@@ -34,39 +34,25 @@ struct ActivityFetchView: View {
 
 struct NotificationsView: View {
     @ObservedObject var vm: ProfileViewModel
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
 
+    // Pushed onto the Library's navigation stack rather than shown as a sheet: the half-height
+    // sheet it used to open in left a filter bar and two or three rows on screen.
     var body: some View {
-        NavigationStack {
-            VStack(spacing: 0) {
-                filterBar
-                    .padding(.horizontal)
-                    .padding(.vertical, 8)
+        VStack(spacing: 0) {
+            filterBar
+                .padding(.horizontal)
+                .padding(.vertical, 8)
 
-                Divider().opacity(0.4)
+            Divider().opacity(0.4)
 
-                content
-            }
-            .navigationTitle("Notifications")
-            #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
-            #endif
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                }
-            }
+            content
         }
-        .task { if vm.notifications.isEmpty { await vm.loadNotifications() } }
+        .navigationTitle("Notifications")
         #if os(iOS)
-        .adaptivePresentationDetents([.medium, .large])
-
-        #else
-
-        .frame(minWidth: 480, minHeight: 360)
-
+        .navigationBarTitleDisplayMode(.inline)
         #endif
+        .task { if vm.notifications.isEmpty { await vm.loadNotifications() } }
     }
 
     // MARK: - Filter bar

@@ -39,13 +39,13 @@ struct Media: Identifiable, Codable, Equatable, Hashable, Sendable {
     let coverImage: MediaCoverImage
     var bannerImage: String?
     let description: String?
-    let episodes: Int?
+    var episodes: Int?
     let status: String?
     let averageScore: Int?   // 0–100
     let genres: [String]?
     let season: String?
     let seasonYear: Int?
-    let nextAiringEpisode: MediaAiringEpisode?
+    var nextAiringEpisode: MediaAiringEpisode?
     let relations: MediaRelations?
     let type: String?
     let format: String?

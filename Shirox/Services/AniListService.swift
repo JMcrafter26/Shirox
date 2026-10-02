@@ -514,6 +514,35 @@ final class AniListService {
         }
     }
 
+    /// AniList's episode total and next airing episode for a MyAnimeList anime.
+    ///
+    /// MyAnimeList reports no count while a show airs (Jikan sends null, the official API 0) and
+    /// has no airing schedule, so a MyAnimeList title on air had nothing to number its episodes
+    /// by: its page read "Episode count not available" and it synced as 0/0. AniList usually
+    /// knows both.
+    func episodeCounts(forMalId malId: Int) async -> (episodes: Int?, nextAiringEpisode: Int?)? {
+        struct Payload: Decodable {
+            struct Node: Decodable {
+                struct Airing: Decodable { let episode: Int }
+                let episodes: Int?
+                let nextAiringEpisode: Airing?
+            }
+            let Media: Node?
+        }
+        let query = """
+        query ($idMal: Int) {
+          Media(idMal: $idMal, type: ANIME) {
+            episodes
+            nextAiringEpisode { episode }
+          }
+        }
+        """
+        guard let data = try? await post(query: query, variables: ["idMal": malId]),
+              let node = (try? JSONDecoder().decode(GraphQLResponse<Payload>.self, from: data))?.data?.Media
+        else { return nil }
+        return (node.episodes, node.nextAiringEpisode?.episode)
+    }
+
     func detail(id: Int) async throws -> AniListMedia {
         let query = """
         query ($id: Int) {

@@ -903,6 +903,9 @@ struct LibraryView: View {
         .navigationDestinationCompat(isPresented: $aniListMangaLinkActive) {
             if let m = pendingAniListMangaMedia { AniListMangaDetailView(mediaId: m.id, preloadedMedia: m) }
         }
+        .navigationDestinationCompat(isPresented: $showNotifications) {
+            NotificationsView(vm: profileVM)
+        }
         .toolbarZoomSource("sort", in: sheetZoom, placement: toolbarItemPlacement[0]) { sortMenu }
         .toolbarZoomSource("account", in: sheetZoom, placement: toolbarItemPlacement[1]) { accountToolbarItem }
         .task { await vm.autoRefreshIfNeeded() }
@@ -1112,10 +1115,6 @@ struct LibraryView: View {
                 }
             }
             .zoomingOut(of: "account", in: sheetZoom, fromToolbar: true)
-        }
-        .adaptiveSheet(isPresented: $showNotifications) {
-            NotificationsView(vm: profileVM)
-                .zoomingOut(of: "account", in: sheetZoom, fromToolbar: true)
         }
         .adaptiveSheet(isPresented: $showManageCollections) {
             ManageCollectionsView()

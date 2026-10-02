@@ -172,6 +172,26 @@ struct ContinueWatchingSection: View {
         // to the right season; the number-based match remains a fallback for items saved before
         // episodeHref was recorded.
         var currentHref = item.episodeHref
+
+        /// The next episode's number in the units the item plays in. An item started from an
+        /// AniList or MyAnimeList page counts within its season, but a source may list a sequel
+        /// as 13…24; reporting the module's own number made Next go from S2 E1 to "episode 13"
+        /// and wrote 13 to the tracker. An item already in the module's units (started from the
+        /// module's page) keeps them.
+        @Sendable func seasonRelativeNextNumber(next: EpisodeLink, playingHref: String?, playingNumber: Int,
+                                                in episodes: [EpisodeLink]) async -> Int {
+            let moduleNumber = Int(next.number)
+            guard item.aniListID != nil,
+                  let playing = episodes.first(where: { $0.href == playingHref }),
+                  Int(playing.number) != playingNumber else { return moduleNumber }
+            let seasonOffset = await SeasonChainMapper.shared.resolveOffset(
+                anchorAniListID: item.aniListID,
+                anchorMALID: item.aniListID.flatMap { IDMappingService.shared.cachedMalId(forAnilistId: $0) }) ?? 0
+            let index = episodes.firstIndex { $0.href == next.href } ?? 0
+            return EpisodeNavigator.seasonRelativeNumber(moduleNumber: moduleNumber, index: index,
+                                                         in: episodes, seasonOffset: seasonOffset)
+        }
+
         let onWatchNext: WatchNextLoader? = { currentEpNum in
             Logger.shared.log("[ContinueWatching] onWatchNext called for episode \(currentEpNum)", type: "Debug")
 
@@ -196,6 +216,7 @@ struct ContinueWatchingSection: View {
                         return nil
                     }
 
+                    let playingHref = currentHref
                     guard let nextEp = EpisodeNavigator.next(afterHref: currentHref, orNumber: currentEpNum, in: episodes) else {
                         return nil
                     }
@@ -211,6 +232,9 @@ struct ContinueWatchingSection: View {
                         let simklEpisodes = (try? await SimklCatalog.loadEpisodes(simklID: ref.simklID)) ?? []
                         number = SimklPlayNumbering.upNextNumber(moduleNumber: number, index: index, in: episodes,
                                                                  season: season, simklEpisodes: simklEpisodes)
+                    } else {
+                        number = await seasonRelativeNextNumber(next: nextEp, playingHref: playingHref,
+                                                                playingNumber: currentEpNum, in: episodes)
                     }
                     return (streams: streams, episodeNumber: number, episodeHref: nextEp.href)
                 } catch {
@@ -222,13 +246,16 @@ struct ContinueWatchingSection: View {
             else if let href = item.detailHref {
                 do {
                     let episodes = try await JSEngine.shared.fetchEpisodes(url: href)
+                    let playingHref = currentHref
                     guard let nextEp = EpisodeNavigator.next(afterHref: currentHref, orNumber: currentEpNum, in: episodes) else {
                         return nil
                     }
                     let streams = try await JSEngine.shared.fetchStreams(episodeUrl: nextEp.href).sorted { $0.title < $1.title }
                     guard !streams.isEmpty else { return nil }
                     currentHref = nextEp.href
-                    return (streams: streams, episodeNumber: Int(nextEp.number), episodeHref: nextEp.href)
+                    let number = await seasonRelativeNextNumber(next: nextEp, playingHref: playingHref,
+                                                                playingNumber: currentEpNum, in: episodes)
+                    return (streams: streams, episodeNumber: number, episodeHref: nextEp.href)
                 } catch {
                     Logger.shared.log("[ContinueWatching] Next episode failed (anilist): \(error)", type: "Error")
                     return nil

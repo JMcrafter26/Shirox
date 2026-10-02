@@ -5,6 +5,7 @@ import Combine
 
 #if os(iOS)
 import AVFoundation
+import CoreImage
 import Photos
 #endif
 #if canImport(GoogleCast)
@@ -213,6 +214,12 @@ struct PlayerView: View {
     // Audio-session interruption (calls, Siri, other media apps)
     @State private var wasPlayingBeforeInterruption = false
 
+    // Paused for Control Center / Notification Center, owed a resume when they close.
+    @AppStorage("pauseWhenInactive") private var pauseWhenInactive = true
+    @AppStorage("playerAmbientMode") private var ambientMode = false
+    @State private var inactivePauseTask: Task<Void, Never>? = nil
+    @State private var pausedForInactive = false
+
     // TVDB episode title
     @State private var tvdbEpisodeTitle: String? = nil
 
@@ -292,6 +299,10 @@ struct PlayerView: View {
             } else if let engine {
                 #if os(iOS)
                 if let av = engine as? AVPlayerEngine {
+                    // Filled, the picture covers the screen and there are no bars to light.
+                    if ambientMode && !isFilled {
+                        PlayerAmbientBackground(player: av.player, isPlaying: isPlaying)
+                    }
                     VideoLayerView(player: av.player, pipTrigger: pipTrigger,
                                    videoGravity: isFilled ? .resizeAspectFill : .resizeAspect)
                         .ignoresSafeArea()
@@ -568,12 +579,23 @@ struct PlayerView: View {
                 isSpeedBoosted = false
                 engine?.rate = isPlaying ? Float(playbackSpeed) : 0
             }
+            scheduleInactivePause()
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
             // Stamp the moment we're TRULY backgrounded (home / app switch / lock) — not a
             // transient resign-active like Control Center or a banner. The foreground handler
             // reads this to decide whether we were suspended long enough that the source died.
             backgroundedAt = Date()
+            // Leaving the app keeps playing in the background as it always has; the pause was
+            // only meant for an overlay. A slow home swipe can outlast the delay, so undo it.
+            inactivePauseTask?.cancel()
+            inactivePauseTask = nil
+            resumeAfterInactivePause()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+            inactivePauseTask?.cancel()
+            inactivePauseTask = nil
+            resumeAfterInactivePause()
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
             guard let engine else { return }
@@ -1014,7 +1036,7 @@ struct PlayerView: View {
                         .opacity(showControls ? 1 : 0)
                         .offset(y: showControls ? 0 : -14)
                     Spacer()
-                    bottomBarView(bottomPad: layouts.bottom)
+                    bottomBarView(bottomPad: layouts.bottom, isLandscape: isLandscape)
                         .opacity(showControls ? 1 : 0)
                         .offset(y: showControls ? 0 : 14)
                 }
@@ -1071,7 +1093,7 @@ struct PlayerView: View {
     }
 
     @ViewBuilder
-    private func bottomBarView(bottomPad: CGFloat) -> some View {
+    private func bottomBarView(bottomPad: CGFloat, isLandscape: Bool) -> some View {
         // Redrawn with the clock on its own; the rest of the player isn't.
         ClockReader(clock: clock) { clock in
             PlayerBottomBar(
@@ -1129,7 +1151,8 @@ struct PlayerView: View {
                 skipSegments: skipSegments,
                 episodeNumber: currentContext?.episodeNumber,
                 tvdbEpisodeTitle: tvdbEpisodeTitle,
-                mediaTitle: currentContext?.mediaTitle
+                mediaTitle: currentContext?.mediaTitle,
+                isPortrait: !isLandscape
             )
         }
         .buttonStyle(CircularButtonStyle())
@@ -1685,6 +1708,8 @@ struct PlayerView: View {
         // exactly once — and duplicate Control Center registrations meant it didn't, so the
         // first call paused and the second immediately played again.
         let intent = PlaybackRouting.toggleIntent(isPlaying: isPlaying)
+        // A choice made from Control Center's Now Playing outranks the automatic resume.
+        pausedForInactive = false
         switch PlaybackRouting.target(isCasting: castManager.isConnected, hasLocalPlayer: engine != nil) {
         case .cast:
             switch intent {
@@ -1728,6 +1753,42 @@ struct PlayerView: View {
         updateNowPlaying()
         setControlsVisible(true)
         scheduleHide()
+    }
+
+    /// Pauses while Control Center, Notification Center or the app switcher covers the player,
+    /// and `resumeAfterInactivePause` plays again when they close.
+    ///
+    /// Resign-active also starts every trip out of the app, and those keep playing in the
+    /// background. Locking or going home moves us to the background within a moment, so the
+    /// pause waits briefly and only goes ahead if we're still merely inactive.
+    private func scheduleInactivePause() {
+        #if os(iOS)
+        inactivePauseTask?.cancel()
+        inactivePauseTask = nil
+        guard pauseWhenInactive, isPlaying, engine != nil,
+              !castManager.isConnected, !Self.isAirPlayRouteActive else { return }
+        inactivePauseTask = Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 400_000_000)
+            guard !Task.isCancelled,
+                  UIApplication.shared.applicationState == .inactive,
+                  isPlaying, !castManager.isConnected, let engine else { return }
+            engine.pause()
+            isPlaying = false
+            pausedForInactive = true
+            reportPlaybackStateChange(paused: true)
+            updateNowPlaying()
+        }
+        #endif
+    }
+
+    private func resumeAfterInactivePause() {
+        guard pausedForInactive else { return }
+        pausedForInactive = false
+        guard !isPlaying, !castManager.isConnected, let engine else { return }
+        engine.rate = Float(playbackSpeed)
+        isPlaying = true
+        reportPlaybackStateChange(paused: false)
+        updateNowPlaying()
     }
 
     private func skipToSegmentEnd() {
@@ -3369,6 +3430,73 @@ class PlayerLayerUIView: UIView {
         playerLayer.videoGravity = .resizeAspect
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+}
+
+/// Ambient mode: the video's colours, blurred, glowing in the bars around a letterboxed picture.
+///
+/// Kept cheap on purpose, since the player is already the app's main heat source: AVFoundation
+/// scales a frame down to 32×18 and one is sampled every 1.5 s while playing. Native engine only,
+/// as mpv has no frame output to read.
+struct PlayerAmbientBackground: View {
+    let player: AVPlayer
+    let isPlaying: Bool
+
+    @State private var image: UIImage?
+    @State private var output: AVPlayerItemVideoOutput?
+    @State private var attachedItem: AVPlayerItem?
+
+    private static let context = CIContext(options: [.useSoftwareRenderer: false])
+    private let timer = Timer.publish(every: 1.5, on: .main, in: .common).autoconnect()
+
+    var body: some View {
+        ZStack {
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .blur(radius: 40, opaque: true)
+                    .opacity(0.55)
+                    .transition(.opacity)
+            }
+        }
+        .ignoresSafeArea()
+        .allowsHitTesting(false)
+        .onReceive(timer) { _ in
+            guard isPlaying || image == nil else { return }
+            sample()
+        }
+        .onDisappear(perform: detach)
+    }
+
+    private func sample() {
+        if player.currentItem !== attachedItem { attach() }
+        guard let output else { return }
+        let time = output.itemTime(forHostTime: CACurrentMediaTime())
+        guard output.hasNewPixelBuffer(forItemTime: time),
+              let buffer = output.copyPixelBuffer(forItemTime: time, itemTimeForDisplay: nil) else { return }
+        let ci = CIImage(cvPixelBuffer: buffer)
+        guard let cg = Self.context.createCGImage(ci, from: ci.extent) else { return }
+        withAnimation(.easeInOut(duration: 1.2)) { image = UIImage(cgImage: cg) }
+    }
+
+    private func attach() {
+        detach()
+        guard let item = player.currentItem else { return }
+        let output = AVPlayerItemVideoOutput(pixelBufferAttributes: [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
+            kCVPixelBufferWidthKey as String: 32,
+            kCVPixelBufferHeightKey as String: 18,
+        ])
+        item.add(output)
+        self.output = output
+        attachedItem = item
+    }
+
+    private func detach() {
+        if let output, let attachedItem { attachedItem.remove(output) }
+        output = nil
+        attachedItem = nil
+    }
 }
 #endif
 

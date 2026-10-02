@@ -573,6 +573,8 @@ struct PlayerSettingsView: View {
     @AppStorage("playerSkipShort") private var skipShort: Int = 10
     @AppStorage("playerSkipLong") private var skipLong: Int = 85
     @AppStorage("autoNextEpisode") private var autoNextEpisode = true
+    @AppStorage("pauseWhenInactive") private var pauseWhenInactive = true
+    @AppStorage("playerAmbientMode") private var ambientMode = false
     @AppStorage("autoSkipSegments") private var autoSkipSegments = true
     @AppStorage("watchedPercentage") private var watchedPercentage = 90.0
 
@@ -605,6 +607,14 @@ struct PlayerSettingsView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
+
+                #if os(iOS)
+                Toggle("Ambient Mode", isOn: $ambientMode)
+                    .tint(.secondary)
+                Text("Fills the bars around the video with a soft glow of its colours. Native engine only.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                #endif
 
                 #if !os(tvOS)
                 Picker("Player Engine", selection: $playerEngine) {
@@ -643,6 +653,14 @@ struct PlayerSettingsView: View {
                 Text("How far your finger may drift before a hold is recognized. Raise it if the hold action keeps cancelling.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
+
+                #if os(iOS)
+                Toggle("Pause for Control Center", isOn: $pauseWhenInactive)
+                    .tint(.secondary)
+                Text("Pauses while Control Center or Notification Center is open and picks up again when you close it. Leaving the app or locking the phone still plays in the background.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                #endif
             }
 
             Section("Skipping") {

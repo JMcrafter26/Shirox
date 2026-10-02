@@ -42,6 +42,9 @@ struct PlayerBottomBar: View {
     var episodeNumber: Int? = nil
     var tvdbEpisodeTitle: String? = nil
     var mediaTitle: String? = nil
+    /// Portrait on a phone: too narrow for the titles, the skip button and the button group
+    /// on one row.
+    var isPortrait: Bool = false
     @AppStorage("playerLiquidGlass") private var playerLiquidGlass = true
 
     private var isPad: Bool {
@@ -52,37 +55,43 @@ struct PlayerBottomBar: View {
         #endif
     }
 
+    private var isPortraitPhone: Bool { isPortrait && !isPad }
+
     var body: some View {
         VStack(spacing: isPad ? 12 : 4) {
             // Episode info + action buttons row
-            HStack(alignment: .bottom, spacing: isPad ? 16 : 8) {
-                VStack(alignment: .leading, spacing: isPad ? 10 : 6) {
-                    VStack(alignment: .leading, spacing: 3) {
-                        if let ep = episodeNumber {
-                            let epLine = tvdbEpisodeTitle.flatMap { $0.isEmpty ? nil : "EP\(ep): \($0)" } ?? "EP\(ep)"
-                            Text(epLine)
-                                .font(.system(size: isPad ? 16 : 14, weight: .semibold))
-                                .foregroundStyle(.white.opacity(0.6))
-                                .lineLimit(1)
-                        }
-                        if let title = mediaTitle, !title.isEmpty {
-                            Text(title)
-                                .font(.system(size: isPad ? 24 : 20, weight: .heavy))
-                                .foregroundStyle(.white)
-                                .lineLimit(1)
-                        }
+            if isPortraitPhone {
+                // A phone held upright can't fit the skip button beside the button group: the
+                // Skip Intro/Outro button drawn over the 85s slot is wider than it and ran into
+                // the stream and quality buttons, and the title was squeezed to a few letters.
+                // Portrait has height to spare, so the group takes its own row.
+                VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        titleBlock
+                        skip85Button
                     }
-                    skip85Button
+                    HStack {
+                        Spacer(minLength: 0)
+                        rightButtonGroup
+                    }
                 }
-                // Without this the button group wins the width contest and the title collapses
-                // to a few characters even when most of the bar is empty.
-                .layoutPriority(1)
+                .padding(.horizontal, 20)
+            } else {
+                HStack(alignment: .bottom, spacing: isPad ? 16 : 8) {
+                    VStack(alignment: .leading, spacing: isPad ? 10 : 6) {
+                        titleBlock
+                        skip85Button
+                    }
+                    // Without this the button group wins the width contest and the title collapses
+                    // to a few characters even when most of the bar is empty.
+                    .layoutPriority(1)
 
-                Spacer(minLength: 8)
+                    Spacer(minLength: 8)
 
-                rightButtonGroup
+                    rightButtonGroup
+                }
+                .padding(.horizontal, isPad ? 30 : 20)
             }
-            .padding(.horizontal, isPad ? 30 : 20)
 
             // Progress slider
             PlayerProgressSlider(
@@ -101,6 +110,24 @@ struct PlayerBottomBar: View {
     }
 
     // MARK: - Subviews
+
+    private var titleBlock: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            if let ep = episodeNumber {
+                let epLine = tvdbEpisodeTitle.flatMap { $0.isEmpty ? nil : "EP\(ep): \($0)" } ?? "EP\(ep)"
+                Text(epLine)
+                    .font(.system(size: isPad ? 16 : 14, weight: .semibold))
+                    .foregroundStyle(.white.opacity(0.6))
+                    .lineLimit(1)
+            }
+            if let title = mediaTitle, !title.isEmpty {
+                Text(title)
+                    .font(.system(size: isPad ? 24 : 20, weight: .heavy))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+            }
+        }
+    }
 
     private var skip85Button: some View {
         Button(action: onSkip85) {

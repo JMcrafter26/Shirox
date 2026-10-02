@@ -244,6 +244,9 @@ final class DownloadManager: NSObject, ObservableObject {
 
     private let hlsDownloader = HLSDownloader()
     private var hlsTasks: [UUID: Task<Void, Never>] = [:]
+    /// Which start of an item's HLS task is current, so a cancelled run finishing late can't
+    /// evict the entry of the run that replaced it.
+    private var hlsTaskTokens: [UUID: UUID] = [:]
     private var backgroundTaskID: UIBackgroundTaskIdentifier = .invalid
     private var backgroundCompletionHandler: (() -> Void)?
     private var isBackgrounded = false
@@ -1178,6 +1181,8 @@ final class DownloadManager: NSObject, ObservableObject {
         let id = item.id
         guard let streamURL = item.streamURL else { return }
         updateState(id, .downloading)
+        let token = UUID()
+        hlsTaskTokens[id] = token
         let task = Task {
             do {
                 let manifestPath = try await hlsDownloader.download(
@@ -1191,10 +1196,18 @@ final class DownloadManager: NSObject, ObservableObject {
                     }
                 )
                 updateCompletion(id, fileName: manifestPath)
+            } catch where Task.isCancelled {
+                // Paused or cancelled by the user: `pause`/`remove` already set the item's
+                // state. Reporting the cancellation as an error flipped a paused download to
+                // Failed with a "Download failed" toast.
             } catch {
                 updateError(id, error)
             }
-            hlsTasks.removeValue(forKey: id)
+            // Only clear our own entry: a quick pause → resume has already stored the new task.
+            if hlsTaskTokens[id] == token {
+                hlsTasks.removeValue(forKey: id)
+                hlsTaskTokens.removeValue(forKey: id)
+            }
             refreshDownloadKeepAlive()
         }
         hlsTasks[id] = task

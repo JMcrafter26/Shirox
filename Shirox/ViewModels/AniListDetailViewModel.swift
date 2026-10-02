@@ -52,10 +52,21 @@ final class AniListDetailViewModel: ObservableObject {
                     media?.bannerImage = fanart
                 }
             }
+            await fillMissingEpisodeCount()
         } catch {
             self.error = error.localizedDescription
         }
         isLoading = false
+    }
+
+    /// Borrows AniList's counts for a MyAnimeList title that has none of its own.
+    private func fillMissingEpisodeCount() async {
+        guard let current = media, current.provider == .mal,
+              current.airedOrAnnouncedEpisodes ?? 0 == 0,
+              let counts = await AniListService.shared.episodeCounts(forMalId: current.idMal ?? current.id),
+              media?.id == current.id else { return }
+        if let total = counts.episodes, total > 0 { media?.episodes = total }
+        if let next = counts.nextAiringEpisode { media?.nextAiringEpisode = MediaAiringEpisode(episode: next) }
     }
 
     func watchEpisode(_ number: Int) {

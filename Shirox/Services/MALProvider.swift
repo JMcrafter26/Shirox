@@ -215,7 +215,8 @@ final class MALProvider: MediaProvider {
             coverImage: MediaCoverImage(large: node.main_picture?.medium, extraLarge: node.main_picture?.large),
             bannerImage: nil,
             description: node.synopsis,
-            episodes: node.num_episodes,
+            // MyAnimeList sends 0 for "not known yet" (a show still airing); as a count it showed 0/0.
+            episodes: node.num_episodes.flatMap { $0 > 0 ? $0 : nil },
             status: node.status,
             averageScore: node.mean.map { Int($0 * 10) },
             genres: node.genres?.map { $0.name },
