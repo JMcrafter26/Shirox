@@ -156,6 +156,72 @@ extension View {
 
 // MARK: - Scroll-aware navigation title
 
+#if os(iOS)
+/// Where the navigation bar's buttons leave room for a title, in window coordinates: the
+/// trailing edge of the back button and the leading edge of the trailing items (nil when
+/// there are none).
+private struct NavBarGap: Equatable {
+    var leading: CGFloat
+    var trailing: CGFloat?
+}
+
+/// Reads the button positions off the enclosing `UINavigationBar`. SwiftUI reports no
+/// frames for toolbar items, so this walks the bar's views: anything small enough to be a
+/// button counts toward the side it sits on.
+private struct NavBarGapProbe: UIViewRepresentable {
+    var isActive: Bool
+    var onMeasure: (NavBarGap) -> Void
+
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView()
+        view.isUserInteractionEnabled = false
+        return view
+    }
+
+    func updateUIView(_ view: UIView, context: Context) {
+        // Called on every scroll frame while the title fades; only the moment it starts to
+        // appear needs a measurement.
+        defer { context.coordinator.wasActive = isActive }
+        guard isActive, !context.coordinator.wasActive else { return }
+        DispatchQueue.main.async {
+            guard let gap = Self.measure(from: view) else { return }
+            onMeasure(gap)
+        }
+    }
+
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
+    final class Coordinator {
+        var wasActive = false
+    }
+
+    private static func measure(from view: UIView) -> NavBarGap? {
+        var responder: UIResponder? = view
+        while let next = responder, !(next is UIViewController) { responder = next.next }
+        guard let bar = (responder as? UIViewController)?.navigationController?.navigationBar,
+              let window = bar.window else { return nil }
+        let barFrame = bar.convert(bar.bounds, to: window)
+        var leading = barFrame.minX
+        var trailing: CGFloat?
+        func visit(_ view: UIView) {
+            guard !view.isHidden, view.alpha > 0.01 else { return }
+            let frame = view.convert(view.bounds, to: window)
+            if frame.width > 1, frame.width < barFrame.width / 3, frame.height > 1 {
+                // Wholly on one side: an empty title view straddles the middle.
+                if frame.maxX < barFrame.midX {
+                    leading = max(leading, frame.maxX)
+                } else if frame.minX > barFrame.midX {
+                    trailing = min(trailing ?? frame.minX, frame.minX)
+                }
+            }
+            view.subviews.forEach(visit)
+        }
+        bar.subviews.forEach(visit)
+        return NavBarGap(leading: leading, trailing: trailing)
+    }
+}
+#endif
+
 /// The bottom edge of the hero title, in the enclosing scroll view's coordinate space.
 ///
 /// The default reads as "far below the bar", so a screen that publishes no anchor —
@@ -216,13 +282,15 @@ private struct ScrollAwareNavTitle: ViewModifier {
     private static let barHeight: CGFloat = 44
     /// How far the hero title travels while the compact one fades in.
     private static let fadeDistance: CGFloat = 20
-    /// Room kept for the back button.
-    private static let leadingClearance: CGFloat = 72
-    /// Room kept for the trailing toolbar items — the detail screens carry two (tracking
-    /// and the website menu), wider than the back button.
-    private static let trailingClearance: CGFloat = 124
+    /// Space between the title and the buttons either side of it.
+    private static let buttonGap: CGFloat = 12
 
     @State private var titleWidth: CGFloat = 0
+    /// Where the back button ends and the trailing toolbar items begin, in window
+    /// coordinates. Measured off the navigation bar, since what's on the right varies
+    /// (the tracking button needs a login, the website button a link); until then the
+    /// room an inline title gets beside a back button and two buttons.
+    @State private var barGap = NavBarGap(leading: 60, trailing: nil)
 
     @State private var heroTitleBottom: CGFloat = .greatestFiniteMagnitude
 
@@ -269,6 +337,8 @@ private struct ScrollAwareNavTitle: ViewModifier {
             }
             .onPreferenceChange(TitleWidthKey.self) { titleWidth = $0 }
             .overlay { placedTitle }
+            // Re-measured each time the title starts to fade in, which is when it matters.
+            .background(NavBarGapProbe(isActive: progress > 0) { barGap = $0 })
             .padding(.top, topInset)
             .background(fallbackBackdrop)
             // Driven straight off scroll position, so it needs no animation of its own:
@@ -283,17 +353,17 @@ private struct ScrollAwareNavTitle: ViewModifier {
             .truncationMode(.tail)
     }
 
-    /// Centred like a system inline title while it fits between the back button and the
-    /// trailing toolbar items; a longer one slides toward the back button, and only once
-    /// it fills the whole gap does it truncate. A symmetric inset wide enough for the
-    /// trailing buttons would have truncated even short titles.
+    /// Centred in the gap between the back button and the trailing toolbar items rather
+    /// than on the screen: those items are often wider than the back button, and a
+    /// screen-centred title then sits visibly closer to them. A title wider than the gap
+    /// truncates.
     private var placedTitle: some View {
         GeometryReader { geo in
-            let width = geo.size.width
-            let room = max(width - Self.leadingClearance - Self.trailingClearance, 0)
-            let shown = min(titleWidth, room)
-            let x = min(max((width - shown) / 2, Self.leadingClearance),
-                        width - Self.trailingClearance - shown)
+            let origin = geo.frame(in: .global).minX
+            let start = barGap.leading - origin + Self.buttonGap
+            let end = (barGap.trailing ?? origin + geo.size.width - 112) - origin - Self.buttonGap
+            let shown = min(titleWidth, max(end - start, 0))
+            let x = start + (end - start - shown) / 2
             titleText
                 // From iOS 26 the bar carries no background of its own. These screens set
                 // `softScrollEdges`, which already fades the artwork out under the toolbar;
