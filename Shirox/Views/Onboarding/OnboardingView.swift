@@ -21,6 +21,8 @@ struct OnboardingView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var showSources = false
+    /// The step the sources screen grows out of.
+    @Namespace private var sourcesZoom
     #if os(iOS)
     @State private var presentationWindow: UIWindow?
     #endif
@@ -75,6 +77,7 @@ struct OnboardingView: View {
                         isDone: hasSource,
                         isRequired: true
                     ) { showSources = true }
+                    .zoomSource("sources", in: sourcesZoom, cornerRadius: 14)
 
                     stepRow(
                         title: "Sign in to a tracker",
@@ -115,6 +118,7 @@ struct OnboardingView: View {
             // gains too, and there's one code path to keep correct.
             ModuleListView()
                 .environmentObject(moduleManager)
+                .zoomingOut(of: "sources", in: sourcesZoom)
         }
         #if os(iOS)
         .onAppear {

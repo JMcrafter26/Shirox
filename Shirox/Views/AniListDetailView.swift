@@ -30,11 +30,18 @@ struct AniListDetailView: View {
     @State private var existingMALEntry: LibraryEntry? = nil
     @State private var showMALEdit = false
     @State private var linkedIDs: TrackingIDs? = nil
+    /// The title's Simkl id from Simkl's id search, when no link or library entry gave one.
+    @State private var lookedUpSimklID: Int?
     @State private var showTrackingLinks = false
+    /// The buttons the edit, tracking-links and download sheets grow out of.
+    @Namespace private var sheetZoom
     @State private var showAniListEdit = false
     @State private var existingAniListCrossEntry: LibraryEntry? = nil
     @State private var isLoadingEntry = false
+    @ObservedObject private var simklAuth = SimklAuthManager.shared
     #if os(iOS)
+    /// The title being edited on Simkl.
+    @State private var simklEdit: SimklEditTarget?
     @State private var pendingDownloadEpisodeNumber: DownloadEpisodeItem? = nil
     @State private var isSelectionMode = false
     @State private var selectedEpisodeNumbers: Set<Int> = []
@@ -93,6 +100,30 @@ struct AniListDetailView: View {
         return linkedIDs?.anilist ?? IDMappingService.shared.cachedAnilistId(forMALId: media.id)
     }
 
+    /// This page's id on each tracker, with the user's tracking links applied.
+    private var pageAniListID: Int? { vm.media?.provider == .mal ? anilistMediaId : vm.media?.id }
+    private var pageMALID: Int? { vm.media?.provider == .mal ? vm.media?.id : malMediaId }
+    private var pageSimklID: Int? {
+        linkedIDs?.simkl
+            ?? SimklLibraryService.shared.cachedEntry(malId: pageMALID, anilistId: pageAniListID)
+                .flatMap(SimklLibraryService.simklID(of:))
+            ?? lookedUpSimklID
+            ?? SimklCatalog.cachedAnimeSimklID(mal: pageMALID, anilist: pageAniListID)
+    }
+
+    #if os(iOS)
+    private var simklEditTarget: SimklEditTarget? {
+        guard let media = vm.media else { return nil }
+        return SimklEditTarget(media: media, mal: pageMALID, anilist: pageAniListID, simkl: pageSimklID)
+    }
+
+    @ViewBuilder private var simklEditButton: some View {
+        if simklAuth.isLoggedIn, let target = simklEditTarget {
+            Button { simklEdit = target } label: { Label("Edit on Simkl", systemImage: "pencil") }
+        }
+    }
+    #endif
+
     /// The other services' ids for this page, with the user's tracking links applied.
     private func reloadLinkedIDs() async {
         guard let media = vm.media else { return }
@@ -101,6 +132,9 @@ struct AniListDetailView: View {
                 aniListID: IDMappingService.shared.cachedAnilistId(forMALId: media.id),
                 malID: media.id, moduleKey: nil)
             : await TrackingLinkResolver.resolve(aniListID: media.id, malID: media.idMal, moduleKey: nil)
+        if pageSimklID == nil {
+            lookedUpSimklID = await SimklCatalog.animeSimklID(mal: pageMALID, anilist: pageAniListID)
+        }
     }
 
     /// True when viewing a MAL item while AniList is signed in and its AniList id
@@ -174,6 +208,7 @@ struct AniListDetailView: View {
                         showAniListEdit = true
                     }
                 } label: { Label("Edit on AniList", systemImage: "pencil") }
+                simklEditButton
                 Button { showTrackingLinks = true } label: {
                     Label("Tracking Links…", systemImage: "link")
                 }
@@ -207,6 +242,7 @@ struct AniListDetailView: View {
                         showMALEdit = true
                     }
                 } label: { Label("Edit on MyAnimeList", systemImage: "pencil") }
+                simklEditButton
                 Button { showTrackingLinks = true } label: {
                     Label("Tracking Links…", systemImage: "link")
                 }
@@ -233,6 +269,7 @@ struct AniListDetailView: View {
                         showLibraryEdit = true
                     }
                 } label: { Label("Edit Library Entry", systemImage: "pencil") }
+                simklEditButton
                 Button { showTrackingLinks = true } label: {
                     Label("Tracking Links…", systemImage: "link")
                 }
@@ -246,6 +283,17 @@ struct AniListDetailView: View {
                 }
             }
             .disabled(isLoadingEntry)
+        } else if simklAuth.isLoggedIn {
+            Menu {
+                simklEditButton
+                Button { showTrackingLinks = true } label: {
+                    Label("Tracking Links…", systemImage: "link")
+                }
+            } label: {
+                Image(systemName: "pencil.circle")
+                    .font(.system(size: 17, weight: .medium))
+                    .foregroundStyle(.primary)
+            }
         }
     }
     #endif
@@ -258,7 +306,22 @@ struct AniListDetailView: View {
                 .padding(.bottom, 24)
         }
         #if os(iOS)
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { editToolbarButton } }
+        .toolbarZoomSource("edit", in: sheetZoom, placement: .topBarTrailing) { editToolbarButton }
+        .toolbar {
+            // The site of the module this show was last watched with, and its trackers' pages.
+            ToolbarItem(placement: .topBarTrailing) {
+                if let media = vm.media {
+                    let cw = continueWatchingItem(for: media)
+                    ModuleWebsiteButton(href: cw?.detailHref, moduleId: cw?.moduleId,
+                                        trackers: TrackerWebLinks.links(anilist: pageAniListID, mal: pageMALID,
+                                                                        simkl: pageSimklID))
+                }
+            }
+        }
+        .adaptiveSheet(item: $simklEdit) { target in
+            SimklAnimeEditSheet(target: target)
+                .zoomingOut(of: "edit", in: sheetZoom)
+        }
         #endif
         .navigationDestinationCompat(item: $sequelMediaId) { id in
             AniListDetailView(mediaId: id)
@@ -415,6 +478,7 @@ struct AniListDetailView: View {
                     }
                 )
                 .environmentObject(moduleManager)
+                .zoomingOut(of: "batchDownload", in: sheetZoom)
             }
         }
         #endif
@@ -426,6 +490,7 @@ struct AniListDetailView: View {
                         : .anilist(id: media.id, title: media.title.displayTitle, idMal: media.idMal),
                     initialSide: media.provider == .mal ? .anilist : .mal,
                     onChange: { Task { await reloadLinkedIDs() } })
+                .zoomingOut(of: "edit", in: sheetZoom, fromToolbar: true)
             }
         }
         .adaptiveSheet(isPresented: $showLibraryEdit) {
@@ -463,6 +528,7 @@ struct AniListDetailView: View {
                 .frame(minWidth: 480, minHeight: 360)
 
                 #endif
+                .zoomingOut(of: "edit", in: sheetZoom, fromToolbar: true)
             }
         }
         .adaptiveSheet(isPresented: $showMALEdit) {
@@ -508,6 +574,7 @@ struct AniListDetailView: View {
                 #else
                 .frame(minWidth: 480, minHeight: 360)
                 #endif
+                .zoomingOut(of: "edit", in: sheetZoom, fromToolbar: true)
             }
         }
         .adaptiveSheet(isPresented: $showAniListEdit) {
@@ -543,6 +610,7 @@ struct AniListDetailView: View {
                 #else
                 .frame(minWidth: 480, minHeight: 360)
                 #endif
+                .zoomingOut(of: "edit", in: sheetZoom, fromToolbar: true)
             }
         }
     }
@@ -1263,6 +1331,7 @@ struct AniListDetailView: View {
                         .tint(.primary)
                         .controlSize(.small)
                         .clipShape(Capsule())
+                        .zoomSource("batchDownload", in: sheetZoom, cornerRadius: 16)
                     }
                 }
                 .padding(.horizontal, 16)
@@ -1687,6 +1756,9 @@ struct RelationCard: View {
                     .padding(8)
             }
             .clipShape(RoundedRectangle(cornerRadius: 12))
+            // The .fill poster overflows the card; clipping hides it but not from hit testing,
+            // so without this a card swallows taps meant for its neighbour.
+            .contentShape(RoundedRectangle(cornerRadius: 12))
             .shadow(color: .black.opacity(0.35), radius: 8, x: 0, y: 4)
     }
 }

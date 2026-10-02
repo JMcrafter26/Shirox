@@ -79,6 +79,7 @@ final class ModuleJSRunner {
               let array = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
             throw JSEngineError.parseError("Could not parse search results")
         }
+        ModuleWebLinks.shared.record(array, moduleId: module?.id)
         return array.compactMap { item in
             guard let title = item["title"] as? String,
                   let image = item["image"] as? String,

@@ -119,6 +119,7 @@ async function mangaSearch(keyword) {
   const results = (await provider().search({ query: keyword })) || [];
   return results.map((r) => {
     const item = { title: r.title, image: r.image || "", id: String(r.id) };
+    if (r.url) item.pageUrl = String(r.url);
     if (item.image && siteReferer) item.imageHeaders = { Referer: siteReferer };
     return item;
   });
@@ -172,7 +173,8 @@ function searchMedia(query) {
 async function animeSearch(keyword) {
   const media = searchMedia(keyword);
   const results = (await provider().search({ query: keyword, dub: !!host().dub, year: media.startDate?.year, media })) || [];
-  return JSON.stringify(results.map((r) => ({ title: r.title, image: "", href: String(r.id) })));
+  // `pageUrl`: the title's page on the site — the href is an id, so the app's website button needs it.
+  return JSON.stringify(results.map((r) => ({ title: r.title, image: "", href: String(r.id), pageUrl: r.url ? String(r.url) : undefined })));
 }
 
 function animeDetails() {

@@ -10,6 +10,9 @@ struct ContinueReadingSection: View {
     /// Owned by HomeView, drives its fullScreenCover.
     @Binding var readerContext: ReaderContext?
     @State private var loadingHref: String?
+    /// The manga whose page "View Details" opens. Owned by HomeView, which pushes it from
+    /// outside its ScrollView.
+    @Binding var detailItem: MangaReadingItem?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -38,6 +41,9 @@ struct ContinueReadingSection: View {
                         .buttonStyle(.plain)
                         .frame(width: 120)
                         .contextMenu {
+                            Button { openDetails(item) } label: {
+                                Label("View Details", systemImage: "list.bullet.below.rectangle")
+                            }
                             Button(role: .destructive) {
                                 MangaProgressManager.shared.remove(item)
                             } label: {
@@ -51,21 +57,36 @@ struct ContinueReadingSection: View {
         }
     }
 
+    /// Makes the manga's module the active one — the manga page and the reader both load through it.
+    private func activateModule(for item: MangaReadingItem) async -> Bool {
+        guard let module = ModuleManager.shared.modules.first(where: { $0.id == item.moduleId }) else {
+            ToastManager.shared.show(message: "Module no longer installed", type: .error)
+            return false
+        }
+        if ModuleManager.shared.moduleReadyId != module.id {
+            guard await ModuleManager.shared.selectAndAwaitReady(module) else {
+                ToastManager.shared.show(message: "Failed to load \(module.sourceName)", type: .error)
+                return false
+            }
+        }
+        return true
+    }
+
+    private func openDetails(_ item: MangaReadingItem) {
+        guard loadingHref == nil else { return }
+        loadingHref = item.mangaHref
+        Task {
+            defer { loadingHref = nil }
+            if await activateModule(for: item) { detailItem = item }
+        }
+    }
+
     private func open(_ item: MangaReadingItem) {
         guard loadingHref == nil else { return }
         loadingHref = item.mangaHref
         Task {
             defer { loadingHref = nil }
-            guard let module = ModuleManager.shared.modules.first(where: { $0.id == item.moduleId }) else {
-                ToastManager.shared.show(message: "Module no longer installed", type: .error)
-                return
-            }
-            if ModuleManager.shared.moduleReadyId != module.id {
-                guard await ModuleManager.shared.selectAndAwaitReady(module) else {
-                    ToastManager.shared.show(message: "Failed to load \(module.sourceName)", type: .error)
-                    return
-                }
-            }
+            guard await activateModule(for: item) else { return }
             do {
                 let chapters = try await JSEngine.shared.mangaChapters(url: item.mangaHref)
                 guard !chapters.isEmpty else {

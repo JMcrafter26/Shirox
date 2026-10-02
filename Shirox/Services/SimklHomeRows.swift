@@ -9,6 +9,8 @@ struct SimklHomeLayout: Equatable {
         var id: SimklFeedList { list }
     }
 
+    /// Which kind's Home this is — what a switch animates between.
+    let kind: MediaKind
     let hero: [Media]
     let rows: [Row]
 }
@@ -109,7 +111,7 @@ enum SimklHomeRows {
         let hero = files[heroSource].map {
             titles(heroSource, $0, today: today, tracker: tracker, anilistForMAL: anilistForMAL)
         } ?? []
-        return SimklHomeLayout(hero: Array(hero.prefix(heroLength)), rows: rows)
+        return SimklHomeLayout(kind: kind, hero: Array(hero.prefix(heroLength)), rows: rows)
     }
 
     /// "yyyy-MM-dd" for a moment in a time zone — the user's, for "today".

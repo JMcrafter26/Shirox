@@ -35,6 +35,10 @@ struct SimklDiscoverItem: Equatable, Sendable {
     var episode: Int? = nil
     /// When the title came out, "yyyy-MM-dd".
     var released: String? = nil
+    /// Calendar entries only: the moment it airs or releases, for the Upcoming calendar.
+    var airsAt: Date? = nil
+    /// Calendar v2 shows only: the season the episode is in.
+    var season: Int? = nil
 }
 
 extension SimklDiscoverItem: Decodable {
@@ -85,7 +89,9 @@ extension SimklDiscoverItem: Decodable {
         runtime = optional(String.self, .runtime).flatMap(Self.minutes(from:))
         totalEpisodes = optional(Int.self, .total_episodes)
         rank = optional(Int.self, .rank).flatMap { $0 > 0 ? $0 : nil }
-        airDay = optional(String.self, .date).flatMap(Self.day(from:))
+        let date = optional(String.self, .date)
+        airDay = date.flatMap(Self.day(from:))
+        airsAt = date.flatMap { Self.timestamps.date(from: $0) }
         episode = optional(Episode.self, .episode)?.episode
         released = optional(String.self, .release_date).flatMap(Self.releaseDay(from:))
     }
@@ -112,6 +118,9 @@ extension SimklDiscoverItem: Decodable {
         return (hours ?? 0) * 60 + (minutes ?? 0)
     }
 
+    /// Calendar timestamps, "2026-09-24T00:00:00+09:00" or "2026-09-30T04:00:00Z".
+    private static let timestamps = ISO8601DateFormatter()
+
     /// The listed day of a calendar timestamp like "2026-09-24T00:00:00+09:00" — Simkl's own day,
     /// not converted, so a show listed for the 24th is on the 24th wherever the user is.
     static func day(from timestamp: String) -> String? {
@@ -132,7 +141,10 @@ extension SimklDiscoverItem: Decodable {
     /// with its title's details; one without them is skipped.
     private struct CalendarV2: Decodable {
         struct Airing: Decodable {
-            struct Episode: Decodable { let episode: Int? }
+            struct Episode: Decodable {
+                let episode: Int?
+                let season: Int?
+            }
             let simkl_id: SimklLibraryService.FlexibleID?
             let date: String?
             let episode: Episode?
@@ -152,7 +164,9 @@ extension SimklDiscoverItem: Decodable {
                 guard let id = airing.simkl_id?.value, var item = metadata[String(id)]?.item,
                       let date = airing.date.flatMap(parser.date(from:)) else { return nil }
                 item.airDay = formatter.string(from: date)
+                item.airsAt = date
                 item.episode = airing.episode?.episode
+                item.season = airing.episode?.season
                 return item
             }
         }

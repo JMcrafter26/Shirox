@@ -461,20 +461,52 @@ extension Notification.Name {
 }
 
 #if os(iOS)
+/// See-through bars on iOS 26, where Liquid Glass and the scroll edge effect stand in for the
+/// background they give up. Before 26 nothing does: the tab bar's items sat straight on the
+/// posters scrolling under them, and lists ran under their titles with no blur.
+///
+/// So before 26 the tab bar keeps the system blur all the time. SwiftUI's tab content often
+/// isn't the scroll view UIKit watches, and a bar left to switch at the scroll edge stays clear.
+/// Navigation bars stay clear at the top and blur once content scrolls under them. Screens
+/// built to sit under a clear bar (Home's hero, the detail banners) still opt out with
+/// `toolbarBackgroundHidden`. That needs iOS 16, so iOS 15 keeps the clear navigation bar
+/// those screens expect.
 func configureGlobalBarAppearances() {
-    let navAppearance = UINavigationBarAppearance()
-    navAppearance.configureWithTransparentBackground()
-    navAppearance.shadowColor = .clear
-    navAppearance.shadowImage = UIImage()
-    UINavigationBar.appearance().standardAppearance = navAppearance
-    UINavigationBar.appearance().scrollEdgeAppearance = navAppearance
-    UINavigationBar.appearance().compactAppearance = navAppearance
+    let clearNav = UINavigationBarAppearance()
+    clearNav.configureWithTransparentBackground()
+    clearNav.shadowColor = .clear
+    clearNav.shadowImage = UIImage()
 
-    let tabAppearance = UITabBarAppearance()
-    tabAppearance.configureWithTransparentBackground()
-    tabAppearance.shadowColor = .clear
-    tabAppearance.shadowImage = UIImage()
-    UITabBar.appearance().standardAppearance = tabAppearance
-    UITabBar.appearance().scrollEdgeAppearance = tabAppearance
+    let clearTab = UITabBarAppearance()
+    clearTab.configureWithTransparentBackground()
+    clearTab.shadowColor = .clear
+    clearTab.shadowImage = UIImage()
+
+    if #available(iOS 26, *) {
+        UINavigationBar.appearance().standardAppearance = clearNav
+        UINavigationBar.appearance().scrollEdgeAppearance = clearNav
+        UINavigationBar.appearance().compactAppearance = clearNav
+        UITabBar.appearance().standardAppearance = clearTab
+        UITabBar.appearance().scrollEdgeAppearance = clearTab
+        return
+    }
+
+    let blurredTab = UITabBarAppearance()
+    blurredTab.configureWithDefaultBackground()
+    UITabBar.appearance().standardAppearance = blurredTab
+    UITabBar.appearance().scrollEdgeAppearance = blurredTab
+
+    if #available(iOS 16, *) {
+        let blurredNav = UINavigationBarAppearance()
+        blurredNav.configureWithDefaultBackground()
+        UINavigationBar.appearance().standardAppearance = blurredNav
+        UINavigationBar.appearance().compactAppearance = blurredNav
+        UINavigationBar.appearance().scrollEdgeAppearance = clearNav
+        UINavigationBar.appearance().compactScrollEdgeAppearance = clearNav
+    } else {
+        UINavigationBar.appearance().standardAppearance = clearNav
+        UINavigationBar.appearance().scrollEdgeAppearance = clearNav
+        UINavigationBar.appearance().compactAppearance = clearNav
+    }
 }
 #endif

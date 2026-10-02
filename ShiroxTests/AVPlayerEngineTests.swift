@@ -75,6 +75,41 @@ final class AVPlayerEngineTests: XCTestCase {
         XCTAssertEqual(engine.rate, 0)
     }
 
+    /// A downloaded HLS episode, served over the loopback proxy as the player gets one, with
+    /// stall-minimisation off as the player sets it for downloads. AVPlayer told to play before
+    /// anything has arrived gives up — rate 0 while still reporting `.playing` — and never
+    /// started on its own, so every downloaded HLS episode opened from the start sat on its
+    /// first frame.
+    func testADownloadedHLSEpisodeStartsWithStallWaitingOff() async throws {
+        let folder = try await TestVideo.makeHLS(seconds: 6, segmentSeconds: 2)
+        files.append(folder)
+        let proxy = HLSProxyServer.shared
+        let savedPort = proxy.port
+        proxy.stop()
+        proxy.port = 18765
+        await proxy.startAndWait(headers: [:])
+        defer {
+            proxy.stop()
+            proxy.port = savedPort
+        }
+        let url = try XCTUnwrap(proxy.proxyURL(for: folder.appendingPathComponent("playlist.m3u8")))
+
+        // In the order `PlayerView.setupPlayer()` starts a downloaded episode.
+        engine.load(PlaybackSource(url: url))
+        // Somewhere to draw, as the player's layer is: AVPlayer doesn't start a picture-only
+        // item with nowhere to show it.
+        engine.player.currentItem?.add(AVPlayerItemVideoOutput(pixelBufferAttributes: nil))
+        engine.waitsToMinimizeStalling = false
+        engine.rate = 1
+        engine.play()
+
+        let deadline = Date().addingTimeInterval(8)
+        while engine.currentTime < 1, Date() < deadline {
+            try await Task.sleep(nanoseconds: 100_000_000)
+        }
+        XCTAssertGreaterThan(engine.currentTime, 1, "playback never left the first frame")
+    }
+
     func testAnExactSeekLandsOnItsTime() async throws {
         try await loadReady(seconds: 2)
         await engine.seek(to: 1.25, precision: .exact)

@@ -64,7 +64,9 @@ extension View {
             #if os(macOS)
                 self.toolbarBackground(.hidden, for: .windowToolbar)
             #elseif os(iOS)
-                if UIDevice.current.userInterfaceIdiom == .pad {
+                // From iPadOS 18 the tab bar floats at the top. Before that it runs along the
+                // bottom, where a hidden background left its items over the content.
+                if UIDevice.current.userInterfaceIdiom == .pad, #available(iOS 18, *) {
                     self
                         .toolbarBackground(.hidden, for: .navigationBar)
                         .toolbarBackground(.hidden, for: .tabBar)
@@ -157,46 +159,104 @@ extension View {
 extension View {
     /// Drop-in for the `.background(NavigationLink(isActive:) { EmptyView() })` hack.
     /// Drives push navigation from an optional: set the item to push, clear it to pop.
-    @ViewBuilder
     func navigationDestinationCompat<V, D: View>(
         item: Binding<V?>,
         @ViewBuilder destination: @escaping (V) -> D
     ) -> some View {
-        #if os(iOS)
-        // IMPORTANT: on iOS the app shims `NavigationStack` over `NavigationView`
-        // (see Shared/NavigationStack.swift), and `NavigationView` silently ignores
-        // `navigationDestination(...)` — the destination builds but never pushes. Drive
-        // the push with a hidden `NavigationLink(isActive:)`, which `NavigationView` honors.
-        self.background(
-            NavigationLink(
-                destination: Group { if let v = item.wrappedValue { destination(v) } },
-                isActive: Binding(
-                    get: { item.wrappedValue != nil },
-                    set: { if !$0 { item.wrappedValue = nil } }
-                )
-            ) { EmptyView() }
-        )
-        #else
-        // macOS/tvOS use the real SwiftUI.NavigationStack via the shim.
-        if #available(macOS 13, tvOS 16, *) {
-            let isPresented = Binding<Bool>(
-                get: { item.wrappedValue != nil },
-                set: { if !$0 { item.wrappedValue = nil } }
-            )
-            self.navigationDestination(isPresented: isPresented) {
-                if let v = item.wrappedValue { destination(v) }
-            }
+        navigationDestinationCompat(isPresented: Binding<Bool>(
+            get: { item.wrappedValue != nil },
+            set: { if !$0 { item.wrappedValue = nil } }
+        )) {
+            if let v = item.wrappedValue { destination(v) }
+        }
+    }
+
+    /// Pushes `destination` while `isPresented` is true. From iOS 16 / macOS 13 / tvOS 16 the
+    /// app's `NavigationStack` is the real one, which honours `navigationDestination`; before,
+    /// it's a `NavigationView`, which ignores that, so a hidden `NavigationLink` pushes instead.
+    /// Attach it outside lazy containers (List, LazyVStack): a destination inside one is ignored.
+    @ViewBuilder
+    func navigationDestinationCompat<D: View>(
+        isPresented: Binding<Bool>,
+        @ViewBuilder destination: @escaping () -> D
+    ) -> some View {
+        if #available(iOS 16, macOS 13, tvOS 16, *) {
+            self.navigationDestination(isPresented: isPresented, destination: destination)
         } else {
             self.background(
-                NavigationLink(
-                    destination: Group { if let v = item.wrappedValue { destination(v) } },
-                    isActive: Binding(
-                        get: { item.wrappedValue != nil },
-                        set: { if !$0 { item.wrappedValue = nil } }
-                    )
-                ) { EmptyView() }
+                NavigationLink(destination: destination(), isActive: isPresented) { EmptyView() }
             )
         }
+    }
+}
+
+// MARK: - Sheets that grow out of their button
+
+extension View {
+    /// Marks the button a sheet grows out of, from iOS 18 — pair it with `zoomingOut(of:in:)` on
+    /// the sheet's content, under the same id. Before 18, and off iOS, the sheet slides up as usual.
+    ///
+    /// `cornerRadius` rounds the shape the sheet starts from; the default is the button's own
+    /// rectangle.
+    @ViewBuilder
+    func zoomSource(_ id: some Hashable, in namespace: Namespace.ID, cornerRadius: CGFloat? = nil) -> some View {
+        #if os(iOS)
+        if #available(iOS 18, *) {
+            if let cornerRadius {
+                matchedTransitionSource(id: id, in: namespace) {
+                    $0.clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+                }
+            } else {
+                matchedTransitionSource(id: id, in: namespace)
+            }
+        } else {
+            self
+        }
+        #else
+        self
+        #endif
+    }
+
+    /// A sheet's content, growing out of the view marked with `zoomSource` under `id` — or, with
+    /// `fromToolbar`, out of the button added by `toolbarZoomSource`. That one is a source only from
+    /// iOS 26; before, a zoom with nothing to start from would grow from the middle of the screen,
+    /// so the sheet slides up as usual instead.
+    @ViewBuilder
+    func zoomingOut(of id: some Hashable, in namespace: Namespace.ID, fromToolbar: Bool = false) -> some View {
+        #if os(iOS)
+        if #available(iOS 26, *) {
+            navigationTransition(.zoom(sourceID: id, in: namespace))
+        } else if #available(iOS 18, *), !fromToolbar {
+            navigationTransition(.zoom(sourceID: id, in: namespace))
+        } else {
+            self
+        }
+        #else
+        self
+        #endif
+    }
+
+    /// A toolbar button a sheet grows out of — pair it with `zoomingOut(of:in:fromToolbar:)`.
+    ///
+    /// A toolbar item can be a zoom source only from iOS 26, and its own builder can't hold that
+    /// condition before iOS 16 (this ships to 15), so the button comes in a toolbar of its own.
+    /// A plain `zoomSource` on a view inside a toolbar item isn't found: the sheet grows from the
+    /// middle of the screen.
+    @ViewBuilder
+    func toolbarZoomSource<Item: View>(_ id: some Hashable, in namespace: Namespace.ID,
+                                       placement: ToolbarItemPlacement = .primaryAction,
+                                       @ViewBuilder item: @escaping () -> Item) -> some View {
+        #if os(iOS)
+        if #available(iOS 26, *) {
+            toolbar {
+                ToolbarItem(placement: placement, content: item)
+                    .matchedTransitionSource(id: id, in: namespace)
+            }
+        } else {
+            toolbar { ToolbarItem(placement: placement, content: item) }
+        }
+        #else
+        toolbar { ToolbarItem(placement: placement, content: item) }
         #endif
     }
 }

@@ -957,6 +957,7 @@ enum BrowseCategory: String, CaseIterable, Hashable {
     private var malMappingIndex: [Int: BulkMapping] = [:]
     private var bulkLoaded = false
     private var bulkLoadTask: Task<Void, Never>?
+    private var bulkFailedAt: Date?
 
     /// Subset of an anira /mappings/all entry we actually consume for TVDB resolution.
     struct BulkMapping: Codable, Sendable {
@@ -1137,6 +1138,9 @@ enum BrowseCategory: String, CaseIterable, Hashable {
     /// Ensures the bulk mapping snapshot is loaded (deduping concurrent callers).
     private func loadAllMappings() async {
         if bulkLoaded { return }
+        // A cold start that just failed waits a minute: a batch of lookups would otherwise
+        // download the whole table again for every id in it.
+        if let failed = bulkFailedAt, Date().timeIntervalSince(failed) < 60 { return }
         if let task = bulkLoadTask { await task.value; return }
         let task = Task { await performLoadAllMappings() }
         bulkLoadTask = task
@@ -1149,18 +1153,26 @@ enum BrowseCategory: String, CaseIterable, Hashable {
         if anilistMappingIndex.isEmpty, let disk = await loadBulkFromDisk() {
             buildMappingIndices(from: disk)
         }
-        // 2. Refresh from the network when we have nothing yet or the snapshot is stale.
+        // 2. Refresh from the network when we have nothing yet or the snapshot is stale — waiting
+        // for it only when there's nothing else to answer with. A day-old snapshot answers nearly
+        // every lookup, and waiting on the ~7MB download held Simkl's anime Home empty meanwhile.
         let fetchedAt = UserDefaults.standard.double(forKey: bulkFetchedAtKey)
         let isStale = Date().timeIntervalSince1970 - fetchedAt > bulkTTL
-        if anilistMappingIndex.isEmpty || isStale {
-            if let entries = await fetchAllMappings(), !entries.isEmpty {
-                buildMappingIndices(from: entries)
-                saveBulkToDisk(entries)
-                UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: bulkFetchedAtKey)
-            }
+        if anilistMappingIndex.isEmpty {
+            await refreshAllMappings()
+        } else if isStale {
+            Task { await refreshAllMappings() }
         }
         // Only latch as "loaded" once we actually have data, so a failed cold start retries later.
         bulkLoaded = !anilistMappingIndex.isEmpty
+        bulkFailedAt = bulkLoaded ? nil : Date()
+    }
+
+    private func refreshAllMappings() async {
+        guard let entries = await fetchAllMappings(), !entries.isEmpty else { return }
+        buildMappingIndices(from: entries)
+        saveBulkToDisk(entries)
+        UserDefaults.standard.set(Date().timeIntervalSince1970, forKey: bulkFetchedAtKey)
     }
 
     private func fetchAllMappings() async -> [BulkMapping]? {

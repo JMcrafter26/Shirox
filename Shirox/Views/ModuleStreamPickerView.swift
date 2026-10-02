@@ -424,6 +424,8 @@ private struct ModuleStreamRow: View {
 
     @ObservedObject var rowVm: ModuleStreamRowViewModel
     @State private var showAllResults = false
+    /// The "Show All" button the results sheet grows out of.
+    @Namespace private var resultsZoom
     @State private var showStreamPicker = false
     @AppStorage("autoPickLastStream") private var autoPickLastStream = false
 
@@ -502,6 +504,7 @@ private struct ModuleStreamRow: View {
                     showAllResults = false
                     rowVm.startSelectResult(item, targetEpisodeNumber: episodeNumber)
                 }
+                .zoomingOut(of: "allResults", in: resultsZoom)
             }
         }
     }
@@ -595,6 +598,7 @@ private struct ModuleStreamRow: View {
                     Button("Show All") { showAllResults = true }
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.primary)
+                        .zoomSource("allResults", in: resultsZoom, cornerRadius: 8)
                 }
                 verifyBanner
                 ScrollView(.horizontal, showsIndicators: false) {

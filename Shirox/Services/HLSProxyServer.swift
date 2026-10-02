@@ -6,7 +6,9 @@ final class HLSProxyServer: @unchecked Sendable {
     static let shared = HLSProxyServer()
 
     private var listener: NWListener?
-    private let port: NWEndpoint.Port = 8765
+    // Changes only while the proxy is down — tests move it, clear of a copy of the app running
+    // in a simulator on the same Mac, which shares its ports.
+    var port: NWEndpoint.Port = 8765
     private var proxyHeaders: [String: String] = [:]
     private(set) var isRunning = false
     private let listenerQueue = DispatchQueue(label: "com.shirox.hlsproxy", qos: .userInitiated)

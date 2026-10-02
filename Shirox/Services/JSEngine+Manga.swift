@@ -33,6 +33,7 @@ extension JSEngine {
             throw JSEngineError.parseError("Could not parse manga search results")
         }
         for (image, headers) in Self.mangaImageHeaders(array) { MangaPageHeaders.shared.record(headers, for: image) }
+        ModuleWebLinks.shared.record(array, hrefKey: "id", moduleId: ModuleManager.shared.activeModule?.id)
         return Self.parseMangaSearchItems(array)
     }
 

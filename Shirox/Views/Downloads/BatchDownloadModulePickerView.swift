@@ -227,6 +227,8 @@ private struct BatchDownloadModuleRow: View {
 
     @StateObject private var rowVm: BatchDownloadModuleRowViewModel
     @State private var showAllResults = false
+    /// The "Show All" button the results sheet grows out of.
+    @Namespace private var resultsZoom
 
     init(module: ModuleDefinition, mediaId: Int?, animeTitle: String, episodeNumbers: [Int], imageUrl: String,
          onStreamsForPicker: @escaping ([StreamResult], SearchItem) -> Void) {
@@ -261,6 +263,7 @@ private struct BatchDownloadModuleRow: View {
                     showAllResults = false
                     rowVm.startFetchStreamsForPicker(from: item)
                 }
+                .zoomingOut(of: "allResults", in: resultsZoom)
             }
         }
     }
@@ -324,6 +327,7 @@ private struct BatchDownloadModuleRow: View {
                     titleField
                     Button("Show All") { showAllResults = true }
                         .font(.caption.weight(.semibold)).foregroundStyle(Color.accentColor)
+                        .zoomSource("allResults", in: resultsZoom, cornerRadius: 8)
                 }
                 verifyBanner
                 ScrollView(.horizontal, showsIndicators: false) {

@@ -18,6 +18,8 @@ struct SimklTitlePage: View {
     @State private var season: Int?
     @State private var showsSpecials = false
     @State private var editing: LibraryEntry?
+    /// The edit button its sheet grows out of.
+    @Namespace private var editZoom
     @State private var busy = false
     @State private var message: String?
     @State private var leadingInset: CGFloat = 0
@@ -94,6 +96,7 @@ struct SimklTitlePage: View {
         .task { await load() }
         .adaptiveSheet(item: $editing) { entry in
             SimklTitleEditSheet(entry: entry, kind: kind) { reloadEntry() }
+                .zoomingOut(of: "edit", in: editZoom)
         }
         .adaptiveSheet(item: $picker, onDismiss: presentAfterPicker) { request in
             ModuleStreamPickerView(
@@ -224,6 +227,7 @@ struct SimklTitlePage: View {
             watchButton
             if let entry {
                 circleButton(systemImage: "square.and.pencil") { editing = entry }
+                    .zoomSource("edit", in: editZoom, cornerRadius: 23)
             } else {
                 Menu {
                     ForEach(LibrarySource.simkl.statuses(in: MediaListStatus.allCases, for: kind)) { status in

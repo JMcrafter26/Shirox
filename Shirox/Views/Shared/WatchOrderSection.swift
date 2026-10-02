@@ -53,6 +53,7 @@ private struct WatchOrderCard: View {
                     .aspectRatio(2/3, contentMode: .fill)
                     .frame(width: 110, height: 165)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .contentShape(RoundedRectangle(cornerRadius: 12))
                     .overlay(RoundedRectangle(cornerRadius: 12)
                         .strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5))
 

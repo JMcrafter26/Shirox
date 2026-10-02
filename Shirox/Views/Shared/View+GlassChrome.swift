@@ -105,6 +105,26 @@ extension View {
         }
     }
 
+    /// The capsule iOS 26 puts behind a toolbar item by itself, drawn by hand below 26.
+    ///
+    /// For screens that hide their navigation bar's background, like Home over its hero:
+    /// with no glass behind them, their items sat straight on the artwork and the rows
+    /// scrolling under them.
+    @ViewBuilder
+    func toolbarItemBackdrop() -> some View {
+        #if os(iOS)
+        if #available(iOS 26, *) {
+            self
+        } else {
+            padding(.horizontal, 12)
+                .padding(.vertical, 7)
+                .background(.ultraThinMaterial, in: Capsule())
+        }
+        #else
+        self
+        #endif
+    }
+
     /// Explicitly hides the scroll-edge effect on iOS/macOS/tvOS 26+; a no-op on older systems.
     @ViewBuilder
     func hideScrollEdgeEffect(_ edges: Edge.Set = .all) -> some View {
@@ -224,7 +244,7 @@ private struct ScrollAwareNavTitle: ViewModifier {
             .font(.headline)
             .lineLimit(1)
             .truncationMode(.tail)
-            // The bar carries no background of its own. These screens set
+            // From iOS 26 the bar carries no background of its own. These screens set
             // `softScrollEdges`, which already fades the artwork out under the toolbar;
             // a material slab and a hairline would paint the crisp `.hard` edge back on
             // top of it the moment the title appeared. A halo in the window background
@@ -236,9 +256,23 @@ private struct ScrollAwareNavTitle: ViewModifier {
             .padding(.horizontal, 72)
             .frame(maxWidth: .infinity, minHeight: Self.barHeight)
             .padding(.top, topInset)
+            .background(fallbackBackdrop)
             // Driven straight off scroll position, so it needs no animation of its own:
             // the fade already tracks the finger.
             .opacity(progress)
+    }
+
+    /// Before iOS 26 there is no soft edge to fade the content out, so the title would sit
+    /// on whatever scrolled under it. There it gets the system bar's blur and hairline.
+    @ViewBuilder
+    private var fallbackBackdrop: some View {
+        if #available(iOS 26, *) {
+            EmptyView()
+        } else {
+            Rectangle()
+                .fill(.bar)
+                .overlay(alignment: .bottom) { Divider() }
+        }
     }
     #else
     func body(content: Content) -> some View {

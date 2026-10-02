@@ -52,6 +52,7 @@ struct ReaderPageView: View {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFit()
+                    .contextMenu { pageMenu(image) }
             } else if failed {
                 VStack(spacing: 8) {
                     Image(systemName: "exclamationmark.triangle")
@@ -81,6 +82,51 @@ struct ReaderPageView: View {
             }
         }
         .task(id: "\(urlString)#\(attempt)") { await load() }
+    }
+
+    @ViewBuilder
+    private func pageMenu(_ shown: UIImage) -> some View {
+        Button {
+            Task { await saveToPhotos(fallback: shown) }
+        } label: {
+            Label("Save to Photos", systemImage: "photo.on.rectangle")
+        }
+        if #available(iOS 16.0, *) {
+            let image = Image(uiImage: shown)
+            ShareLink(item: image, preview: SharePreview("Page \(pageNumber)", image: image)) {
+                Label("Share", systemImage: "square.and.arrow.up")
+            }
+        }
+    }
+
+    /// Saves the page at full resolution — the original Kingfisher kept on disk
+    /// (`.cacheOriginalImage`), or the file itself for downloaded chapters — rather than
+    /// the screen-width copy on display.
+    @MainActor
+    private func saveToPhotos(fallback: UIImage) async {
+        let full = await originalImage() ?? fallback
+        PhotoLibrarySaver.save(full) { outcome in
+            switch outcome {
+            case .savedToAlbum:
+                ToastManager.shared.show(message: "Page saved to the Shirox album", type: .success)
+            case .savedToLibrary:
+                ToastManager.shared.show(message: "Page saved to Photos", type: .success)
+            case .denied:
+                ToastManager.shared.show(message: "Allow Photos access in Settings to save pages", type: .warning)
+            case .failed(let error):
+                ToastManager.shared.show(message: "Couldn't save page: \(error.localizedDescription)", type: .error)
+            }
+        }
+    }
+
+    private func originalImage() async -> UIImage? {
+        guard let url = URL(string: urlString) else { return nil }
+        if url.isFileURL { return UIImage(contentsOfFile: url.path) }
+        return await withCheckedContinuation { (cont: CheckedContinuation<UIImage?, Never>) in
+            ImageCache.default.retrieveImage(forKey: urlString) { result in
+                cont.resume(returning: try? result.get().image)
+            }
+        }
     }
 
     @MainActor

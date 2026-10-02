@@ -145,7 +145,7 @@ struct SettingsBackupSection: BackupSection {
         "backgroundDownloadsEnabled", "defaultReverseSort", "forceLandscape",
         "autoRotateForcedLandscape",
         "librarySortAscending", "playerLiquidGlass", "rateOnFinish",
-        "readerLiquidGlass", "readerPageCurl", "skipReWatchTracking", "useDefaultExtension",
+        "readerLiquidGlass", "readerPageCurl", "readerPortraitOnly", "skipReWatchTracking", "useDefaultExtension",
         "dataSaverEnabled", "gooeyRefresh"
     ]
 

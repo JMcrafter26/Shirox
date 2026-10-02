@@ -98,6 +98,8 @@ private struct DownloadModuleRow: View {
 
     @ObservedObject var rowVm: DownloadModuleRowViewModel
     @State private var showAllResults = false
+    /// The "Show All" button the results sheet grows out of.
+    @Namespace private var resultsZoom
 
     init(module: ModuleDefinition, mediaId: Int?, animeTitle: String, episodeNumber: Int,
          rowVm: DownloadModuleRowViewModel,
@@ -132,6 +134,7 @@ private struct DownloadModuleRow: View {
                     showAllResults = false
                     rowVm.startSelectResult(item, targetEpisodeNumber: episodeNumber)
                 }
+                .zoomingOut(of: "allResults", in: resultsZoom)
             }
         }
     }
@@ -203,6 +206,7 @@ private struct DownloadModuleRow: View {
                     titleField
                     Button("Show All") { showAllResults = true }
                         .font(.caption.weight(.semibold)).foregroundStyle(Color.accentColor)
+                        .zoomSource("allResults", in: resultsZoom, cornerRadius: 8)
                 }
                 verifyBanner
                 ScrollView(.horizontal, showsIndicators: false) {

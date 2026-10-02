@@ -27,6 +27,35 @@ struct ModuleDefinition: Codable, Identifiable, Equatable {
     var isJellyfin: Bool { supportsJellyfin == true }
     var isManga: Bool { type == "mangas" || type == "manga" }
 
+    /// The source site's page for a title, from the `href` this module gave it — for opening in a
+    /// browser. Relative paths (`/anime/1`, `anime/1`) resolve against `baseUrl`; bare ids
+    /// (Seanime providers, some modules) aren't web pages and give nil, as do local-file and
+    /// Jellyfin modules.
+    func webURL(forHref href: String) -> URL? {
+        guard !isLocalPlayback, !isJellyfin else { return nil }
+        return Self.webURL(forHref: href, baseUrl: baseUrl)
+    }
+
+    /// `webURL(forHref:)` without a module record — e.g. one since removed. Only absolute
+    /// hrefs resolve when `baseUrl` is nil.
+    static func webURL(forHref href: String, baseUrl: String?) -> URL? {
+        let href = href.trimmingCharacters(in: .whitespacesAndNewlines)
+        let url: URL?
+        if href.hasPrefix("//") {
+            url = URL(string: "https:" + href)
+        } else if let absolute = URL(string: href), absolute.scheme != nil {
+            url = absolute
+        } else if href.contains("/") {
+            let path = href.hasPrefix("/") ? href : "/" + href
+            url = baseUrl.flatMap { URL(string: $0) }.flatMap { URL(string: path, relativeTo: $0)?.absoluteURL }
+        } else {
+            url = nil
+        }
+        guard let url, let scheme = url.scheme?.lowercased(), scheme == "http" || scheme == "https",
+              url.host?.isEmpty == false else { return nil }
+        return url
+    }
+
     private enum CodingKeys: String, CodingKey {
         case sourceName, iconUrl, author, version, baseUrl, searchBaseUrl,
              scriptUrl, type, asyncJS, streamType, quality, language, softsub,

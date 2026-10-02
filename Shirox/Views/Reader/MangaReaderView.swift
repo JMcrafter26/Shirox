@@ -136,6 +136,8 @@ struct MangaReaderView: View {
     @State private var panStart: CGFloat = 0
     @State private var isPanning = false
     private static let maxZoom: CGFloat = 3
+    /// What a double-tap zooms to, the same as the paged modes.
+    private static let doubleTapZoom: CGFloat = 2.5
 
     // Debounced progress saving (a synchronous save on every page crossing
     // caused visible hitches while scrolling)
@@ -205,6 +207,11 @@ struct MangaReaderView: View {
 
             chrome
         }
+        // The reader is a full-screen cover, above the app's own toast overlay.
+        .overlay(alignment: .bottom) {
+            ToastView()
+                .allowsHitTesting(false)
+        }
         .statusBar(hidden: !chromeVisible)
         .task { await loadChapter(displayedChapterIndex) }
         .onChangeOf(currentPage) { page in
@@ -237,9 +244,15 @@ struct MangaReaderView: View {
         .onAppear {
             // Reading session: keep the screen awake until the reader closes.
             UIApplication.shared.isIdleTimerDisabled = true
+            // The reader turns with the phone, as the player does, unless Settings → Reader →
+            // Portrait Only says not to; the rest of the iPhone app stays portrait.
+            if !UserDefaults.standard.bool(forKey: "readerPortraitOnly") {
+                PlayerPresenter.shared.updateOrientationLock(.allButUpsideDown)
+            }
         }
         .onDisappear {
             UIApplication.shared.isIdleTimerDisabled = false
+            PlayerPresenter.shared.resetToAppOrientation(shouldRotate: true)
             saveTask?.cancel()
             performSave()
             verticalResumeTarget = nil   // stop a pending settle loop
@@ -323,16 +336,15 @@ struct MangaReaderView: View {
                     currentPage = page   // onChangeOf(currentPage) does the rest
                 }
             }
-            .onTapGesture {
+            .modifier(DoubleTapToZoom(onDoubleTap: toggleDoubleTapZoom(at:)) {
                 withAnimation(.easeInOut(duration: 0.2)) { chromeVisible.toggle() }
-            }
+            })
             .onAppear {
                 verticalProxy = proxy
                 if let target = verticalResumeTarget {
                     performVerticalResume(proxy, target: target, attempt: 0)
                 }
             }
-            .ignoresSafeArea()
             // Pure visual magnification anchored at the pinch point — the scroll
             // position is never touched, so pinching zooms in place and never
             // scrolls. Overflow past the screen edges is clipped by the window.
@@ -349,6 +361,11 @@ struct MangaReaderView: View {
                     horizontalPan = scale <= 1 ? 0 : clampedPan(horizontalPan, at: scale)
                 }
             }
+            // Last, so the magnification measures its anchor against the full-screen frame
+            // that the pinch and the double-tap report their points in. With the scale outside
+            // it, the anchor was taken against the safe-area frame instead, and a zoom landed
+            // above the spot you touched.
+            .ignoresSafeArea()
         }
     }
 
@@ -432,6 +449,8 @@ struct MangaReaderView: View {
             Button {
                 saveTask?.cancel()
                 performSave()
+                // Upright before leaving, so the screen underneath never shows sideways.
+                PlayerPresenter.shared.resetToAppOrientation(shouldRotate: true)
                 dismiss()
             } label: {
                 Image(systemName: "xmark")
@@ -831,6 +850,24 @@ struct MangaReaderView: View {
         return min(max(value, -limit), limit)
     }
 
+    /// Double-tap zooms in on the spot tapped and stays there while you scroll, until another
+    /// double-tap brings it back to fit, from a pinched zoom too. No location (iOS 15) zooms
+    /// on the centre.
+    private func toggleDoubleTapZoom(at location: CGPoint?) {
+        guard zoomScale <= 1 else {
+            withAnimation(.easeInOut(duration: 0.25)) { zoomScale = 1 }
+            return
+        }
+        // Moved at fit, where it changes nothing on screen, so the zoom grows out of the
+        // tapped spot instead of sliding over to it.
+        if let location, let size = verticalScrollView?.bounds.size, size.width > 0, size.height > 0 {
+            pinchAnchor = UnitPoint(x: location.x / size.width, y: location.y / size.height)
+        } else {
+            pinchAnchor = .center
+        }
+        withAnimation(.easeInOut(duration: 0.25)) { zoomScale = Self.doubleTapZoom }
+    }
+
     /// Horizontal drag, live only while zoomed so an ordinary read is untouched.
     private var horizontalPanGesture: some Gesture {
         DragGesture(minimumDistance: 12)
@@ -1144,6 +1181,30 @@ private struct PinchToZoom: ViewModifier {
                         zoomScale = min(max(startScale * value, 1), maxZoom)
                     }
                     .onEnded { _ in pinching = false }
+            )
+        }
+    }
+}
+
+/// A double-tap, and the single tap that shows and hides the chrome, which now waits until a
+/// second tap can't come. iOS 16+'s `SpatialTapGesture` says where the double-tap landed;
+/// iOS 15's `TapGesture` doesn't, so it reports nil.
+private struct DoubleTapToZoom: ViewModifier {
+    let onDoubleTap: (CGPoint?) -> Void
+    let onSingleTap: () -> Void
+
+    func body(content: Content) -> some View {
+        if #available(iOS 16.0, *) {
+            content.gesture(
+                SpatialTapGesture(count: 2)
+                    .onEnded { onDoubleTap($0.location) }
+                    .exclusively(before: TapGesture().onEnded { onSingleTap() })
+            )
+        } else {
+            content.gesture(
+                TapGesture(count: 2)
+                    .onEnded { onDoubleTap(nil) }
+                    .exclusively(before: TapGesture().onEnded { onSingleTap() })
             )
         }
     }

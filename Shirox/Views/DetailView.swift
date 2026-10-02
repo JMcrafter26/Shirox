@@ -39,10 +39,13 @@ struct DetailView: View {
     @StateObject private var vm = DetailViewModel()
     @ObservedObject private var continueWatching = ContinueWatchingManager.shared
     @ObservedObject private var malAuth = MALAuthManager.shared
+    @ObservedObject private var simklAuth = SimklAuthManager.shared
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @State private var malID: Int? = nil
     /// This page's linked Simkl id, if the user set one in Tracking Links.
     @State private var simklID: Int? = nil
+    /// The title's Simkl id from Simkl's id search, when no link or library entry gave one.
+    @State private var lookedUpSimklID: Int?
     @State private var existingMALEntry: LibraryEntry? = nil
     @State private var isSynopsisExpanded = false
     @State private var selectedSeason = 0
@@ -57,6 +60,8 @@ struct DetailView: View {
     @State private var showAniListEdit = false
     @State private var showMALEdit = false
     #if os(iOS)
+    /// The title being edited on Simkl.
+    @State private var simklEdit: SimklEditTarget?
     @State private var isSelectionMode = false
     @State private var selectedEpisodeNumbers: Set<Int> = []
     @State private var showBatchDownloadPicker = false
@@ -70,6 +75,10 @@ struct DetailView: View {
     @State private var isReversed = false
     @State private var selectedTab = 0
     @State private var showMatchingSearch = false
+    /// The buttons the edit, tracking-links and download sheets grow out of; tracking links come
+    /// from the toolbar's menu or the "Link with AniList" button, whichever opened them.
+    @Namespace private var sheetZoom
+    @State private var linksZoomID = "edit"
     @State private var sequelSearchItem: SearchItem? = nil
     @State private var watchOrder: [TVDBMappingService.AniraMediaEntry] = []
     @State private var leadingInset: CGFloat = 0
@@ -164,7 +173,17 @@ struct DetailView: View {
         .toolbarBackgroundHidden()
         .scrollAwareNavTitle(item.title)
         .tint(.primary)
-        .toolbar { detailToolbar }
+        .toolbarZoomSource("edit", in: sheetZoom, placement: .topBarTrailing) { detailToolbarButton }
+        .adaptiveSheet(item: $simklEdit) { target in
+            SimklAnimeEditSheet(target: target)
+                .zoomingOut(of: "edit", in: sheetZoom)
+        }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                ModuleWebsiteButton(href: vm.detailHref ?? item.href, moduleId: effectiveModuleId,
+                                    trackers: TrackerWebLinks.links(anilist: vm.aniListID, mal: malID, simkl: pageSimklID))
+            }
+        }
         #endif
         .navigationDestinationCompat(item: $sequelSearchItem) { item in
             DetailView(item: item)
@@ -270,6 +289,7 @@ struct DetailView: View {
         #endif
         .adaptiveSheet(isPresented: $showLibraryEdit) {
             libraryEditSheet
+                .zoomingOut(of: "edit", in: sheetZoom, fromToolbar: true)
         }
         .adaptiveSheet(isPresented: $showAniListEdit) {
             if let aid = vm.aniListID, let detail = vm.detail {
@@ -318,6 +338,7 @@ struct DetailView: View {
                 #else
                 .frame(minWidth: 480, minHeight: 360)
                 #endif
+                .zoomingOut(of: "edit", in: sheetZoom, fromToolbar: true)
             }
         }
         .adaptiveSheet(isPresented: $showMALEdit) {
@@ -351,6 +372,7 @@ struct DetailView: View {
                 #else
                 .frame(minWidth: 480, minHeight: 360)
                 #endif
+                .zoomingOut(of: "edit", in: sheetZoom, fromToolbar: true)
             }
         }
         #if os(iOS)
@@ -369,6 +391,7 @@ struct DetailView: View {
                         selectedEpisodeNumbers.removeAll()
                     }
                 )
+                .zoomingOut(of: "batchDownload", in: sheetZoom)
             }
         }
         #endif
@@ -390,6 +413,7 @@ struct DetailView: View {
                     Task { await reloadLinkedIDs() }
                     rememberEpisodesIfLinked()
                 })
+            .zoomingOut(of: linksZoomID, in: sheetZoom, fromToolbar: linksZoomID == "edit")
         }
     }
 
@@ -431,11 +455,23 @@ struct DetailView: View {
     }
 
     /// MAL and Simkl for this page, with the user's tracking links applied.
+    /// This page's Simkl id: the user's tracking link, else the Simkl list's copy.
+    private var pageSimklID: Int? {
+        simklID
+            ?? SimklLibraryService.shared.cachedEntry(malId: malID, anilistId: vm.aniListID)
+                .flatMap(SimklLibraryService.simklID(of:))
+            ?? lookedUpSimklID
+            ?? SimklCatalog.cachedAnimeSimklID(mal: malID, anilist: vm.aniListID)
+    }
+
     private func reloadLinkedIDs() async {
         let ids = await TrackingLinkResolver.resolve(
             aniListID: vm.aniListID ?? aniListID, malID: nil, moduleKey: linkModuleKey)
         malID = ids.mal
         simklID = ids.simkl
+        if pageSimklID == nil, ids.anilist ?? ids.mal != nil {
+            lookedUpSimklID = await SimklCatalog.animeSimklID(mal: ids.mal, anilist: ids.anilist)
+        }
         if malAuth.isLoggedIn, let mid = malID {
             existingMALEntry = try? await MALProvider.shared.fetchEntry(mediaId: mid)
         } else {
@@ -757,76 +793,106 @@ struct DetailView: View {
     #endif
 
     #if os(iOS)
-    @ToolbarContentBuilder
-    private var detailToolbar: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            let aniListLoggedIn = AniListAuthManager.shared.isLoggedIn
-            let malLoggedIn = malAuth.isLoggedIn
-            let hasAniListEdit = aniListLoggedIn && vm.aniListID != nil
-            let hasMALEdit = malLoggedIn && malID != nil
-            let hasAnyEdit = hasAniListEdit || hasMALEdit
-            let bothAvail = hasAniListEdit && hasMALEdit
+    /// The title to edit on Simkl, once it's matched to AniList or MyAnimeList.
+    private var simklEditTarget: SimklEditTarget? {
+        guard vm.aniListID != nil || malID != nil else { return nil }
+        let media = vm.aniListMedia ?? Media(
+            id: vm.aniListID ?? malID ?? 0, idMal: malID, provider: .anilist,
+            title: MediaTitle(romaji: vm.detail?.title ?? item.title, english: vm.detail?.title ?? item.title, native: nil),
+            coverImage: MediaCoverImage(large: vm.detail?.image ?? item.image, extraLarge: vm.detail?.image ?? item.image),
+            bannerImage: nil, description: nil, episodes: nil, status: nil, averageScore: nil, genres: nil,
+            season: nil, seasonYear: nil, nextAiringEpisode: nil, relations: nil, type: nil, format: nil)
+        return SimklEditTarget(media: media, mal: malID, anilist: vm.aniListID, simkl: pageSimklID)
+    }
 
-            if hasAnyEdit {
-                Menu {
-                    if bothAvail && dualSync {
+    @ViewBuilder private var simklEditButton: some View {
+        if simklAuth.isLoggedIn, let target = simklEditTarget {
+            Button { simklEdit = target } label: { Label("Edit on Simkl", systemImage: "pencil") }
+        }
+    }
+
+    @ViewBuilder
+    private var detailToolbarButton: some View {
+        let aniListLoggedIn = AniListAuthManager.shared.isLoggedIn
+        let malLoggedIn = malAuth.isLoggedIn
+        let hasAniListEdit = aniListLoggedIn && vm.aniListID != nil
+        let hasMALEdit = malLoggedIn && malID != nil
+        let hasAnyEdit = hasAniListEdit || hasMALEdit
+        let bothAvail = hasAniListEdit && hasMALEdit
+
+        if hasAnyEdit {
+            Menu {
+                if bothAvail && dualSync {
+                    Button {
+                        Task {
+                            isLoadingEntry = true
+                            if let aid = vm.aniListID {
+                                if let raw = try? await AniListLibraryService.shared.fetchEntry(mediaId: aid) {
+                                    existingEntry = AniListProvider.shared.mapEntry(raw)
+                                }
+                            }
+                            if let mid = malID {
+                                existingMALEntry = try? await MALProvider.shared.fetchEntry(mediaId: mid)
+                            }
+                            isLoadingEntry = false
+                            showLibraryEdit = true
+                        }
+                    } label: { Label("Edit on Both Services", systemImage: "pencil") }
+                } else {
+                    if hasAniListEdit {
                         Button {
                             Task {
                                 isLoadingEntry = true
-                                if let aid = vm.aniListID {
-                                    if let raw = try? await AniListLibraryService.shared.fetchEntry(mediaId: aid) {
-                                        existingEntry = AniListProvider.shared.mapEntry(raw)
-                                    }
+                                if let aid = vm.aniListID,
+                                   let raw = try? await AniListLibraryService.shared.fetchEntry(mediaId: aid) {
+                                    existingEntry = AniListProvider.shared.mapEntry(raw)
                                 }
+                                isLoadingEntry = false
+                                showAniListEdit = true
+                            }
+                        } label: { Label("Edit on AniList", systemImage: "pencil") }
+                    }
+                    if hasMALEdit {
+                        Button {
+                            Task {
+                                isLoadingEntry = true
                                 if let mid = malID {
                                     existingMALEntry = try? await MALProvider.shared.fetchEntry(mediaId: mid)
                                 }
                                 isLoadingEntry = false
-                                showLibraryEdit = true
+                                showMALEdit = true
                             }
-                        } label: { Label("Edit on Both Services", systemImage: "pencil") }
-                    } else {
-                        if hasAniListEdit {
-                            Button {
-                                Task {
-                                    isLoadingEntry = true
-                                    if let aid = vm.aniListID,
-                                       let raw = try? await AniListLibraryService.shared.fetchEntry(mediaId: aid) {
-                                        existingEntry = AniListProvider.shared.mapEntry(raw)
-                                    }
-                                    isLoadingEntry = false
-                                    showAniListEdit = true
-                                }
-                            } label: { Label("Edit on AniList", systemImage: "pencil") }
-                        }
-                        if hasMALEdit {
-                            Button {
-                                Task {
-                                    isLoadingEntry = true
-                                    if let mid = malID {
-                                        existingMALEntry = try? await MALProvider.shared.fetchEntry(mediaId: mid)
-                                    }
-                                    isLoadingEntry = false
-                                    showMALEdit = true
-                                }
-                            } label: { Label("Edit on MyAnimeList", systemImage: "pencil") }
-                        }
+                        } label: { Label("Edit on MyAnimeList", systemImage: "pencil") }
                     }
-                    Button { showMatchingSearch = true } label: {
-                        Label("Tracking Links…", systemImage: "link")
-                    }
-                } label: { libraryEditButtonLabel }
-                .disabled(isLoadingEntry)
-            } else {
-                Button { showMatchingSearch = true } label: {
-                    if isLoadingEntry {
-                        ProgressView().scaleEffect(0.8)
-                    } else {
-                        Image(systemName: "link.badge.plus").font(.system(size: 17, weight: .medium))
-                    }
+                }
+                simklEditButton
+                Button { openLinks(from: "edit") } label: {
+                    Label("Tracking Links…", systemImage: "link")
+                }
+            } label: { libraryEditButtonLabel }
+            .disabled(isLoadingEntry)
+        } else if simklAuth.isLoggedIn, simklEditTarget != nil {
+            Menu {
+                simklEditButton
+                Button { openLinks(from: "edit") } label: {
+                    Label("Tracking Links…", systemImage: "link")
+                }
+            } label: { libraryEditButtonLabel }
+        } else {
+            Button { openLinks(from: "edit") } label: {
+                if isLoadingEntry {
+                    ProgressView().scaleEffect(0.8)
+                } else {
+                    Image(systemName: "link.badge.plus").font(.system(size: 17, weight: .medium))
                 }
             }
         }
+    }
+
+    /// Tracking links, growing out of the button that asked for them.
+    private func openLinks(from zoomID: String) {
+        linksZoomID = zoomID
+        showMatchingSearch = true
     }
     #endif
 
@@ -1154,7 +1220,7 @@ struct DetailView: View {
                     }
 
                     Button {
-                        showMatchingSearch = true
+                        openLinks(from: "linkButton")
                     } label: {
                         Text("Link with AniList")
                             .font(.subheadline.weight(.bold))
@@ -1163,6 +1229,7 @@ struct DetailView: View {
                             .background(Color.primary, in: Capsule())
                             .foregroundStyle(platformBackground)
                     }
+                    .zoomSource("linkButton", in: sheetZoom, cornerRadius: 20)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 40)
@@ -1522,6 +1589,7 @@ struct DetailView: View {
                             .tint(.primary)
                             .controlSize(.small)
                             .clipShape(Capsule())
+                            .zoomSource("batchDownload", in: sheetZoom, cornerRadius: 16)
                         }
                     }
                 }

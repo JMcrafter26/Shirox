@@ -95,6 +95,54 @@ final class SimklHomeViewModelTests: XCTestCase {
         XCTAssertEqual(vm.layout?.rows.first?.items.map(\.id), [154587])
     }
 
+    /// Anime wait for their AniList ids before they're shown. Until then Home is loading — a page
+    /// with only Continue Watching on it read as Simkl having nothing.
+    func testASwitchIsLoadingUntilTheNewKindIsReady() async {
+        let gate = Gate()
+        let anime = [entry(10, mal: 64710)]
+        let vm = SimklHomeViewModel(
+            fetch: { list, _ in list.kind == .anime ? anime : [self.entry(1)] },
+            saved: { list in list.kind == .anime ? anime : nil },
+            anilistIDs: { _ in await gate.wait(); return [:] },
+            fillIDs: { $0 },
+            tracker: { .anilist },
+            today: { "2026-09-25" })
+        await vm.load(kind: .tv)
+        XCTAssertNotNil(vm.layout)
+
+        let switching = Task { await vm.load(kind: .anime) }
+        await gate.untilWaiting()
+        XCTAssertNil(vm.layout, "Shows' rows never stand in for Anime's")
+        XCTAssertTrue(vm.isLoading)
+
+        gate.open()
+        await switching.value
+        XCTAssertNotNil(vm.layout)
+        XCTAssertFalse(vm.isLoading)
+    }
+
+    /// A load overtaken by another kind leaves loading to that one, finished or not.
+    func testAnOvertakenLoadLeavesLoadingAlone() async {
+        let gate = Gate()
+        let anime = [entry(10, mal: 64710)]
+        let vm = SimklHomeViewModel(
+            fetch: { list, _ in list.kind == .anime ? anime : [self.entry(1)] },
+            saved: { list in list.kind == .anime ? anime : nil },
+            anilistIDs: { _ in await gate.wait(); return [:] },
+            fillIDs: { $0 },
+            tracker: { .anilist },
+            today: { "2026-09-25" })
+        let overtaken = Task { await vm.load(kind: .anime) }
+        await gate.untilWaiting()
+        await vm.load(kind: .tv)
+        XCTAssertFalse(vm.isLoading)
+
+        gate.open()
+        await overtaken.value
+        XCTAssertFalse(vm.isLoading, "The overtaken anime load mustn't leave Home loading")
+        XCTAssertEqual(vm.layout?.hero.map(\.id), [1])
+    }
+
     func testSwitchingKindDropsTheOldKindsRows() async {
         let vm = model(files: [.trending(.tv, .today): [entry(1)]])
         await vm.load(kind: .tv)
@@ -102,5 +150,28 @@ final class SimklHomeViewModelTests: XCTestCase {
         await vm.load(kind: .movie)
         XCTAssertNil(vm.layout, "Shows' rows never stand in for Movies'")
         XCTAssertNotNil(vm.error)
+    }
+}
+
+/// Holds the AniList id lookup open until the test lets it finish.
+@MainActor
+private final class Gate {
+    private var waiting: [CheckedContinuation<Void, Never>] = []
+    private var isOpen = false
+
+    func wait() async {
+        guard !isOpen else { return }
+        await withCheckedContinuation { waiting.append($0) }
+    }
+
+    /// Returns once a lookup is held here.
+    func untilWaiting() async {
+        while waiting.isEmpty { await Task.yield() }
+    }
+
+    func open() {
+        isOpen = true
+        waiting.forEach { $0.resume() }
+        waiting.removeAll()
     }
 }

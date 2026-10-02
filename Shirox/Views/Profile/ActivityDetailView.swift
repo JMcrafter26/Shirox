@@ -31,6 +31,9 @@ struct ActivityDetailView: View {
 
     // Likes sheets
     @State private var showActivityLikes = false
+    /// The likes sheet grows out of whichever opened it: the avatars or the count.
+    @Namespace private var likesZoom
+    @State private var likesZoomID = "likesPreview"
     @State private var showLikesForReply: ReplyLikeTarget?
 
     @Environment(\.dismiss) private var dismiss
@@ -132,6 +135,7 @@ struct ActivityDetailView: View {
                 .frame(minWidth: 480, minHeight: 360)
 
                 #endif
+                .zoomingOut(of: likesZoomID, in: likesZoom)
         }
         .adaptiveSheet(item: $showLikesForReply) { target in
             LikesSheetView(id: target.id, type: .activityReply)
@@ -222,6 +226,7 @@ struct ActivityDetailView: View {
 
     private var likesPreviewRow: some View {
         Button {
+            likesZoomID = "likesPreview"
             showActivityLikes = true
         } label: {
             HStack(spacing: -8) {
@@ -252,6 +257,7 @@ struct ActivityDetailView: View {
             }
         }
         .buttonStyle(.plain)
+        .zoomSource("likesPreview", in: likesZoom, cornerRadius: 12)
     }
 
     private var likeButton: some View {
@@ -266,6 +272,7 @@ struct ActivityDetailView: View {
             .disabled(isTogglingLike)
 
             Button {
+                likesZoomID = "likeCount"
                 showActivityLikes = true
             } label: {
                 Text("\(likeCount)")
@@ -273,6 +280,7 @@ struct ActivityDetailView: View {
                     
             }
             .buttonStyle(.plain)
+            .zoomSource("likeCount", in: likesZoom, cornerRadius: 8)
         }
         .font(.subheadline)
     }

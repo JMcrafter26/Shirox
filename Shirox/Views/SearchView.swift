@@ -9,6 +9,8 @@ struct SearchView: View {
     @ObservedObject private var providerManager = ProviderManager.shared
     @ObservedObject private var discovery = DiscoverySource.shared
     @State private var showModuleList = false
+    /// The module button the module list grows out of.
+    @Namespace private var moduleListZoom
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var isLandscape = false
     // A SINGLE file importer drives both phases. Two `.fileImporter` modifiers in one view
@@ -59,10 +61,8 @@ struct SearchView: View {
             mainContent
                 .background(SearchActivationObserver { vm.clearResults() })
                 .navigationTitle("Search")
-                .toolbar {
-                    ToolbarItem(placement: .automatic) {
-                        moduleButton
-                    }
+                .toolbarZoomSource("moduleList", in: moduleListZoom, placement: .automatic) {
+                    moduleButton
                 }
                 .modifier(ConditionalSearchable(enabled: !isLocalModule && !isJellyfinModule, text: $vm.query))
                 .onSubmit(of: .search) {
@@ -99,6 +99,7 @@ struct SearchView: View {
             }
             .environmentObject(moduleManager)
             .tint(.primary)
+            .zoomingOut(of: "moduleList", in: moduleListZoom, fromToolbar: true)
         }
         #if os(iOS)
         .background(

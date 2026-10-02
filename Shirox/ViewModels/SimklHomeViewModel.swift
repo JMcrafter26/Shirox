@@ -41,15 +41,20 @@ final class SimklHomeViewModel: ObservableObject {
 
     func load(kind: MediaKind, force: Bool = false) async {
         wanted = kind
+        // Loading from the first moment: the saved copies can take a while to become rows — anime
+        // wait for their AniList ids — and a switch with the old kind's rows gone and nothing
+        // loading left Home showing only Continue Watching, as if Simkl had nothing.
+        isLoading = true
+        error = nil
+        defer { if wanted == kind { isLoading = false } }
+
         let lists = SimklHomeRows.lists(for: kind)
         var files: [SimklFeedList: [SimklDiscoverItem]] = [:]
         for list in lists { files[list] = saved(list) }
         if layoutKind != kind { layout = nil }
         if !files.isEmpty { await show(files, kind: kind) }
-
-        isLoading = true
-        error = nil
-        defer { if wanted == kind { isLoading = false } }
+        // Overtaken while the saved copies were shown: the newer load fetches for itself.
+        guard wanted == kind, !Task.isCancelled else { return }
 
         let fetch = self.fetch
         var failure: Error?

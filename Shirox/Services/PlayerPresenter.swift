@@ -28,7 +28,10 @@ final class PlayerPresenter: ObservableObject {
     static let shared = PlayerPresenter()
 
     #if os(iOS)
-    @Published var orientationLock = UIInterfaceOrientationMask.portrait
+    /// Read by the app delegate when UIKit asks, never observed — so not `@Published`. Pages set it
+    /// from `onAppear`, and publishing re-rendered the root tab view (it observes this object) as
+    /// each page appeared, which on iOS 27 popped the page that had just been pushed.
+    var orientationLock = UIInterfaceOrientationMask.portrait
     #endif
 
     /// Set by `presentRatingPromptIfNeeded` after the user finishes the last episode.

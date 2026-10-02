@@ -14,7 +14,7 @@ typealias PlatformImage = NSImage
 
 /// Cross-platform image loader backed by Kingfisher's memory + disk cache.
 /// Keeps the app's domain logic that a stock loader doesn't handle: hotlink
-/// headers, Cloudflare-bypass recovery, base64 and `file://` fast paths.
+/// headers, solved Cloudflare sessions, base64 and `file://` fast paths.
 struct CachedAsyncImage: View {
     let urlString: String
     var base64String: String? = nil
@@ -184,8 +184,8 @@ struct CachedAsyncImage: View {
         }
 
         // Kingfisher couldn't load it — most often a cold Cloudflare challenge
-        // (an HTML body that won't decode). Fall back to the manual solve+retry,
-        // then back-fill Kingfisher's cache so later loads are warm.
+        // (an HTML body that won't decode). Retry with any solved session for the
+        // host, then back-fill Kingfisher's cache so later loads are warm.
         if let recovered = await loadViaCloudflareFallback(url: url) {
             platformImage = recovered
         } else {
@@ -193,9 +193,9 @@ struct CachedAsyncImage: View {
         }
     }
 
-    /// Manual Cloudflare-challenge recovery for a single image URL. Returns the
-    /// decoded image on success and seeds Kingfisher's cache so later loads are
-    /// warm. Returns nil on genuine failure (offline, 4xx, undecodable).
+    /// Direct fetch of one image URL with any solved Cloudflare session for its host. Returns
+    /// the decoded image on success and seeds Kingfisher's cache so later loads are warm.
+    /// Returns nil on failure (offline, 4xx, undecodable, or still walled).
     private func loadViaCloudflareFallback(url: URL) async -> PlatformImage? {
         let cookieHeader = url.host.flatMap { CloudflareBypassManager.shared.fullCookieHeader(for: $0) }
         let bypassUA = url.host.flatMap { CloudflareBypassManager.shared.bypassUserAgent(for: $0) }
@@ -231,61 +231,17 @@ struct CachedAsyncImage: View {
             .lowercased().hasPrefix("image/")
         let responseText = isImageContentType ? "" : (String(data: data, encoding: .utf8) ?? "")
 
-        // If CF blocked the image CDN, solve the challenge for that host then
-        // retry with the fresh cookie.
+        // Walled by Cloudflare. An image never opens the challenge window itself: posters load
+        // on their own (Home at launch, list rows), so the window popped up unprompted, and the
+        // load was usually cancelled by a re-layout a moment later, closing it again — a flash
+        // that never solved anything. Show the placeholder instead; `.cloudflareBypassSolved`
+        // retries it once the user clears this host somewhere they asked to.
         if JSEngine.isTurnstileResponse(status: httpStatus, body: responseText) {
-            Logger.shared.log("[Image] CF challenge detected status=\(httpStatus) host=\(finalURL.host ?? "?")", type: "Debug")
-            let cfTarget = finalURL
-            let cfHostStr = cfTarget.host ?? ""
-
-            // We already sent whatever cookie was cached for this host and Cloudflare walled
-            // us anyway, so that cookie is dead. Drop it before asking for a new one —
-            // otherwise `triggerBypass` early-returns on the stale entry and every image on
-            // this host 403s until the hour-long cache expires.
-            if cookieHeader != nil {
-                CloudflareBypassManager.shared.invalidateCookie(for: cfHostStr)
-            }
-            try? await CloudflareBypassManager.shared.triggerBypass(for: cfTarget)
-
-            var retryRequest = Self.makeImageRequest(for: cfTarget)
-            // cf_clearance is bound to the UA that solved the challenge — use the
-            // bypass WebView's actual UA + full cookie header, not our default.
-            if let info = await CloudflareBypassManager.shared.bypassSessionInfo(for: cfHostStr) {
-                retryRequest.setValue(info.cookieHeader, forHTTPHeaderField: "Cookie")
-                if !info.userAgent.isEmpty {
-                    retryRequest.setValue(info.userAgent, forHTTPHeaderField: "User-Agent")
-                }
-            } else if let cfHeader = CloudflareBypassManager.shared.fullCookieHeader(for: cfHostStr) {
-                retryRequest.setValue(cfHeader, forHTTPHeaderField: "Cookie")
-                if let ua = CloudflareBypassManager.shared.bypassUserAgent(for: cfHostStr) {
-                    retryRequest.setValue(ua, forHTTPHeaderField: "User-Agent")
-                }
-            }
-            guard let (retryData, retryResponse) = try? await Self.session.data(for: retryRequest) else {
-                Logger.shared.log("[Image] CF retry network error host=\(cfHostStr)", type: "Error")
-                return nil
-            }
-            let retryStatus = (retryResponse as? HTTPURLResponse)?.statusCode ?? -1
-            let retryIsImage = ((retryResponse as? HTTPURLResponse)?
-                .value(forHTTPHeaderField: "Content-Type") ?? "")
-                .lowercased().hasPrefix("image/")
-            let retryText = retryIsImage ? "" : (String(data: retryData, encoding: .utf8) ?? "")
-
-            // Still walled with a cookie we just solved for: it doesn't work for this host, so
-            // evict it rather than caching a dud that suppresses every later solve attempt.
-            if JSEngine.isTurnstileResponse(status: retryStatus, body: retryText) {
-                CloudflareBypassManager.shared.invalidateCookie(for: cfHostStr)
-                Logger.shared.log("[Image] CF retry still walled host=\(cfHostStr) status=\(retryStatus)", type: "Error")
-                return nil
-            }
-
-            guard let loaded = PlatformImage(data: retryData) else {
-                let snippet = retryText.prefix(120).replacingOccurrences(of: "\n", with: " ")
-                Logger.shared.log("[Image] CF retry decode failed host=\(cfHostStr) status=\(retryStatus) body=\(snippet)", type: "Error")
-                return nil
-            }
-            KingfisherManager.shared.cache.store(loaded, original: retryData, forKey: urlString, toDisk: true) { _ in }
-            return loaded
+            let cfHost = finalURL.host ?? ""
+            // We sent this host's cached cookie and got walled anyway, so it's dead.
+            if cookieHeader != nil { CloudflareBypassManager.shared.invalidateCookie(for: cfHost) }
+            Logger.shared.log("[Image] CF challenge, not loading host=\(cfHost) status=\(httpStatus)", type: "Debug")
+            return nil
         }
 
         guard let loaded = PlatformImage(data: data) else {

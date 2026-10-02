@@ -701,6 +701,7 @@ struct PlayerSettingsView: View {
 struct ReaderSettingsView: View {
     @AppStorage("readerLiquidGlass") private var readerLiquidGlass = true
     @AppStorage("readerPageCurl") private var readerPageCurl = true
+    @AppStorage("readerPortraitOnly") private var readerPortraitOnly = false
 
     var body: some View {
         List {
@@ -711,6 +712,17 @@ struct ReaderSettingsView: View {
                 Text("Turning Pages")
             } footer: {
                 Text("Turn pages with a curl, like a book, in the paged reading modes. Turn off to slide them instead.")
+            }
+            // An iPad turns everywhere, so this only means something on iPhone.
+            if UIDevice.current.userInterfaceIdiom == .phone {
+                Section {
+                    Toggle("Portrait Only", isOn: $readerPortraitOnly)
+                        .tint(.secondary)
+                } header: {
+                    Text("Orientation")
+                } footer: {
+                    Text("Keep the reader upright. Turn off to read sideways when you turn your phone.")
+                }
             }
             if #available(iOS 26.0, *) {
                 Section {

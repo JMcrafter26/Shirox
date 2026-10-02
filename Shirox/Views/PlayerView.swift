@@ -121,7 +121,6 @@ struct PlayerView: View {
     /// Owns the Control Center / lock screen transport registration. Held here so a player
     /// rebuild replaces the handlers instead of stacking a second set on top.
     #if os(iOS)
-    private static let frameSaveQueue = DispatchQueue(label: "com.shirox.framePhotoSaves")
 
     @State private var remoteCommands = RemoteCommandCoordinator()
     #endif
@@ -675,6 +674,17 @@ struct PlayerView: View {
             overlayActive = false
             scheduleHide()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .playerKey)) { note in
+            guard controlsEnabled, let key = note.object as? PlayerKey else { return }
+            switch key {
+            case .playPause: togglePlayPause()
+            case .back: skip(by: -Double(skipShort))
+            case .forward: skip(by: Double(skipShort))
+            case .longBack: skip(by: -Double(skipLong))
+            case .longForward: skip(by: Double(skipLong))
+            }
+            if key != .playPause { scheduleHide() }
+        }
         .statusBarHidden(true)
         .persistentSystemOverlaysHidden()
         .onChangeOf(videoReady) { ready in
@@ -915,50 +925,18 @@ struct PlayerView: View {
             return
         }
 
-        PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
-            Self.frameSaveQueue.async {
-                let canUseAlbum = status == .authorized
-                let canSave = canUseAlbum || status == .limited ||
-                    PHPhotoLibrary.authorizationStatus(for: .addOnly) == .authorized
-                guard canSave else {
-                    DispatchQueue.main.async {
-                        frameSaveMessage = "Allow Photos access in Settings to save video frames."
-                        showFrameSaveAlert = true
-                    }
-                    return
-                }
-
-                do {
-                    let album: PHAssetCollection? = canUseAlbum ? {
-                        let options = PHFetchOptions()
-                        options.predicate = NSPredicate(format: "title = %@", "Shirox")
-                        return PHAssetCollection.fetchAssetCollections(
-                            with: .album, subtype: .albumRegular, options: options).firstObject
-                    }() : nil
-                    try PHPhotoLibrary.shared().performChangesAndWait {
-                        if canUseAlbum {
-                            let albumRequest = album.flatMap { PHAssetCollectionChangeRequest(for: $0) }
-                                ?? PHAssetCollectionChangeRequest.creationRequestForAssetCollection(withTitle: "Shirox")
-                            let asset = PHAssetChangeRequest.creationRequestForAsset(from: image)
-                            if let placeholder = asset.placeholderForCreatedAsset {
-                                albumRequest.addAssets([placeholder] as NSArray)
-                            }
-                        } else {
-                            PHAssetChangeRequest.creationRequestForAsset(from: image)
-                        }
-                    }
-                    DispatchQueue.main.async {
-                        frameSaveMessage = canUseAlbum ? "Frame saved to the Shirox album in Photos." :
-                            "Frame saved to Photos. Allow Full Access in Settings to use the Shirox album."
-                        showFrameSaveAlert = true
-                    }
-                } catch {
-                    DispatchQueue.main.async {
-                        frameSaveMessage = "Could not save the frame: \(error.localizedDescription)"
-                        showFrameSaveAlert = true
-                    }
-                }
+        PhotoLibrarySaver.save(image) { outcome in
+            switch outcome {
+            case .savedToAlbum:
+                frameSaveMessage = "Frame saved to the Shirox album in Photos."
+            case .savedToLibrary:
+                frameSaveMessage = "Frame saved to Photos. Allow Full Access in Settings to use the Shirox album."
+            case .denied:
+                frameSaveMessage = "Allow Photos access in Settings to save video frames."
+            case .failed(let error):
+                frameSaveMessage = "Could not save the frame: \(error.localizedDescription)"
             }
+            showFrameSaveAlert = true
         }
     }
     #endif
@@ -3127,6 +3105,10 @@ private extension View {
         skipShort: Int,
         skipLong: Int
     ) -> some View {
+        #if os(iOS)
+        // `PlayerHostingController` takes these as key commands.
+        self
+        #else
         if #available(iOS 17, *) {
             self
                 .focusable()
@@ -3140,6 +3122,7 @@ private extension View {
         } else {
             self
         }
+        #endif
     }
 }
 
@@ -3505,6 +3488,56 @@ class PlayerHostingController<Content: View>: UIHostingController<Content> {
 
     override var shouldAutorotate: Bool { true }
     override var prefersStatusBarHidden: Bool { true }
+
+    // A hardware keyboard: an iPad's, or a Mac's running this iOS app. SwiftUI's onKeyPress
+    // needs a focused view, and nothing in the player takes focus on iOS, so the shortcuts are
+    // key commands here, on the controller that's first responder once the player is up.
+    override var canBecomeFirstResponder: Bool { true }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        becomeFirstResponder()
+    }
+
+    override var keyCommands: [UIKeyCommand]? {
+        PlayerKey.inputs.map { input in
+            let command = UIKeyCommand(input: input, modifierFlags: [], action: #selector(playerKeyPressed(_:)))
+            // Ahead of what the system does with space and the arrows itself.
+            command.wantsPriorityOverSystemBehavior = true
+            return command
+        }
+    }
+
+    @objc private func playerKeyPressed(_ command: UIKeyCommand) {
+        guard let key = command.input.flatMap(PlayerKey.init(input:)) else { return }
+        NotificationCenter.default.post(name: .playerKey, object: key)
+    }
+}
+
+/// What a key does in the player, from `PlayerHostingController`'s key commands.
+enum PlayerKey: Equatable {
+    case playPause
+    /// The Skip Duration setting.
+    case back, forward
+    /// The Long Skip Duration setting.
+    case longBack, longForward
+
+    static let inputs = [" ", "k", UIKeyCommand.inputLeftArrow, UIKeyCommand.inputRightArrow, "j", "l"]
+
+    init?(input: String) {
+        switch input {
+        case " ", "k": self = .playPause
+        case UIKeyCommand.inputLeftArrow: self = .back
+        case UIKeyCommand.inputRightArrow: self = .forward
+        case "j": self = .longBack
+        case "l": self = .longForward
+        default: return nil
+        }
+    }
+}
+
+extension Notification.Name {
+    static let playerKey = Notification.Name("playerKey")
 }
 
 private final class DragToDismissCoordinator: NSObject, UIGestureRecognizerDelegate {

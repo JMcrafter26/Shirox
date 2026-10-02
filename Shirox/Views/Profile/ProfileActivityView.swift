@@ -6,6 +6,8 @@ struct ProfileActivityView: View {
     var topContent: AnyView? = nil
     @State private var selectedActivity: UserActivity?
     @State private var showCompose = false
+    /// The compose button its sheet grows out of.
+    @Namespace private var composeZoom
 
     @ObservedObject private var providerManager = ProviderManager.shared
     @ObservedObject private var malAuth = MALAuthManager.shared
@@ -64,6 +66,7 @@ struct ProfileActivityView: View {
         }
         .adaptiveSheet(isPresented: $showCompose) {
             ComposeStatusView(profileVM: vm)
+                .zoomingOut(of: "compose", in: composeZoom)
         }
         .adaptiveSheet(item: $targetUserId) { uid in
             ProfileView(userId: uid, username: targetUsername ?? "Profile", avatarURL: nil)
@@ -87,6 +90,7 @@ struct ProfileActivityView: View {
                         .background(Circle().fill(Color.primary))
                         .shadow(color: .black.opacity(0.25), radius: 8, y: 3)
                 }
+                .zoomSource("compose", in: composeZoom, cornerRadius: 26)
                 .padding(20)
             }
         }

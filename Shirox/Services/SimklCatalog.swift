@@ -238,3 +238,56 @@ enum SimklCatalog {
         return SimklDiscoverItem.IDs(simkl: simkl, mal: ids.mal?.value, anilist: ids.anilist?.value)
     }
 }
+
+// MARK: - Simkl id by tracker id
+
+extension SimklCatalog {
+    private static let animeIDsKey = "com.shirox.simkl_anime_ids"
+    /// Misses this session, so a title Simkl doesn't know isn't asked about on every visit.
+    private static var unknownAnime: Set<String> = []
+
+    nonisolated static func lookupKey(mal: Int?, anilist: Int?) -> String? {
+        if let mal { return "mal:\(mal)" }
+        return anilist.map { "anilist:\($0)" }
+    }
+
+    /// A remembered answer, without asking Simkl.
+    static func cachedAnimeSimklID(mal: Int?, anilist: Int?) -> Int? {
+        guard let key = lookupKey(mal: mal, anilist: anilist) else { return nil }
+        return (UserDefaults.standard.dictionary(forKey: animeIDsKey) as? [String: Int])?[key]
+    }
+
+    /// An anime's Simkl id from its MyAnimeList or AniList id, through `/search/id` — which this
+    /// client may only call signed in. Each answer is remembered, so a page asks once.
+    static func animeSimklID(mal: Int?, anilist: Int?) async -> Int? {
+        guard let key = lookupKey(mal: mal, anilist: anilist) else { return nil }
+        if let known = cachedAnimeSimklID(mal: mal, anilist: anilist) { return known }
+        let auth = SimklAuthManager.shared
+        guard auth.isLoggedIn, !unknownAnime.contains(key) else { return nil }
+        let query = mal.map { [URLQueryItem(name: "mal", value: String($0))] }
+            ?? [URLQueryItem(name: "anilist", value: String(anilist ?? 0))]
+        do {
+            let (data, http) = try await auth.send { try auth.authorizedRequest(path: "/search/id", query: query) }
+            guard (200...299).contains(http.statusCode) else { return nil }
+            guard let id = decodeSearchID(data) else {
+                unknownAnime.insert(key)
+                return nil
+            }
+            var known = (UserDefaults.standard.dictionary(forKey: animeIDsKey) as? [String: Int]) ?? [:]
+            known[key] = id
+            UserDefaults.standard.set(known, forKey: animeIDsKey)
+            return id
+        } catch {
+            Logger.shared.log("[Simkl] Looking up \(key) failed: \(error)", type: "Error")
+            return nil
+        }
+    }
+
+    /// `/search/id` answers with a list of matches (`[]` for none); a lone object is taken too.
+    nonisolated static func decodeSearchID(_ data: Data) -> Int? {
+        if let items = try? JSONDecoder().decode([SimklCatalogItem].self, from: data) {
+            return items.lazy.compactMap(\.simklID).first
+        }
+        return (try? JSONDecoder().decode(SimklCatalogItem.self, from: data))?.simklID
+    }
+}

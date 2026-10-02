@@ -29,9 +29,7 @@ private func cwNavDestination(_ target: ContinueWatchingNavTarget) -> some View 
 
 extension View {
     /// Drives Continue Watching context-menu navigation from HomeView. Attach outside the
-    /// ScrollView. Uses `navigationDestinationCompat`, which pushes via a hidden
-    /// `NavigationLink` on iOS (the app's `NavigationStack` is really a `NavigationView`,
-    /// which ignores `navigationDestination(...)`).
+    /// ScrollView: a navigation destination inside a lazy container is ignored.
     func continueWatchingNavigation(_ target: Binding<ContinueWatchingNavTarget?>) -> some View {
         self.navigationDestinationCompat(item: target) { cwNavDestination($0) }
     }

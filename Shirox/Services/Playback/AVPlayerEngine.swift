@@ -19,7 +19,10 @@ final class AVPlayerEngine: PlaybackEngine {
     private var timeObserver: Any?
     private var timeControlObservation: NSKeyValueObservation?
     private var statusObservation: NSKeyValueObservation?
+    private var keepUpObservation: NSKeyValueObservation?
     private var itemObservers: [NSObjectProtocol] = []
+    /// The rate the player was last asked to play at, for `restartIfWedged()`.
+    private var requestedRate: Float = 1
     private var audioGroup: AVMediaSelectionGroup?
     private var audioLoad: Task<Void, Never>?
 
@@ -103,6 +106,15 @@ final class AVPlayerEngine: PlaybackEngine {
                 }
             }
         }
+        keepUpObservation?.invalidate()
+        keepUpObservation = item.observe(\.isPlaybackLikelyToKeepUp, options: [.new]) { [weak self] observed, _ in
+            let engine = self
+            DispatchQueue.main.async {
+                guard let engine, engine.player.currentItem === observed,
+                      observed.isPlaybackLikelyToKeepUp else { return }
+                engine.restartIfWedged()
+            }
+        }
         // Block observers are unregistered by token, or every swap would stack another pair.
         for token in itemObservers { NotificationCenter.default.removeObserver(token) }
         itemObservers = [
@@ -126,6 +138,16 @@ final class AVPlayerEngine: PlaybackEngine {
         ]
     }
 
+    /// With stall-minimisation off, which the player sets for downloads, AVPlayer told to play
+    /// before anything has arrived gives up on the spot. Its rate drops to 0 while
+    /// `timeControlStatus` stays `.playing`, and it doesn't start once the buffer fills. Every
+    /// downloaded HLS episode opened from the start sat on its first frame like that. A pause
+    /// reads `.paused`, so asking again here never overrides one.
+    private func restartIfWedged() {
+        guard player.timeControlStatus == .playing, player.rate == 0 else { return }
+        player.playImmediately(atRate: requestedRate)
+    }
+
     func stop() {
         isStopped = true
         player.pause()
@@ -135,6 +157,8 @@ final class AVPlayerEngine: PlaybackEngine {
         timeControlObservation = nil
         statusObservation?.invalidate()
         statusObservation = nil
+        keepUpObservation?.invalidate()
+        keepUpObservation = nil
         for token in itemObservers { NotificationCenter.default.removeObserver(token) }
         itemObservers = []
         audioLoad?.cancel()
@@ -188,7 +212,10 @@ final class AVPlayerEngine: PlaybackEngine {
 
     var rate: Float {
         get { player.rate }
-        set { player.rate = newValue }
+        set {
+            if newValue > 0 { requestedRate = newValue }
+            player.rate = newValue
+        }
     }
 
     var volume: Float {
@@ -196,9 +223,16 @@ final class AVPlayerEngine: PlaybackEngine {
         set { player.volume = newValue }
     }
 
-    func play() { player.play() }
+    func play() {
+        // `play()` plays at `defaultRate`, which the app leaves at 1.
+        requestedRate = 1
+        player.play()
+    }
     func pause() { player.pause() }
-    func playImmediately(atRate rate: Float) { player.playImmediately(atRate: rate) }
+    func playImmediately(atRate rate: Float) {
+        if rate > 0 { requestedRate = rate }
+        player.playImmediately(atRate: rate)
+    }
 
     func seek(to seconds: Double, precision: SeekPrecision, completion: ((Bool) -> Void)?) {
         let time = CMTime(seconds: seconds, preferredTimescale: 600)

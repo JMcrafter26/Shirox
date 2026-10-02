@@ -10,6 +10,9 @@ final class HomeViewModel: ObservableObject {
     @Published var topRated: [Media] = []
     @Published var isLoading = false
     @Published var error: String?
+    /// Whose rows these are — the provider that was first when they were asked for. A change is
+    /// Home switching providers, which it animates.
+    @Published private(set) var feedProvider: ProviderType?
 
     private var loaded = false
     private var cancellables = Set<AnyCancellable>()
@@ -42,8 +45,9 @@ final class HomeViewModel: ObservableObject {
             // `call` once also means the whole screen comes from one provider — five separate
             // calls could each fall back independently and leave Home showing a mix.
             let feed = try await ProviderManager.shared.call { try await $0.homeFeed() }
-            apply(feed)
-            if let type = ProviderManager.shared.primary?.providerType {
+            let type = ProviderManager.shared.primary?.providerType
+            apply(feed, from: type)
+            if let type {
                 HomeCacheStore.shared.save(feed: feed, provider: type)
             }
             loaded = true
@@ -81,10 +85,11 @@ final class HomeViewModel: ObservableObject {
     private func seedFromCache() {
         guard let type = ProviderManager.shared.primary?.providerType,
               let cached = HomeCacheStore.shared.snapshot(provider: type) else { return }
-        apply(cached.feed)
+        apply(cached.feed, from: type)
     }
 
-    private func apply(_ feed: HomeFeed) {
+    private func apply(_ feed: HomeFeed, from provider: ProviderType?) {
+        feedProvider = provider
         trending = feed.trending
         seasonal = feed.seasonal
         lastSeason = feed.lastSeason

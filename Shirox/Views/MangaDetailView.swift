@@ -20,6 +20,8 @@ struct MangaDetailView: View {
     @State private var newestFirst = false
     @State private var readerContext: ReaderContext?
     @State private var showMatchSheet = false
+    /// The buttons the match and list-entry sheets grow out of.
+    @Namespace private var sheetZoom
     @State private var leadingInset: CGFloat = 0
 
     #if os(iOS)
@@ -110,9 +112,20 @@ struct MangaDetailView: View {
             MangaReaderView(context: ctx)
         }
         #endif
+        .toolbarZoomSource("match", in: sheetZoom) {
+            if vm.detail != nil && offlineChapters == nil { matchToolbarButton }
+        }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                if vm.detail != nil && offlineChapters == nil { matchToolbarButton }
+                // Downloaded manga too: the site is still there to check for new chapters.
+                if vm.detail != nil {
+                    ModuleWebsiteButton(
+                        href: item.href, moduleId: nil,
+                        trackers: TrackerWebLinks.links(
+                            anilist: vm.match?.aniListID ?? aniListMedia?.id,
+                            mal: vm.match?.malID ?? vm.enrichment?.idMal ?? aniListMedia?.idMal,
+                            simkl: nil, isManga: true))
+                }
             }
         }
         .sheet(isPresented: $showMatchSheet) {
@@ -152,6 +165,7 @@ struct MangaDetailView: View {
                     }
                 }
             )
+            .zoomingOut(of: "match", in: sheetZoom, fromToolbar: true)
         }
         .task {
             if let aniListMedia {
@@ -205,6 +219,7 @@ struct MangaDetailView: View {
                         }
                     } : nil)
                 .adaptivePresentationDetents([.medium, .large])
+                .zoomingOut(of: "anilistEdit", in: sheetZoom)
             }
         }
         .adaptiveSheet(isPresented: $showMALEdit) {
@@ -228,6 +243,7 @@ struct MangaDetailView: View {
                         Task { try? await MALMangaLibraryService.shared.deleteEntry(malId: mid) }
                     } : nil)
                 .adaptivePresentationDetents([.medium, .large])
+                .zoomingOut(of: "malEdit", in: sheetZoom)
             }
         }
         #endif
@@ -504,17 +520,19 @@ struct MangaDetailView: View {
             if anilistAuth.isLoggedIn, mangaAniListID != nil {
                 listButton(
                     title: existingAniListEntry.map { "\($0.status.displayName(for: .manga)) \($0.progress)/\(vm.match?.totalChapters.map(String.init) ?? "?")" } ?? "Add to AniList",
-                    systemImage: "list.bullet.rectangle") { showAniListEdit = true }
+                    systemImage: "list.bullet.rectangle", zoomID: "anilistEdit") { showAniListEdit = true }
             }
             if malAuth.isLoggedIn, mangaMALID != nil {
                 listButton(
                     title: existingMALEntry.map { "MAL · \($0.status.displayName(for: .manga)) \($0.progress)" } ?? "Add to MAL",
-                    systemImage: "list.bullet.rectangle") { showMALEdit = true }
+                    systemImage: "list.bullet.rectangle", zoomID: "malEdit") { showMALEdit = true }
             }
         }
     }
 
-    private func listButton(title: String, systemImage: String, action: @escaping () -> Void) -> some View {
+    /// `zoomID` names the sheet that grows out of it.
+    private func listButton(title: String, systemImage: String, zoomID: String,
+                            action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 8) {
                 Image(systemName: systemImage).font(.system(size: 13, weight: .bold))
@@ -526,6 +544,7 @@ struct MangaDetailView: View {
             .foregroundStyle(.primary)
         }
         .buttonStyle(.plain)
+        .zoomSource(zoomID, in: sheetZoom, cornerRadius: 22)
     }
     #endif
 
@@ -772,6 +791,7 @@ private struct MangaRelationCard: View {
             CachedAsyncImage(urlString: edge.node.coverImage.thumb ?? "")
                 .frame(width: 110, height: 165)
                 .clipShape(RoundedRectangle(cornerRadius: 10))
+                .contentShape(RoundedRectangle(cornerRadius: 10))
                 .overlay(alignment: .topLeading) {
                     Text(edge.formattedRelation)
                         .font(.system(size: 9, weight: .bold)).foregroundStyle(.white)

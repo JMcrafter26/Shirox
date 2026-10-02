@@ -9,6 +9,8 @@ struct BookmarkButton: View {
 
     @ObservedObject private var local = LocalLibraryManager.shared
     @State private var showCollections = false
+    /// The button the collections sheet grows out of.
+    @Namespace private var collectionsZoom
 
     private var isSaved: Bool {
         guard let media else { return false }
@@ -30,8 +32,10 @@ struct BookmarkButton: View {
                     .shadow(color: .black.opacity(0.2), radius: 6, x: 0, y: 3)
             }
             .buttonStyle(.plain)
+            .zoomSource("collections", in: collectionsZoom, cornerRadius: 26)
             .adaptiveSheet(isPresented: $showCollections) {
                 LocalCollectionPickerSheet(media: media, localSource: localSource)
+                    .zoomingOut(of: "collections", in: collectionsZoom)
             }
         }
     }

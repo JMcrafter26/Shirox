@@ -1077,7 +1077,7 @@ final class DownloadManager: NSObject, ObservableObject {
         updateState(item.id, .downloading)
         let id = item.id
         guard let url = item.streamURL else { return }
-        let headers = item.headers
+        let headers = Self.requestHeaders(for: url, streamHeaders: item.headers)
         Task {
             let isHLS = await Self.detectIsHLS(url: url, headers: headers)
             await MainActor.run {
@@ -1086,6 +1086,27 @@ final class DownloadManager: NSObject, ObservableObject {
                 if isHLS { self.startHLS(current) } else { self.startMP4(current) }
             }
         }
+    }
+
+    /// The headers a download's requests go out with: the stream's own, plus a mobile browser's
+    /// User-Agent and the stream's origin as Referer where the module gave neither.
+    ///
+    /// Modules often return a bare URL that plays but won't download. AVPlayer sends
+    /// "AppleCoreMedia/… (iPhone…)", while URLSession sends "Shirox/… CFNetwork/…". VOE mints its
+    /// link for the browser the module fetched the embed with and answers 403 to a non-mobile
+    /// agent when that was a phone. Doodstream's CDN redirects a request with no Referer to a
+    /// host that refuses connections. Both take any Referer, the stream's own origin included.
+    nonisolated static func requestHeaders(for url: URL, streamHeaders: [String: String]) -> [String: String] {
+        var headers = streamHeaders
+        let present = Set(streamHeaders.keys.map { $0.lowercased() })
+        if !present.contains("user-agent") {
+            headers["User-Agent"] = BrowserImpersonator.safariIOSUA
+        }
+        if !present.contains("referer"), let scheme = url.scheme, let host = url.host {
+            let port = url.port.map { ":\($0)" } ?? ""
+            headers["Referer"] = "\(scheme)://\(host)\(port)/"
+        }
+        return headers
     }
 
     private static func detectIsHLS(url: URL, headers: [String: String]) async -> Bool {
@@ -1116,7 +1137,7 @@ final class DownloadManager: NSObject, ObservableObject {
                 let manifestPath = try await hlsDownloader.download(
                     id: id,
                     url: streamURL,
-                    headers: item.headers,
+                    headers: Self.requestHeaders(for: streamURL, streamHeaders: item.headers),
                     downloadDir: downloadDir,
                     onProgress: { [weak self] p in
                         Task { @MainActor in self?.updateProgress(id, p) }
@@ -1136,8 +1157,9 @@ final class DownloadManager: NSObject, ObservableObject {
     private func startMP4(_ item: DownloadItem) {
         guard let streamURL = item.streamURL else { return }
         var req = URLRequest(url: streamURL)
-        item.headers.forEach { req.setValue($1, forHTTPHeaderField: $0) }
-        
+        Self.requestHeaders(for: streamURL, streamHeaders: item.headers)
+            .forEach { req.setValue($1, forHTTPHeaderField: $0) }
+
         let task = urlSession.downloadTask(with: req)
         task.taskDescription = item.id.uuidString
         if let idx = items.firstIndex(where: { $0.id == item.id }) {

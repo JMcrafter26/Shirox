@@ -103,6 +103,9 @@ final class SimklDiscoverTests: XCTestCase {
         XCTAssertEqual(items[0].runtime, 10)
         XCTAssertNil(items[0].rank)
         XCTAssertEqual(items[1].rank, 23032)
+        XCTAssertEqual(items.map(\.airsAt), [Date(timeIntervalSince1970: 1_790_175_600),
+                                              Date(timeIntervalSince1970: 1_790_222_400)], "The exact moment, for Upcoming")
+        XCTAssertEqual(items.map(\.season), [nil, 2])
         let newYork = try XCTUnwrap(TimeZone(identifier: "America/New_York"))
         XCTAssertEqual(try SimklDiscoverItem.decodeList(Data(json.utf8), timeZone: newYork).map(\.airDay),
                        ["2026-09-23", "2026-09-24"], "The same airings on New York's days")

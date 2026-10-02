@@ -120,3 +120,92 @@ final class SimklHomeRowsTests: XCTestCase {
         XCTAssertEqual(SimklHomeRows.day(moment, in: try XCTUnwrap(TimeZone(identifier: "America/New_York"))), "2026-09-24")
     }
 }
+
+/// Simkl's calendar as the Upcoming schedule: a week of airings, a season dropped at once as one
+/// row, movies as the day's releases, and a busy day cut to its most watched.
+final class SimklUpcomingTests: XCTestCase {
+    private var utc: Calendar {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(identifier: "UTC")!
+        return calendar
+    }
+
+    /// 2026-09-25 12:00 UTC.
+    private let now = Date(timeIntervalSince1970: 1_790_337_600)
+    private var weekOut: Date { now.addingTimeInterval(7 * 24 * 60 * 60) }
+
+    private func airing(_ simkl: Int, hoursFromNow: Double, mal: Int? = nil, season: Int? = nil,
+                        episode: Int? = nil, rank: Int? = nil) -> SimklDiscoverItem {
+        var item = SimklDiscoverItem(title: "Title \(simkl)", titleRomaji: nil, ids: .init(simkl: simkl, mal: mal, anilist: nil),
+                                     poster: "1/1", fanart: nil, overview: nil, genres: [], rating: nil, runtime: nil,
+                                     totalEpisodes: nil, rank: rank, airDay: nil, episode: episode)
+        item.airsAt = now.addingTimeInterval(hoursFromNow * 60 * 60)
+        item.season = season
+        return item
+    }
+
+    private func schedule(_ items: [SimklDiscoverItem], kind: MediaKind,
+                          anilistForMAL: [Int: Int] = [:]) -> [AiringEpisode] {
+        SimklUpcoming.schedule(items, kind: kind, from: now, to: weekOut, tracker: .anilist,
+                               anilistForMAL: anilistForMAL, calendar: utc)
+    }
+
+    func testAWeekOfShowAirings() {
+        let rows = schedule([
+            airing(1, hoursFromNow: -1, season: 2, episode: 4),
+            airing(2, hoursFromNow: 3, season: 2, episode: 5),
+            airing(3, hoursFromNow: 24 * 7 + 1, season: 1, episode: 1),
+        ], kind: .tv)
+        XCTAssertEqual(rows.map(\.media.id), [2], "What already aired and what's past the week are left out")
+        XCTAssertEqual(rows.first?.caption, "Season 2 · Episode 5")
+        XCTAssertEqual(rows.first?.libraryID, 2, "Matched against the Simkl library by Simkl id")
+        XCTAssertEqual(rows.first?.media.simklTitleKind, .tv)
+        XCTAssertEqual(rows.first?.isRelease, false)
+    }
+
+    func testASeasonDroppedAtOnceIsOneRow() {
+        let rows = schedule((1...8).map { airing(5, hoursFromNow: 2, season: 1, episode: $0) }
+                            + [airing(5, hoursFromNow: 26, season: 1, episode: 9)], kind: .tv)
+        XCTAssertEqual(rows.map(\.caption), ["Season 1 · Episodes 1–8", "Season 1 · Episode 9"])
+    }
+
+    /// A movie's time is Simkl's placeholder: one out today still counts, and shows no time.
+    func testMoviesAreTheDaysReleases() {
+        let rows = schedule([airing(7, hoursFromNow: -8), airing(8, hoursFromNow: -13)], kind: .movie)
+        XCTAssertEqual(rows.map(\.media.id), [7], "Out earlier today counts; yesterday's doesn't")
+        XCTAssertEqual(rows.first?.caption, "Release")
+        XCTAssertEqual(rows.first?.isRelease, true)
+        XCTAssertEqual(rows.first?.media.simklTitleKind, .movie)
+    }
+
+    func testAnimeOpenOnTheirAniListPage() {
+        let rows = schedule([airing(9, hoursFromNow: 1, mal: 64710, episode: 3)], kind: .anime,
+                            anilistForMAL: [64710: 180001])
+        XCTAssertEqual(rows.first?.media.id, 180001)
+        XCTAssertEqual(rows.first?.media.provider, .anilist)
+        XCTAssertEqual(rows.first?.libraryID, 9)
+        XCTAssertEqual(rows.first?.caption, "Episode 3")
+    }
+
+    func testABusyDayKeepsItsMostWatchedAndTheLibrary() {
+        let rows = schedule([
+            airing(1, hoursFromNow: 1, episode: 1, rank: 900),
+            airing(2, hoursFromNow: 2, episode: 1),
+            airing(3, hoursFromNow: 3, episode: 1, rank: 5),
+            airing(4, hoursFromNow: 4, episode: 1, rank: 40),
+        ], kind: .tv)
+        XCTAssertEqual(SimklUpcoming.busiest(rows, length: 2, library: [2]).map(\.media.id), [2, 3, 4])
+        XCTAssertEqual(SimklUpcoming.busiest(rows, length: 4, library: []).count, 4, "A quiet day is left whole")
+    }
+}
+
+extension SimklUpcomingTests {
+    /// Simkl gives every movie of a day the same time; the most watched lead.
+    func testTheSameTimeListsTheMostWatchedFirst() {
+        let rows = schedule([
+            airing(1, hoursFromNow: 1), airing(2, hoursFromNow: 1, rank: 50),
+            airing(3, hoursFromNow: 1, rank: 4), airing(4, hoursFromNow: 0.5, rank: 900),
+        ], kind: .movie)
+        XCTAssertEqual(rows.sorted(by: AiringEpisode.soonestFirst).map(\.media.id), [4, 3, 2, 1])
+    }
+}

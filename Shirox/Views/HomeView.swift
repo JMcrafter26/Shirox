@@ -4,21 +4,17 @@ struct HomeView: View {
     @StateObject private var vm = HomeViewModel()
     @ObservedObject private var continueWatching = ContinueWatchingManager.shared
     @ObservedObject private var mangaProgress = MangaProgressManager.shared
-    // Continue Watching context-menu navigation. Driven from here so the hidden
-    // NavigationLink that performs the push sits OUTSIDE the ScrollView below.
+    // Continue Watching and Continue Reading context-menu navigation. Driven from here so the
+    // navigation destinations sit OUTSIDE the ScrollView below.
     @State private var cwNavTarget: ContinueWatchingNavTarget?
+    @State private var readingDetail: MangaReadingItem?
     @State private var readerContext: ReaderContext?
     @State private var showUpcoming = false
+    /// The calendar button the Upcoming sheet grows out of.
+    @Namespace private var calendarZoom
+    /// Where the page before this one sat in `pagePosition`'s order.
+    @State private var lastPagePosition: Int?
     @ObservedObject private var providerManager = ProviderManager.shared
-
-    /// The leading edge of the navigation bar, named differently per platform.
-    private static var leadingPlacement: ToolbarItemPlacement {
-        #if os(iOS)
-        .navigationBarLeading
-        #else
-        .navigation
-        #endif
-    }
 
     private var platformBackground: Color {
         #if os(iOS)
@@ -78,6 +74,29 @@ struct HomeView: View {
         discovery.usesSimkl ? (simkl.layout == nil ? simkl.error : nil) : (vm.trending.isEmpty ? vm.error : nil)
     }
 
+    /// Where the Home on screen sits in the order a switch slides through: the trackers as the
+    /// provider menu lists them, then Simkl's Anime, Shows and Movies as its kind menu does. Nil
+    /// until there's a page.
+    private var pagePosition: Int? {
+        if discovery.usesSimkl {
+            guard let kind = simkl.layout?.kind, let index = MediaKind.simklKinds.firstIndex(of: kind) else { return nil }
+            return ProviderType.userProviders.count + index
+        }
+        return vm.feedProvider.flatMap { ProviderType.userProviders.firstIndex(of: $0) }
+    }
+
+    /// What the hero and rows are of: a change here is a page turning, not a refresh.
+    private var homePage: String {
+        pagePosition.map { "page-\($0)" } ?? "none"
+    }
+
+    /// Which side an arriving page slides in from: the right when it's further along than the
+    /// one before. Read as it arrives, before `lastPagePosition` catches up.
+    private var pageStep: Int {
+        guard let now = pagePosition, let before = lastPagePosition else { return 1 }
+        return now < before ? -1 : 1
+    }
+
     private func loadCurrent() async {
         if discovery.usesSimkl {
             await simkl.load(kind: discovery.simklKind)
@@ -114,14 +133,20 @@ struct HomeView: View {
                 } else {
                     ScrollView {
                         VStack(alignment: .leading, spacing: 24) {
-                            if !heroItems.isEmpty {
-                                FeaturedCarousel(
-                                    items: heroItems,
-                                    isRefreshing: isRefreshing,
-                                    // With the drop off, the hero's own circle refreshes.
-                                    onRefresh: gooeyRefresh ? nil : heroRefresh,
-                                    leadingInset: leadingInset
-                                )
+                            // In a ZStack so a switch's leaving and arriving heroes overlap
+                            // instead of stacking for the length of the transition.
+                            ZStack {
+                                if !heroItems.isEmpty {
+                                    FeaturedCarousel(
+                                        items: heroItems,
+                                        isRefreshing: isRefreshing,
+                                        // With the drop off, the hero's own circle refreshes.
+                                        onRefresh: gooeyRefresh ? nil : heroRefresh,
+                                        leadingInset: leadingInset
+                                    )
+                                    .id(homePage)
+                                    .transition(.pageTurn(step: pageStep))
+                                }
                             }
                             Group {
                                 #if os(iOS)
@@ -129,35 +154,44 @@ struct HomeView: View {
                                     ContinueWatchingSection(items: continueWatching.items, navTarget: $cwNavTarget)
                                 }
                                 if !mangaProgress.items.isEmpty {
-                                    ContinueReadingSection(items: mangaProgress.items, readerContext: $readerContext)
+                                    ContinueReadingSection(items: mangaProgress.items, readerContext: $readerContext,
+                                                           detailItem: $readingDetail)
                                 }
                                 #endif
-                                if discovery.usesSimkl {
-                                    ForEach(simkl.layout?.rows ?? []) { row in
-                                        AnimeSection(title: row.title, items: row.items) {
-                                            SimklListView(list: row.list)
+                                // Like the hero: the leaving and arriving rows overlap while they turn.
+                                ZStack(alignment: .topLeading) {
+                                    VStack(alignment: .leading, spacing: 24) {
+                                        if discovery.usesSimkl {
+                                            ForEach(simkl.layout?.rows ?? []) { row in
+                                                AnimeSection(title: row.title, items: row.items) {
+                                                    SimklListView(list: row.list)
+                                                }
+                                            }
+                                        } else {
+                                            if !vm.trending.isEmpty {
+                                                AnimeSection(title: "Trending Now", items: vm.trending) { BrowseView(category: .trending) }
+                                            }
+                                            if !vm.seasonal.isEmpty {
+                                                AnimeSection(title: "This Season", items: vm.seasonal) { BrowseView(category: .seasonal) }
+                                            }
+                                            if !vm.lastSeason.isEmpty {
+                                                AnimeSection(title: "Last Season · Complete", items: vm.lastSeason) { BrowseView(category: .lastSeason) }
+                                            }
+                                            if !vm.popular.isEmpty {
+                                                AnimeSection(title: "All-Time Popular", items: vm.popular) { BrowseView(category: .popular) }
+                                            }
+                                            if !vm.topRated.isEmpty {
+                                                AnimeSection(title: "Top Rated", items: vm.topRated) { BrowseView(category: .topRated) }
+                                            }
                                         }
                                     }
-                                } else {
-                                    if !vm.trending.isEmpty {
-                                        AnimeSection(title: "Trending Now", items: vm.trending) { BrowseView(category: .trending) }
-                                    }
-                                    if !vm.seasonal.isEmpty {
-                                        AnimeSection(title: "This Season", items: vm.seasonal) { BrowseView(category: .seasonal) }
-                                    }
-                                    if !vm.lastSeason.isEmpty {
-                                        AnimeSection(title: "Last Season · Complete", items: vm.lastSeason) { BrowseView(category: .lastSeason) }
-                                    }
-                                    if !vm.popular.isEmpty {
-                                        AnimeSection(title: "All-Time Popular", items: vm.popular) { BrowseView(category: .popular) }
-                                    }
-                                    if !vm.topRated.isEmpty {
-                                        AnimeSection(title: "Top Rated", items: vm.topRated) { BrowseView(category: .topRated) }
-                                    }
+                                    .id(homePage)
+                                    .transition(.pageTurn(step: pageStep))
                                 }
                             }
                             .padding(.leading, leadingInset)
                         }
+                        .animation(.spring(response: 0.45, dampingFraction: 0.9), value: homePage)
                         Spacer().frame(height: 28)
                     }
                     .softScrollEdges(heroItems.isEmpty ? .all : [.bottom, .leading, .trailing])
@@ -173,6 +207,16 @@ struct HomeView: View {
                     .ignoresSafeArea(edges: heroItems.isEmpty ? [] : [.top, .leading])
                 }
             }
+            .animation(.easeInOut(duration: 0.25), value: isLoadingEmpty)
+            #if os(iOS)
+            .overlay(alignment: .bottomTrailing) {
+                CalendarButton { showUpcoming = true }
+                    .zoomSource(HomeToolbar.calendarID, in: calendarZoom, cornerRadius: 26)
+                    // Centred over the tab bar's search button, which sits 21pt in and is 62 across.
+                    .padding(.trailing, 26)
+                    .padding(.bottom, 12)
+            }
+            #endif
             // `ProviderStatusBanner` existed but was never placed in any view — a provider
             // switch that quietly falls back (AniList failing in a way ProviderManager treats
             // as transient, like a rate limit) served the other provider's rows successfully,
@@ -185,25 +229,17 @@ struct HomeView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackgroundHidden()
             #endif
-            .toolbar {
-                ToolbarItem(placement: Self.leadingPlacement) {
-                    Button { showUpcoming = true } label: {
-                        Image(systemName: "calendar")
-                    }
-                }
-                ToolbarItem(placement: .principal) {
-                    if discovery.usesSimkl {
-                        SimklKindPicker(kind: $discovery.simklKind)
-                    }
-                }
-                ToolbarItem(placement: .primaryAction) {
-                    ProviderMenuButton()
-                }
+            .modifier(HomeToolbar(discovery: discovery, kind: $discovery.simklKind) { showUpcoming = true })
+            .sheet(isPresented: $showUpcoming) {
+                UpcomingCalendarView()
+                    .zoomingOut(of: HomeToolbar.calendarID, in: calendarZoom)
             }
-            .sheet(isPresented: $showUpcoming) { UpcomingCalendarView() }
-            // Outside the ScrollView: the hidden NavigationLink that performs the push.
+            // Outside the ScrollView, where a navigation destination is honoured.
             .continueWatchingNavigation($cwNavTarget)
             #if os(iOS)
+            .navigationDestinationCompat(item: $readingDetail) { item in
+                MangaDetailView(item: SearchItem(title: item.mangaTitle, image: item.coverImage, href: item.mangaHref))
+            }
             .fullScreenCover(item: $readerContext) { ctx in
                 MangaReaderView(context: ctx)
             }
@@ -212,21 +248,126 @@ struct HomeView: View {
         .toolbarBackgroundHidden()
         .observeSafeAreaLeading($leadingInset)
         .task(id: homeSourceID) { await loadCurrent() }
+        .onChangeOf(pagePosition) { if let position = $0 { lastPagePosition = position } }
         .onAppear {
             #if os(iOS)
-            let navAppearance = UINavigationBarAppearance()
-            navAppearance.configureWithTransparentBackground()
-            navAppearance.shadowColor = .clear
-            navAppearance.shadowImage = UIImage()
-            UINavigationBar.appearance().standardAppearance = navAppearance
-            UINavigationBar.appearance().scrollEdgeAppearance = navAppearance
-            UINavigationBar.appearance().compactAppearance = navAppearance
-
             PlayerPresenter.shared.resetToAppOrientation()
             // Reclaim local-file copies left by cancelled picks or finished/removed items.
             ContinueWatchingManager.shared.pruneOrphanedLocalImports()
             #endif
         }
+    }
+}
+
+// MARK: - Toolbar
+
+/// Home's navigation bar: Simkl's kind menu while Home is Simkl's, and the provider menu. The
+/// calendar floats in the bottom corner on iOS; elsewhere it stays up here.
+private struct HomeToolbar: ViewModifier {
+    static let calendarID = "upcomingCalendar"
+
+    @ObservedObject var discovery: DiscoverySource
+    @Binding var kind: MediaKind
+    let openCalendar: () -> Void
+
+    /// The leading edge of the navigation bar, named differently per platform.
+    private static var leadingPlacement: ToolbarItemPlacement {
+        #if os(iOS)
+        .navigationBarLeading
+        #else
+        .navigation
+        #endif
+    }
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if #available(iOS 16, macOS 13, tvOS 16, *) {
+            // Left out, not left empty: from iOS 26 an empty item still draws its glass.
+            content.toolbar {
+                #if !os(iOS)
+                calendarItem
+                #endif
+                if discovery.usesSimkl {
+                    ToolbarItem(placement: Self.leadingPlacement) { kindMenu }
+                }
+                providerItem
+            }
+        } else {
+            // A bare `if` in a toolbar builder needs iOS 16; before it, the condition lives
+            // inside the item.
+            content.toolbar {
+                #if !os(iOS)
+                calendarItem
+                #endif
+                ToolbarItem(placement: Self.leadingPlacement) {
+                    if discovery.usesSimkl { kindMenu }
+                }
+                providerItem
+            }
+        }
+    }
+
+    private var calendarItem: some ToolbarContent {
+        ToolbarItem(placement: Self.leadingPlacement) {
+            Button(action: openCalendar) { Image(systemName: "calendar") }
+        }
+    }
+
+    private var kindMenu: some View {
+        SimklKindMenu(kind: $kind).toolbarItemBackdrop()
+    }
+
+    private var providerItem: some ToolbarContent {
+        ToolbarItem(placement: .primaryAction) { ProviderMenuButton().toolbarItemBackdrop() }
+    }
+}
+
+#if os(iOS)
+/// The Upcoming calendar, floating in Home's bottom corner above the tab bar.
+private struct CalendarButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "calendar")
+                .font(.system(size: 19, weight: .semibold))
+                .foregroundStyle(.primary)
+                .frame(width: 52, height: 52)
+                .glassChrome(Circle(), enabled: true, off: .ultraThinMaterial)
+                .shadow(color: .black.opacity(0.18), radius: 10, y: 4)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Upcoming")
+    }
+}
+#endif
+
+/// Home turning to another provider's page, or another Simkl kind's: the arriving page slides in
+/// from the side it sits on in the menus' order while the leaving one sinks back where it is, both
+/// through a blur. The leaving page's transition is fixed before the new rows exist, so it can't
+/// know which way the switch went; sinking in place needs no direction.
+private struct PageTurnEffect: ViewModifier {
+    var offset: CGFloat = 0
+    var scale: CGFloat = 1
+    var hidden = false
+
+    func body(content: Content) -> some View {
+        content
+            .offset(x: offset)
+            .scaleEffect(scale)
+            .opacity(hidden ? 0 : 1)
+            .blur(radius: hidden ? 10 : 0)
+    }
+}
+
+private extension AnyTransition {
+    /// `step` is which way the switch went through the menus' order: 1 onward, -1 back.
+    static func pageTurn(step: Int) -> AnyTransition {
+        .asymmetric(
+            insertion: .modifier(active: PageTurnEffect(offset: CGFloat(step) * 56, hidden: true),
+                                 identity: PageTurnEffect()),
+            removal: .modifier(active: PageTurnEffect(scale: 0.96, hidden: true),
+                               identity: PageTurnEffect()))
     }
 }
 
