@@ -160,6 +160,13 @@ extension View {
 ///
 /// The default reads as "far below the bar", so a screen that publishes no anchor —
 /// a loading skeleton, an error state — simply keeps the compact title hidden.
+private struct TitleWidthKey: PreferenceKey {
+    nonisolated(unsafe) static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
+    }
+}
+
 private struct HeroTitleBottomKey: PreferenceKey {
     nonisolated(unsafe) static var defaultValue: CGFloat = .greatestFiniteMagnitude
     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
@@ -209,6 +216,13 @@ private struct ScrollAwareNavTitle: ViewModifier {
     private static let barHeight: CGFloat = 44
     /// How far the hero title travels while the compact one fades in.
     private static let fadeDistance: CGFloat = 20
+    /// Room kept for the back button.
+    private static let leadingClearance: CGFloat = 72
+    /// Room kept for the trailing toolbar items — the detail screens carry two (tracking
+    /// and the website menu), wider than the back button.
+    private static let trailingClearance: CGFloat = 124
+
+    @State private var titleWidth: CGFloat = 0
 
     @State private var heroTitleBottom: CGFloat = .greatestFiniteMagnitude
 
@@ -240,26 +254,58 @@ private struct ScrollAwareNavTitle: ViewModifier {
     }
 
     private var bar: some View {
-        Text(title)
-            .font(.headline)
-            .lineLimit(1)
-            .truncationMode(.tail)
-            // From iOS 26 the bar carries no background of its own. These screens set
-            // `softScrollEdges`, which already fades the artwork out under the toolbar;
-            // a material slab and a hairline would paint the crisp `.hard` edge back on
-            // top of it the moment the title appeared. A halo in the window background
-            // colour — light behind dark text, dark behind light — keeps the title
-            // legible against whatever is still showing through the fade.
-            .shadow(color: .adaptiveSystemBackground, radius: 2)
-            .shadow(color: .adaptiveSystemBackground, radius: 7)
-            // Keeps the title clear of the back button and the trailing toolbar items.
-            .padding(.horizontal, 72)
-            .frame(maxWidth: .infinity, minHeight: Self.barHeight)
+        Color.clear
+            .frame(maxWidth: .infinity)
+            .frame(height: Self.barHeight)
+            // Measured untruncated, so the title can be placed before it's squeezed. As a
+            // background it can't widen the bar however long it runs.
+            .background(alignment: .leading) {
+                titleText
+                    .fixedSize()
+                    .hidden()
+                    .background(GeometryReader { proxy in
+                        Color.clear.preference(key: TitleWidthKey.self, value: proxy.size.width)
+                    })
+            }
+            .onPreferenceChange(TitleWidthKey.self) { titleWidth = $0 }
+            .overlay { placedTitle }
             .padding(.top, topInset)
             .background(fallbackBackdrop)
             // Driven straight off scroll position, so it needs no animation of its own:
             // the fade already tracks the finger.
             .opacity(progress)
+    }
+
+    private var titleText: some View {
+        Text(title)
+            .font(.headline)
+            .lineLimit(1)
+            .truncationMode(.tail)
+    }
+
+    /// Centred like a system inline title while it fits between the back button and the
+    /// trailing toolbar items; a longer one slides toward the back button, and only once
+    /// it fills the whole gap does it truncate. A symmetric inset wide enough for the
+    /// trailing buttons would have truncated even short titles.
+    private var placedTitle: some View {
+        GeometryReader { geo in
+            let width = geo.size.width
+            let room = max(width - Self.leadingClearance - Self.trailingClearance, 0)
+            let shown = min(titleWidth, room)
+            let x = min(max((width - shown) / 2, Self.leadingClearance),
+                        width - Self.trailingClearance - shown)
+            titleText
+                // From iOS 26 the bar carries no background of its own. These screens set
+                // `softScrollEdges`, which already fades the artwork out under the toolbar;
+                // a material slab and a hairline would paint the crisp `.hard` edge back on
+                // top of it the moment the title appeared. A halo in the window background
+                // colour — light behind dark text, dark behind light — keeps the title
+                // legible against whatever is still showing through the fade.
+                .shadow(color: .adaptiveSystemBackground, radius: 2)
+                .shadow(color: .adaptiveSystemBackground, radius: 7)
+                .frame(width: shown)
+                .position(x: x + shown / 2, y: geo.size.height / 2)
+        }
     }
 
     /// Before iOS 26 there is no soft edge to fade the content out, so the title would sit

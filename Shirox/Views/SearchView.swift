@@ -500,6 +500,11 @@ struct SearchView: View {
                 Text(usingModule ? (moduleManager.activeModule?.sourceName ?? "Module") : shownProvider.displayName)
                     .font(.callout)
                     .fontWeight(.medium)
+                    // A toolbar item takes whatever width it asks for, so a long module name
+                    // would run the button off the leading edge of the screen.
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .frame(maxWidth: 160, alignment: .leading)
             }
             .foregroundStyle(.primary)
         }
