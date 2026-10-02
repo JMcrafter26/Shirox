@@ -238,7 +238,8 @@ struct HomeView: View {
             .continueWatchingNavigation($cwNavTarget)
             #if os(iOS)
             .navigationDestinationCompat(item: $readingDetail) { item in
-                MangaDetailView(item: SearchItem(title: item.mangaTitle, image: item.coverImage, href: item.mangaHref))
+                MangaDetailView(item: SearchItem(title: item.mangaTitle, image: item.coverImage, href: item.mangaHref),
+                                moduleId: item.moduleId.isEmpty ? nil : item.moduleId)
             }
             .fullScreenCover(item: $readerContext) { ctx in
                 MangaReaderView(context: ctx)

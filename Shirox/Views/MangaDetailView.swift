@@ -13,6 +13,16 @@ struct MangaDetailView: View {
     /// Non-nil ⇒ AniList-first entry (from AniListMangaDetailView / relations):
     /// seed the metadata overlay directly instead of resolving a match.
     var aniListMedia: Media? = nil
+    /// The module this manga belongs to — a download's own source. Without it a downloaded
+    /// manga showed (and saved reading progress under) whichever module happened to be
+    /// active, so Continue Reading later reopened it in the wrong source.
+    var moduleId: String? = nil
+
+    private var effectiveModuleId: String? { moduleId ?? ModuleManager.shared.activeModule?.id }
+    private var effectiveModule: ModuleDefinition? {
+        guard let id = effectiveModuleId else { return nil }
+        return ModuleManager.shared.modules.first { $0.id == id }
+    }
 
     @StateObject private var vm = MangaDetailViewModel()
     @ObservedObject private var progress = MangaProgressManager.shared
@@ -113,14 +123,14 @@ struct MangaDetailView: View {
         }
         #endif
         .toolbarZoomSource("match", in: sheetZoom) {
-            if vm.detail != nil && offlineChapters == nil { matchToolbarButton }
+            if vm.detail != nil { matchToolbarButton }
         }
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 // Downloaded manga too: the site is still there to check for new chapters.
                 if vm.detail != nil {
                     ModuleWebsiteButton(
-                        href: item.href, moduleId: nil,
+                        href: item.href, moduleId: effectiveModuleId,
                         trackers: TrackerWebLinks.links(
                             anilist: vm.match?.aniListID ?? aniListMedia?.id,
                             mal: vm.match?.malID ?? vm.enrichment?.idMal ?? aniListMedia?.idMal,
@@ -177,7 +187,19 @@ struct MangaDetailView: View {
                         title: item.title, image: item.image,
                         description: "", tags: [], chapters: offlineChapters)
                 }
+                // Tracking for downloads: a saved match works with no network, and when
+                // online the AniList search and metadata fill in the rest. Both fail quietly
+                // offline, leaving the downloaded chapters as they are.
+                await vm.loadOfflineMatch(item: item)
+                if vm.enrichment == nil, let aid = vm.match?.aniListID {
+                    await vm.enrich(aniListID: aid)
+                }
             } else {
+                // Module calls go through whichever module is active, so a page opened for a
+                // specific source has to make that source active before loading from it.
+                if moduleId != nil, let module = effectiveModule, ModuleManager.shared.moduleReadyId != module.id {
+                    _ = await ModuleManager.shared.selectAndAwaitReady(module)
+                }
                 await vm.load(item: item)
                 if vm.enrichment == nil, let aid = vm.match?.aniListID {
                     await vm.enrich(aniListID: aid)
@@ -357,7 +379,7 @@ struct MangaDetailView: View {
                         .heroTitleAnchor(in: "mangaDetailScroll")
                         .copyTitleContextMenu(detail.title)
 
-                    if let module = ModuleManager.shared.activeModule {
+                    if let module = effectiveModule {
                         HStack(spacing: 5) {
                             CachedAsyncImage(urlString: module.iconUrl ?? "", base64String: module.iconData)
                                 .frame(width: 14, height: 14)
@@ -476,7 +498,7 @@ struct MangaDetailView: View {
     private func readButton(_ detail: MangaDetail) -> some View {
         let hasProgress = progress.lastRead(for: item.href) != nil
         return Button {
-            openContinue(detail)
+            openContinue(readableDetail(detail))
         } label: {
             HStack(spacing: 10) {
                 Image(systemName: "book.fill")
@@ -495,7 +517,7 @@ struct MangaDetailView: View {
             .foregroundStyle(.primary)
         }
         .buttonStyle(.plain)
-        .disabled(detail.chapters.isEmpty)
+        .disabled(liveChapters(for: detail).isEmpty)
     }
 
     // MARK: - Reading-list editor (mirrors DetailView's per-service controls)
@@ -693,7 +715,7 @@ struct MangaDetailView: View {
                                         selectedChapterHrefs.insert(chapter.href)
                                     }
                                 } else {
-                                    openChapter(chapter, detail: detail)
+                                    openChapter(chapter, detail: readableDetail(detail))
                                 }
                                 #endif
                             },
@@ -729,6 +751,15 @@ struct MangaDetailView: View {
     // MARK: - Reader launching (iOS)
 
     #if os(iOS)
+    /// The detail the reader opens on. Offline, that is the chapters still on disk — the list
+    /// captured on entry goes stale as chapters are deleted, and the reader would then try to
+    /// fetch a removed chapter from the network.
+    private func readableDetail(_ detail: MangaDetail) -> MangaDetail {
+        guard offlineChapters != nil else { return detail }
+        return MangaDetail(title: detail.title, image: detail.image, description: detail.description,
+                           tags: detail.tags, chapters: liveChapters(for: detail))
+    }
+
     private func openChapter(_ chapter: MangaChapter, detail: MangaDetail) {
         guard let idx = detail.chapters.firstIndex(where: { $0.href == chapter.href }) else { return }
         let last = progress.lastRead(for: item.href)
@@ -761,7 +792,7 @@ struct MangaDetailView: View {
             mangaTitle: detail.title,
             mangaHref: item.href,
             coverImage: detail.image,
-            moduleId: ModuleManager.shared.activeModule?.id ?? "")
+            moduleId: effectiveModuleId ?? "")
     }
 
     private func makeContext(detail: MangaDetail, chapterIndex: Int,
@@ -770,7 +801,7 @@ struct MangaDetailView: View {
             mangaTitle: detail.title,
             mangaHref: item.href,
             coverImage: detail.image,
-            moduleId: ModuleManager.shared.activeModule?.id ?? "",
+            moduleId: effectiveModuleId ?? "",
             chapters: detail.chapters,
             chapterIndex: chapterIndex,
             resumePage: resumePage,

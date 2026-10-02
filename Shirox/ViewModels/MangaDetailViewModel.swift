@@ -39,6 +39,17 @@ final class MangaDetailViewModel: ObservableObject {
         isLoading = false
     }
 
+    /// Downloaded-manga counterpart of `load`'s match step: no module calls, just the saved
+    /// match (available offline) or, when there is none, an AniList search that simply comes
+    /// back empty without a connection.
+    func loadOfflineMatch(item: SearchItem) async {
+        if let cached = MangaMatchManager.shared.cachedMatch(mangaHref: item.href) {
+            match = cached
+            return
+        }
+        match = await MangaMatchManager.shared.match(mangaHref: item.href, title: item.title)
+    }
+
     /// Module descriptions come from scraped meta tags and often carry HTML
     /// entities. Ordered replacements: `&amp;` must be last so a literal
     /// "&amp;#039;" decodes in one pass instead of re-exposing an entity.

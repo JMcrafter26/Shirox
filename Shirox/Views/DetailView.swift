@@ -65,6 +65,8 @@ struct DetailView: View {
     @State private var isSelectionMode = false
     @State private var selectedEpisodeNumbers: Set<Int> = []
     @State private var showBatchDownloadPicker = false
+    /// A downloaded episode's unmark that would lower AniList/MAL progress, awaiting a choice.
+    @State private var offlineDowngrade: RemoteDowngrade?
     // Observe the snapshot store so the offline view re-renders when reenrichIfStale
     // finishes — `offlineSnapshot` is a value captured at navigation time and never
     // updates on its own, which is why re-enriched thumbnails only appeared after an
@@ -1849,6 +1851,12 @@ struct DetailView: View {
                                     playDownloaded(downloadItem)
                                 }
                             },
+                            onMarkWatched: {
+                                markDownloaded(downloadItem, watched: true, snapshot: snapshot, detail: detail)
+                            },
+                            onMarkUnwatched: {
+                                markDownloaded(downloadItem, watched: false, snapshot: snapshot, detail: detail)
+                            },
                             onResetProgress: {
                                 ContinueWatchingManager.shared.resetEpisodeProgress(
                                     aniListID: snapshot.aniListID,
@@ -1868,6 +1876,52 @@ struct DetailView: View {
                 }
                 .padding(.horizontal, 16)
             }
+        }
+        .alert(
+            "Update tracking progress?",
+            isPresented: Binding(get: { offlineDowngrade != nil }, set: { if !$0 { offlineDowngrade = nil } }),
+            presenting: offlineDowngrade
+        ) { d in
+            Button("Update everywhere (ep \(d.newProgress))") {
+                Task { await d.confirm(); offlineDowngrade = nil }
+            }
+            Button("This device only") { d.localOnly(); offlineDowngrade = nil }
+            Button("Cancel", role: .cancel) { offlineDowngrade = nil }
+        } message: { d in
+            let parts = [
+                d.anilistFrom.map { "AniList: \($0) → \(d.newProgress)" },
+                d.malFrom.map { "MAL: \($0) → \(d.newProgress)" }
+            ].compactMap { $0 }
+            Text(parts.joined(separator: "\n"))
+        }
+    }
+
+    /// Mark/unmark from a downloaded row — the same path the online rows use, so it also pushes
+    /// to AniList/MAL when signed in (and is simply local-only without a connection).
+    private func markDownloaded(_ item: DownloadItem, watched: Bool,
+                                snapshot: DownloadedMediaSnapshot, detail: MediaDetail) {
+        // The download's own id, not a later auto-match: the row's watched state and the
+        // player both key progress by it, so marking under another id would not show up.
+        let aid = snapshot.aniListID
+        let context = MarkContext(
+            aniListID: aid,
+            malID: malID ?? aid.flatMap { IDMappingService.shared.cachedMalId(forAnilistId: $0) },
+            moduleId: snapshot.moduleId,
+            mediaTitle: snapshot.mediaTitle,
+            imageUrl: detail.image.isEmpty ? nil : detail.image,
+            totalEpisodes: vm.aniListMedia?.episodes,
+            availableEpisodes: nil,
+            detailHref: item.detailHref,
+            episodeHref: item.episodeHref,
+            isAiring: vm.aniListMedia.map { $0.status == "RELEASING" },
+            currentAniListProgress: existingEntry?.progress,
+            currentMALProgress: existingMALEntry?.progress,
+            currentAniListStatus: existingEntry?.status
+        )
+        Task {
+            let result = await ContinueWatchingManager.shared.markEpisode(
+                item.episodeNumber, asWatched: watched, context: context)
+            if case .needsConfirmation(let d) = result { offlineDowngrade = d }
         }
     }
 
