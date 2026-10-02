@@ -84,6 +84,34 @@ final class MALOfficialDiscoveryTests: XCTestCase {
         let date = Calendar.current.date(from: DateComponents(year: 2026, month: 11, day: 2))!
         XCTAssertEqual(MALOfficialDiscoveryService.currentSeason(now: date).year, 2026)
     }
+
+    // MARK: - Last season
+
+    /// Winter's previous season is the fall before, in the year before.
+    func testPreviousSeasonRollsBackAcrossTheYear() {
+        func previous(month: Int) -> (year: Int, season: String) {
+            let date = Calendar.current.date(from: DateComponents(year: 2026, month: month, day: 15))!
+            return MALOfficialDiscoveryService.previousSeason(now: date)
+        }
+        XCTAssertTrue(previous(month: 2) == (2025, "fall"))
+        XCTAssertTrue(previous(month: 5) == (2026, "winter"))
+        XCTAssertTrue(previous(month: 8) == (2026, "spring"))
+        XCTAssertTrue(previous(month: 11) == (2026, "summer"))
+    }
+
+    /// Only shows that both started that season and have stopped airing belong in the binge
+    /// row — not one still airing, and not a carryover that merely ended then.
+    func testLastSeasonKeepsOnlyFinishedShowsFromThatSeason() throws {
+        let nodes = try [
+            node(json: #"{"id":1,"title":"Done","status":"finished_airing","start_season":{"year":2026,"season":"summer"}}"#),
+            node(json: #"{"id":2,"title":"Airing","status":"currently_airing","start_season":{"year":2026,"season":"summer"}}"#),
+            node(json: #"{"id":3,"title":"Carryover","status":"finished_airing","start_season":{"year":2026,"season":"spring"}}"#),
+            node(json: #"{"id":4,"title":"Unknown","start_season":{"year":2026,"season":"summer"}}"#),
+            node(json: #"{"id":5,"title":"Also done","status":"finished_airing","start_season":{"year":2026,"season":"summer"}}"#)
+        ]
+        let kept = MALOfficialDiscoveryService.finished(nodes, year: 2026, season: "summer")
+        XCTAssertEqual(kept.map(\.id), [1, 5], "popularity order from the API is kept")
+    }
 }
 
 /// Tests for turning MyAnimeList's weekly broadcast slot into a real instant.

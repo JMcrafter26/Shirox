@@ -59,6 +59,20 @@ final class MALProvider: MediaProvider {
         )
     }
 
+    /// MyAnimeList's API only, with no Jikan fallback: Jikan can't filter by status either, and
+    /// paging a whole season through its rate limit isn't worth one row. A failure hides the row
+    /// rather than failing the whole Home feed with it.
+    func lastSeasonCompleted() async throws -> [Media] {
+        do {
+            return try await MALOfficialDiscoveryService.shared.lastSeasonCompleted()
+                .prefix(DataSaver.rowLength(20))
+                .map { MALOfficialDiscoveryService.shared.mapToMedia($0) }
+        } catch {
+            Logger.shared.log("[MAL] Last season failed (\(error)) — hiding the row", type: "Provider")
+            return []
+        }
+    }
+
     /// Sequenced rather than concurrent: unlike AniList's single combined request, MyAnimeList
     /// still needs one call per row, and Jikan — which these can still fall back to — enforces
     /// ~3 req/s. Firing them at once risked a 429 on exactly the rows that have nowhere else to
@@ -109,7 +123,13 @@ final class MALProvider: MediaProvider {
     }
 
     func browse(category: BrowseCategory, page: Int) async throws -> [Media] {
-        try await MALDiscoveryService.shared.browse(category: category, page: page).map { MALDiscoveryService.shared.mapToMedia($0) }
+        if category == .lastSeason {
+            // The one request already returns the whole finished season, so it is all page one.
+            guard page == 1 else { return [] }
+            return try await MALOfficialDiscoveryService.shared.lastSeasonCompleted()
+                .map { MALOfficialDiscoveryService.shared.mapToMedia($0) }
+        }
+        return try await MALDiscoveryService.shared.browse(category: category, page: page).map { MALDiscoveryService.shared.mapToMedia($0) }
     }
 
     // MARK: - Library

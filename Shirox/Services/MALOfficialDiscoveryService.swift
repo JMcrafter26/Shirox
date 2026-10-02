@@ -107,6 +107,31 @@ final class MALOfficialDiscoveryService {
         ])
     }
 
+    /// Last season's finished shows, most-listed first — MyAnimeList's side of the binge row.
+    ///
+    /// The API can't filter a season by airing status, but it hands back the whole season in one
+    /// page sorted by popularity, so the filter happens here: still one request, where Jikan
+    /// would have needed a page per 25 titles.
+    func lastSeasonCompleted(now: Date = Date()) async throws -> [Node] {
+        let previous = Self.previousSeason(now: now)
+        let nodes = try await get("anime/season/\(previous.year)/\(previous.season)", query: [
+            URLQueryItem(name: "sort", value: "anime_num_list_users"),
+            URLQueryItem(name: "limit", value: "500")
+        ])
+        return Self.finished(nodes, year: previous.year, season: previous.season)
+    }
+
+    /// The titles that started in this season and have stopped airing — matching AniList's
+    /// `season`/`status: FINISHED` pair, so a long show carried over from an earlier season
+    /// doesn't land in the row just because it ended.
+    static func finished(_ nodes: [Node], year: Int, season: String) -> [Node] {
+        nodes.filter {
+            $0.status == "finished_airing"
+                && $0.start_season?.year == year
+                && $0.start_season?.season == season
+        }
+    }
+
     func search(_ query: String, limit: Int) async throws -> [Node] {
         try await get("anime", query: [
             URLQueryItem(name: "q", value: query),
@@ -163,6 +188,17 @@ final class MALOfficialDiscoveryService {
         case 4...6:  return (year, "spring")
         case 7...9:  return (year, "summer")
         default:     return (year, "fall")
+        }
+    }
+
+    /// The season before the current one; winter rolls back into the previous year's fall.
+    static func previousSeason(now: Date = Date()) -> (year: Int, season: String) {
+        let current = currentSeason(now: now)
+        switch current.season {
+        case "winter": return (current.year - 1, "fall")
+        case "spring": return (current.year, "winter")
+        case "summer": return (current.year, "spring")
+        default:       return (current.year, "summer")
         }
     }
 

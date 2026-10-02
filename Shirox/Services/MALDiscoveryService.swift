@@ -330,9 +330,8 @@ final class MALDiscoveryService {
         case .seasonal: return try await seasonal(page: page)
         case .popular:  return try await popular(page: page)
         case .topRated: return try await topRated(page: page)
-        // Jikan can't filter a season by airing status in one query, so there's no honest
-        // MAL answer here. The home row is hidden when empty, and `MediaProvider`'s default
-        // `lastSeasonCompleted()` returns empty for the same reason.
+        // Jikan can't filter a season by airing status in one query; `MALProvider` serves this
+        // from MyAnimeList's own API instead and never asks Jikan for it.
         case .lastSeason: return []
         }
     }
