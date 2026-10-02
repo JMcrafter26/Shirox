@@ -17,7 +17,7 @@ struct DownloadsView: View {
         var id: Self { self }
     }
 
-    private enum SortOrder: String, CaseIterable, Identifiable {
+    fileprivate enum SortOrder: String, CaseIterable, Identifiable {
         case title = "Title"
         case recent = "Recently Downloaded"
         var id: Self { self }
@@ -316,19 +316,7 @@ struct DownloadsView: View {
                 }
             }
             .navigationTitle("Downloads")
-            .toolbar {
-                if hasAnything {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        Menu {
-                            Picker("Sort By", selection: $sortOrder) {
-                                ForEach(SortOrder.allCases) { Text($0.rawValue).tag($0) }
-                            }
-                        } label: {
-                            Image(systemName: "arrow.up.arrow.down")
-                        }
-                    }
-                }
-            }
+            .modifier(SortToolbar(isShown: hasAnything, sortOrder: $sortOrder))
             // Re-measured whenever something finishes or is removed, off the main thread: an
             // HLS download is thousands of segment files.
             .task(id: storageKey) {
@@ -979,6 +967,42 @@ private struct MangaDownloadProgressRow: View {
             case .failed: Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.red)
             default: EmptyView()
             }
+        }
+    }
+}
+
+/// The Downloads sort menu, shown once there's something to sort.
+private struct SortToolbar: ViewModifier {
+    let isShown: Bool
+    @Binding var sortOrder: DownloadsView.SortOrder
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if #available(iOS 16, *) {
+            // Left out, not left empty: from iOS 26 an empty item still draws its glass.
+            content.toolbar {
+                if isShown {
+                    ToolbarItem(placement: .topBarTrailing) { menu }
+                }
+            }
+        } else {
+            // A bare `if` in a toolbar builder needs iOS 16; before it, the condition lives
+            // inside the item.
+            content.toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    if isShown { menu }
+                }
+            }
+        }
+    }
+
+    private var menu: some View {
+        Menu {
+            Picker("Sort By", selection: $sortOrder) {
+                ForEach(DownloadsView.SortOrder.allCases) { Text($0.rawValue).tag($0) }
+            }
+        } label: {
+            Image(systemName: "arrow.up.arrow.down")
         }
     }
 }
