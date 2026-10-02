@@ -171,7 +171,7 @@ struct LibraryEntryEditSheet: View {
                     ScoreInputView(score: $score, format: scoreFormat)
                 }
 
-                if progressUnit == "episode", media.provider != .local {
+                if progressUnit == "episode", AniListMappingManager.shared.canToggleAutomaticTracking(for: media) {
                     Section("Tracking") {
                         Toggle("Automatically Track", isOn: $automaticTracking)
                             .tint(.secondary)
@@ -260,7 +260,7 @@ struct LibraryEntryEditSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        if progressUnit == "episode", media.provider != .local {
+                        if progressUnit == "episode", AniListMappingManager.shared.canToggleAutomaticTracking(for: media) {
                             AniListMappingManager.shared.setAutomaticTracking(automaticTracking, for: media)
                         }
                         let finalProgress = status == .completed ? (media.episodes ?? progress) : progress

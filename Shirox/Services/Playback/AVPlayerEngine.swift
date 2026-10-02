@@ -53,9 +53,12 @@ final class AVPlayerEngine: PlaybackEngine {
             : AVURLAsset(url: source.url, options: ["AVURLAssetHTTPHeaderFieldsKey": source.headers])
         let item = AVPlayerItem(asset: asset)
         #if os(iOS)
-        item.add(AVPlayerItemVideoOutput(pixelBufferAttributes: [
-            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
-        ]))
+        // Only for the hold-to-save-frame action: an output costs a BGRA copy path all along.
+        if UserDefaults.standard.string(forKey: "playerHoldAction") == "saveFrame" {
+            item.add(AVPlayerItemVideoOutput(pixelBufferAttributes: [
+                kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+            ]))
+        }
         #endif
         // Automatic: let AVPlayer size the buffer adaptively (YouTube-style ABR). A fixed value
         // fights stall-minimization and prolongs stalls on flaky CDNs.

@@ -8,6 +8,7 @@ final class BackupSettingsSectionTests: XCTestCase {
     private var allKeys: [String] {
         SettingsBackupSection.boolKeys + SettingsBackupSection.intKeys
             + SettingsBackupSection.doubleKeys + SettingsBackupSection.stringKeys
+            + SettingsBackupSection.stringListKeys
             + ["subtitle.enabled", "subtitle.fontSize", "subtitle.shadowRadius",
                "subtitle.backgroundEnabled", "subtitle.bottomPadding", "subtitle.delay",
                "subtitle.color.r", "subtitle.color.g", "subtitle.color.b", "subtitle.color.a"]
@@ -136,5 +137,47 @@ final class BackupSettingsSectionTests: XCTestCase {
                                             strings: [SyncTargets.key: "anilist,simkl"], subtitles: nil)
         _ = try await SettingsBackupSection().apply(payload)
         XCTAssertEqual(SyncTargets.load(), [.anilist, .simkl])
+    }
+
+    func testManualTrackingTitlesAndHoldActionRoundTrip() async throws {
+        UserDefaults.standard.set(["anilist-1", "mal-2"], forKey: AniListMappingManager.manualTrackingKey)
+        UserDefaults.standard.set("saveFrame", forKey: "playerHoldAction")
+        let section = SettingsBackupSection()
+        let payload = try XCTUnwrap(section.export())
+
+        UserDefaults.standard.removeObject(forKey: AniListMappingManager.manualTrackingKey)
+        UserDefaults.standard.set("speed", forKey: "playerHoldAction")
+        _ = try await section.apply(payload)
+
+        XCTAssertEqual(UserDefaults.standard.stringArray(forKey: AniListMappingManager.manualTrackingKey),
+                       ["anilist-1", "mal-2"])
+        XCTAssertEqual(UserDefaults.standard.string(forKey: "playerHoldAction"), "saveFrame")
+    }
+
+    private func media(_ id: Int, _ provider: ProviderType, type: String? = nil) -> Media {
+        Media(id: id, idMal: nil, provider: provider, title: MediaTitle(romaji: nil, english: "T", native: nil),
+              coverImage: MediaCoverImage(large: nil, extraLarge: nil), bannerImage: nil, description: nil,
+              episodes: nil, status: nil, averageScore: nil, genres: nil, season: nil, seasonYear: nil,
+              nextAiringEpisode: nil, relations: nil, type: type, format: nil)
+    }
+
+    /// The edit sheet writes what the player reads: AniList and MAL ids, a Simkl anime by its MAL id.
+    func testManualTrackingIsStoredUnderTheIdsThePlayerChecks() {
+        let manager = AniListMappingManager.shared
+        let cases: [(Media, ProviderType, Int)] = [
+            (media(9_000_001, .anilist), .anilist, 9_000_001),
+            (media(9_000_002, .mal), .mal, 9_000_002),
+            (media(9_000_003, .simkl), .mal, 9_000_003),
+        ]
+        for (title, provider, id) in cases {
+            XCTAssertTrue(manager.canToggleAutomaticTracking(for: title))
+            manager.setAutomaticTracking(false, for: title)
+            XCTAssertFalse(manager.automaticTrackingEnabled(for: title))
+            XCTAssertFalse(manager.automaticTrackingEnabled(provider: provider, mediaId: id))
+            manager.setAutomaticTracking(true, for: title)
+            XCTAssertTrue(manager.automaticTrackingEnabled(provider: provider, mediaId: id))
+        }
+        XCTAssertFalse(manager.canToggleAutomaticTracking(for: media(1, .simkl, type: Media.simklTVType)))
+        XCTAssertFalse(manager.canToggleAutomaticTracking(for: media(1, .local)))
     }
 }

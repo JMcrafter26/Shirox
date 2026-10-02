@@ -789,20 +789,67 @@ final class AniListMappingManager {
     // Dictionary of moduleTitle -> aniListID
     private var mappings: [String: Int] = [:]
     
+    /// Titles the user tracks by hand, as "anilist-<id>" / "mal-<id>": the ids the player has.
+    static let manualTrackingKey = "manualTrackingTitles"
+
     private init() {
         loadMappings()
+        migrateManualTrackingKeys()
     }
-    
+
+    /// The entry the player checks for a title. A Simkl anime is keyed by its MAL id; a Simkl
+    /// show or movie carries no AniList or MAL id, so the player can't tell it apart and it has none.
+    private func manualTrackingEntry(for media: Media) -> String? {
+        switch media.provider {
+        case .anilist, .mal: return "\(media.provider.rawValue)-\(media.id)"
+        case .simkl: return media.simklTitleKind == nil ? "\(ProviderType.mal.rawValue)-\(media.id)" : nil
+        case .local: return nil
+        }
+    }
+
+    private var manualTrackingTitles: Set<String> {
+        Set(userDefaults.stringArray(forKey: Self.manualTrackingKey) ?? [])
+    }
+
+    func canToggleAutomaticTracking(for media: Media) -> Bool {
+        manualTrackingEntry(for: media) != nil
+    }
+
     func automaticTrackingEnabled(for media: Media) -> Bool {
-        automaticTrackingEnabled(provider: media.provider, mediaId: media.id)
+        guard let entry = manualTrackingEntry(for: media) else { return true }
+        return !manualTrackingTitles.contains(entry)
     }
 
     func automaticTrackingEnabled(provider: ProviderType, mediaId: Int) -> Bool {
-        !userDefaults.bool(forKey: "com.shirox.manual_tracking.\(provider.rawValue)-\(mediaId)")
+        !manualTrackingTitles.contains("\(provider.rawValue)-\(mediaId)")
     }
 
     func setAutomaticTracking(_ enabled: Bool, for media: Media) {
-        userDefaults.set(!enabled, forKey: "com.shirox.manual_tracking.\(media.uniqueId)")
+        guard let entry = manualTrackingEntry(for: media) else { return }
+        var titles = manualTrackingTitles
+        if enabled { titles.remove(entry) } else { titles.insert(entry) }
+        userDefaults.set(titles.sorted(), forKey: Self.manualTrackingKey)
+    }
+
+    /// Build 115 kept each title under its own key, named by `Media.uniqueId`.
+    private func migrateManualTrackingKeys() {
+        let migratedKey = "manualTrackingMigrated"
+        guard !userDefaults.bool(forKey: migratedKey) else { return }
+        let prefix = "com.shirox.manual_tracking."
+        var titles = manualTrackingTitles
+        for (key, value) in userDefaults.dictionaryRepresentation() where key.hasPrefix(prefix) {
+            userDefaults.removeObject(forKey: key)
+            guard value as? Bool == true else { continue }
+            let parts = key.dropFirst(prefix.count).split(separator: "-")
+            guard parts.count == 2, let id = Int(parts[1]) else { continue }
+            switch parts[0] {
+            case "anilist", "mal": titles.insert("\(parts[0])-\(id)")
+            case "simkl": titles.insert("\(ProviderType.mal.rawValue)-\(id)")
+            default: break
+            }
+        }
+        if !titles.isEmpty { userDefaults.set(titles.sorted(), forKey: Self.manualTrackingKey) }
+        userDefaults.set(true, forKey: migratedKey)
     }
 
     func saveMapping(title: String, aniListID: Int) {

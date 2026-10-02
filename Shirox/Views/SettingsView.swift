@@ -593,6 +593,9 @@ struct PlayerSettingsView: View {
                 if forceLandscape {
                     Toggle("Auto-Rotate in Landscape", isOn: $autoRotateForcedLandscape)
                         .tint(.secondary)
+                    Text("Turns the player to the other landscape side even with Rotation Lock on in Control Center.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
 
                 if #available(iOS 26.0, macOS 26.0, *) {

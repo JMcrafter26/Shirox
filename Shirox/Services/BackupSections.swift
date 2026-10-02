@@ -123,6 +123,8 @@ struct SettingsBackupPayload: Codable {
     var doubles: [String: Double]
     var strings: [String: String]
     var subtitles: SubtitleBackupPayload?
+    /// Absent from backups made before any list was backed up.
+    var stringLists: [String: [String]]? = nil
 }
 
 /// Preferences, as an explicit allowlist rather than a dump of the UserDefaults domain —
@@ -156,8 +158,10 @@ struct SettingsBackupSection: BackupSection {
     static let stringKeys = [
         "librarySortOrder", "libraryStatusOrder", "mangaReadingMode",
         "preferredQuality", "titleLanguagePriority", SyncTargets.key,
-        DiscoverySource.choiceKey, DiscoverySource.kindKey
+        DiscoverySource.choiceKey, DiscoverySource.kindKey, "playerHoldAction"
     ]
+
+    static let stringListKeys = [AniListMappingManager.manualTrackingKey]
 
     private enum SubtitleKeys {
         static let colorR = "subtitle.color.r"
@@ -180,6 +184,10 @@ struct SettingsBackupSection: BackupSection {
         for key in Self.stringKeys {
             if let value = d.string(forKey: key) { strings[key] = value }
         }
+        var stringLists: [String: [String]] = [:]
+        for key in Self.stringListKeys {
+            if let value = d.stringArray(forKey: key) { stringLists[key] = value }
+        }
 
         let subtitles = SubtitleSettingsManager.shared
         let color: [Double]? = d.object(forKey: SubtitleKeys.colorR) == nil ? nil : [
@@ -199,7 +207,8 @@ struct SettingsBackupSection: BackupSection {
                 backgroundEnabled: subtitles.backgroundEnabled,
                 bottomPadding: subtitles.bottomPadding,
                 delaySeconds: subtitles.delaySeconds,
-                colorRGBA: color))
+                colorRGBA: color),
+            stringLists: stringLists)
     }
 
     @MainActor func apply(_ payload: SettingsBackupPayload) async throws -> [String] {
@@ -208,6 +217,7 @@ struct SettingsBackupSection: BackupSection {
         for (key, value) in payload.ints where Self.intKeys.contains(key) { d.set(value, forKey: key) }
         for (key, value) in payload.doubles where Self.doubleKeys.contains(key) { d.set(value, forKey: key) }
         for (key, value) in payload.strings where Self.stringKeys.contains(key) { d.set(value, forKey: key) }
+        for (key, value) in payload.stringLists ?? [:] where Self.stringListKeys.contains(key) { d.set(value, forKey: key) }
 
         // A backup from before `syncTargets` carries only `dualSync`. Re-seed from it, or the
         // restored choice is ignored in favour of whatever set this device had.
