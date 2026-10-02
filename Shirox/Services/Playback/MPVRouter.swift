@@ -40,7 +40,8 @@ final class MPVProxyRouter: MPVRouter {
         holding = true
         let up = await CastProxyServer.shared.startAndWait(headers: source.headers, reason: reason,
                                                            timeout: readyTimeout)
-        guard up, let proxied = CastProxyServer.shared.loopbackURL(for: source.url) else {
+        guard up, let proxied = CastProxyServer.shared.loopbackURL(for: source.url,
+                                                                   playlistKey: source.playlistKey) else {
             Logger.shared.log("[MPV] The proxy didn't come up; fetching the stream directly", type: "Error")
             release()
             return source

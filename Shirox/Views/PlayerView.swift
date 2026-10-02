@@ -128,6 +128,9 @@ struct PlayerView: View {
     /// which is the only way a header-authenticated stream reaches an Apple TV.
     @State private var airPlayProxyURL: URL? = nil
     @State private var isSwappingAirPlayRoute = false
+    /// What the subtitles last handed to the AirPlay receiver were, so a change (a new track,
+    /// cues that finished loading after the swap) re-sends them.
+    @State private var airPlaySubtitlesSignature: String?
     @State private var lastSavedSeconds: Double = 0
     @State private var loadingOpacity = 0.8
     @State private var didSeekToResume = false
@@ -721,6 +724,12 @@ struct PlayerView: View {
         // What mpv draws follows who's drawing, and the viewer's settings.
         .onChangeOf(subtitleRoute) { _ in applySubtitlesToMPV() }
         .onChangeOf(assScript) { _ in applySubtitlesToMPV() }
+        #if os(iOS)
+        // Under AirPlay the subtitles travel in the stream; a change has to reach the receiver.
+        .onChangeOf(assScript) { _ in refreshAirPlaySubtitles() }
+        .onChangeOf(subtitleCues.count) { _ in refreshAirPlaySubtitles() }
+        .onChangeOf(subtitleSettings.enabled) { _ in refreshAirPlaySubtitles() }
+        #endif
         .onChangeOf(subtitleSettings.enabled) { _ in applySubtitlesToMPV() }
         .onChangeOf(subtitleSettings.delaySeconds) { _ in applySubtitlesToMPV() }
         .onChangeOf(subtitleSettings.fontSize) { _ in applySubtitlesToMPV() }
@@ -1484,10 +1493,11 @@ struct PlayerView: View {
 
             let subtitleURL = currentStream.subtitle.flatMap { URL(string: $0) }
             let castURL: URL
-            if !currentStream.headers.isEmpty {
+            if !currentStream.headers.isEmpty || currentStream.playlistKey != nil {
                 #if os(iOS)
                 await CastProxyServer.shared.startAndWait(headers: currentStream.headers, reason: "cast")
-                castURL = CastProxyServer.shared.proxyURL(for: currentStream.url) ?? currentStream.url
+                castURL = CastProxyServer.shared.proxyURL(for: currentStream.url,
+                                                          playlistKey: currentStream.playlistKey) ?? currentStream.url
                 #else
                 castURL = currentStream.url
                 #endif
@@ -1537,7 +1547,8 @@ struct PlayerView: View {
         let needsProxy = AirPlayRouting.needsProxy(
             url: currentStream.url,
             headers: currentStream.headers,
-            isAirPlayActive: isActive
+            isAirPlayActive: isActive,
+            hasScrambledPlaylists: currentStream.playlistKey != nil
         )
         guard AirPlayRouting.shouldRebuild(currentlyProxied: airPlayProxyURL != nil,
                                            needsProxy: needsProxy) else { return }
@@ -1546,32 +1557,126 @@ struct PlayerView: View {
         Task { @MainActor in
             defer { isSwappingAirPlayRoute = false }
 
-            let resumeAt = currentTime
             if needsProxy {
-                await CastProxyServer.shared.startAndWait(headers: currentStream.headers, reason: "airplay")
-                guard let proxied = CastProxyServer.shared.proxyURL(for: currentStream.url) else {
+                guard await CastProxyServer.shared.startAndWait(headers: currentStream.headers, reason: "airplay"),
+                      let proxied = CastProxyServer.shared.proxyURL(for: currentStream.url,
+                                                                    playlistKey: currentStream.playlistKey) else {
                     // No usable LAN address (no Wi-Fi) — the receiver could not have reached
                     // us anyway. Leave the direct URL in place rather than break local playback.
                     CastProxyServer.shared.stop(reason: "airplay")
-                    Logger.shared.log("[AirPlay] No LAN address; keeping direct URL", type: "Error")
+                    Logger.shared.log("[AirPlay] Proxy unavailable or no LAN address; keeping direct URL", type: "Error")
                     return
                 }
                 Logger.shared.log("[AirPlay] Routing through proxy: \(Logger.redact(proxied))", type: "Stream")
                 airPlayProxyURL = proxied
             } else {
+                // THE BUG: the route briefly reads as the phone's speaker while AirPlay
+                // re-attaches, and taking that at face value stopped the proxy under a live
+                // session ("[CastProxy] Stopped", then a stall). Only a route that stays off
+                // AirPlay ends it.
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                guard !Self.isAirPlayRouteActive, airPlayProxyURL != nil else { return }
                 Logger.shared.log("[AirPlay] Ended; restoring direct URL", type: "Stream")
                 airPlayProxyURL = nil
+                airPlaySubtitlesSignature = nil
                 CastProxyServer.shared.stop(reason: "airplay")
             }
 
-            // Same clean-slate path the stall recovery uses: seed the resume position and
-            // rebuild, so the swap lands back exactly where the user was.
-            currentContext?.resumeFrom = resumeAt
-            didSeekToResume = false
-            engine?.pause()
-            setupPlayer()
+            reloadItemInPlace()
         }
         #endif
+    }
+
+    /// Reloads the stream at the current position on the same AVPlayer — for a route or
+    /// subtitle change under AirPlay. Not a rebuild: the external playback session belongs to
+    /// the player, and a fresh one let go of the Apple TV, which flipped the route back and
+    /// forth. The resume position is reapplied on the first tick, the same way a launch resumes.
+    @MainActor
+    private func reloadItemInPlace() {
+        guard let engine else { return }
+        let resumeAt = currentTime
+        if resumeAt > 0 { currentContext?.resumeFrom = resumeAt }
+        didSeekToResume = false
+        engine.load(playbackSource(for: currentStream))
+        watchOpeningIfLeftToFinish()
+        if isPlaying { engine.rate = Float(playbackSpeed) }
+    }
+
+    #if os(iOS)
+    /// The subtitles on screen now, as plain cues timed for the receiver, with their signature.
+    private func airPlaySubtitleCues() -> (cues: [SubtitleCue], signature: String)? {
+        guard subtitleSettings.enabled else { return nil }
+        let source = assScript.map(AirPlaySubtitles.cues(fromASS:)) ?? subtitleCues
+        guard let first = source.first, let last = source.last else { return nil }
+        // The overlay shows a cue while `time + delay` is inside it, so it's shifted by -delay.
+        let delay = subtitleSettings.delaySeconds
+        let cues = delay == 0 ? source : source.map {
+            SubtitleCue(start: $0.start - delay, end: $0.end - delay, text: $0.text)
+        }
+        let signature = "\(source.count)|\(first.start)|\(last.end)|\(delay)|\(selectedSubtitleTrack?.title ?? "")"
+        return (cues, signature)
+    }
+
+    /// Re-sends the subtitles to the AirPlay receiver when they've changed since the stream
+    /// was handed over.
+    @MainActor
+    private func refreshAirPlaySubtitles() {
+        guard airPlayProxyURL != nil, !isSwappingAirPlayRoute, engine is AVPlayerEngine else { return }
+        let signature = airPlaySubtitleCues()?.signature
+        guard signature != airPlaySubtitlesSignature else { return }
+        // Cues cleared while the next ones load (a quality switch) aren't worth a reload; only
+        // turning subtitles off is.
+        if signature == nil, subtitleSettings.enabled { return }
+        Logger.shared.log("[AirPlay] Subtitles changed; reloading the receiver's stream", type: "Stream")
+        reloadItemInPlace()
+    }
+    #endif
+
+    /// What the engine should open for `stream`. While AirPlay runs through the LAN proxy, a
+    /// header-authenticated stream is re-minted there too — a refetch, a quality switch or the
+    /// next episode used to load the bare module URL, which the Apple TV then fetched without
+    /// the module's headers and stalled on.
+    /// - Parameter withSubtitles: hand the receiver the subtitles on screen now. Off for a new
+    ///   episode, whose own subtitles haven't loaded yet; they follow once they have.
+    private func playbackSource(for stream: StreamResult, prefersJapaneseAudio: Bool = true,
+                                withSubtitles: Bool = true) -> PlaybackSource {
+        var source: PlaybackSource
+        if stream.url.isFileURL {
+            source = PlaybackSource(url: stream.url)
+        } else {
+            source = PlaybackSource(url: stream.url, headers: stream.headers)
+            source.playlistKey = stream.playlistKey
+        }
+        #if os(iOS)
+        if airPlayProxyURL != nil {
+            if AirPlayRouting.needsProxy(url: stream.url, headers: stream.headers, isAirPlayActive: true,
+                                         hasScrambledPlaylists: stream.playlistKey != nil) {
+                // Already up for this session; this only swaps the headers it attaches.
+                CastProxyServer.shared.start(headers: stream.headers, reason: "airplay")
+                // The receiver can't see the subtitles drawn on the phone: they go to it as a
+                // WebVTT rendition in the stream itself.
+                let subtitles = withSubtitles ? airPlaySubtitleCues() : nil
+                let subtitlesID = subtitles.map {
+                    CastProxyServer.shared.registerSubtitles(
+                        cues: $0.cues, name: selectedSubtitleTrack?.title ?? "Subtitles",
+                        duration: duration > 0 ? duration : ($0.cues.last?.end ?? 0) + 60)
+                }
+                if let proxied = CastProxyServer.shared.proxyURL(for: stream.url, playlistKey: stream.playlistKey,
+                                                                 subtitlesID: subtitlesID) {
+                    airPlayProxyURL = proxied
+                    airPlaySubtitlesSignature = subtitles?.signature
+                    source = PlaybackSource(url: proxied)
+                    source.selectsSubtitles = subtitlesID != nil
+                }
+            } else {
+                airPlayProxyURL = nil
+                airPlaySubtitlesSignature = nil
+                CastProxyServer.shared.stop(reason: "airplay")
+            }
+        }
+        #endif
+        source.prefersJapaneseAudio = prefersJapaneseAudio && stream.subtitle != nil
+        return source
     }
 
     private func togglePlayPause() {
@@ -1643,7 +1748,10 @@ struct PlayerView: View {
         let newTime = min(max(currentTime + seconds, 0), duration)
         currentTime = newTime
         isScrubbing = true
-        engine.seek(to: newTime, precision: .fast, completion: nil)
+        // Through the chaser, not a seek per tap: each new seek cancelled the one in flight,
+        // and AVPlayer could come out of a cancelled seek on HLS with its audio gone until
+        // the next one ("sound cuts out after skipping until you skip again").
+        seekSmoothly(to: newTime)
         Task { @MainActor in
             try? await Task.sleep(nanoseconds: 300_000_000)
             endSeekWindow()
@@ -1777,15 +1885,7 @@ struct PlayerView: View {
         // While AirPlay is driving the TV, a header-authenticated stream is played from the
         // LAN proxy instead: the Apple TV fetches the URL itself and AVURLAsset's headers
         // don't travel with the handoff, so the direct URL 403s to a black screen there.
-        var source: PlaybackSource
-        if let proxied = airPlayProxyURL {
-            source = PlaybackSource(url: proxied)
-        } else if currentStream.url.isFileURL {
-            source = PlaybackSource(url: currentStream.url)
-        } else {
-            source = PlaybackSource(url: currentStream.url, headers: currentStream.headers)
-        }
-        source.prefersJapaneseAudio = currentStream.subtitle != nil
+        let source = playbackSource(for: currentStream)
         #if os(tvOS)
         // The native player shows no picture on tvOS; MPV is the one that does.
         let kind = PlaybackEngineKind.mpv
@@ -1807,13 +1907,21 @@ struct PlayerView: View {
         e.play() // Ensure player starts
         isPlaying = true
         engine = e
+        #if os(iOS)
+        // AirPlay may already own the route when the player opens (picked in Control Center
+        // beforehand), and then no route change ever arrives to move it onto the proxy: the
+        // Apple TV was handed the bare module URL and sat at 0:00.
+        handleExternalPlaybackChange(Self.isAirPlayRouteActive)
+        #endif
         bufferProgress = 0
         hlsQualities = []
         selectedQualityBandwidth = nil
         let qualityURL = currentStream.url
         let qualityHeaders = currentStream.headers
+        let qualityKey = currentStream.playlistKey
         Task {
-            let qualities = await HLSQualityParser.parse(url: qualityURL, headers: qualityHeaders)
+            let qualities = await HLSQualityParser.parse(url: qualityURL, headers: qualityHeaders,
+                                                         playlistKey: qualityKey)
             await MainActor.run {
                 hlsQualities = qualities
                 applyPreferredQuality()
@@ -2845,7 +2953,7 @@ struct PlayerView: View {
         // watched the item they were given, so without this a dead URL after a quality switch was
         // never noticed at all. The engine attaches them with every load. The audio tracks it
         // finds come back through `audioOptionsChanged`.
-        engine?.load(PlaybackSource(url: next.url, headers: next.headers))
+        engine?.load(playbackSource(for: next, prefersJapaneseAudio: false))
         watchOpeningIfLeftToFinish()
         subtitleTracks = next.allSubtitles ?? subtitleTracks
         currentStream = next
@@ -2902,9 +3010,7 @@ struct PlayerView: View {
         // refetch recovery): without its own observers, a dead URL on episode 2 onwards produced
         // a black screen with no refetch and no error. The engine attaches them with every load,
         // and starts a subbed episode on Japanese audio when there's a choice.
-        var source = PlaybackSource(url: next.url, headers: next.headers)
-        source.prefersJapaneseAudio = next.subtitle != nil
-        engine?.load(source)
+        engine?.load(playbackSource(for: next, withSubtitles: false))
         watchOpeningIfLeftToFinish()
         // THE BUG: this used to start the local player unconditionally. During a cast the
         // local player is deliberately parked and silent, so an auto-advance played episode 2
@@ -2955,8 +3061,10 @@ struct PlayerView: View {
         selectedQualityBandwidth = nil
         let qualityURL = next.url
         let qualityHeaders = next.headers
+        let qualityKey = next.playlistKey
         Task {
-            let qualities = await HLSQualityParser.parse(url: qualityURL, headers: qualityHeaders)
+            let qualities = await HLSQualityParser.parse(url: qualityURL, headers: qualityHeaders,
+                                                         playlistKey: qualityKey)
             await MainActor.run {
                 hlsQualities = qualities
                 applyPreferredQuality()

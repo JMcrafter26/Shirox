@@ -50,12 +50,23 @@ enum CastManifestRewriter {
     /// - Parameter proxy: maps an origin URL to its proxied form; a `nil` return leaves that
     ///   URL untouched rather than dropping the line.
     static func rewrite(_ manifest: String, baseURL: URL, proxy: (URL) -> URL?) -> String {
-        manifest.components(separatedBy: .newlines).map { line -> String in
+        rewrite(manifest, baseURL: baseURL) { url, _ in proxy(url) }
+    }
+
+    /// Rewrites every fetchable URL in `manifest` through `proxy`, telling it which of them are
+    /// playlists themselves: a master playlist's variants and its `#EXT-X-MEDIA` /
+    /// `#EXT-X-I-FRAME-STREAM-INF` renditions. Segments, keys and init maps are not.
+    static func rewrite(_ manifest: String, baseURL: URL, proxy: (URL, _ isPlaylist: Bool) -> URL?) -> String {
+        let isMaster = manifest.contains("#EXT-X-STREAM-INF") || manifest.contains("#EXT-X-MEDIA:")
+        return manifest.components(separatedBy: .newlines).map { line -> String in
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             if trimmed.isEmpty { return line }
-            if trimmed.hasPrefix("#") { return rewriteTag(line, baseURL: baseURL, proxy: proxy) }
+            if trimmed.hasPrefix("#") {
+                let isPlaylist = trimmed.hasPrefix("#EXT-X-MEDIA:") || trimmed.hasPrefix("#EXT-X-I-FRAME-STREAM-INF:")
+                return rewriteTag(line, baseURL: baseURL) { proxy($0, isPlaylist) }
+            }
             guard let resolved = resolve(trimmed, relativeTo: baseURL),
-                  let proxied = proxy(resolved) else { return line }
+                  let proxied = proxy(resolved, isMaster) else { return line }
             return proxied.absoluteString
         }.joined(separator: "\n")
     }
@@ -76,5 +87,35 @@ enum CastManifestRewriter {
         guard let resolved = resolve(value, relativeTo: baseURL),
               let proxied = proxy(resolved) else { return line }
         return line.replacingCharacters(in: range, with: "URI=\"\(proxied.absoluteString)\"")
+    }
+}
+
+/// Undoes the playlist scrambling some sites put on top of HLS: every playlist (master, audio
+/// and video) is served as base64 of the text XORed with a per-session key, which the site's
+/// player unscrambles before parsing. A module hands the key over as the stream's
+/// `playlistKey` (base64, as the site has it); segments are not scrambled.
+///
+/// The site's own loader, for reference:
+///
+///     const key = atob(pk), ct = atob(body), out = [];
+///     for (let i = 0; i < ct.length; i++) out.push(ct.charCodeAt(i) ^ key.charCodeAt(i % key.length));
+///     body = new TextDecoder().decode(new Uint8Array(out));
+enum HLSPlaylistCipher {
+    /// The playlist text in `body`: as is when it's already a playlist, otherwise unscrambled
+    /// with `key`. Nil when it is neither.
+    static func decode(_ body: Data, key: String) -> String? {
+        if let plain = String(data: body, encoding: .utf8),
+           plain.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("#EXTM3U") {
+            return plain
+        }
+        guard let keyBytes = Data(base64Encoded: key, options: .ignoreUnknownCharacters), !keyBytes.isEmpty,
+              let text = String(data: body, encoding: .utf8),
+              let cipher = Data(base64Encoded: text.trimmingCharacters(in: .whitespacesAndNewlines),
+                                options: .ignoreUnknownCharacters) else { return nil }
+        let k = [UInt8](keyBytes)
+        let plain = Data(cipher.enumerated().map { $0.element ^ k[$0.offset % k.count] })
+        guard let decoded = String(data: plain, encoding: .utf8),
+              decoded.trimmingCharacters(in: .whitespacesAndNewlines).hasPrefix("#EXTM3U") else { return nil }
+        return decoded
     }
 }

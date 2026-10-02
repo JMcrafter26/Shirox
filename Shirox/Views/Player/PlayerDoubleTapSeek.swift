@@ -144,6 +144,14 @@ private struct FullScreenSeekView: UIViewRepresentable {
         // is the standard ~0.3s double-tap-detection delay on single-tap-to-show-controls.
         singleTap.require(toFail: doubleTap)
 
+        // On iOS 16 SwiftUI's own recognizers on the hosting view (the centre play button,
+        // the controls) won these touches outright, so a tap on the video never showed the
+        // controls; only the middle, a SwiftUI button, did anything. Recognising alongside
+        // them lets the video tap through, as it already does on later versions.
+        doubleTap.delegate = context.coordinator
+        singleTap.delegate = context.coordinator
+        context.coordinator.ownRecognizers = [doubleTap, singleTap]
+
         view.addGestureRecognizer(doubleTap)
         view.addGestureRecognizer(singleTap)
         return view
@@ -155,7 +163,9 @@ private struct FullScreenSeekView: UIViewRepresentable {
         context.coordinator.onSeekRight = onSeekRight
     }
 
-    final class Coordinator: NSObject {
+    final class Coordinator: NSObject, UIGestureRecognizerDelegate {
+        /// The pair this view installs, which must still order themselves by `require(toFail:)`.
+        var ownRecognizers: [UIGestureRecognizer] = []
         var onSingleTap: () -> Void
         var onSeekLeft: () -> Void
         var onSeekRight: () -> Void
@@ -175,6 +185,11 @@ private struct FullScreenSeekView: UIViewRepresentable {
         @objc func handleDouble(_ gr: UITapGestureRecognizer) {
             let isLeft = gr.location(in: gr.view).x < (gr.view?.bounds.width ?? 0) / 2
             if isLeft { onSeekLeft() } else { onSeekRight() }
+        }
+
+        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                               shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool {
+            !ownRecognizers.contains { $0 === other }
         }
     }
 }

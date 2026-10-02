@@ -34,6 +34,11 @@ struct PlaybackSource: Equatable {
     var headers: [String: String] = [:]
     /// Start on Japanese audio when the source offers a choice — a subbed stream.
     var prefersJapaneseAudio = false
+    /// The key its playlists are scrambled with (see ``HLSPlaylistCipher``), when they are.
+    /// Such a stream is only playable through the app's proxy, which unscrambles them.
+    var playlistKey: String? = nil
+    /// Turn on the stream's own subtitle rendition — the one the proxy adds for AirPlay.
+    var selectsSubtitles = false
 }
 
 /// What an engine reports while it plays. Each is only ever about the item loaded now: an event

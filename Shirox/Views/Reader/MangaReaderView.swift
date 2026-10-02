@@ -65,6 +65,13 @@ struct MangaReaderView: View {
 
     // Vertical infrastructure
     @State private var verticalProxy: ScrollViewProxy?
+    /// Bumped by each start of the resume settle loop, so a newer start retires an older one
+    /// rather than both steering the scroll.
+    @State private var settleRun = 0
+    /// The chapter and page on screen when a new reading mode was picked, taken before the switch: the
+    /// vertical strip renders the moment the mode changes, and its tracker reports page 0 before
+    /// the change handler runs — so a paged reader on page 3 reopened vertical at the top.
+    @State private var pageAtModeSwitch: (chapter: Int, page: Int)?
     @State private var verticalScrollView: UIScrollView?
     /// Non-nil while a resume settles BEHIND the spinner. Gates the tracker
     /// so the initial top-of-list layout can't overwrite the saved position.
@@ -82,6 +89,10 @@ struct MangaReaderView: View {
         var geoms: [Int: ReaderPageGeom] = [:]
         var topPage = 0
         var topFraction: Double = 0
+        /// The width the pages were last laid out at. A change is a rotation (or an iPad
+        /// resize): every page's height scales with it, so the scroll offset in points lands
+        /// on a different page — the reader has to re-anchor to where it was.
+        var layoutWidth: CGFloat = 0
         /// Real laid-out height per page, keyed by "<url>@<width>".
         ///
         /// A page that hasn't decoded yet falls back to a fixed 2:3 placeholder, but real
@@ -226,8 +237,9 @@ struct MangaReaderView: View {
             stopAutoScroll()
             verticalResumeTarget = nil
             isSettling = false
-            let chapterIdx = displayedChapterIndex
-            pendingResume = pageInChapter
+            let chapterIdx = pageAtModeSwitch?.chapter ?? displayedChapterIndex
+            pendingResume = pageAtModeSwitch?.page ?? pageInChapter
+            pageAtModeSwitch = nil
             pendingResumeFraction = 0
             Task { await loadChapter(chapterIdx) }
         }
@@ -312,6 +324,20 @@ struct MangaReaderView: View {
                 pinching: $pinching, startScale: $pinchStartScale, maxZoom: Self.maxZoom))
             .coordinateSpace(name: "readerScroll")
             .onPreferenceChange(ReaderPageFrameKey.self) { frames in
+                if let width = frames.values.first(where: { $0.width > 1 })?.width {
+                    let previous = geomStore.layoutWidth
+                    geomStore.layoutWidth = width
+                    if previous > 1, abs(width - previous) > 1, verticalResumeTarget == nil, !strip.isEmpty {
+                        // Rotated: go back to the page under the top edge, the same distance into
+                        // it, as it was before the width changed. The anchor isn't updated from
+                        // this pass — its frames are already the new layout's.
+                        verticalResumeFraction = geomStore.topFraction
+                        verticalResumeTarget = geomStore.topPage
+                        geomStore.geoms = frames
+                        DispatchQueue.main.async { startVerticalResume() }
+                        return
+                    }
+                }
                 geomStore.geoms = frames
                 for (idx, geom) in frames where geom.height > 1 && geom.width > 1 {
                     guard let url = strip[safe: idx]?.url else { continue }
@@ -341,9 +367,7 @@ struct MangaReaderView: View {
             })
             .onAppear {
                 verticalProxy = proxy
-                if let target = verticalResumeTarget {
-                    performVerticalResume(proxy, target: target, attempt: 0)
-                }
+                startVerticalResume()
             }
             // Pure visual magnification anchored at the pinch point — the scroll
             // position is never touched, so pinching zooms in place and never
@@ -476,7 +500,13 @@ struct MangaReaderView: View {
             Spacer()
 
             Menu {
-                Picker("Reading Mode", selection: $modeRaw) {
+                Picker("Reading Mode", selection: Binding(
+                    get: { modeRaw },
+                    set: { newMode in
+                        guard newMode != modeRaw else { return }
+                        pageAtModeSwitch = (displayedChapterIndex, pageInChapter)
+                        modeRaw = newMode
+                    })) {
                     ForEach(MangaReadingMode.allCases) { m in
                         Label(m.label, systemImage: m.icon).tag(m.rawValue)
                     }
@@ -684,6 +714,13 @@ struct MangaReaderView: View {
                 // The strip hierarchy is recreated after loading, so
                 // verticalReader.onAppear kicks the settle loop.
                 isSettling = wantsResume && mode == .vertical
+                // THE BUG: the settle loop was started only by verticalReader's onAppear. Pages
+                // already on hand (downloaded, prefetched) load without suspending, so the
+                // spinner never rendered, the vertical strip was never re-created, onAppear
+                // never fired — and switching from paged to vertical sat on the spinner forever.
+                if isSettling {
+                    DispatchQueue.main.async { startVerticalResume() }
+                }
                 // Auto-fetch the upcoming chapter right away (vertical) so
                 // forward navigation is instant and stays scroll-back-able.
                 prepareUpcomingChapter()
@@ -927,7 +964,14 @@ struct MangaReaderView: View {
     /// until the error is under 3pt, then reveal already in position. After
     /// the reveal NOTHING programmatic touches the scroll — no locking, no
     /// snapping, the user's scroll is the only thing that moves the reader.
-    private func performVerticalResume(_ proxy: ScrollViewProxy, target: Int, attempt: Int) {
+    private func startVerticalResume() {
+        guard let proxy = verticalProxy, let target = verticalResumeTarget else { return }
+        settleRun += 1
+        performVerticalResume(proxy, target: target, attempt: 0, run: settleRun)
+    }
+
+    private func performVerticalResume(_ proxy: ScrollViewProxy, target: Int, attempt: Int, run: Int) {
+        guard run == settleRun else { return }   // a newer start took over
         guard verticalResumeTarget == target else {   // cancelled (scrub/chapter/mode change)
             isSettling = false
             return
@@ -976,7 +1020,7 @@ struct MangaReaderView: View {
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            performVerticalResume(proxy, target: target, attempt: attempt + 1)
+            performVerticalResume(proxy, target: target, attempt: attempt + 1, run: run)
         }
     }
 

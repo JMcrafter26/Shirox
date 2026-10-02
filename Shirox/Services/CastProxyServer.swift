@@ -63,6 +63,20 @@ final class CastProxyServer: @unchecked Sendable {
     private var running = false
     /// Signs proxy URLs so only URLs this app minted are honoured.
     private var token = CastProxyServer.makeToken()
+    /// Subtitles handed to an AirPlay receiver as a WebVTT rendition (see ``AirPlaySubtitles``),
+    /// by id. Only the latest is kept: one video plays at a time.
+    private var subtitleSessions: [String: SubtitleSession] = [:]
+
+    private struct SubtitleSession {
+        var cues: [SubtitleCue]
+        var name: String
+        var duration: Double
+        /// The stream's first media segment and its init map, found while its media playlist
+        /// went through — read for the timestamp the cues are mapped onto.
+        var firstSegment: URL?
+        var initSegment: URL?
+        var firstTimestamp: Int64?
+    }
 
     /// Called on the main queue when the device's LAN address changes while casting. Any
     /// URL already handed to the receiver now points at an address the phone has given up,
@@ -322,25 +336,44 @@ final class CastProxyServer: @unchecked Sendable {
 
     // MARK: - URL minting
 
+    /// Registers subtitles to hand an AirPlay receiver with the next stream minted with the id
+    /// this returns. `duration` is the video's, in seconds.
+    func registerSubtitles(cues: [SubtitleCue], name: String, duration: Double) -> String {
+        let id = String(UUID().uuidString.prefix(8))
+        stateQueue.sync {
+            subtitleSessions = [id: SubtitleSession(cues: cues, name: name, duration: duration)]
+        }
+        return id
+    }
+
     /// Returns a proxied URL on the device's LAN address, signed with this run's token.
-    func proxyURL(for url: URL) -> URL? {
+    /// - Parameters:
+    ///   - playlistKey: the stream's playlist key (see ``HLSPlaylistCipher``), for a playlist
+    ///     URL; nil for anything else.
+    ///   - subtitlesID: from ``registerSubtitles(cues:name:duration:)``, to add those subtitles
+    ///     to the stream's master playlist.
+    func proxyURL(for url: URL, playlistKey: String? = nil, subtitlesID: String? = nil) -> URL? {
         stateQueue.sync {
             // Cached: a manifest rewrite calls this once per line, and `getifaddrs` per
             // segment on a long playlist is real work for a constant answer.
             let host = cachedIP ?? Self.currentLocalIP()
             cachedIP = host
             guard let host, host != "127.0.0.1" else { return nil }
-            return mintLocked(url, host: host)
+            return mintLocked(url, host: host, playlistKey: playlistKey,
+                              extra: subtitlesID.map { [URLQueryItem(name: "s", value: $0)] } ?? [])
         }
     }
 
     /// Returns a proxied URL on loopback, signed with this run's token — for a client on this
     /// device (mpv), which reaches the proxy with or without Wi-Fi.
-    func loopbackURL(for url: URL) -> URL? {
-        stateQueue.sync { mintLocked(url, host: "127.0.0.1") }
+    func loopbackURL(for url: URL, playlistKey: String? = nil, subtitlesID: String? = nil) -> URL? {
+        stateQueue.sync {
+            mintLocked(url, host: "127.0.0.1", playlistKey: playlistKey,
+                       extra: subtitlesID.map { [URLQueryItem(name: "s", value: $0)] } ?? [])
+        }
     }
 
-    private func mintLocked(_ url: URL, host: String) -> URL? {
+    private func mintLocked(_ url: URL, host: String, playlistKey: String?, extra: [URLQueryItem] = []) -> URL? {
         var c = URLComponents()
         c.scheme = "http"
         c.host = host
@@ -350,6 +383,11 @@ final class CastProxyServer: @unchecked Sendable {
             URLQueryItem(name: "url", value: url.absoluteString),
             URLQueryItem(name: "t", value: token)
         ]
+        if let playlistKey { c.queryItems?.append(URLQueryItem(name: "k", value: playlistKey)) }
+        c.queryItems?.append(contentsOf: extra)
+        // `URLComponents` leaves `+` alone, which a server reads back as a space; a base64 key
+        // is full of them.
+        c.percentEncodedQuery = c.percentEncodedQuery?.replacingOccurrences(of: "+", with: "%2B")
         return c.url
     }
 
@@ -393,10 +431,25 @@ final class CastProxyServer: @unchecked Sendable {
     /// Serves one parsed request onto `connection`. Returns once the response is fully
     /// written, so the connection can decide whether to read another request.
     fileprivate func serve(_ head: HTTPRequestHead, on connection: ProxyConnection) async {
+        let query = URLComponents(string: "http://localhost" + head.path)
+        if let path = query?.path, path == "/subs.m3u8" || path == "/subs.vtt" {
+            guard validate(path: head.path),
+                  let id = query?.queryItems?.first(where: { $0.name == "id" })?.value else {
+                connection.writeStatus(403)
+                return
+            }
+            await serveSubtitles(id: id, playlist: path == "/subs.m3u8", head: head, on: connection)
+            return
+        }
         guard validate(path: head.path), let target = head.targetURL else {
             connection.writeStatus(head.targetURL == nil ? 400 : 403)
             return
         }
+
+        // Present only on a scrambled stream's playlists: its responses are unscrambled, and
+        // the playlists they name are minted with it in turn.
+        let playlistKey = URLComponents(string: "http://localhost" + head.path)?
+            .queryItems?.first(where: { $0.name == "k" })?.value
 
         var request = URLRequest(url: target)
         request.httpMethod = head.wantsBody ? "GET" : "HEAD"
@@ -404,20 +457,167 @@ final class CastProxyServer: @unchecked Sendable {
 
         // A manifest gets rewritten, which changes its length — so a range over it would be
         // a lie. Manifests are small and never usefully ranged, so ask for the whole thing.
-        let expectManifest = target.pathExtension.lowercased() == "m3u8"
+        let expectManifest = playlistKey != nil || target.pathExtension.lowercased() == "m3u8"
         if !expectManifest, let range = head.value(for: "range") {
             request.setValue(range, forHTTPHeaderField: "Range")
         }
 
         let loopback = Self.isLoopback(hostHeader: head.value(for: "host"))
+        // AirPlay subtitles: `s` on the stream's own URL (add the rendition), `sp` on the
+        // playlists it names (find the first segment, for the timing).
+        let subtitlesID = query?.queryItems?.first(where: { $0.name == "s" })?.value
+        let probeID = subtitlesID ?? query?.queryItems?.first(where: { $0.name == "sp" })?.value
+        let finish: ((String, String) -> String)? = probeID.map { id in
+            { [weak self] original, rewritten in
+                guard let self else { return rewritten }
+                self.recordSegments(of: original, baseURL: target, subtitlesID: id)
+                guard let subtitlesID else { return rewritten }
+                return self.addSubtitles(to: original, rewritten: rewritten, target: target,
+                                         playlistKey: playlistKey, subtitlesID: subtitlesID,
+                                         loopback: loopback)
+            }
+        }
         await exchanges.run(request: request,
                             on: upstream,
                             connection: connection,
                             wantsBody: head.wantsBody,
                             rewriteManifestFrom: target,
-                            proxy: { [weak self] in
-                                loopback ? self?.loopbackURL(for: $0) : self?.proxyURL(for: $0)
+                            playlistKey: playlistKey,
+                            finish: finish,
+                            proxy: { [weak self] url, isPlaylist in
+                                self?.mintNested(url, isPlaylist: isPlaylist, playlistKey: playlistKey,
+                                                 probeID: probeID, loopback: loopback)
                             })
+    }
+
+    /// A URL a playlist names, minted back through the proxy: playlists keep the stream's key
+    /// and the subtitle probe, segments and keys need neither.
+    private func mintNested(_ url: URL, isPlaylist: Bool, playlistKey: String?, probeID: String?,
+                            loopback: Bool) -> URL? {
+        stateQueue.sync {
+            let host = loopback ? "127.0.0.1" : (cachedIP ?? Self.currentLocalIP())
+            guard let host else { return nil }
+            return mintLocked(url, host: host, playlistKey: isPlaylist ? playlistKey : nil,
+                              extra: isPlaylist ? probeID.map { [URLQueryItem(name: "sp", value: $0)] } ?? [] : [])
+        }
+    }
+
+    // MARK: - AirPlay subtitles
+
+    private func subtitleURL(_ path: String, id: String, loopback: Bool) -> String? {
+        stateQueue.sync {
+            let host = loopback ? "127.0.0.1" : (cachedIP ?? Self.currentLocalIP())
+            guard let host else { return nil }
+            var c = URLComponents()
+            c.scheme = "http"
+            c.host = host
+            c.port = Int(port.rawValue)
+            c.path = path
+            c.queryItems = [URLQueryItem(name: "id", value: id), URLQueryItem(name: "t", value: token)]
+            return c.url?.absoluteString
+        }
+    }
+
+    /// The stream's top playlist with the subtitle rendition in it — or, for a stream that is a
+    /// single media playlist, a master around it that names both.
+    private func addSubtitles(to original: String, rewritten: String, target: URL, playlistKey: String?,
+                              subtitlesID: String, loopback: Bool) -> String {
+        let name = stateQueue.sync { subtitleSessions[subtitlesID]?.name }
+        guard let name, let uri = subtitleURL("/subs.m3u8", id: subtitlesID, loopback: loopback) else { return rewritten }
+        let tag = AirPlaySubtitles.mediaTag(uri: uri, name: name)
+        if original.contains("#EXT-X-STREAM-INF") {
+            return AirPlaySubtitles.inject(into: rewritten, mediaTag: tag)
+        }
+        guard let media = mintNested(target, isPlaylist: true, playlistKey: playlistKey,
+                                     probeID: subtitlesID, loopback: loopback) else { return rewritten }
+        return AirPlaySubtitles.wrap(mediaPlaylistURL: media.absoluteString, mediaTag: tag)
+    }
+
+    /// Notes a media playlist's first segment and init map, once per subtitle session.
+    private func recordSegments(of playlist: String, baseURL: URL, subtitlesID: String) {
+        guard !playlist.contains("#EXT-X-STREAM-INF") else { return }
+        var initSegment: URL?
+        var first: URL?
+        for raw in playlist.components(separatedBy: .newlines) {
+            let line = raw.trimmingCharacters(in: .whitespaces)
+            if line.hasPrefix("#EXT-X-MAP:"),
+               let range = line.range(of: "(?<=[:,])URI=\"[^\"]*\"", options: .regularExpression) {
+                let value = String(line[range].dropFirst(5).dropLast())
+                initSegment = CastManifestRewriter.resolve(value, relativeTo: baseURL)
+            } else if !line.isEmpty, !line.hasPrefix("#") {
+                first = CastManifestRewriter.resolve(line, relativeTo: baseURL)
+                break
+            }
+        }
+        guard let first else { return }
+        stateQueue.sync {
+            guard subtitleSessions[subtitlesID] != nil, subtitleSessions[subtitlesID]?.firstSegment == nil else { return }
+            subtitleSessions[subtitlesID]?.firstSegment = first
+            subtitleSessions[subtitlesID]?.initSegment = initSegment
+        }
+    }
+
+    private func serveSubtitles(id: String, playlist: Bool, head: HTTPRequestHead, on connection: ProxyConnection) async {
+        guard let session = stateQueue.sync(execute: { subtitleSessions[id] }) else {
+            connection.writeStatus(404)
+            return
+        }
+        let loopback = Self.isLoopback(hostHeader: head.value(for: "host"))
+        if playlist {
+            guard let vtt = subtitleURL("/subs.vtt", id: id, loopback: loopback) else {
+                connection.writeStatus(404)
+                return
+            }
+            respond(AirPlaySubtitles.subtitlePlaylist(vttURL: vtt, duration: session.duration),
+                    type: "application/x-mpegURL", wantsBody: head.wantsBody, on: connection)
+            return
+        }
+        let timestamp = await firstTimestamp(for: id)
+        respond(AirPlaySubtitles.webVTT(cues: session.cues, firstTimestamp: timestamp ?? 0),
+                type: "text/vtt", wantsBody: head.wantsBody, on: connection)
+    }
+
+    /// The stream's first timestamp, read once off its first segment. The receiver can ask for
+    /// the subtitles before the video's media playlist has come through, so this waits a little
+    /// for that to name the segment.
+    private func firstTimestamp(for id: String) async -> Int64? {
+        var session = stateQueue.sync { subtitleSessions[id] }
+        for _ in 0..<30 where session?.firstSegment == nil {
+            try? await Task.sleep(nanoseconds: 100_000_000)
+            session = stateQueue.sync { subtitleSessions[id] }
+        }
+        guard let session, let segment = session.firstSegment else {
+            Logger.shared.log("[AirPlay] Subtitles served unmapped: no segment seen yet", type: "Stream")
+            return nil
+        }
+        if let known = session.firstTimestamp { return known }
+        let headers = currentHeaders()
+        func fetch(_ url: URL, range: String?) async -> Data? {
+            var request = URLRequest(url: url, timeoutInterval: 15)
+            headers.forEach { request.setValue($1, forHTTPHeaderField: $0) }
+            if let range { request.setValue(range, forHTTPHeaderField: "Range") }
+            return try? await URLSession.shared.data(for: request).0
+        }
+        let timestamp: Int64?
+        if let initURL = session.initSegment {
+            guard let initData = await fetch(initURL, range: nil),
+                  let start = await fetch(segment, range: "bytes=0-65535") else { return nil }
+            timestamp = AirPlaySubtitles.firstTimestamp(fragmentedInit: initData, segment: start)
+        } else {
+            guard let start = await fetch(segment, range: "bytes=0-37599") else { return nil }
+            timestamp = AirPlaySubtitles.firstTimestamp(transportStream: start)
+        }
+        Logger.shared.log("[AirPlay] Subtitles mapped to timestamp \(timestamp.map(String.init) ?? "none")", type: "Stream")
+        stateQueue.sync { subtitleSessions[id]?.firstTimestamp = timestamp }
+        return timestamp
+    }
+
+    private func respond(_ text: String, type: String, wantsBody: Bool, on connection: ProxyConnection) {
+        let body = Data(text.utf8)
+        var head = "HTTP/1.1 200 OK\r\nContent-Type: \(type)\r\nContent-Length: \(body.count)\r\n"
+        head += "Access-Control-Allow-Origin: *\r\nCache-Control: no-cache\r\nConnection: keep-alive\r\n\r\n"
+        guard connection.writeBlocking(Data(head.utf8)) else { return }
+        if wantsBody { _ = connection.writeBlocking(body) }
     }
 
     // MARK: - Local IP
@@ -625,17 +825,23 @@ fileprivate final class ProxyExchangeRegistry: NSObject, URLSessionDataDelegate,
         let connection: ProxyConnection
         let wantsBody: Bool
         let manifestBase: URL
-        let proxy: (URL) -> URL?
+        let playlistKey: String?
+        /// Last say over a rewritten manifest: (as fetched, rewritten) → served.
+        let finishManifest: ((String, String) -> String)?
+        let proxy: (URL, Bool) -> URL?
         var isManifest = false
         var manifestBuffer = Data()
         var headerSent = false
         var failed = false
         var finish: ((Void) -> Void)?
 
-        init(connection: ProxyConnection, wantsBody: Bool, manifestBase: URL, proxy: @escaping (URL) -> URL?) {
+        init(connection: ProxyConnection, wantsBody: Bool, manifestBase: URL, playlistKey: String?,
+             finish: ((String, String) -> String)?, proxy: @escaping (URL, Bool) -> URL?) {
+            self.finishManifest = finish
             self.connection = connection
             self.wantsBody = wantsBody
             self.manifestBase = manifestBase
+            self.playlistKey = playlistKey
             self.proxy = proxy
         }
     }
@@ -649,9 +855,12 @@ fileprivate final class ProxyExchangeRegistry: NSObject, URLSessionDataDelegate,
              connection: ProxyConnection,
              wantsBody: Bool,
              rewriteManifestFrom base: URL,
-             proxy: @escaping (URL) -> URL?) async {
+             playlistKey: String? = nil,
+             finish: ((String, String) -> String)? = nil,
+             proxy: @escaping (URL, Bool) -> URL?) async {
         let task = session.dataTask(with: request)
-        let exchange = Exchange(connection: connection, wantsBody: wantsBody, manifestBase: base, proxy: proxy)
+        let exchange = Exchange(connection: connection, wantsBody: wantsBody, manifestBase: base,
+                                playlistKey: playlistKey, finish: finish, proxy: proxy)
         lock.lock(); active[task.taskIdentifier] = exchange; lock.unlock()
 
         await withCheckedContinuation { continuation in
@@ -689,7 +898,9 @@ fileprivate final class ProxyExchangeRegistry: NSObject, URLSessionDataDelegate,
             ?? response.mimeType
             ?? Self.mimeType(for: exchange.manifestBase.pathExtension)
 
-        exchange.isManifest = CastManifestRewriter.isManifest(mime: mime, url: exchange.manifestBase)
+        // A scrambled playlist comes back as text/plain base64, so its key marks it instead.
+        exchange.isManifest = exchange.playlistKey != nil
+            || CastManifestRewriter.isManifest(mime: mime, url: exchange.manifestBase)
 
         if exchange.isManifest {
             // Length is unknown until the rewrite is done, so the head waits.
@@ -755,11 +966,16 @@ fileprivate final class ProxyExchangeRegistry: NSObject, URLSessionDataDelegate,
         guard exchange.isManifest else { return }
 
         let body: Data
-        if let text = String(data: exchange.manifestBuffer, encoding: .utf8) {
+        let text = exchange.playlistKey.map { HLSPlaylistCipher.decode(exchange.manifestBuffer, key: $0) }
+            ?? String(data: exchange.manifestBuffer, encoding: .utf8)
+        if exchange.playlistKey != nil, text == nil {
+            Logger.shared.log("[CastProxy] Couldn't unscramble a playlist from \(exchange.manifestBase.host ?? "?") with the module's key", type: "Error")
+        }
+        if let text {
             let rewritten = CastManifestRewriter.rewrite(text,
                                                          baseURL: exchange.manifestBase,
                                                          proxy: exchange.proxy)
-            body = Data(rewritten.utf8)
+            body = Data((exchange.finishManifest?(text, rewritten) ?? rewritten).utf8)
         } else {
             body = exchange.manifestBuffer
         }

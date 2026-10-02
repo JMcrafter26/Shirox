@@ -11,6 +11,10 @@ struct PlayerTopBar: View {
     var isLandscape: Bool = true
     var showDismiss: Bool = true
     @AppStorage("playerLiquidGlass") private var playerLiquidGlass = true
+    /// The right-hand capsule's width. In landscape it lays its buttons out in a row (Cast,
+    /// AirPlay, PiP, lock) and is far wider than the dismiss button, so a fixed inset let a
+    /// long title run underneath it.
+    @State private var trailingWidth: CGFloat = 0
 
     private var isPad: Bool {
         #if os(iOS)
@@ -28,10 +32,9 @@ struct PlayerTopBar: View {
                 .foregroundStyle(.white)
                 .lineLimit(1)
                 .frame(maxWidth: .infinity)
-                // Enough to clear the dismiss button and the right capsule, and no more. This
-                // was 100/140, which reserved more than twice the buttons' width and left so
-                // little room that ordinary titles truncated after a couple of words.
-                .padding(.horizontal, isPad ? 84 : 64)
+                // Clears the wider of the two sides on both, so the title stays centred and
+                // never runs under either the dismiss button or the right capsule.
+                .padding(.horizontal, titleInset)
                 .frame(height: isPad ? 56 : 44) // match dismiss button height
 
             HStack(alignment: .top) {
@@ -65,11 +68,22 @@ struct PlayerTopBar: View {
                     }
                 }
                 .mediaGlassChrome(Capsule(), enabled: playerLiquidGlass, off: Color.white.opacity(0.2))
+                .background(GeometryReader { proxy in
+                    Color.clear.preference(key: PlayerTopBarTrailingWidthKey.self, value: proxy.size.width)
+                })
             }
         }
         .padding(.horizontal, isPad ? 30 : 20)
         .padding(.top, isPad ? topPadding + 10 : topPadding)
         .padding(.bottom, 16)
+        .onPreferenceChange(PlayerTopBarTrailingWidthKey.self) { trailingWidth = $0 }
+    }
+
+    /// The title's inset from each edge of the bar: past the wider side's button, plus a gap.
+    private var titleInset: CGFloat {
+        let dismissWidth: CGFloat = isPad ? 56 : 44
+        let gap: CGFloat = isPad ? 28 : 20
+        return max(dismissWidth, trailingWidth) + gap
     }
 
     @ViewBuilder
@@ -105,5 +119,12 @@ struct PlayerTopBar: View {
                 .frame(width: frameSize, height: frameSize)
         }
         .buttonStyle(.plain)
+    }
+}
+
+private struct PlayerTopBarTrailingWidthKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = max(value, nextValue())
     }
 }

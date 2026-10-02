@@ -143,14 +143,23 @@ final class AssOverlayView: UIView {
         isUserInteractionEnabled = false
         clipsToBounds = true
         layer.addSublayer(driver.layer)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    /// The link runs only while the overlay is on screen, as on macOS. It used to start in
+    /// `init` and stop only when SwiftUI dismantled the view, so an overlay taken out of the
+    /// window any other way kept a 30 Hz link firing after the player had gone.
+    override func didMoveToWindow() {
+        super.didMoveToWindow()
+        stop()
+        guard window != nil else { return }
         let link = CADisplayLink(target: DisplayLinkTarget(self), selector: #selector(DisplayLinkTarget.fire))
         link.preferredFrameRateRange = AssOverlayDriver.frameRateRange
         link.add(to: .main, forMode: .common)
         displayLink = link
     }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 
     override func layoutSubviews() {
         super.layoutSubviews()
@@ -166,6 +175,8 @@ final class AssOverlayView: UIView {
         displayLink?.invalidate()
         displayLink = nil
     }
+
+    deinit { displayLink?.invalidate() }
 
     /// A display link holds its target strongly; this holds the view weakly.
     private final class DisplayLinkTarget {

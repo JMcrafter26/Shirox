@@ -26,6 +26,8 @@ func parseStreamResults(from obj: [String: Any]) -> [StreamResult] {
     let subtitleUrl = (obj["subtitle"] as? String ?? obj["subtitles"] as? String).flatMap { $0.isEmpty ? nil : $0 }
     let subtitleHeaders = obj["subtitleHeaders"] as? [String: String] ?? [:]
     let allSubtitles = parseSubtitleTracks(from: obj["allSubtitles"])
+    // Scrambled playlists (see HLSPlaylistCipher): a key for every stream, or per stream.
+    let sharedPlaylistKey = obj["playlistKey"] as? String
 
     var results: [StreamResult] = []
 
@@ -40,7 +42,8 @@ func parseStreamResults(from obj: [String: Any]) -> [StreamResult] {
             let headers = stream["headers"] as? [String: String] ?? [:]
             results.append(StreamResult(title: title, url: url, headers: headers,
                                         subtitle: subtitleUrl, subtitleHeaders: subtitleHeaders,
-                                        allSubtitles: allSubtitles))
+                                        allSubtitles: allSubtitles,
+                                        playlistKey: stream["playlistKey"] as? String ?? sharedPlaylistKey))
         }
     } else if let streams = obj["streams"] as? [String] {
         for (i, urlStr) in streams.enumerated() {
@@ -48,19 +51,20 @@ func parseStreamResults(from obj: [String: Any]) -> [StreamResult] {
             guard seen.insert(urlStr).inserted else { continue }
             results.append(StreamResult(title: "Stream \(i + 1)", url: url, headers: [:],
                                         subtitle: subtitleUrl, subtitleHeaders: subtitleHeaders,
-                                        allSubtitles: allSubtitles))
+                                        allSubtitles: allSubtitles, playlistKey: sharedPlaylistKey))
         }
     } else if let stream = obj["stream"] as? String, let url = URL(string: stream) {
         results.append(StreamResult(title: "Stream", url: url, headers: [:],
                                     subtitle: subtitleUrl, subtitleHeaders: subtitleHeaders,
-                                    allSubtitles: allSubtitles))
+                                    allSubtitles: allSubtitles, playlistKey: sharedPlaylistKey))
     } else if let stream = obj["stream"] as? [String: Any],
               let urlStr = stream["url"] as? String,
               let url = URL(string: urlStr) {
         let headers = stream["headers"] as? [String: String] ?? [:]
         results.append(StreamResult(title: "Stream", url: url, headers: headers,
                                     subtitle: subtitleUrl, subtitleHeaders: subtitleHeaders,
-                                    allSubtitles: allSubtitles))
+                                    allSubtitles: allSubtitles,
+                                    playlistKey: stream["playlistKey"] as? String ?? sharedPlaylistKey))
     }
 
     return results

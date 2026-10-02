@@ -10,6 +10,15 @@ enum DownloadState: String, Codable {
     case failed
 }
 
+/// One of a download's subtitle tracks: where it came from, and its local copy once fetched.
+struct DownloadedSubtitle: Codable, Equatable {
+    let title: String
+    let url: URL
+    var headers: [String: String]?
+    /// Relative to the downloads folder; nil until fetched.
+    var relativePath: String?
+}
+
 struct DownloadItem: Identifiable, Codable {
     let id: UUID
     
@@ -51,6 +60,11 @@ struct DownloadItem: Identifiable, Codable {
     // Task Tracking
     var taskIdentifier: Int?
     var retryCount: Int = 0
+    /// The key the stream's playlists are scrambled with (see ``HLSPlaylistCipher``), if any.
+    var playlistKey: String? = nil
+    /// Every subtitle track the stream offered, each saved beside the video once fetched. Only
+    /// the default (`subtitleURL`) used to be kept, so offline the other languages were gone.
+    var subtitleTracks: [DownloadedSubtitle]? = nil
     
     // Helper to determine if we should use HLS playback
     var isHLS: Bool {

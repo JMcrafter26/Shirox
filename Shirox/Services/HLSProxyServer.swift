@@ -207,6 +207,14 @@ final class HLSProxyServer: @unchecked Sendable {
                 guard let mapped = proxied(uri) else { return line }
                 return "#EXT-X-MAP:URI=\"\(mapped)\""
             }
+            // A download with separate audio has a local master naming its audio playlist here;
+            // the rest of the line (group, name, default) stays as written.
+            if tr.hasPrefix("#EXT-X-MEDIA:"), let r = tr.range(of: "URI=\"") {
+                let afterQuote = r.upperBound
+                guard let closing = tr[afterQuote...].firstIndex(of: "\""),
+                      let mapped = proxied(String(tr[afterQuote..<closing])) else { return line }
+                return tr.replacingCharacters(in: afterQuote..<closing, with: mapped)
+            }
             guard !tr.isEmpty && !tr.hasPrefix("#") else { return line }
             let segURL = folderURL.appendingPathComponent(tr)
             return proxyURL(for: segURL)?.absoluteString ?? line
@@ -266,6 +274,11 @@ final class HLSProxyServer: @unchecked Sendable {
         case "m4s": return "video/iso.segment" // fMP4/CMAF media segment
         case "ts": return "video/mp2t"
         case "m3u8": return "application/x-mpegURL"
+        // Packed audio from a download whose audio came as its own rendition.
+        case "aac": return "audio/aac"
+        case "mp3": return "audio/mpeg"
+        case "ac3": return "audio/ac3"
+        case "ec3": return "audio/eac3"
         default: return "application/octet-stream"
         }
     }

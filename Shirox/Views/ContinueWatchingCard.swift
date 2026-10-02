@@ -113,7 +113,7 @@ struct ContinueWatchingSection: View {
             if let url = LocalPlaybackCoordinator.shared.resolveImport(name: name) {
                 let subtitle = item.localSubtitleImportName
                     .flatMap { LocalPlaybackCoordinator.shared.resolveImport(name: $0) }
-                    .map { SubtitleTrack(title: $0.deletingPathExtension().lastPathComponent, url: $0, headers: [:]) }
+                    .map { SubtitleTrack(title: LocalPlaybackCoordinator.displayTitle(for: $0), url: $0, headers: [:]) }
                 LocalPlaybackCoordinator.shared.launch(videoURL: url, subtitle: subtitle, resumeFrom: item.watchedSeconds)
             } else {
                 ToastManager.shared.show(message: "File moved or unavailable — remove this item", type: .error)

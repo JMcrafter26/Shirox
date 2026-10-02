@@ -24,7 +24,10 @@ enum AirPlayRouting {
     ///     Taken from the audio session, not from an `AVPlayer` — the swap this decision
     ///     drives replaces the player, and a fresh instance reports `false` until it
     ///     re-attaches, which would oscillate the routing.
-    static func needsProxy(url: URL, headers: [String: String], isAirPlayActive: Bool) -> Bool {
+    ///   - hasScrambledPlaylists: the stream's playlists need unscrambling (`playlistKey`),
+    ///     which only the proxy can do — the receiver gets them as the origin serves them.
+    static func needsProxy(url: URL, headers: [String: String], isAirPlayActive: Bool,
+                           hasScrambledPlaylists: Bool = false) -> Bool {
         // On-device playback keeps the direct URL: AVPlayer sends the headers itself, and a
         // localhost hop would cost throughput for nothing.
         guard isAirPlayActive else { return false }
@@ -33,7 +36,7 @@ enum AirPlayRouting {
         guard !url.isFileURL else { return false }
         // An anonymous stream authenticates fine from the Apple TV — don't funnel a whole
         // movie through the phone's radio for no benefit.
-        return !headers.isEmpty
+        return !headers.isEmpty || hasScrambledPlaylists
     }
 
     /// Whether the change in routing warrants rebuilding the player item.

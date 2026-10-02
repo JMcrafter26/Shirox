@@ -41,11 +41,15 @@ enum HLSQualityParser {
         return digits.isEmpty ? nil : Int(digits)
     }
 
-    static func parse(url: URL, headers: [String: String], session: URLSession = .shared) async -> [HLSQualityLevel] {
+    /// - Parameter playlistKey: the stream's playlist key when its playlists are scrambled
+    ///   (see ``HLSPlaylistCipher``); the body is then base64, not `#EXTM3U`, until unscrambled.
+    static func parse(url: URL, headers: [String: String], playlistKey: String? = nil,
+                      session: URLSession = .shared) async -> [HLSQualityLevel] {
         var request = URLRequest(url: url, timeoutInterval: 10)
         headers.forEach { request.setValue($1, forHTTPHeaderField: $0) }
 
-        guard let (playlist, statusCode) = try? await fetchPlaylist(request, session: session) else {
+        guard let (playlist, statusCode) = try? await fetchPlaylist(request, session: session,
+                                                                     sniff: playlistKey == nil) else {
             Logger.shared.log("[HLSQuality] Fetch failed for \(Logger.redact(url))", type: "Error")
             return []
         }
@@ -53,7 +57,8 @@ enum HLSQualityParser {
             Logger.shared.log("[HLSQuality] Not a playlist (status=\(statusCode)), left unread: \(Logger.redact(url))", type: "Stream")
             return []
         }
-        guard let text = String(data: data, encoding: .utf8) else {
+        guard let text = playlistKey.map({ HLSPlaylistCipher.decode(data, key: $0) })
+                ?? String(data: data, encoding: .utf8) else {
             Logger.shared.log("[HLSQuality] Could not decode response (status=\(statusCode)) for \(Logger.redact(url))", type: "Error")
             return []
         }
@@ -112,7 +117,8 @@ enum HLSQualityParser {
     /// The URL is the stream's own, which for a direct MP4 or MKV link is the episode file. That
     /// used to be downloaded whole into memory beside the player; now it's dropped after its
     /// first bytes.
-    private static func fetchPlaylist(_ request: URLRequest, session: URLSession) async throws -> (Data?, Int) {
+    private static func fetchPlaylist(_ request: URLRequest, session: URLSession,
+                                      sniff: Bool = true) async throws -> (Data?, Int) {
         let (bytes, response) = try await session.bytes(for: request)
         let http = response as? HTTPURLResponse
         let statusCode = http?.statusCode ?? -1
@@ -120,13 +126,13 @@ enum HLSQualityParser {
         var sniffed = false
         for try await byte in bytes {
             body.append(byte)
-            if !sniffed, body.count >= sniffLength {
+            if sniff, !sniffed, body.count >= sniffLength {
                 sniffed = true
                 guard mayBePlaylist(body) else { bytes.task.cancel(); return (nil, statusCode) }
             }
             if body.count > maxPlaylistBytes { bytes.task.cancel(); return (nil, statusCode) }
         }
-        guard sniffed || mayBePlaylist(body) else { return (nil, statusCode) }
+        guard !sniff || sniffed || mayBePlaylist(body) else { return (nil, statusCode) }
         if let http { body = try HTTPBodyDecoding.decoded(body, response: http) }
         return (body, statusCode)
     }

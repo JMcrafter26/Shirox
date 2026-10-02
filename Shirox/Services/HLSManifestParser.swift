@@ -37,6 +37,15 @@ struct HLSInitSegment: Equatable {
     let key: HLSKey?
 }
 
+/// The variant a download takes from a master playlist, and the audio rendition it plays with
+/// when the audio comes separately (`AUDIO="group"` naming an `#EXT-X-MEDIA:TYPE=AUDIO`).
+struct HLSVariantChoice: Equatable {
+    let video: URL
+    let audio: URL?
+    let bandwidth: Int
+    let codecs: String?
+}
+
 /// A self-contained plan for downloading one media playlist offline.
 struct HLSDownloadPlan: Equatable {
     let initSegment: HLSInitSegment?
@@ -76,6 +85,47 @@ enum HLSManifestParser {
             i += 1
         }
         return best
+    }
+
+    /// The highest-`BANDWIDTH` variant, with the audio rendition of its `AUDIO` group — the
+    /// group's `DEFAULT=YES` one, else its first that has a URI. A rendition without a URI is
+    /// muxed into the video and needs nothing separate. Nil for a media playlist.
+    static func selectBestVariantChoice(_ manifest: String, baseURL: URL) -> HLSVariantChoice? {
+        let lines = manifest.components(separatedBy: .newlines).map { $0.trimmingCharacters(in: .whitespaces) }
+        var best: (url: URL, bandwidth: Int, attrs: [String: String])?
+        for (i, line) in lines.enumerated() where line.hasPrefix("#EXT-X-STREAM-INF") {
+            let attrs = parseAttributes(String(line.dropFirst("#EXT-X-STREAM-INF:".count)))
+            let bandwidth = attrs["BANDWIDTH"].flatMap { Int($0) } ?? 0
+            guard let uri = lines[(i + 1)...].first(where: { !$0.isEmpty && !$0.hasPrefix("#") }),
+                  let url = URL(string: uri, relativeTo: baseURL)?.absoluteURL else { continue }
+            if bandwidth > (best?.bandwidth ?? -1) { best = (url, bandwidth, attrs) }
+        }
+        guard let best else { return nil }
+        var audio: URL?
+        if let group = best.attrs["AUDIO"] {
+            let renditions = lines.filter { $0.hasPrefix("#EXT-X-MEDIA:") }
+                .map { parseAttributes(String($0.dropFirst("#EXT-X-MEDIA:".count))) }
+                .filter { $0["TYPE"] == "AUDIO" && $0["GROUP-ID"] == group && $0["URI"] != nil }
+            let pick = renditions.first { $0["DEFAULT"] == "YES" } ?? renditions.first
+            audio = pick?["URI"].flatMap { URL(string: $0, relativeTo: baseURL)?.absoluteURL }
+        }
+        return HLSVariantChoice(video: best.url, audio: audio, bandwidth: best.bandwidth, codecs: best.attrs["CODECS"])
+    }
+
+    /// The local master playlist for a download whose audio came separately: one variant, one
+    /// audio rendition, both local media playlists.
+    static func localMasterManifest(videoPlaylist: String, audioPlaylist: String,
+                                    bandwidth: Int, codecs: String?) -> String {
+        var inf = "#EXT-X-STREAM-INF:BANDWIDTH=\(max(bandwidth, 1)),AUDIO=\"audio\""
+        if let codecs { inf += ",CODECS=\"\(codecs)\"" }
+        return """
+        #EXTM3U
+        #EXT-X-VERSION:7
+        #EXT-X-INDEPENDENT-SEGMENTS
+        #EXT-X-MEDIA:TYPE=AUDIO,GROUP-ID="audio",NAME="Audio",DEFAULT=YES,AUTOSELECT=YES,URI="\(audioPlaylist)"
+        \(inf)
+        \(videoPlaylist)
+        """
     }
 
     /// Parse a media playlist into a download plan, capturing the fMP4 init segment
@@ -151,7 +201,8 @@ enum HLSManifestParser {
     /// Generate a self-contained local media playlist for the downloaded files. All
     /// segments are stored decrypted as `seg_<i>.<segmentExtension>`; an fMP4 init segment
     /// (if any) is referenced via `#EXT-X-MAP`. Never emits `#EXT-X-KEY` — content is cleartext.
-    static func localManifest(durations: [Double], segmentExtension: String, initFileName: String?) -> String {
+    static func localManifest(durations: [Double], segmentExtension: String, initFileName: String?,
+                              segmentPrefix: String = "seg_") -> String {
         let target = max(1, Int((durations.max() ?? 10).rounded(.up)))
         let version = initFileName != nil ? 7 : 3
         var m = "#EXTM3U\n#EXT-X-VERSION:\(version)\n#EXT-X-TARGETDURATION:\(target)\n#EXT-X-MEDIA-SEQUENCE:0\n"
@@ -160,7 +211,7 @@ enum HLSManifestParser {
         }
         for (index, duration) in durations.enumerated() {
             m += "#EXTINF:\(duration),\n"
-            m += "seg_\(index).\(segmentExtension)\n"
+            m += "\(segmentPrefix)\(index).\(segmentExtension)\n"
         }
         m += "#EXT-X-ENDLIST"
         return m

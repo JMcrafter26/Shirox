@@ -39,11 +39,15 @@ struct AniListDetailView: View {
     @State private var existingAniListCrossEntry: LibraryEntry? = nil
     @State private var isLoadingEntry = false
     @ObservedObject private var simklAuth = SimklAuthManager.shared
+    /// The Details sheet: following, full synopsis, trailer.
+    @State private var showDetailsSheet = false
     #if os(iOS)
     /// The title being edited on Simkl.
     @State private var simklEdit: SimklEditTarget?
     @State private var pendingDownloadEpisodeNumber: DownloadEpisodeItem? = nil
     @State private var isSelectionMode = false
+    /// Which of the two download buttons the batch sheet grows out of.
+    @State private var batchDownloadZoomID = "batchDownload"
     @State private var selectedEpisodeNumbers: Set<Int> = []
     @State private var showBatchDownloadPicker = false
     #endif
@@ -301,9 +305,26 @@ struct AniListDetailView: View {
     private var navContent: AnyView {
         AnyView(navTitled
         .overlay(alignment: .bottomTrailing) {
-            BookmarkButton(media: vm.media)
-                .padding(.trailing, 16)
-                .padding(.bottom, 24)
+            Group {
+                #if os(iOS)
+                if isSelectionMode {
+                    FloatingDownloadButton(count: selectedEpisodeNumbers.count) {
+                        batchDownloadZoomID = "batchDownloadFloating"
+                        showBatchDownloadPicker = true
+                    }
+                    // No corner clip: it would cut the count badge sitting off the circle's edge.
+                    .zoomSource("batchDownloadFloating", in: sheetZoom)
+                    .transition(.scale.combined(with: .opacity))
+                } else {
+                    BookmarkButton(media: vm.media)
+                }
+                #else
+                BookmarkButton(media: vm.media)
+                #endif
+            }
+            .padding(.trailing, 16)
+            .padding(.bottom, 24)
+            .animation(.spring(response: 0.35, dampingFraction: 0.8), value: isSelectionMode)
         }
         #if os(iOS)
         .toolbarZoomSource("edit", in: sheetZoom, placement: .topBarTrailing) { editToolbarButton }
@@ -478,7 +499,7 @@ struct AniListDetailView: View {
                     }
                 )
                 .environmentObject(moduleManager)
-                .zoomingOut(of: "batchDownload", in: sheetZoom)
+                .zoomingOut(of: batchDownloadZoomID, in: sheetZoom)
             }
         }
         #endif
@@ -774,8 +795,11 @@ struct AniListDetailView: View {
                     metadataSection(media: media)
                         .frame(maxWidth: .infinity)
                     if let desc = media.plainDescription, !desc.isEmpty {
-                        SynopsisSection(text: desc)
+                        SynopsisSection(text: desc, onMore: { showDetailsSheet = true })
                             .padding(.top, 16)
+                            .adaptiveSheet(isPresented: $showDetailsSheet) {
+                                MediaDetailsSheet(aniListID: pageAniListID, synopsis: desc)
+                            }
                     }
 
                     #if os(iOS)
@@ -1321,6 +1345,7 @@ struct AniListDetailView: View {
                     
                     if !selectedEpisodeNumbers.isEmpty {
                         Button {
+                            batchDownloadZoomID = "batchDownload"
                             showBatchDownloadPicker = true
                         } label: {
                             Label("Download \(selectedEpisodeNumbers.count)", systemImage: "arrow.down.circle.fill")
@@ -1497,6 +1522,8 @@ struct AniListDetailView: View {
 // MARK: - Synopsis
 struct SynopsisSection: View {
     let text: String
+    /// Opens the full details instead of expanding the text in place.
+    var onMore: (() -> Void)? = nil
     @State private var expanded = false
 
     var body: some View {
@@ -1515,11 +1542,22 @@ struct SynopsisSection: View {
                 .padding(.horizontal, 16)
                 .fixedSize(horizontal: false, vertical: true)
                 .onTapGesture {
+                    if let onMore { onMore(); return }
                     withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                         expanded.toggle()
                     }
                 }
                 .copyDescriptionContextMenu(text)
+
+            if let onMore {
+                Button(action: onMore) {
+                    Text("View more…")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, 16)
+            }
         }
     }
 }

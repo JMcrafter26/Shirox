@@ -105,6 +105,24 @@ struct ThumbnailEpisodeRow: View {
                                 .background(badge.tint.opacity(0.15), in: Capsule())
                                 .overlay(Capsule().strokeBorder(badge.tint.opacity(0.35), lineWidth: 0.5))
                         }
+
+                        // Selection mode swaps out the thumbnail, and with it the watched tick
+                        // and the progress bar. Picking downloads to delete is exactly when it
+                        // matters which ones were already watched.
+                        if isSelectionMode {
+                            if isComplete {
+                                Label("Watched", systemImage: "checkmark")
+                                    .labelStyle(.titleAndIcon)
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundStyle(.green)
+                                    .padding(.horizontal, 6).padding(.vertical, 2)
+                                    .background(Color.green.opacity(0.15), in: Capsule())
+                            } else if let p = progress, p > 0 {
+                                Text("\(Int((p * 100).rounded()))%")
+                                    .font(.caption2.weight(.semibold))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
                     }
 
                     if let t = title, !t.isEmpty {

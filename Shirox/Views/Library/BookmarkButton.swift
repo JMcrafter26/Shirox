@@ -41,6 +41,50 @@ struct BookmarkButton: View {
     }
 }
 
+/// Takes the bookmark button's place while episodes are being picked for download, so the
+/// download is a thumb away however far down the list the user has scrolled — the button at
+/// the top of the list was the only way to start it. Dimmed until something is picked.
+struct FloatingDownloadButton: View {
+    let count: Int
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "arrow.down")
+                .font(.system(size: 18, weight: .bold))
+                .foregroundStyle(count > 0 ? Color.accentColor : .secondary)
+                .frame(width: 52, height: 52)
+                .background(.ultraThinMaterial, in: Circle())
+                .overlay(Circle().strokeBorder(Color.primary.opacity(0.15), lineWidth: 1))
+                .overlay(alignment: .topTrailing) {
+                    if count > 0 {
+                        // Primary on the page's own background: the accent is white in the dark
+                        // theme, which made white digits on it invisible.
+                        Text("\(count)")
+                            .font(.caption2.weight(.bold))
+                            .monospacedDigit()
+                            .foregroundStyle(Self.badgeText)
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(Color.primary, in: Capsule())
+                            .offset(x: 4, y: -4)
+                    }
+                }
+                .shadow(color: .black.opacity(0.2), radius: 6, x: 0, y: 3)
+        }
+        .buttonStyle(.plain)
+        .disabled(count == 0)
+        .accessibilityLabel(count > 0 ? "Download \(count) episodes" : "Download")
+    }
+
+    private static var badgeText: Color {
+        #if os(iOS)
+        Color(uiColor: .systemBackground)
+        #else
+        Color.black
+        #endif
+    }
+}
+
 /// Sheet for toggling a title's collection membership and removing it from the library.
 private struct LocalCollectionPickerSheet: View {
     let media: Media

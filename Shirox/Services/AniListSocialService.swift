@@ -66,6 +66,53 @@ final class AniListSocialService {
         }
     }
 
+    // MARK: - Title details
+
+    /// A title's trailer and, when signed in, where the people the user follows stand on it —
+    /// for the detail page's Details sheet.
+    func fetchDetailsExtras(mediaId: Int) async throws -> MediaDetailsExtras {
+        struct Response: Decodable {
+            struct Data: Decodable {
+                struct MediaPart: Decodable { let trailer: MediaDetailsExtras.Trailer? }
+                struct PagePart: Decodable { let mediaList: [ListEntry] }
+                let Media: MediaPart?
+                let Page: PagePart?
+            }
+            let data: Data
+        }
+        struct ListEntry: Decodable {
+            struct User: Decodable { let id: Int; let name: String; let avatar: AniListUserAvatar? }
+            let status: MediaListStatus?
+            let score: Double?
+            let progress: Int?
+            let user: User
+        }
+        let signedIn = AniListAuthManager.shared.isLoggedIn
+        // `isFollowing` is relative to the viewer, so it only means something signed in.
+        let following = signedIn ? """
+          Page(perPage: 25) {
+            mediaList(mediaId: $id, isFollowing: true, sort: UPDATED_TIME_DESC) {
+              status score(format: POINT_10_DECIMAL) progress
+              user { id name avatar { large } }
+            }
+          }
+        """ : ""
+        let q = """
+        query($id: Int) {
+          Media(id: $id) { trailer { id site thumbnail } }
+          \(following)
+        }
+        """
+        let r: Response = try await performQuery(query: q, variables: ["id": mediaId], auth: signedIn)
+        return MediaDetailsExtras(
+            trailer: r.data.Media?.trailer,
+            following: (r.data.Page?.mediaList ?? []).map {
+                MediaDetailsExtras.Follower(id: $0.user.id, name: $0.user.name, avatar: $0.user.avatar?.large,
+                                            status: $0.status, score: $0.score ?? 0, progress: $0.progress)
+            }
+        )
+    }
+
     // MARK: - Profile
 
     func fetchProfile(userId: Int) async throws -> AniListUser {

@@ -396,7 +396,9 @@ final class DownloadManager: NSObject, ObservableObject {
             subtitleHeaders: stream.subtitleHeaders.isEmpty ? nil : stream.subtitleHeaders,
             state: .pending,
             progress: 0,
-            createdAt: Date()
+            createdAt: Date(),
+            playlistKey: stream.playlistKey,
+            subtitleTracks: Self.subtitleTracks(of: stream)
         )
 
         items.append(item)
@@ -421,30 +423,75 @@ final class DownloadManager: NSObject, ObservableObject {
             }
         }
 
-        // Fetch the subtitle file in the background. Small, fast — usually finishes long
-        // before the video does so the local copy is ready for offline playback.
-        if let subURL = item.subtitleURL {
-            let captureID = item.id
-            // Subtitles often live on a different CDN than the video but share the
-            // stream's auth context (Referer = embedded player origin). If the JS module
-            // didn't set explicit subtitle headers, reuse the video stream's headers —
-            // those carry the right Referer + User-Agent for the source.
-            let effectiveHeaders = (item.subtitleHeaders?.isEmpty == false)
-                ? (item.subtitleHeaders ?? [:])
-                : item.headers
-            Task {
-                await self.downloadSubtitleFile(itemID: captureID, url: subURL, headers: effectiveHeaders)
-            }
-        } else {
-            Logger.shared.log("[Subtitles] Stream had no subtitle URL — episode will play without subs offline", type: "Download")
-        }
+        // Fetch the subtitle files in the background. Small, fast — usually finishes long
+        // before the video does so the local copies are ready for offline playback.
+        downloadSubtitles(for: item.id)
 
         processQueue()
     }
 
     /// Downloads a subtitle file to disk and stores its relative path on the item.
     /// Silent on failure — the video still plays without subtitles.
-    private func downloadSubtitleFile(itemID: UUID, url: URL, headers: [String: String]) async {
+    /// The stream's subtitle tracks, to keep with its download.
+    nonisolated static func subtitleTracks(of stream: StreamResult) -> [DownloadedSubtitle]? {
+        let tracks = (stream.allSubtitles ?? []).map {
+            DownloadedSubtitle(title: $0.title, url: $0.url, headers: $0.headers.isEmpty ? nil : $0.headers)
+        }
+        return tracks.isEmpty ? nil : tracks
+    }
+
+    /// Fetches a download's default subtitle and every other track it lists, in the background.
+    ///
+    /// Subtitles often live on a different CDN than the video but share the stream's auth
+    /// context (Referer = embedded player origin). A track without headers of its own falls
+    /// back to the stream's subtitle headers, then the video stream's.
+    private func downloadSubtitles(for itemID: UUID) {
+        guard let item = items.first(where: { $0.id == itemID }) else { return }
+        let fallback = (item.subtitleHeaders?.isEmpty == false) ? (item.subtitleHeaders ?? [:]) : item.headers
+        let defaultURL = item.subtitleURL
+        let tracks = item.subtitleTracks ?? []
+        if defaultURL == nil && tracks.isEmpty {
+            Logger.shared.log("[Subtitles] Stream had no subtitles for ep \(item.episodeNumber) — it will play without subs offline", type: "Download")
+            return
+        }
+        Task {
+            var defaultFile: String?
+            if let defaultURL {
+                defaultFile = await self.downloadSubtitleFile(itemID: itemID, url: defaultURL, headers: fallback,
+                                                              fileStem: itemID.uuidString)
+                if let defaultFile {
+                    await MainActor.run {
+                        guard let idx = self.items.firstIndex(where: { $0.id == itemID }) else { return }
+                        self.items[idx].relativeSubtitlePath = defaultFile
+                        self.persist()
+                    }
+                }
+            }
+            for (index, track) in tracks.enumerated() {
+                // The default is usually one of the tracks: one copy serves both.
+                let file: String?
+                if track.url == defaultURL, let defaultFile {
+                    file = defaultFile
+                } else {
+                    file = await self.downloadSubtitleFile(itemID: itemID, url: track.url,
+                                                           headers: track.headers ?? fallback,
+                                                           fileStem: "\(itemID.uuidString)-sub\(index)")
+                }
+                guard let file else { continue }
+                await MainActor.run {
+                    guard let idx = self.items.firstIndex(where: { $0.id == itemID }),
+                          self.items[idx].subtitleTracks?.indices.contains(index) == true else { return }
+                    self.items[idx].subtitleTracks?[index].relativePath = file
+                    self.persist()
+                }
+            }
+        }
+    }
+
+    /// Fetches one subtitle file into the downloads folder as `<fileStem>.<ext>` and returns that
+    /// name, or nil when it couldn't be fetched.
+    private func downloadSubtitleFile(itemID: UUID, url: URL, headers: [String: String],
+                                      fileStem: String) async -> String? {
         Logger.shared.log("[Subtitles] Downloading subtitle from \(Logger.redact(url))", type: "Download")
 
         var req = URLRequest(url: url, timeoutInterval: 30)
@@ -470,29 +517,26 @@ final class DownloadManager: NSObject, ObservableObject {
 
         guard let (data, response) = try? await URLSession.shared.data(for: req) else {
             Logger.shared.log("[Subtitles] Network error fetching subtitle host=\(url.host ?? "?")", type: "Error")
-            return
+            return nil
         }
         let status = (response as? HTTPURLResponse)?.statusCode ?? -1
         guard (200..<300).contains(status), !data.isEmpty else {
             Logger.shared.log("[Subtitles] HTTP \(status) for subtitle host=\(url.host ?? "?") size=\(data.count)", type: "Error")
-            return
+            return nil
         }
 
         let rawExt = url.pathExtension.lowercased()
         let ext = ["vtt", "srt", "ass", "ssa"].contains(rawExt) ? rawExt : "vtt"
-        let fileName = "\(itemID.uuidString).\(ext)"
+        let fileName = "\(fileStem).\(ext)"
         let dest = downloadDir.appendingPathComponent(fileName)
 
         do {
             try data.write(to: dest, options: .atomic)
-            await MainActor.run {
-                guard let idx = self.items.firstIndex(where: { $0.id == itemID }) else { return }
-                self.items[idx].relativeSubtitlePath = fileName
-                self.persist()
-                Logger.shared.log("[Subtitles] Saved subtitle to \(fileName) (\(data.count) bytes)", type: "Download")
-            }
+            Logger.shared.log("[Subtitles] Saved subtitle to \(fileName) (\(data.count) bytes)", type: "Download")
+            return fileName
         } catch {
             Logger.shared.log("[Subtitles] Disk write failed: \(error.localizedDescription)", type: "Error")
+            return nil
         }
     }
 
@@ -675,24 +719,14 @@ final class DownloadManager: NSObject, ObservableObject {
         guard let idx = items.firstIndex(where: { $0.id == id }) else { return }
         items[idx].streamURL = stream.url
         items[idx].headers = stream.headers
+        items[idx].playlistKey = stream.playlistKey
+        items[idx].subtitleTracks = Self.subtitleTracks(of: stream)
         items[idx].subtitleURL = stream.subtitleURL
         items[idx].subtitleHeaders = stream.subtitleHeaders.isEmpty ? nil : stream.subtitleHeaders
         items[idx].error = nil
         persist()
 
-        if let subURL = stream.subtitleURL {
-            let captureID = id
-            // See note in download(): if subtitleHeaders weren't provided, reuse the
-            // video stream's headers — same source, same Referer/UA expectations.
-            let effectiveHeaders: [String: String] = (items[idx].subtitleHeaders?.isEmpty == false)
-                ? (items[idx].subtitleHeaders ?? [:])
-                : items[idx].headers
-            Task {
-                await self.downloadSubtitleFile(itemID: captureID, url: subURL, headers: effectiveHeaders)
-            }
-        } else {
-            Logger.shared.log("[Subtitles] Batch stream had no subtitle URL for ep \(items[idx].episodeNumber)", type: "Download")
-        }
+        downloadSubtitles(for: id)
 
         processQueue()
     }
@@ -775,6 +809,9 @@ final class DownloadManager: NSObject, ObservableObject {
         }
         if let subPath = item.relativeSubtitlePath {
             try? FileManager.default.removeItem(at: downloadDir.appendingPathComponent(subPath))
+        }
+        for path in (item.subtitleTracks ?? []).compactMap(\.relativePath) {
+            try? FileManager.default.removeItem(at: downloadDir.appendingPathComponent(path))
         }
         try? FileManager.default.removeItem(at: resumeDataURL(for: item.id))
     }
@@ -971,11 +1008,19 @@ final class DownloadManager: NSObject, ObservableObject {
             let url = downloadDir.appendingPathComponent(relPath)
             return FileManager.default.fileExists(atPath: url.path) ? url.absoluteString : nil
         }
+        // Every track saved with the download, offered in the player's subtitle menu.
+        let localTracks: [SubtitleTrack] = (item.subtitleTracks ?? []).compactMap { track in
+            guard let path = track.relativePath else { return nil }
+            let url = downloadDir.appendingPathComponent(path)
+            return FileManager.default.fileExists(atPath: url.path)
+                ? SubtitleTrack(title: track.title, url: url, headers: [:]) : nil
+        }
         return StreamResult(
             title: item.episodeTitle ?? "Episode \(item.episodeNumber)",
             url: playURL,
             headers: [:],
-            subtitle: localSubtitle
+            subtitle: localSubtitle,
+            allSubtitles: localTracks.isEmpty ? nil : localTracks
         )
     }
 
@@ -1079,7 +1124,8 @@ final class DownloadManager: NSObject, ObservableObject {
         guard let url = item.streamURL else { return }
         let headers = Self.requestHeaders(for: url, streamHeaders: item.headers)
         Task {
-            let isHLS = await Self.detectIsHLS(url: url, headers: headers)
+            // Scrambled playlists are HLS whatever the URL or Content-Type says.
+            let isHLS = item.playlistKey != nil ? true : await Self.detectIsHLS(url: url, headers: headers)
             await MainActor.run {
                 guard let current = self.items.first(where: { $0.id == id }),
                       current.state == .downloading else { return }
@@ -1138,6 +1184,7 @@ final class DownloadManager: NSObject, ObservableObject {
                     id: id,
                     url: streamURL,
                     headers: Self.requestHeaders(for: streamURL, streamHeaders: item.headers),
+                    playlistKey: item.playlistKey,
                     downloadDir: downloadDir,
                     onProgress: { [weak self] p in
                         Task { @MainActor in self?.updateProgress(id, p) }

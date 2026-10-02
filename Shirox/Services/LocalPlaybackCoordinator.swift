@@ -53,6 +53,18 @@ final class LocalPlaybackCoordinator: ObservableObject {
         }
     }
 
+    /// The name to show for a local file: its name without the extension, and without the
+    /// `<UUID>-` prefix an import copy carries to keep same-named picks apart. The player used
+    /// to title an imported video "B0071143-E426-…-BigBuckBunny".
+    nonisolated static func displayTitle(for url: URL) -> String {
+        let name = url.deletingPathExtension().lastPathComponent
+        let prefixLength = 37 // a UUID string plus the "-"
+        guard name.count > prefixLength,
+              UUID(uuidString: String(name.prefix(36))) != nil,
+              name[name.index(name.startIndex, offsetBy: 36)] == "-" else { return name }
+        return String(name.dropFirst(prefixLength))
+    }
+
     /// Reconstructs the stable local URL for a stored import filename under the current
     /// container. Returns nil if the copy no longer exists.
     func resolveImport(name: String) -> URL? {
@@ -159,7 +171,7 @@ final class LocalPlaybackCoordinator: ObservableObject {
     /// as a legacy fallback, a scoped URL from resolveBookmark.
     func launch(videoURL: URL, subtitle: SubtitleTrack?, resumeFrom: Double?) {
         let handle = register(videoURL)
-        let title = videoURL.deletingPathExtension().lastPathComponent
+        let title = Self.displayTitle(for: videoURL)
 
         Task { @MainActor in
             // Run the JS bridge: the module echoes the handle back as a stream result.

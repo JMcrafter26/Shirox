@@ -16,6 +16,8 @@ final class AVPlayerEngine: PlaybackEngine {
     }
 
     private var isStopped = false
+    /// Bumped by every load, so a load still waiting on the proxy can tell it was replaced.
+    private var loadGeneration = 0
     private var timeObserver: Any?
     private var timeControlObservation: NSKeyValueObservation?
     private var statusObservation: NSKeyValueObservation?
@@ -51,6 +53,50 @@ final class AVPlayerEngine: PlaybackEngine {
     }
 
     func load(_ source: PlaybackSource) {
+        loadGeneration += 1
+        #if os(iOS)
+        if let key = source.playlistKey {
+            // Scrambled playlists: AVPlayer can't read them, so it plays from the app's proxy,
+            // which unscrambles them. The proxy has to be listening before AVPlayer asks.
+            let generation = loadGeneration
+            holdingProxy = true
+            Task { [weak self] in
+                let up = await CastProxyServer.shared.startAndWait(headers: source.headers, reason: Self.proxyReason)
+                guard let self, !self.isStopped, self.loadGeneration == generation else { return }
+                var routed = source
+                routed.playlistKey = nil
+                if up, let proxied = CastProxyServer.shared.loopbackURL(for: source.url, playlistKey: key) {
+                    routed = PlaybackSource(url: proxied)
+                    routed.prefersJapaneseAudio = source.prefersJapaneseAudio
+                } else {
+                    Logger.shared.log("[Player] The proxy didn't come up for a scrambled stream", type: "Error")
+                }
+                self.loadItem(routed)
+            }
+            return
+        }
+        releaseProxy()
+        #endif
+        loadItem(source)
+    }
+
+    #if os(iOS)
+    /// One reason for every AVPlayer: only one plays at a time, and a replaced engine's
+    /// release mustn't drop the proxy from under its successor — hence the counted holds.
+    private static let proxyReason = "avplayer-playlists"
+    private static var proxyHolders = 0
+    private var holdingProxy = false {
+        didSet {
+            guard holdingProxy != oldValue else { return }
+            Self.proxyHolders += holdingProxy ? 1 : -1
+            if Self.proxyHolders == 0 { CastProxyServer.shared.stop(reason: Self.proxyReason) }
+        }
+    }
+
+    private func releaseProxy() { holdingProxy = false }
+    #endif
+
+    private func loadItem(_ source: PlaybackSource) {
         let asset = source.headers.isEmpty
             ? AVURLAsset(url: source.url)
             : AVURLAsset(url: source.url, options: ["AVURLAssetHTTPHeaderFieldsKey": source.headers])
@@ -72,6 +118,17 @@ final class AVPlayerEngine: PlaybackEngine {
         audioGroup = nil
         audioLoad?.cancel()
         let prefersJapanese = source.prefersJapaneseAudio
+        if source.selectsSubtitles {
+            // AVPlayer leaves subtitles off unless the system's caption settings ask for them.
+            Task { [weak self] in
+                guard let group = try? await asset.loadMediaSelectionGroup(for: .legible),
+                      let self, self.player.currentItem === item,
+                      let option = group.options.first(where: {
+                          !$0.hasMediaCharacteristic(.containsOnlyForcedSubtitles)
+                      }) else { return }
+                item.select(option, in: group)
+            }
+        }
         audioLoad = Task { [weak self] in
             guard let group = try? await asset.loadMediaSelectionGroup(for: .audible) else { return }
             guard let self, self.player.currentItem === item else { return }
@@ -150,6 +207,9 @@ final class AVPlayerEngine: PlaybackEngine {
 
     func stop() {
         isStopped = true
+        #if os(iOS)
+        releaseProxy()
+        #endif
         player.pause()
         if let timeObserver { player.removeTimeObserver(timeObserver) }
         timeObserver = nil

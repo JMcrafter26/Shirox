@@ -30,6 +30,11 @@ final class AssRenderer: @unchecked Sendable {
     private var storageSize = CGSize.zero
     private var fontScale = 1.0
     private var hasDrawn = false
+    /// The script time last handed to libass, and whether nothing was on screen then. Calling
+    /// libass costs a layout pass even when it reports no change, and the overlay asks 30 times
+    /// a second — paused, or in the long gaps between lines, for nothing.
+    private var lastMilliseconds: Int64?
+    private var lastWasEmpty = true
 
     /// nil when libass can't read the script.
     init?(script: String) {
@@ -96,12 +101,36 @@ final class AssRenderer: @unchecked Sendable {
                 self.fontScale = fontScale
                 settingsChanged = true
             }
+            let milliseconds = Int64((seconds * 1000).rounded())
+            if !settingsChanged {
+                // Paused: the same instant renders the same picture.
+                if milliseconds == lastMilliseconds { return .unchanged }
+                // Between lines, with the screen already clear: nothing to draw.
+                if lastWasEmpty, !hasEvent(at: milliseconds) {
+                    lastMilliseconds = milliseconds
+                    return .unchanged
+                }
+            }
+            lastMilliseconds = milliseconds
             var change: Int32 = 0
-            let images = ass_render_frame(renderer, track, Int64((seconds * 1000).rounded()), &change)
+            let images = ass_render_frame(renderer, track, milliseconds, &change)
             guard change != 0 || settingsChanged else { return .unchanged }
             hasDrawn = true
-            return .frame(Self.composite(images))
+            let frame = Self.composite(images)
+            lastWasEmpty = frame == nil
+            return .frame(frame)
         }
+    }
+
+    /// Whether any event in the script is on screen at `milliseconds`.
+    private func hasEvent(at milliseconds: Int64) -> Bool {
+        let track = track.pointee
+        guard let events = track.events else { return false }
+        for i in 0..<Int(track.n_events) {
+            let event = events[i]
+            if milliseconds >= event.Start, milliseconds < event.Start + event.Duration { return true }
+        }
+        return false
     }
 
     /// Blends libass's coverage bitmaps — each one colour — into one premultiplied BGRA image

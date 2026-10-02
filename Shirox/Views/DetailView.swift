@@ -65,6 +65,8 @@ struct DetailView: View {
     @State private var isSelectionMode = false
     @State private var selectedEpisodeNumbers: Set<Int> = []
     @State private var showBatchDownloadPicker = false
+    /// Which of the two download buttons the batch sheet grows out of.
+    @State private var batchDownloadZoomID = "batchDownload"
     /// A downloaded episode's unmark that would lower AniList/MAL progress, awaiting a choice.
     @State private var offlineDowngrade: RemoteDowngrade?
     // Observe the snapshot store so the offline view re-renders when reenrichIfStale
@@ -129,9 +131,27 @@ struct DetailView: View {
             }
         }
         .overlay(alignment: .bottomTrailing) {
-            BookmarkButton(media: bookmarkMedia, localSource: bookmarkSource)
-                .padding(.trailing, 16)
-                .padding(.bottom, 24)
+            Group {
+                #if os(iOS)
+                // Not on the downloaded-only list: picking there is for deleting.
+                if isSelectionMode, let detail = vm.detail, !showsOfflineEpisodes(detail) {
+                    FloatingDownloadButton(count: downloadableSelectionCount(detail)) {
+                        batchDownloadZoomID = "batchDownloadFloating"
+                        showBatchDownloadPicker = true
+                    }
+                    // No corner clip: it would cut the count badge sitting off the circle's edge.
+                    .zoomSource("batchDownloadFloating", in: sheetZoom)
+                    .transition(.scale.combined(with: .opacity))
+                } else {
+                    BookmarkButton(media: bookmarkMedia, localSource: bookmarkSource)
+                }
+                #else
+                BookmarkButton(media: bookmarkMedia, localSource: bookmarkSource)
+                #endif
+            }
+            .padding(.trailing, 16)
+            .padding(.bottom, 24)
+            .animation(.spring(response: 0.35, dampingFraction: 0.8), value: isSelectionMode)
         }
     }
 
@@ -393,7 +413,7 @@ struct DetailView: View {
                         selectedEpisodeNumbers.removeAll()
                     }
                 )
-                .zoomingOut(of: "batchDownload", in: sheetZoom)
+                .zoomingOut(of: batchDownloadZoomID, in: sheetZoom)
             }
         }
         #endif
@@ -1337,12 +1357,26 @@ struct DetailView: View {
         return seasons.count > 1 ? seasons : [episodes]
     }
 
+    /// Whether the episode list is the downloaded-only one: there's a snapshot AND the episode
+    /// list holds nothing usable for online streaming (all hrefs empty = snapshot fallback).
+    private func showsOfflineEpisodes(_ detail: MediaDetail) -> Bool {
+        offlineSnapshot != nil && detail.episodes.allSatisfy { $0.href.isEmpty }
+    }
+
+    /// Picked episodes that aren't downloaded yet — what the batch download would fetch.
+    private func downloadableSelectionCount(_ detail: MediaDetail) -> Int {
+        let downloaded = DownloadManager.shared.items.filter { item in
+            selectedEpisodeNumbers.contains(item.episodeNumber)
+                && item.mediaTitle == detail.title
+                && item.moduleId == effectiveModuleId
+                && item.state == .completed
+        }
+        return selectedEpisodeNumbers.count - downloaded.count
+    }
+
     private func episodesSection(detail: MediaDetail) -> some View {
         #if os(iOS)
-        // Use the downloaded-only path only when we have a snapshot AND the episode list
-        // contains nothing usable for online streaming (all hrefs empty = snapshot fallback).
-        if let captured = offlineSnapshot,
-           detail.episodes.allSatisfy({ $0.href.isEmpty }) {
+        if let captured = offlineSnapshot, showsOfflineEpisodes(detail) {
             // Read the freshest copy from the store so re-enriched titles/thumbnails
             // render live (the captured value is stale once reenrichIfStale runs).
             let snap = snapshotStore.snapshot(mediaKey: captured.mediaKey) ?? captured
@@ -1581,6 +1615,7 @@ struct DetailView: View {
                         }
                         if downloadCount > 0 {
                             Button {
+                                batchDownloadZoomID = "batchDownload"
                                 showBatchDownloadPicker = true
                             } label: {
                                 Label("Download \(downloadCount)", systemImage: "arrow.down.circle.fill")
