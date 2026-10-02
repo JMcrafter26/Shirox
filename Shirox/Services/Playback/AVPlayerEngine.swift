@@ -1,4 +1,8 @@
 import AVFoundation
+#if os(iOS)
+import CoreImage
+import UIKit
+#endif
 
 /// `PlaybackEngine` over AVPlayer: the engine the player has always had, moved out of
 /// `PlayerView` with its configuration and observer order unchanged.
@@ -48,6 +52,11 @@ final class AVPlayerEngine: PlaybackEngine {
             ? AVURLAsset(url: source.url)
             : AVURLAsset(url: source.url, options: ["AVURLAssetHTTPHeaderFieldsKey": source.headers])
         let item = AVPlayerItem(asset: asset)
+        #if os(iOS)
+        item.add(AVPlayerItemVideoOutput(pixelBufferAttributes: [
+            kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA
+        ]))
+        #endif
         // Automatic: let AVPlayer size the buffer adaptively (YouTube-style ABR). A fixed value
         // fights stall-minimization and prolongs stalls on flaky CDNs.
         item.preferredForwardBufferDuration = 0
@@ -141,6 +150,19 @@ final class AVPlayerEngine: PlaybackEngine {
 
     /// The picture's own size, zero until known.
     var presentationSize: CGSize { player.currentItem?.presentationSize ?? .zero }
+
+    #if os(iOS)
+    func captureCurrentFrame() -> UIImage? {
+        guard let item = player.currentItem,
+              let output = item.outputs.compactMap({ $0 as? AVPlayerItemVideoOutput }).first,
+              let buffer = output.copyPixelBuffer(forItemTime: item.currentTime(), itemTimeForDisplay: nil),
+              let image = CIContext().createCGImage(CIImage(cvPixelBuffer: buffer),
+                                                    from: CGRect(x: 0, y: 0,
+                                                                 width: CVPixelBufferGetWidth(buffer),
+                                                                 height: CVPixelBufferGetHeight(buffer))) else { return nil }
+        return UIImage(cgImage: image)
+    }
+    #endif
 
     var bufferedUntil: Double {
         (player.currentItem?.loadedTimeRanges ?? [])

@@ -5,6 +5,7 @@ import Combine
 
 #if os(iOS)
 import AVFoundation
+import Photos
 #endif
 #if canImport(GoogleCast)
 import GoogleCast
@@ -120,6 +121,8 @@ struct PlayerView: View {
     /// Owns the Control Center / lock screen transport registration. Held here so a player
     /// rebuild replaces the handlers instead of stacking a second set on top.
     #if os(iOS)
+    private static let frameSaveQueue = DispatchQueue(label: "com.shirox.framePhotoSaves")
+
     @State private var remoteCommands = RemoteCommandCoordinator()
     #endif
     /// Non-nil while playback is routed through `CastProxyServer` for an AirPlay receiver,
@@ -173,6 +176,7 @@ struct PlayerView: View {
     @AppStorage("watchedPercentage") private var watchedPercentage: Double = 90
     @AppStorage("playerLiquidGlass") private var playerLiquidGlass = true
     @AppStorage("speedBoostTolerance") private var speedBoostTolerance: Int = 10
+    @AppStorage("playerHoldAction") private var playerHoldAction = "speed"
     @AppStorage("preferredQuality") private var preferredQuality: String = "auto"
     @State private var playbackSpeed: Double = 1.0
     @State private var volume: Float = 1.0
@@ -236,6 +240,10 @@ struct PlayerView: View {
     }
 
     @State private var isSpeedBoosted = false
+    #if os(iOS)
+    @State private var showFrameSaveAlert = false
+    @State private var frameSaveMessage = ""
+    #endif
     @State private var isVideoScrubbing = false
     @State private var videoScrubTime: Double = 0
     @State private var videoScrubStartTime: Double = 0
@@ -388,6 +396,13 @@ struct PlayerView: View {
             }
         }
         .ignoresSafeArea()
+        #if os(iOS)
+        .alert("Save Frame", isPresented: $showFrameSaveAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(frameSaveMessage)
+        }
+        #endif
         .onPreferenceChange(Skip85ButtonFramePreferenceKey.self) { frame in
             if frame != .zero { skip85ButtonFrame = frame }
         }
@@ -834,11 +849,15 @@ struct PlayerView: View {
                 moveTolerance: CGFloat(speedBoostTolerance),
                 onBegan: {
                     if !castManager.isConnected {
-                        isSpeedBoosted = true
-                        engine.rate = 2.0
-                        // Hide the controls (title, gradients, play/pause) so the
-                        // 2× badge sits cleanly at the top by itself while boosting.
-                        setControlsVisible(false)
+                        if playerHoldAction == "saveFrame" {
+                            saveCurrentFrame(from: engine)
+                        } else {
+                            isSpeedBoosted = true
+                            engine.rate = 2.0
+                            // Hide the controls (title, gradients, play/pause) so the
+                            // 2× badge sits cleanly at the top by itself while boosting.
+                            setControlsVisible(false)
+                        }
                     }
                 },
                 onEnded: {
@@ -879,6 +898,70 @@ struct PlayerView: View {
         .animation(.easeInOut(duration: 0.15), value: isSpeedBoosted)
         .allowsHitTesting(false)
     }
+
+    #if os(iOS)
+    private func saveCurrentFrame(from engine: any PlaybackEngine) {
+        if let mpv = engine as? MPVEngine {
+            mpv.captureCurrentFrame { image in saveFrameImage(image) }
+        } else {
+            saveFrameImage((engine as? AVPlayerEngine)?.captureCurrentFrame())
+        }
+    }
+
+    private func saveFrameImage(_ image: UIImage?) {
+        guard let image else {
+            frameSaveMessage = "The current video frame is unavailable. Try again while the video is playing."
+            showFrameSaveAlert = true
+            return
+        }
+
+        PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
+            Self.frameSaveQueue.async {
+                let canUseAlbum = status == .authorized
+                let canSave = canUseAlbum || status == .limited ||
+                    PHPhotoLibrary.authorizationStatus(for: .addOnly) == .authorized
+                guard canSave else {
+                    DispatchQueue.main.async {
+                        frameSaveMessage = "Allow Photos access in Settings to save video frames."
+                        showFrameSaveAlert = true
+                    }
+                    return
+                }
+
+                do {
+                    let album: PHAssetCollection? = canUseAlbum ? {
+                        let options = PHFetchOptions()
+                        options.predicate = NSPredicate(format: "title = %@", "Shirox")
+                        return PHAssetCollection.fetchAssetCollections(
+                            with: .album, subtype: .albumRegular, options: options).firstObject
+                    }() : nil
+                    try PHPhotoLibrary.shared().performChangesAndWait {
+                        if canUseAlbum {
+                            let albumRequest = album.flatMap { PHAssetCollectionChangeRequest(for: $0) }
+                                ?? PHAssetCollectionChangeRequest.creationRequestForAssetCollection(withTitle: "Shirox")
+                            let asset = PHAssetChangeRequest.creationRequestForAsset(from: image)
+                            if let placeholder = asset.placeholderForCreatedAsset {
+                                albumRequest.addAssets([placeholder] as NSArray)
+                            }
+                        } else {
+                            PHAssetChangeRequest.creationRequestForAsset(from: image)
+                        }
+                    }
+                    DispatchQueue.main.async {
+                        frameSaveMessage = canUseAlbum ? "Frame saved to the Shirox album in Photos." :
+                            "Frame saved to Photos. Allow Full Access in Settings to use the Shirox album."
+                        showFrameSaveAlert = true
+                    }
+                } catch {
+                    DispatchQueue.main.async {
+                        frameSaveMessage = "Could not save the frame: \(error.localizedDescription)"
+                        showFrameSaveAlert = true
+                    }
+                }
+            }
+        }
+    }
+    #endif
 
     private var safeAreaTopInset: CGFloat {
         #if os(iOS)
