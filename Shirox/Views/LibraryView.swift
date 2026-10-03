@@ -24,6 +24,12 @@ struct LibraryView: View {
     @State private var searchText = ""
     @AppStorage("librarySortOrder") private var sortOrderRaw: String = LibrarySortOrder.score.rawValue
     @AppStorage("librarySortAscending") private var sortAscending = false
+    /// Posters in a grid instead of rows.
+    @AppStorage("libraryGridLayout") private var gridLayout = false
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    /// The title a grid card opened: cards share a List row, so they navigate from code.
+    @State private var gridDestination: LibraryEntry?
+    @State private var gridLinkActive = false
     @AppStorage("localScoreFormat") private var localScoreFormatRaw: String = ScoreFormat.point10Decimal.rawValue
 
     #if os(iOS)
@@ -201,6 +207,13 @@ struct LibraryView: View {
                         }
                     }
                 }
+            }
+            Section("Layout") {
+                Picker("Layout", selection: $gridLayout) {
+                    Label("List", systemImage: "list.bullet").tag(false)
+                    Label("Grid", systemImage: "square.grid.3x2").tag(true)
+                }
+                .pickerStyle(.inline)
             }
         } label: {
             HStack(spacing: 3) {
@@ -838,9 +851,74 @@ struct LibraryView: View {
         }
     }
 
+    @ViewBuilder
     private var entryRows: some View {
-        ForEach(displayedEntries, id: \.media.id) { entry in
-            entryRow(entry)
+        if gridLayout {
+            gridRows
+        } else {
+            ForEach(displayedEntries, id: \.media.id) { entry in
+                entryRow(entry)
+            }
+        }
+    }
+
+    // MARK: - Grid
+
+    private var gridColumns: Int {
+        #if os(iOS)
+        horizontalSizeClass == .regular ? 6 : 3
+        #else
+        6
+        #endif
+    }
+
+    /// The grid, a List row per line of posters, so the List stays lazy and keeps the search bar.
+    private var gridRows: some View {
+        let columns = gridColumns
+        let entries = displayedEntries
+        let lines = stride(from: 0, to: entries.count, by: columns).map {
+            Array(entries[$0..<min($0 + columns, entries.count)])
+        }
+        return ForEach(lines, id: \.first?.media.id) { line in
+            HStack(alignment: .top, spacing: 12) {
+                ForEach(line, id: \.media.id) { entry in
+                    LibraryGridCard(entry: entry, scoreFormat: scoreFormat)
+                        .zoomSource(entry.id, in: sheetZoom)
+                        .contentShape(Rectangle())
+                        .onTapGesture { openFromGrid(entry) }
+                        .contextMenu {
+                            Button { editEntry(entry) } label: { Label("Edit", systemImage: "pencil") }
+                        }
+                }
+                // Keeps a short last line's posters the same size as the rest.
+                ForEach(line.count..<columns, id: \.self) { _ in
+                    Color.clear.frame(maxWidth: .infinity)
+                }
+            }
+            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+            .listRowSeparator(.hidden)
+            .listRowBackground(Color.clear)
+        }
+    }
+
+    /// What tapping the title's row does, for a grid card.
+    private func openFromGrid(_ entry: LibraryEntry) {
+        if entry.media.isManga {
+            openManga(entry)
+        } else if let source = entry.localSource, source.kind == .localFile {
+            resumeLocalFile(source)
+        } else {
+            gridDestination = entry
+            gridLinkActive = true
+        }
+    }
+
+    private func editEntry(_ entry: LibraryEntry) {
+        if case .provider = vm.source, anilistAuth.isLoggedIn, malAuth.isLoggedIn, !dualSync {
+            pendingEntry = entry
+            showProviderPicker = true
+        } else {
+            selectedEntry = entry
         }
     }
 
@@ -905,6 +983,9 @@ struct LibraryView: View {
         }
         .navigationDestinationCompat(isPresented: $showNotifications) {
             NotificationsView(vm: profileVM)
+        }
+        .navigationDestinationCompat(isPresented: $gridLinkActive) {
+            if let entry = gridDestination { rowDestination(entry) }
         }
         .toolbarZoomSource("sort", in: sheetZoom, placement: toolbarItemPlacement[0]) { sortMenu }
         .toolbarZoomSource("account", in: sheetZoom, placement: toolbarItemPlacement[1]) { accountToolbarItem }
@@ -1161,6 +1242,61 @@ private extension MediaKind {
 }
 
 // MARK: - Library row
+
+/// A title in the Library's grid: its poster, score and progress, and its name below.
+private struct LibraryGridCard: View {
+    let entry: LibraryEntry
+    var scoreFormat: ScoreFormat = .point10Decimal
+
+    private var progressText: String {
+        let unit = entry.media.isManga ? "Ch" : "Ep"
+        if let total = entry.media.episodes, total > 0 { return "\(unit) \(entry.progress)/\(total)" }
+        return "\(unit) \(entry.progress)"
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Color.clear
+                .aspectRatio(2/3, contentMode: .fit)
+                .overlay(
+                    CachedAsyncImage(urlString: entry.media.coverImage.thumb ?? "")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .clipped()
+                )
+                .overlay(alignment: .bottomLeading) {
+                    Text(progressText)
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 6).padding(.vertical, 3)
+                        .background(.black.opacity(0.6), in: Capsule())
+                        .padding(6)
+                }
+                .overlay(alignment: .topTrailing) {
+                    if entry.score > 0 {
+                        HStack(spacing: 2) {
+                            if scoreFormat != .point3 {
+                                Image(systemName: "star.fill").font(.system(size: 7))
+                            }
+                            scoreFormat.scoreText(for: entry.displayScore(in: scoreFormat))
+                                .font(.caption2.weight(.bold))
+                        }
+                        .foregroundStyle(.yellow)
+                        .padding(.horizontal, 6).padding(.vertical, 3)
+                        .background(.black.opacity(0.6), in: Capsule())
+                        .padding(6)
+                    }
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 10))
+            Text(entry.media.title.displayTitle)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.primary)
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
 
 private struct LibraryRowView: View {
     let entry: LibraryEntry
