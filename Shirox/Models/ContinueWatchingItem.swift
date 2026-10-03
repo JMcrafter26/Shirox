@@ -77,4 +77,14 @@ extension ContinueWatchingItem {
         }
         return episodeNumber == number
     }
+
+    /// True when this item is the downloaded episode `number`/`href`: the href *and* the number.
+    ///
+    /// Some sources give every episode of a show the same href and tell them apart some other
+    /// way, so a download's href alone matched every downloaded episode. Watching episode 19 put
+    /// its progress on all of them, and each one then resumed a third of the way in. Both sides
+    /// here come from the same download, so its number is in the same units and can be required.
+    func matchesDownloadedEpisode(number: Int, href: String?) -> Bool {
+        episodeNumber == number && matchesEpisode(number: number, href: href)
+    }
 }

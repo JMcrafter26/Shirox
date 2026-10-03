@@ -213,4 +213,31 @@ final class HLSManifestParserTests: XCTestCase {
                        "The quick brown fox jumps over the lazy dog!!!",
                        "PKCS7 padding must be stripped to recover the exact 46-byte plaintext")
     }
+
+    // MARK: - Download quality
+
+    private let ladder = """
+    #EXTM3U
+    #EXT-X-STREAM-INF:BANDWIDTH=800000,RESOLUTION=854x480
+    480.m3u8
+    #EXT-X-STREAM-INF:BANDWIDTH=2800000,RESOLUTION=1280x720
+    720.m3u8
+    #EXT-X-STREAM-INF:BANDWIDTH=5000000,RESOLUTION=1920x1080
+    1080.m3u8
+    """
+
+    /// Downloads took the highest rendition whatever the setting; now the setting picks it.
+    func testDownloadQualityPicksTheRung() {
+        let base = URL(string: "https://cdn.example/master.m3u8")!
+        func pick(_ q: String) -> String? {
+            HLSManifestParser.selectBestVariantChoice(ladder, baseURL: base, quality: q)?.video.lastPathComponent
+        }
+        XCTAssertEqual(pick("highest"), "1080.m3u8")
+        XCTAssertEqual(pick("720"), "720.m3u8")
+        XCTAssertEqual(pick("lowest"), "480.m3u8")
+        // No 900p rung: the best one below it.
+        XCTAssertEqual(pick("900"), "720.m3u8")
+        // Everything is above 360p: the smallest.
+        XCTAssertEqual(pick("360"), "480.m3u8")
+    }
 }

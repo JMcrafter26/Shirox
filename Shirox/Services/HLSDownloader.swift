@@ -41,7 +41,7 @@ actor HLSDownloader {
     ) async throws -> String {
         Logger.shared.log("[HLS] Downloading manifest: \(Logger.redact(url))", type: "Download")
 
-        // 1. Resolve Master Playlist → highest-bandwidth media playlist, and its audio when
+        // 1. Resolve Master Playlist → the media playlist at the Download Quality setting, and its audio when
         //    that comes as a rendition of its own. Only the video used to be fetched, so a
         //    stream with separate audio downloaded silent.
         var manifest = try await fetchManifest(url: url, headers: headers, playlistKey: playlistKey)
@@ -49,7 +49,9 @@ actor HLSDownloader {
         var audio: (url: URL, manifest: String)?
         var choice: HLSVariantChoice?
         if manifest.contains("#EXT-X-STREAM-INF"),
-           let picked = HLSManifestParser.selectBestVariantChoice(manifest, baseURL: url) {
+           let picked = HLSManifestParser.selectBestVariantChoice(
+               manifest, baseURL: url,
+               quality: UserDefaults.standard.string(forKey: "downloadQuality") ?? "highest") {
             choice = picked
             videoURL = picked.video
             manifest = try await fetchManifest(url: picked.video, headers: headers, playlistKey: playlistKey)

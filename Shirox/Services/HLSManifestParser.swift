@@ -90,17 +90,41 @@ enum HLSManifestParser {
     /// The highest-`BANDWIDTH` variant, with the audio rendition of its `AUDIO` group — the
     /// group's `DEFAULT=YES` one, else its first that has a URI. A rendition without a URI is
     /// muxed into the video and needs nothing separate. Nil for a media playlist.
-    static func selectBestVariantChoice(_ manifest: String, baseURL: URL) -> HLSVariantChoice? {
+    /// - Parameter quality: which variant to take — "highest", "lowest", or a height such as
+    ///   "720". A height takes that rung, else the best one below it, else the smallest; the
+    ///   rule the player's Preferred Quality uses. Downloads always took the highest, so a phone
+    ///   short on space had no way to keep episodes smaller.
+    static func selectBestVariantChoice(_ manifest: String, baseURL: URL,
+                                        quality: String = "highest") -> HLSVariantChoice? {
         let lines = manifest.components(separatedBy: .newlines).map { $0.trimmingCharacters(in: .whitespaces) }
-        var best: (url: URL, bandwidth: Int, attrs: [String: String])?
+        var variants: [(url: URL, bandwidth: Int, attrs: [String: String])] = []
         for (i, line) in lines.enumerated() where line.hasPrefix("#EXT-X-STREAM-INF") {
             let attrs = parseAttributes(String(line.dropFirst("#EXT-X-STREAM-INF:".count)))
             let bandwidth = attrs["BANDWIDTH"].flatMap { Int($0) } ?? 0
             guard let uri = lines[(i + 1)...].first(where: { !$0.isEmpty && !$0.hasPrefix("#") }),
                   let url = URL(string: uri, relativeTo: baseURL)?.absoluteURL else { continue }
-            if bandwidth > (best?.bandwidth ?? -1) { best = (url, bandwidth, attrs) }
+            variants.append((url, bandwidth, attrs))
         }
-        guard let best else { return nil }
+        func height(_ v: (url: URL, bandwidth: Int, attrs: [String: String])) -> Int? {
+            v.attrs["RESOLUTION"]?.split(separator: "x").last.flatMap { Int($0) }
+        }
+        let highest = variants.max { $0.bandwidth < $1.bandwidth }
+        let picked: (url: URL, bandwidth: Int, attrs: [String: String])? = {
+            switch quality {
+            case "lowest": return variants.min { $0.bandwidth < $1.bandwidth }
+            case "highest": return highest
+            default:
+                guard let target = Int(quality) else { return highest }
+                let measured = variants.filter { height($0) != nil }
+                guard !measured.isEmpty else { return highest }
+                let atOrBelow = measured.filter { height($0)! <= target }
+                if let topHeight = atOrBelow.map({ height($0)! }).max() {
+                    return atOrBelow.filter { height($0) == topHeight }.max { $0.bandwidth < $1.bandwidth }
+                }
+                return measured.min { height($0)! < height($1)! }
+            }
+        }()
+        guard let best = picked else { return nil }
         var audio: URL?
         if let group = best.attrs["AUDIO"] {
             let renditions = lines.filter { $0.hasPrefix("#EXT-X-MEDIA:") }

@@ -1982,7 +1982,7 @@ struct DetailView: View {
         guard let cw = continueWatching.items.first(where: {
             (($0.aniListID != nil && $0.aniListID == snapshot.aniListID) ||
              ($0.mediaTitle == snapshot.mediaTitle && $0.moduleId == snapshot.moduleId))
-            && $0.matchesEpisode(number: episodeNumber, href: href)
+            && $0.matchesDownloadedEpisode(number: episodeNumber, href: href)
         }), cw.totalSeconds > 0 else { return nil }
         return min(cw.watchedSeconds / cw.totalSeconds, 1.0)
     }
@@ -1997,7 +1997,7 @@ struct DetailView: View {
             // Anchor on the episode's unique href so a downloaded S2 E5 doesn't inherit
             // S1 E5's resume position when their numbers collide on a multi-season list.
             let saved = ContinueWatchingManager.shared.items.first {
-                $0.matchesEpisode(number: item.episodeNumber, href: item.episodeHref)
+                $0.matchesDownloadedEpisode(number: item.episodeNumber, href: item.episodeHref)
                     && (
                         ($0.aniListID != nil && $0.aniListID == item.aniListID)
                         || ($0.mediaTitle == item.mediaTitle && $0.moduleId == item.moduleId)
@@ -2031,8 +2031,28 @@ struct DetailView: View {
             PlayerPresenter.shared.presentPlayer(
                 stream: stream,
                 context: context,
+                onWatchNext: Self.nextDownloadLoader(after: item),
+                onSequelNeeded: SequelResolver.loader(aniListID: item.aniListID, moduleId: item.moduleId),
                 onFinished: nil
             )
+        }
+    }
+
+    /// Next for a downloaded episode: the show's next downloaded episode. A download played
+    /// with no loader, so it had no Next button and nothing to move on to by hand.
+    static func nextDownloadLoader(after item: DownloadItem) -> WatchNextLoader {
+        { currentNumber in
+            let next = await MainActor.run { () -> DownloadItem? in
+                DownloadManager.shared.items
+                    .filter {
+                        $0.state == .completed && $0.episodeNumber > currentNumber
+                            && (($0.aniListID != nil && $0.aniListID == item.aniListID)
+                                || ($0.mediaTitle == item.mediaTitle && $0.moduleId == item.moduleId))
+                    }
+                    .min { $0.episodeNumber < $1.episodeNumber }
+            }
+            guard let next, let stream = await DownloadManager.shared.getStream(for: next) else { return nil }
+            return (streams: [stream], episodeNumber: next.episodeNumber, episodeHref: next.episodeHref)
         }
     }
     #endif

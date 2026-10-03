@@ -992,6 +992,7 @@ struct DownloadsSettingsView: View {
     @AppStorage("backgroundDownloadsEnabled") private var backgroundDownloadsEnabled = true
     @AppStorage("autoResumeDownloads") private var autoResumeDownloads = false
     @AppStorage("autoDeleteWatched") private var autoDeleteWatched = false
+    @AppStorage("downloadQuality") private var downloadQuality = "highest"
     #if os(iOS)
     @State private var downloadsSize = 0
     @State private var showDeleteDownloadsConfirmation = false
@@ -1000,6 +1001,13 @@ struct DownloadsSettingsView: View {
     var body: some View {
         List {
             Section("Downloads") {
+                Picker("Download Quality", selection: $downloadQuality) {
+                    Text("Best").tag("highest")
+                    Text("1080p").tag("1080")
+                    Text("720p").tag("720")
+                    Text("480p").tag("480")
+                    Text("Smallest").tag("lowest")
+                }
                 Picker("Concurrent Downloads", selection: $maxConcurrentDownloads) {
                     ForEach(1...5, id: \.self) { count in
                         Text("\(count)").tag(count)
@@ -1011,7 +1019,7 @@ struct DownloadsSettingsView: View {
                     .tint(.secondary)
                 Toggle("Delete After Watching", isOn: $autoDeleteWatched)
                     .tint(.secondary)
-                Text("Delete After Watching removes a downloaded episode once you finish it and close the player. Retry downloads that were interrupted or failed when the app next opens — off by default so reopening the app never starts a large transfer on cellular without you asking.")
+                Text("Download Quality picks the rendition for streams that offer several, falling back to the closest below. A downloaded episode keeps the one it was saved in. Delete After Watching removes a downloaded episode once you finish it and close the player. Retry downloads that were interrupted or failed when the app next opens — off by default so reopening the app never starts a large transfer on cellular without you asking.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
