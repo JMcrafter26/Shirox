@@ -391,7 +391,9 @@ struct PlayerView: View {
                 lockOverlayView
             }
 
-            if let segment = activeSkipSegment, !castManager.isConnected, skip85ButtonFrame != .zero {
+            // Hidden while locked: it's a seek like any other, and floated over the lock it let
+            // a stray touch jump the episode forward.
+            if let segment = activeSkipSegment, !isLocked, !castManager.isConnected, skip85ButtonFrame != .zero {
                 ZStack(alignment: .topLeading) {
                     Color.clear
                     PlayerSkipButton(segmentType: segment, onSkip: skipToSegmentEnd)
@@ -700,7 +702,7 @@ struct PlayerView: View {
             scheduleHide()
         }
         .onReceive(NotificationCenter.default.publisher(for: .playerKey)) { note in
-            guard controlsEnabled, let key = note.object as? PlayerKey else { return }
+            guard controlsEnabled, !isLocked, let key = note.object as? PlayerKey else { return }
             switch key {
             case .playPause: togglePlayPause()
             case .back: skip(by: -Double(skipShort))
@@ -1146,7 +1148,7 @@ struct PlayerView: View {
                 qualityMenuItems: qualityMenuItems,
                 onMenuOpen: { overlayActive = true; hideTask?.cancel() },
                 bottomPadding: bottomPad,
-                onNextEpisodeTap: (onWatchNext != nil || onSequelNeeded != nil) ? { Task { @MainActor in await loadAndAdvance() } } : nil,
+                onNextEpisodeTap: (onWatchNext != nil || onSequelNeeded != nil) && !isLatestAiredEpisode ? { Task { @MainActor in await loadAndAdvance() } } : nil,
                 hasActiveSkipSegment: activeSkipSegment != nil,
                 skipSegments: skipSegments,
                 episodeNumber: currentContext?.episodeNumber,
@@ -1303,8 +1305,18 @@ struct PlayerView: View {
     private var isLastEpisodeNow: Bool {
         guard let ctx = currentContext else { return false }
         if let total = ctx.totalEpisodes { return ctx.episodeNumber >= total }
-        if let avail = ctx.availableEpisodes { return ctx.episodeNumber >= avail }
+        // The aired count only marks the end of a show that has stopped airing. On one still
+        // airing it's just the newest episode, and finishing it asked for a rating.
+        if ctx.isAiring != true, let avail = ctx.availableEpisodes { return ctx.episodeNumber >= avail }
         return false
+    }
+
+    /// The newest aired episode of a show still airing: there's nothing to go Next to yet.
+    private var isLatestAiredEpisode: Bool {
+        guard let ctx = currentContext, ctx.isAiring == true,
+              let avail = ctx.availableEpisodes, ctx.episodeNumber >= avail else { return false }
+        if let total = ctx.totalEpisodes, ctx.episodeNumber >= total { return false }
+        return true
     }
 
     /// Deletes the downloaded copy of the episode just finished, when the user has asked for
