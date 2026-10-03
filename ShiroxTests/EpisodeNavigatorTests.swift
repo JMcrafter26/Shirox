@@ -235,4 +235,51 @@ final class EpisodeNavigatorTests: XCTestCase {
         XCTAssertNil(EpisodeNavigator.resolve(href: "s2/ep2?token=stale", orNumber: 2, in: eps),
                      "unmatched href + repeated number must abort, not fall back to season 1")
     }
+
+    // MARK: - upNextNumber (Continue Watching's Next Episode)
+
+    /// The sequel's own page, numbered on from season 1 (13…24).
+    private func sequelPageNumberedOn() -> [EpisodeLink] {
+        (13...24).map { EpisodeLink(number: Double($0), href: "s2/ep\($0)") }
+    }
+
+    /// THE REPORT: S2 E1 started from the AniList page plays as "1"; Next must say 2, not 13+1.
+    func testUpNextFromSeasonRelativePlaybackStaysSeasonRelative() {
+        let eps = sequelPageNumberedOn()
+        let n = EpisodeNavigator.upNextNumber(next: eps[1], playingHref: "s2/ep13", playingNumber: 1,
+                                              in: eps, seasonOffset: 0)
+        XCTAssertEqual(n, 2)
+    }
+
+    /// Chained: after the first Next the context holds 2 while the module says 14.
+    func testUpNextKeepsSeasonRelativeAcrossHops() {
+        let eps = sequelPageNumberedOn()
+        let n = EpisodeNavigator.upNextNumber(next: eps[2], playingHref: "s2/ep14", playingNumber: 2,
+                                              in: eps, seasonOffset: 0)
+        XCTAssertEqual(n, 3)
+    }
+
+    /// Started from the module's own page, the item plays as 13; it stays in the module's units.
+    func testUpNextFromModuleNumberedPlaybackKeepsModuleNumbers() {
+        let eps = sequelPageNumberedOn()
+        let n = EpisodeNavigator.upNextNumber(next: eps[1], playingHref: "s2/ep13", playingNumber: 13,
+                                              in: eps, seasonOffset: 0)
+        XCTAssertEqual(n, 14)
+    }
+
+    /// A combined franchise list (S1 1–12 then S2 13–24 on one page) with the season offset known.
+    func testUpNextOnCombinedListUsesSeasonOffset() {
+        let eps = (1...24).map { EpisodeLink(number: Double($0), href: "ep\($0)") }
+        let n = EpisodeNavigator.upNextNumber(next: eps[13], playingHref: "ep13", playingNumber: 1,
+                                              in: eps, seasonOffset: 12)
+        XCTAssertEqual(n, 2)
+    }
+
+    /// No saved href (legacy item): can't tell the units, so the module's number is reported.
+    func testUpNextWithoutPlayingHrefFallsBackToModuleNumber() {
+        let eps = sequelPageNumberedOn()
+        let n = EpisodeNavigator.upNextNumber(next: eps[1], playingHref: nil, playingNumber: 1,
+                                              in: eps, seasonOffset: 0)
+        XCTAssertEqual(n, 14)
+    }
 }

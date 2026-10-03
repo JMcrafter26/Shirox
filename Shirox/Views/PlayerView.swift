@@ -3449,17 +3449,21 @@ struct PlayerAmbientBackground: View {
     private let timer = Timer.publish(every: 1.5, on: .main, in: .common).autoconnect()
 
     var body: some View {
-        ZStack {
-            if let image {
-                Image(uiImage: image)
-                    .resizable()
-                    .scaledToFill()
-                    .blur(radius: 40, opaque: true)
-                    .opacity(0.55)
-                    .transition(.opacity)
+        // Sized by the screen, with the frame drawn over it: a fill-scaled image laid out
+        // directly takes the frame's width, which widened the whole player off the screen.
+        Color.clear
+            .overlay {
+                if let image {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .blur(radius: 40, opaque: true)
+                        .opacity(0.55)
+                        .transition(.opacity)
+                }
             }
-        }
-        .ignoresSafeArea()
+            .clipped()
+            .ignoresSafeArea()
         .allowsHitTesting(false)
         .onReceive(timer) { _ in
             guard isPlaying || image == nil else { return }

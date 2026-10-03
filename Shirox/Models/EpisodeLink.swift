@@ -116,6 +116,23 @@ enum EpisodeNavigator {
         return moduleNumber
     }
 
+    /// The number to report for `next` when advancing from the episode at `playingHref`,
+    /// in the units the playback already uses.
+    ///
+    /// Playback launched from an AniList or MyAnimeList page counts within the season, but the
+    /// source may list a sequel as 13…24; reporting the module's own number turned S2 E1's
+    /// Next into "episode 13" and synced 13. Playback whose number matches the module's own
+    /// (started from the module's page) stays in the module's units.
+    static func upNextNumber(next: EpisodeLink, playingHref: String?, playingNumber: Int,
+                             in episodes: [EpisodeLink], seasonOffset: Int) -> Int {
+        let moduleNumber = Int(next.number)
+        guard let playing = episodes.first(where: { $0.href == playingHref }),
+              Int(playing.number) != playingNumber else { return moduleNumber }
+        let index = episodes.firstIndex { $0.href == next.href } ?? 0
+        return seasonRelativeNumber(moduleNumber: moduleNumber, index: index,
+                                    in: episodes, seasonOffset: seasonOffset)
+    }
+
     /// Convenience for the resume paths: anchor on the unique `href` when one was saved,
     /// otherwise fall back to `number` — but only when it names exactly one episode (legacy
     /// items predate the stored href). Returns just the next episode, or `nil` at the end of

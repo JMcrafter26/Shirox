@@ -173,23 +173,16 @@ struct ContinueWatchingSection: View {
         // episodeHref was recorded.
         var currentHref = item.episodeHref
 
-        /// The next episode's number in the units the item plays in. An item started from an
-        /// AniList or MyAnimeList page counts within its season, but a source may list a sequel
-        /// as 13…24; reporting the module's own number made Next go from S2 E1 to "episode 13"
-        /// and wrote 13 to the tracker. An item already in the module's units (started from the
-        /// module's page) keeps them.
+        /// The next episode's number in the units the item plays in; see
+        /// `EpisodeNavigator.upNextNumber`. Only tracked items can be season-relative.
         @Sendable func seasonRelativeNextNumber(next: EpisodeLink, playingHref: String?, playingNumber: Int,
                                                 in episodes: [EpisodeLink]) async -> Int {
-            let moduleNumber = Int(next.number)
-            guard item.aniListID != nil,
-                  let playing = episodes.first(where: { $0.href == playingHref }),
-                  Int(playing.number) != playingNumber else { return moduleNumber }
+            guard let aniListID = item.aniListID else { return Int(next.number) }
             let seasonOffset = await SeasonChainMapper.shared.resolveOffset(
-                anchorAniListID: item.aniListID,
-                anchorMALID: item.aniListID.flatMap { IDMappingService.shared.cachedMalId(forAnilistId: $0) }) ?? 0
-            let index = episodes.firstIndex { $0.href == next.href } ?? 0
-            return EpisodeNavigator.seasonRelativeNumber(moduleNumber: moduleNumber, index: index,
-                                                         in: episodes, seasonOffset: seasonOffset)
+                anchorAniListID: aniListID,
+                anchorMALID: IDMappingService.shared.cachedMalId(forAnilistId: aniListID)) ?? 0
+            return EpisodeNavigator.upNextNumber(next: next, playingHref: playingHref, playingNumber: playingNumber,
+                                                 in: episodes, seasonOffset: seasonOffset)
         }
 
         let onWatchNext: WatchNextLoader? = { currentEpNum in
