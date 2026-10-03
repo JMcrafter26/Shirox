@@ -146,6 +146,8 @@ struct MangaReaderView: View {
     /// Pan at the moment the current drag began, so a drag is applied as a delta.
     @State private var panStart: CGFloat = 0
     @State private var isPanning = false
+    /// Drives the sideways pan from UIKit, alongside the scroll view's own pan.
+    @State private var zoomPan = ReaderZoomPan()
     private static let maxZoom: CGFloat = 3
     /// What a double-tap zooms to, the same as the paged modes.
     private static let doubleTapZoom: CGFloat = 2.5
@@ -316,6 +318,7 @@ struct MangaReaderView: View {
                 }
                 .background(ScrollViewGrabber { scrollView in
                     if verticalScrollView !== scrollView { verticalScrollView = scrollView }
+                    zoomPan.attach(to: scrollView)
                 })
             }
             .softScrollEdges()
@@ -378,8 +381,9 @@ struct MangaReaderView: View {
             // so magnifying a wide panel just cropped it. Drag to pan across it. Vertical
             // movement stays with the ScrollView, which already does it well.
             .offset(x: horizontalPan)
-            .simultaneousGesture(horizontalPanGesture, including: zoomScale > 1 ? .all : .subviews)
+            .onAppear { zoomPan.onPan = handleZoomPan }
             .onChangeOf(zoomScale) { scale in
+                zoomPan.isZoomed = scale > 1
                 // Back to fit — recentre, and clamp if the new scale exposes less slack.
                 withAnimation(.easeOut(duration: 0.2)) {
                     horizontalPan = scale <= 1 ? 0 : clampedPan(horizontalPan, at: scale)
@@ -872,19 +876,25 @@ struct MangaReaderView: View {
     /// How far the content may slide sideways at `scale` before its edge comes past the
     /// screen edge. Half the overflow in each direction, so the page can be walked from one
     /// margin to the other and no further.
-    private func panLimit(at scale: CGFloat) -> CGFloat {
-        guard scale > 1 else { return 0 }
+    ///
+    /// The overflow on each side depends on where the zoom is anchored: zoomed in on the left
+    /// third, most of it is on the right. Halving it both ways, as this did, kept one side of a
+    /// page out of reach after any zoom that wasn't dead centre.
+    private func panRange(at scale: CGFloat) -> ClosedRange<CGFloat> {
+        guard scale > 1 else { return 0...0 }
         #if os(iOS)
         let width = UIScreen.main.bounds.width
         #else
         let width: CGFloat = 1024
         #endif
-        return width * (scale - 1) / 2
+        let anchorX = min(max(pinchAnchor.x, 0), 1)
+        let overflow = width * (scale - 1)
+        return -(1 - anchorX) * overflow ... anchorX * overflow
     }
 
     private func clampedPan(_ value: CGFloat, at scale: CGFloat) -> CGFloat {
-        let limit = panLimit(at: scale)
-        return min(max(value, -limit), limit)
+        let range = panRange(at: scale)
+        return min(max(value, range.lowerBound), range.upperBound)
     }
 
     /// Double-tap zooms in on the spot tapped and stays there while you scroll, until another
@@ -905,18 +915,19 @@ struct MangaReaderView: View {
         withAnimation(.easeInOut(duration: 0.25)) { zoomScale = Self.doubleTapZoom }
     }
 
-    /// Horizontal drag, live only while zoomed so an ordinary read is untouched.
-    private var horizontalPanGesture: some Gesture {
-        DragGesture(minimumDistance: 12)
-            .onChanged { value in
-                guard zoomScale > 1 else { return }
-                if !isPanning {
-                    isPanning = true
-                    panStart = horizontalPan
-                }
-                horizontalPan = clampedPan(panStart + value.translation.width, at: zoomScale)
-            }
-            .onEnded { _ in isPanning = false }
+    /// The sideways half of a pan while zoomed; the scroll view moves the strip up and down
+    /// from the same drag, so a page can be panned in any direction, as in a photo viewer.
+    private func handleZoomPan(_ translationX: CGFloat, _ state: UIGestureRecognizer.State) {
+        guard zoomScale > 1 else { return }
+        switch state {
+        case .began:
+            isPanning = true
+            panStart = horizontalPan
+        case .changed:
+            horizontalPan = clampedPan(panStart + translationX, at: zoomScale)
+        default:
+            isPanning = false
+        }
     }
 
     // MARK: - Auto-scroll
@@ -1149,6 +1160,38 @@ private struct ReaderPageFrameKey: PreferenceKey {
 /// Resolves the UIScrollView backing a SwiftUI ScrollView by walking up the
 /// view hierarchy from a zero-sized background view. Needed for exact-offset
 /// resume: ScrollViewReader can only anchor to view ids, not pixel offsets.
+/// A pan recognizer on the vertical reader's scroll view that runs together with the scroll
+/// view's own. Zoomed in, the scroll view took every drag, so the SwiftUI drag that was meant
+/// to move the page sideways rarely got one and a diagonal drag only ever went up or down.
+/// This one reports the horizontal part of the same drag. Off at fit width.
+final class ReaderZoomPan: NSObject, UIGestureRecognizerDelegate {
+    var onPan: (CGFloat, UIGestureRecognizer.State) -> Void = { _, _ in }
+    var isZoomed = false
+    private weak var scrollView: UIScrollView?
+    private var recognizer: UIPanGestureRecognizer?
+
+    func attach(to scrollView: UIScrollView) {
+        guard self.scrollView !== scrollView else { return }
+        if let recognizer { recognizer.view?.removeGestureRecognizer(recognizer) }
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(handle(_:)))
+        pan.delegate = self
+        pan.cancelsTouchesInView = false
+        scrollView.addGestureRecognizer(pan)
+        self.scrollView = scrollView
+        recognizer = pan
+    }
+
+    @objc private func handle(_ pan: UIPanGestureRecognizer) {
+        // In window points: the strip is drawn scaled, and its own views measure in unscaled ones.
+        onPan(pan.translation(in: nil).x, pan.state)
+    }
+
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool { isZoomed }
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                           shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { true }
+}
+
 private struct ScrollViewGrabber: UIViewRepresentable {
     let onResolve: (UIScrollView) -> Void
 

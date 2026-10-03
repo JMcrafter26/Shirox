@@ -38,6 +38,7 @@ struct MangaDetailView: View {
     @ObservedObject private var mangaDownloads = MangaDownloadManager.shared
     @State private var isSelectionMode = false
     @State private var selectedChapterHrefs: Set<String> = []
+    @State private var confirmDeleteAllDownloads = false
     @ObservedObject private var anilistAuth = AniListAuthManager.shared
     @ObservedObject private var malAuth = MALAuthManager.shared
     @State private var existingAniListEntry: LibraryEntry? = nil
@@ -584,6 +585,12 @@ struct MangaDetailView: View {
         return detail.chapters
     }
 
+    #if os(iOS)
+    private var downloadedItemsForThisManga: [MangaDownloadItem] {
+        mangaDownloads.items.filter { $0.mangaHref == item.href }
+    }
+    #endif
+
     private func chaptersSection(_ detail: MangaDetail) -> some View {
         let visibleChapters = liveChapters(for: detail)
         return VStack(alignment: .leading, spacing: 12) {
@@ -601,6 +608,26 @@ struct MangaDetailView: View {
 
                 HStack(spacing: 8) {
                     #if os(iOS)
+                    // A visible way to delete what's downloaded. It was only behind a swipe or
+                    // a long press on the Downloads tab, or select mode here, and people
+                    // reported there was no way at all.
+                    if offlineChapters != nil, !downloadedItemsForThisManga.isEmpty {
+                        Button(role: .destructive) { confirmDeleteAllDownloads = true } label: {
+                            Image(systemName: "trash")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(.red)
+                                .frame(width: 36, height: 36)
+                                .overlay(Circle().strokeBorder(Color.primary.opacity(0.15), lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Delete Downloaded Chapters")
+                        .confirmationDialog("Delete all \(downloadedItemsForThisManga.count) downloaded chapters?",
+                                            isPresented: $confirmDeleteAllDownloads, titleVisibility: .visible) {
+                            Button("Delete Downloads", role: .destructive) {
+                                mangaDownloads.removeAll(downloadedItemsForThisManga)
+                            }
+                        }
+                    }
                     Button {
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                             isSelectionMode.toggle()
