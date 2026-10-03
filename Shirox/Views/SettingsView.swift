@@ -1079,6 +1079,8 @@ struct StorageSettingsView: View {
     @State private var isClearing = false
     @State private var showResetCWConfirmation = false
     @State private var showResetHistoryConfirmation = false
+    @State private var downloadsSize = 0
+    @State private var showDeleteDownloadsConfirmation = false
 
     var body: some View {
         List {
@@ -1096,16 +1098,8 @@ struct StorageSettingsView: View {
                     isClearing = true
                     Task {
                         await CacheManager.shared.clearEverything()
-                        imageCacheSize = 0
-                        websiteDataSize = 0
-                        tempFilesSize = 0
-                        continueWatchingSize = 0
-                        watchHistorySize = 0
-                        searchAliasSize = 0
-                        idMappingSize = 0
-                        episodeSortSize = 0
-                        totalUsage = 0
                         isClearing = false
+                        updateCacheSizes()
                     }
                 } label: {
                     LabeledContent("Clear Everything") {
@@ -1122,8 +1116,10 @@ struct StorageSettingsView: View {
 
                 DisclosureGroup("Individual Resets") {
                     Button {
-                        CacheManager.shared.clearImageCache()
-                        updateCacheSizes()
+                        Task {
+                            await CacheManager.shared.clearImageCache()
+                            updateCacheSizes()
+                        }
                     } label: {
                         LabeledContent("Reset Image Cache") {
                             Text(SettingsView.formattedBytes(imageCacheSize))
@@ -1216,10 +1212,38 @@ struct StorageSettingsView: View {
                 .font(.subheadline)
                 .disabled(isClearing)
 
-                Text("Website Data includes cookies and local storage from module scrapers. Watch Data includes continue watching and history. Search Aliases store remembered search results and stream picks per module.")
+                Text("Clear Everything removes caches the app can rebuild. It keeps Continue Watching and watch history, which have their own resets. Website Data includes cookies and local storage from module scrapers. Search Aliases store remembered search results and stream picks per module.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+
+            Section {
+                Button(role: .destructive) {
+                    showDeleteDownloadsConfirmation = true
+                } label: {
+                    LabeledContent("Delete All Downloads") {
+                        Text(SettingsView.formattedBytes(downloadsSize))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .foregroundStyle(.red)
+                .disabled(downloadsSize == 0)
+                NavigationLink("Download Settings") { DownloadsSettingsView() }
+            } header: {
+                Text("Downloads")
+            } footer: {
+                Text("Downloaded episodes and chapters aren't a cache, so Clear Everything leaves them alone. Delete single episodes from the Downloads tab, or turn on Delete After Watching in Download Settings.")
+            }
+        }
+        .alert("Delete All Downloads?", isPresented: $showDeleteDownloadsConfirmation) {
+            Button("Delete", role: .destructive) {
+                DownloadManager.shared.removeAll(DownloadManager.shared.items)
+                MangaDownloadManager.shared.removeAll(MangaDownloadManager.shared.items)
+                downloadsSize = DownloadManager.shared.bytesOnDisk + MangaDownloadManager.shared.bytesOnDisk
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Every downloaded episode and chapter will be removed from this device. You can download them again later.")
         }
         .softScrollEdges()
         .navigationTitle("Storage & Cache")
@@ -1248,6 +1272,7 @@ struct StorageSettingsView: View {
     }
 
     private func updateCacheSizes() {
+        downloadsSize = DownloadManager.shared.bytesOnDisk + MangaDownloadManager.shared.bytesOnDisk
         websiteDataSize = CacheManager.shared.websiteDataSize
         tempFilesSize = CacheManager.shared.tempFilesSize
         continueWatchingSize = CacheManager.shared.continueWatchingSize

@@ -22,15 +22,20 @@ final class CacheManager: ObservableObject {
         get async { await CachedAsyncImage.diskCacheBytes }
     }
     
+    /// What Reset Website Data removes: WebKit's own folders. It used to measure all of
+    /// `Library/Caches`, which holds the image cache too, so the figure never went down after a
+    /// reset and the image cache was counted twice in the total.
     var websiteDataSize: Int {
-        let libraryDir = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
-        let webKitFolders = ["Caches", "WebKit", "Cookies"]
-        var total = 0
-        for folder in webKitFolders {
-            let url = libraryDir.appendingPathComponent(folder)
-            total += (try? sizeOfDirectory(at: url)) ?? 0
+        let fm = FileManager.default
+        let libraryDir = fm.urls(for: .libraryDirectory, in: .userDomainMask)[0]
+        let caches = libraryDir.appendingPathComponent("Caches")
+        var folders = [libraryDir.appendingPathComponent("WebKit"),
+                       libraryDir.appendingPathComponent("Cookies"),
+                       caches.appendingPathComponent("WebKit")]
+        if let bundleID = Bundle.main.bundleIdentifier {
+            folders.append(caches.appendingPathComponent(bundleID).appendingPathComponent("WebKit"))
         }
-        return total
+        return folders.reduce(0) { $0 + ((try? sizeOfDirectory(at: $1)) ?? 0) }
     }
     
     var tempFilesSize: Int {
@@ -83,16 +88,17 @@ final class CacheManager: ObservableObject {
 
     var totalDiskUsage: Int {
         get async {
-            (await imageCacheSize) + websiteDataSize + tempFilesSize + continueWatchingSize
-                + watchHistorySize + searchAliasSize + idMappingSize + episodeSortSize
+            // What Clear Everything clears, so the figure beside it is what it frees.
+            (await imageCacheSize) + websiteDataSize + tempFilesSize
+                + searchAliasSize + idMappingSize + episodeSortSize
                 + libraryCacheSize + profileCacheSize
         }
     }
 
     // MARK: - Individual Reset Methods
 
-    func clearImageCache() {
-        CachedAsyncImage.resetCache()
+    func clearImageCache() async {
+        await CachedAsyncImage.resetCacheAndWait()
     }
 
     func clearWebsiteData() async {
@@ -142,12 +148,13 @@ final class CacheManager: ObservableObject {
         ProfileCacheStore.shared.clearAll()
     }
 
+    /// Every cache the app can rebuild. Continue Watching and watch history aren't caches —
+    /// they're the viewer's progress — and clearing a cache used to take them too. They have
+    /// their own resets, behind a confirmation.
     func clearEverything() async {
-        clearImageCache()
+        await clearImageCache()
         await clearWebsiteData()
         clearTempFiles()
-        clearContinueWatching()
-        clearWatchHistory()
         clearSearchAliases()
         clearIDMappingCache()
         clearEpisodeSortPreferences()
@@ -164,7 +171,9 @@ final class CacheManager: ObservableObject {
         
         var total = 0
         for case let fileURL as URL in enumerator {
-            let resourceValues = try fileURL.resourceValues(forKeys: Set(keys))
+            // One file vanishing mid-walk (a cache being written) used to throw out of the
+            // whole walk, and the folder read as empty.
+            guard let resourceValues = try? fileURL.resourceValues(forKeys: Set(keys)) else { continue }
             if let isDirectory = resourceValues.isDirectory, !isDirectory {
                 total += resourceValues.fileSize ?? 0
             }

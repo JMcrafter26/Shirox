@@ -68,6 +68,18 @@ struct CachedAsyncImage: View {
         NotificationCenter.default.post(name: NSNotification.Name("ClearImageCache"), object: nil)
     }
 
+    /// `resetCache`, returning once the files are gone. Kingfisher deletes them in the
+    /// background, so Settings measured the cache straight after a reset, before anything was
+    /// deleted, and showed the same size as if the reset had done nothing.
+    static func resetCacheAndWait() async {
+        ImageCache.default.clearMemoryCache()
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            ImageCache.default.clearDiskCache { continuation.resume() }
+        }
+        URLCache.shared.removeAllCachedResponses()
+        NotificationCenter.default.post(name: NSNotification.Name("ClearImageCache"), object: nil)
+    }
+
     /// The one place that bridges `PlatformImage` into SwiftUI's `Image`.
     private static func image(from platformImage: PlatformImage) -> Image {
         #if os(macOS)
