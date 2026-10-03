@@ -374,6 +374,30 @@ import Combine
         entries = store.entries
         collections = store.collections
         migrateScoreCanonicalIfNeeded()
+        stripImportPrefixesIfNeeded()
+    }
+
+    /// Imported videos saved before the import prefix was hidden were titled with it. The
+    /// title sits in `let`s, so the entry is re-titled through its JSON.
+    private func stripImportPrefixesIfNeeded() {
+        var changed = false
+        for i in entries.indices where entries[i].localSource?.kind == .localFile {
+            guard let title = entries[i].media.title.english else { continue }
+            let clean = LocalPlaybackCoordinator.strippingImportPrefix(title)
+            guard clean != title,
+                  let data = try? JSONEncoder().encode(entries[i]),
+                  var object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  var media = object["media"] as? [String: Any],
+                  var titles = media["title"] as? [String: Any] else { continue }
+            titles["english"] = clean
+            media["title"] = titles
+            object["media"] = media
+            guard let fixed = try? JSONSerialization.data(withJSONObject: object),
+                  let entry = try? JSONDecoder().decode(LibraryEntry.self, from: fixed) else { continue }
+            entries[i] = entry
+            changed = true
+        }
+        if changed { persist() }
     }
 
     /// Backfills the 0–100 canonical score for entries saved before it existed,

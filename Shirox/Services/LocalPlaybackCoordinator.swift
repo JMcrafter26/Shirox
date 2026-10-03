@@ -57,7 +57,12 @@ final class LocalPlaybackCoordinator: ObservableObject {
     /// `<UUID>-` prefix an import copy carries to keep same-named picks apart. The player used
     /// to title an imported video "B0071143-E426-…-BigBuckBunny".
     nonisolated static func displayTitle(for url: URL) -> String {
-        let name = url.deletingPathExtension().lastPathComponent
+        strippingImportPrefix(url.deletingPathExtension().lastPathComponent)
+    }
+
+    /// `name` without an import copy's `<UUID>-` prefix. Titles saved before `displayTitle`
+    /// existed still carry it, on Continue Watching cards and library entries.
+    nonisolated static func strippingImportPrefix(_ name: String) -> String {
         let prefixLength = 37 // a UUID string plus the "-"
         guard name.count > prefixLength,
               UUID(uuidString: String(name.prefix(36))) != nil,

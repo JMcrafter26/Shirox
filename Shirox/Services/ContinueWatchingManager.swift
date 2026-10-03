@@ -1302,6 +1302,22 @@ struct SimklTrackWrite: Equatable {
         persist()
     }
 
+    /// Local-file cards saved before the import prefix was hidden were titled with it
+    /// ("B0071143-E426-…-Episode 3"). Re-titled through the JSON, as the title is a `let`.
+    private static func strippingImportPrefixes(_ items: [ContinueWatchingItem]) -> [ContinueWatchingItem] {
+        items.map { item in
+            guard item.localImportName != nil else { return item }
+            let clean = LocalPlaybackCoordinator.strippingImportPrefix(item.mediaTitle)
+            guard clean != item.mediaTitle,
+                  let data = try? JSONEncoder().encode(item),
+                  var object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return item }
+            object["mediaTitle"] = clean
+            guard let fixed = try? JSONSerialization.data(withJSONObject: object),
+                  let decoded = try? JSONDecoder().decode(ContinueWatchingItem.self, from: fixed) else { return item }
+            return decoded
+        }
+    }
+
     private func load() {
         let storedVersion = UserDefaults.standard.integer(forKey: Keys.dataVersion)
         if storedVersion != Self.currentDataVersion {
@@ -1317,7 +1333,7 @@ struct SimklTrackWrite: Equatable {
         }
         if let data = UserDefaults.standard.data(forKey: Keys.storage),
            let decoded = try? JSONDecoder().decode([ContinueWatchingItem].self, from: data) {
-            items = decoded.sorted { cwSortOrder($0, $1) }
+            items = Self.strippingImportPrefixes(decoded).sorted { cwSortOrder($0, $1) }
         }
         if let wdata = UserDefaults.standard.data(forKey: Keys.watched),
            let wdecoded = try? JSONDecoder().decode(Set<String>.self, from: wdata) {
