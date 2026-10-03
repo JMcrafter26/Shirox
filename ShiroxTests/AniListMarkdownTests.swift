@@ -91,4 +91,21 @@ final class AniListMarkdownTests: XCTestCase {
         let raw = "dangling ~! marker"
         XCTAssertEqual(AniListSpoilerMarkup.apply(to: raw, revealed: []), raw)
     }
+
+    // MARK: - Embeds
+
+    /// Embeds only render on a line of their own; bios put them in centred lines, rows and links.
+    func testEmbedsAreIsolatedOntoTheirOwnLines() {
+        // Centred on one line, it rendered as the text "webm(…)"; split, it renders centred.
+        XCTAssertEqual(MarkdownText.isolatingEmbeds("~~~webm(https://x.io/a.webm)~~~"),
+                       "~~~\nwebm(https://x.io/a.webm)\n~~~")
+        XCTAssertEqual(MarkdownText.isolatingEmbeds("youtube(dQw4w9WgXcQ)"), "youtube(dQw4w9WgXcQ)")
+        XCTAssertEqual(MarkdownText.isolatingEmbeds("img220(https://x.io/a.png) img220(https://x.io/b.png)"),
+                       "img220(https://x.io/a.png)\nimg220(https://x.io/b.png)")
+        XCTAssertEqual(MarkdownText.isolatingEmbeds("~~~hi youtube(dQw4w9WgXcQ)~~~"),
+                       "~~~\nhi\nyoutube(dQw4w9WgXcQ)\n~~~")
+        XCTAssertEqual(MarkdownText.isolatingEmbeds("[img(https://x.io/a.gif)](https://anilist.co)"),
+                       "img(https://x.io/a.gif)")
+        XCTAssertEqual(MarkdownText.isolatingEmbeds("plain text"), "plain text")
+    }
 }

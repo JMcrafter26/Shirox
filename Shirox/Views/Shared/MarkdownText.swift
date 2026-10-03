@@ -191,6 +191,7 @@ struct MarkdownText: View {
         // <center>...</center> → ~~~\n...\n~~~ (centered block)
         s = s.replacingOccurrences(
             of: #"<center>([\s\S]*?)</center>"#, with: "~~~\n$1\n~~~", options: .regularExpression)
+        s = Self.isolatingEmbeds(s)
         // Expand ~~~content (opening with inline content) into two lines
         return s.components(separatedBy: "\n").flatMap { line -> [String] in
             let t = line.trimmingCharacters(in: .whitespaces)
@@ -204,6 +205,46 @@ struct MarkdownText: View {
             }
             return [line]
         }.joined(separator: "\n")
+    }
+
+    /// Puts every image and video embed on a line of its own, which is the only place the block
+    /// parser recognises one. AniList bios rarely write them that way: they sit in a centred
+    /// line (`~~~webm(…)~~~`), several to a line (`img220(a) img220(b)`), or wrapped in a link
+    /// (`[img(…)](…)`), and all of those showed up as raw text instead of the picture or video.
+    static func isolatingEmbeds(_ text: String) -> String {
+        let token = #"(?i)(?:img\d*|youtube|webm|mp4)\([^()\s]+\)"#
+        // A linked image or video: keep the embed, drop the link around it.
+        var s = text.replacingOccurrences(
+            of: #"\[\s*("# + token + #")\s*\]\([^()\s]*\)"#, with: "$1", options: .regularExpression)
+        guard let regex = try? NSRegularExpression(pattern: token) else { return s }
+        s = s.components(separatedBy: "\n").flatMap { line -> [String] in
+            let ns = line as NSString
+            let matches = regex.matches(in: line, range: NSRange(location: 0, length: ns.length))
+            guard !matches.isEmpty else { return [line] }
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            if matches.count == 1, matches[0].range.length == (trimmed as NSString).length { return [line] }
+            // A centred line stays centred: its pieces go inside a ~~~ block.
+            var body = trimmed
+            var centred = false
+            if body.hasPrefix("~~~") && body.hasSuffix("~~~") && body.count > 6 {
+                body = String(body.dropFirst(3).dropLast(3))
+                centred = true
+            }
+            let bodyNS = body as NSString
+            var pieces: [String] = []
+            var cursor = 0
+            for match in regex.matches(in: body, range: NSRange(location: 0, length: bodyNS.length)) {
+                let before = bodyNS.substring(with: NSRange(location: cursor, length: match.range.location - cursor))
+                    .trimmingCharacters(in: .whitespaces)
+                if !before.isEmpty { pieces.append(before) }
+                pieces.append(bodyNS.substring(with: match.range))
+                cursor = match.range.location + match.range.length
+            }
+            let after = bodyNS.substring(from: cursor).trimmingCharacters(in: .whitespaces)
+            if !after.isEmpty { pieces.append(after) }
+            return centred ? ["~~~"] + pieces + ["~~~"] : pieces
+        }.joined(separator: "\n")
+        return s
     }
 
     private var blocks: [MBlock] {
