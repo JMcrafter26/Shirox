@@ -90,3 +90,50 @@ enum PlaybackFallback {
         abs(playheadMoved) < 0.5 && bufferGrew < 0.5
     }
 }
+
+/// Tells a stream that died mid-episode from one that played to its end, from mpv's log.
+///
+/// When a stream's segments stop loading (an expired CDN token after a phone call, or a seek
+/// back into segments the server no longer serves), ffmpeg's HLS demuxer doesn't fail. It logs
+/// "Failed to open segment", skips that segment and tries the next, and races through the rest
+/// of the episode to EOF. The playhead lands at the end, the end check passes, and the player
+/// moved on to the next episode. The abandoned one was synced as watched on the way past, or
+/// left with no progress. This counts the failures so the engine can report a dead stream from
+/// where it was before they started.
+struct SegmentFailureWatch {
+    /// This many failures close together mean the source is gone, not one bad segment.
+    static let failuresToGiveUp = 3
+    /// How close together they have to be.
+    static let window: TimeInterval = 20
+
+    private var failures: [Date] = []
+    /// The playhead when the current run of failures started.
+    private(set) var positionBeforeFailures: Double?
+
+    static func isSegmentFailure(_ line: String) -> Bool {
+        let lower = line.lowercased()
+        return lower.contains("failed to open segment")
+            || (lower.contains("hls") && lower.contains("skipping"))
+            || lower.contains("failed to reload playlist")
+    }
+
+    /// Records a log line. True once the failures add up to a dead stream.
+    mutating func record(_ line: String, position: Double, at now: Date = Date()) -> Bool {
+        guard Self.isSegmentFailure(line) else { return false }
+        failures.removeAll { now.timeIntervalSince($0) > Self.window }
+        if failures.isEmpty { positionBeforeFailures = position }
+        failures.append(now)
+        return failures.count >= Self.failuresToGiveUp
+    }
+
+    /// Whether an EOF now follows segment failures, so it's the demuxer giving up, not the end.
+    func endIsFailure(at now: Date = Date()) -> Bool {
+        guard let last = failures.last else { return false }
+        return now.timeIntervalSince(last) <= Self.window
+    }
+
+    mutating func reset() {
+        failures = []
+        positionBeforeFailures = nil
+    }
+}

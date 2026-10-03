@@ -2056,7 +2056,21 @@ struct PlayerView: View {
                                          hasRefetched: refetchedAfterFailure) {
         case .refetch:
             refetchedAfterFailure = true
-            Task { @MainActor in await refetchStream() }
+            // A stream that had been playing comes back where it was: `refetchStream()` alone
+            // swaps the fresh item in at 0:00, which is how a dropped stream after a phone call
+            // lost the viewer's place. One that failed to open keeps the resume it opened with.
+            let pendingResume = didSeekToResume ? nil : currentContext?.resumeFrom
+            Task { @MainActor in
+                if videoReady && recoveryPosition > 1 {
+                    await recoverByRefetch()
+                } else {
+                    await refetchStream()
+                    if let pendingResume {
+                        currentContext?.resumeFrom = pendingResume
+                        didSeekToResume = false
+                    }
+                }
+            }
         case .switchToMPV:
             switchToMPV()
         case .giveUp:
@@ -2458,6 +2472,13 @@ struct PlayerView: View {
     /// Whether the item genuinely ran to its end, rather than AVPlayer reporting an end because
     /// the stream died. The tolerance absorbs the rounding HLS leaves on a final segment.
     @MainActor
+    /// Where a recovery should put the viewer back: the clock, unless a dead item has collapsed
+    /// it to 0, in which case the last position saved while it was still playing.
+    private var recoveryPosition: Double {
+        PlaybackRouting.shouldDiscardPositionWrite(position: currentTime, lastSaved: lastSavedSeconds)
+            ? lastSavedSeconds : currentTime
+    }
+
     private var reachedGenuineEnd: Bool {
         PlaybackRouting.isGenuineEnd(position: currentTime, duration: duration)
     }
@@ -2653,7 +2674,7 @@ struct PlayerView: View {
         guard !isRecoveringStall else { return }
         isRecoveringStall = true
         defer { isRecoveringStall = false }
-        let resumeAt = currentTime
+        let resumeAt = recoveryPosition
         // swapStream unconditionally force-plays (rate up, isPlaying = true), so capture the
         // user's intent now — a recovery triggered while paused must stay paused, not start
         // playing on its own when the user returns to the app.
@@ -2714,7 +2735,7 @@ struct PlayerView: View {
         isRecoveringStall = true
         defer { isRecoveringStall = false }
 
-        let resumeAt = currentTime
+        let resumeAt = recoveryPosition
         let wasPlaying = isPlaying
         Logger.shared.log("[Recovery] Clean rebuild of local playback, resuming at \(resumeAt)s", type: "Player")
 

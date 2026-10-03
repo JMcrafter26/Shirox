@@ -107,4 +107,32 @@ final class PlaybackFallbackTests: XCTestCase {
         XCTAssertFalse(PlaybackFallback.isStalled(playheadMoved: 12, bufferGrew: 0))
         XCTAssertFalse(PlaybackFallback.isStalled(playheadMoved: -12, bufferGrew: 0))
     }
+
+    // MARK: - Segment failures
+
+    /// mpv skipping failed segments to EOF looked like the episode ending: the player advanced
+    /// from the middle of episode 207 after a phone call.
+    func testRepeatedSegmentFailuresMeanADeadStream() {
+        var watch = SegmentFailureWatch()
+        let start = Date()
+        let line = "[ffmpeg/demuxer] hls: Failed to open segment 412 of playlist 0"
+        XCTAssertFalse(watch.record(line, position: 830, at: start))
+        XCTAssertFalse(watch.record(line, position: 836, at: start.addingTimeInterval(1)))
+        XCTAssertTrue(watch.record(line, position: 842, at: start.addingTimeInterval(2)))
+        // The viewer goes back to where it started failing, not where the skipping got to.
+        XCTAssertEqual(watch.positionBeforeFailures, 830)
+        XCTAssertTrue(watch.endIsFailure(at: start.addingTimeInterval(5)))
+    }
+
+    /// One bad segment in a healthy stream isn't a dead stream, and a later real ending is real.
+    func testAnOldSingleFailureDoesntSpoilTheEnding() {
+        var watch = SegmentFailureWatch()
+        let start = Date()
+        XCTAssertFalse(watch.record("[ffmpeg/demuxer] hls: Failed to open segment 3 of playlist 0", position: 20, at: start))
+        XCTAssertFalse(watch.record("[cplayer] some other warning", position: 30, at: start))
+        XCTAssertFalse(watch.endIsFailure(at: start.addingTimeInterval(1400)))
+        // A new run of failures much later starts counting from its own position.
+        XCTAssertFalse(watch.record("[ffmpeg/demuxer] hls: Failed to open segment 300 of playlist 0", position: 1200, at: start.addingTimeInterval(1200)))
+        XCTAssertEqual(watch.positionBeforeFailures, 1200)
+    }
 }

@@ -163,6 +163,10 @@ final class MPVEngine: PlaybackEngine {
     private var metalReturns = 0
     /// Between the app's going to the background and its coming back, when mpv draws nothing.
     private var isInBackground = false
+    /// Segment failures on the file playing now (see ``SegmentFailureWatch``).
+    private var segmentFailures = SegmentFailureWatch()
+    /// Set once the file playing now has been reported dead, so its EOF isn't taken as the end.
+    private var reportedDeadStream = false
 
     private(set) var currentTime: Double = 0
     private(set) var duration: Double?
@@ -400,6 +404,8 @@ final class MPVEngine: PlaybackEngine {
         case .startFile:
             isItemReady = false
             isItemFailed = false
+            segmentFailures.reset()
+            reportedDeadStream = false
             reportTimeControl()
         case .fileLoaded:
             if reloadAfterLoad {
@@ -434,7 +440,7 @@ final class MPVEngine: PlaybackEngine {
                 events.itemFailed(failure)
             }
         case .playbackRestart:
-            if let time = getDouble("time-pos") { currentTime = time }
+            if !reportedDeadStream, let time = getDouble("time-pos") { currentTime = time }
             finishTakenSeeks()
             tick(force: true)
             tellMetalShown()
@@ -451,7 +457,8 @@ final class MPVEngine: PlaybackEngine {
         case .double(let name, let value):
             switch name {
             case "time-pos":
-                if let value {
+                // The demuxer is skipping through a dead stream: hold the clock where it was.
+                if let value, !reportedDeadStream {
                     currentTime = value
                     tick(force: false)
                 }
@@ -473,7 +480,12 @@ final class MPVEngine: PlaybackEngine {
                 isPausedForCache = value ?? false
                 reportTimeControl()
             case "eof-reached":
-                if value == true { events.playedToEnd() }
+                guard value == true, !reportedDeadStream else { break }
+                if segmentFailures.endIsFailure() {
+                    reportDeadStream()
+                } else {
+                    events.playedToEnd()
+                }
             default:
                 break
             }
@@ -489,7 +501,21 @@ final class MPVEngine: PlaybackEngine {
             }
         case .log(let line):
             Logger.shared.log("[MPV] \(line.trimmingCharacters(in: .whitespacesAndNewlines))", type: "Player")
+            if isItemReady, !reportedDeadStream,
+               segmentFailures.record(line, position: currentTime) {
+                reportDeadStream()
+            }
         }
+    }
+
+    /// Puts the clock back where the segments started failing and reports the stream dead, so the
+    /// player re-fetches it from there instead of following the demuxer to the end.
+    private func reportDeadStream() {
+        reportedDeadStream = true
+        if let position = segmentFailures.positionBeforeFailures { currentTime = position }
+        Logger.shared.log("[MPV] Segments stopped loading at \(currentTime)s — reporting a dead stream", type: "Error")
+        tick(force: true)
+        events.failedToPlayToEnd(Failure(code: MPV_ERROR_LOADING_FAILED.rawValue))
     }
 
     /// About twice a second of playback, and always after a seek, as AVPlayer's periodic
