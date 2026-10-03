@@ -1027,6 +1027,28 @@ final class DownloadManager: NSObject, ObservableObject {
         )
     }
 
+    /// Keeps a subtitle file the viewer supplied with a download, so it's in the menu every time
+    /// the episode plays, not only for the session it was imported in. Copied into the downloads
+    /// folder, so deleting the download deletes it too. Returns the track to show now.
+    @discardableResult
+    func attachSubtitle(from fileURL: URL, title: String, to itemID: UUID) -> SubtitleTrack? {
+        guard let idx = items.firstIndex(where: { $0.id == itemID }) else { return nil }
+        let ext = fileURL.pathExtension.isEmpty ? "srt" : fileURL.pathExtension
+        let name = "\(itemID.uuidString)-user-\(UUID().uuidString.prefix(8)).\(ext)"
+        let dest = downloadDir.appendingPathComponent(name)
+        do {
+            try FileManager.default.copyItem(at: fileURL, to: dest)
+        } catch {
+            Logger.shared.log("[Subtitles] Couldn't keep an imported subtitle with the download: \(error)", type: "Error")
+            return nil
+        }
+        var tracks = items[idx].subtitleTracks ?? []
+        tracks.append(DownloadedSubtitle(title: title, url: dest, headers: nil, relativePath: name))
+        items[idx].subtitleTracks = tracks
+        persist()
+        return SubtitleTrack(title: title, url: dest, headers: [:])
+    }
+
     func item(for episodeHref: String, streamTitle: String?) -> DownloadItem? {
         let matchStreamTitle = streamTitle == nil
         return items.first { item in

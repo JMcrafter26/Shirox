@@ -14,7 +14,7 @@ enum PlayerSubtitleMenu {
         var setDelay: (Double) -> Void
         var setFontSize: (Double) -> Void
         var selectTrack: (SubtitleTrack?) -> Void
-        /// nil when the video can't take a file — only a local or downloaded one can.
+        /// nil when the video can't take a file: while casting, where the receiver draws subtitles.
         var importFile: (() -> Void)?
         var moreSettings: () -> Void
         /// A track inside the file, by its number.

@@ -741,7 +741,7 @@ struct PlayerView: View {
                       allowsMultipleSelection: false) { result in
             if case .success(let urls) = result, let url = urls.first,
                let track = LocalPlaybackCoordinator.shared.importSubtitle(from: url) {
-                addImportedSubtitle(track)
+                addImportedSubtitle(keptWithDownload(track) ?? track)
             }
         }
         .onChangeOf(selectedSubtitleTrack) { loadSubtitles() }
@@ -1139,7 +1139,8 @@ struct PlayerView: View {
                 subtitleMenu: subtitleMenu,
                 // With tracks but no default, or with none yet on a video that can take a file,
                 // the menu is the only way to choose one or import one.
-                hasSubtitles: currentStream.subtitle != nil || !(subtitleTracks ?? []).isEmpty || canImportSubtitles,
+                hasSubtitles: currentStream.subtitle != nil || !(subtitleTracks ?? []).isEmpty
+                    || !embeddedSubtitles.isEmpty || canImportSubtitles,
                 audioTrackCount: audioOptions.count,
                 audioMenuItems: audioMenuItems,
                 streamCount: availableStreams.count,
@@ -2343,11 +2344,21 @@ struct PlayerView: View {
         }
     }
 
+    /// The headers to fetch a subtitle with: its own, else the stream's subtitle headers, else
+    /// the video's. Subtitles often sit on a CDN that wants the embed player's Referer, like the
+    /// video does. Downloads already fell back this way and the player didn't, so a track that
+    /// came with no headers of its own loaded offline and failed while streaming.
+    private func subtitleHeaders(_ own: [String: String]) -> [String: String] {
+        if !own.isEmpty { return own }
+        if !currentStream.subtitleHeaders.isEmpty { return currentStream.subtitleHeaders }
+        return currentStream.headers
+    }
+
     private func loadSubtitles() {
         if let track = selectedSubtitleTrack {
             Task {
                 do {
-                    show(try await VTTSubtitlesLoader.load(from: track.url.absoluteString, headers: track.headers))
+                    show(try await VTTSubtitlesLoader.load(from: track.url.absoluteString, headers: subtitleHeaders(track.headers)))
                 } catch {
                     Logger.shared.log("[Subtitles] Failed to load track '\(track.title)': \(error)", type: "Error")
                 }
@@ -2363,7 +2374,7 @@ struct PlayerView: View {
             }
             Task {
                 do {
-                    show(try await VTTSubtitlesLoader.load(from: urlString, headers: currentStream.subtitleHeaders))
+                    show(try await VTTSubtitlesLoader.load(from: urlString, headers: subtitleHeaders(currentStream.subtitleHeaders)))
                 } catch {
                     Logger.shared.log("[Subtitles] Failed to load default: \(error)", type: "Error")
                 }
@@ -2375,7 +2386,7 @@ struct PlayerView: View {
             selectedSubtitleTrack = first
             Task {
                 do {
-                    show(try await VTTSubtitlesLoader.load(from: first.url.absoluteString, headers: first.headers))
+                    show(try await VTTSubtitlesLoader.load(from: first.url.absoluteString, headers: subtitleHeaders(first.headers)))
                 } catch {
                     Logger.shared.log("[Subtitles] Failed to load first track: \(error)", type: "Error")
                 }
@@ -3235,8 +3246,29 @@ struct PlayerView: View {
     /// covers a downloaded episode (file:// or the localhost HLS proxy). Gating import on the
     /// narrow one meant a downloaded episode with missing or wrong subtitles had no way to take
     /// a supplied file.
+    /// Any video can take a file now: a stream whose subtitles are wrong or missing needs one as
+    /// much as a download does. Not while casting, where the receiver draws the subtitles.
     private var canImportSubtitles: Bool {
-        currentContext?.isLocalPlayback == true || isLocalPlayback
+        !castManager.isConnected
+    }
+
+    /// A subtitle imported over a downloaded episode, stored with the download so it's there
+    /// next time. nil when this isn't a download (or it couldn't be kept), and the session copy
+    /// is used.
+    private func keptWithDownload(_ track: SubtitleTrack) -> SubtitleTrack? {
+        #if os(iOS)
+        guard isLocalPlayback, currentContext?.isLocalPlayback != true, let ctx = currentContext,
+              let download = DownloadManager.shared.downloadItem(
+                forEpisodeHref: ctx.episodeHref, aniListID: ctx.aniListID, moduleId: ctx.moduleId,
+                mediaTitle: ctx.mediaTitle, episodeNumber: ctx.episodeNumber),
+              download.state == .completed,
+              let kept = DownloadManager.shared.attachSubtitle(from: track.url, title: track.title, to: download.id)
+        else { return nil }
+        LocalPlaybackCoordinator.shared.removeImport(name: track.url.lastPathComponent)
+        return kept
+        #else
+        return nil
+        #endif
     }
 
     private func addImportedSubtitle(_ track: SubtitleTrack) {
