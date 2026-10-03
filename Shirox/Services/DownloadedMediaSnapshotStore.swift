@@ -10,7 +10,7 @@ final class DownloadedMediaSnapshotStore: ObservableObject {
     @Published private(set) var snapshots: [String: DownloadedMediaSnapshot] = [:]
 
     private let rootDir: URL = {
-        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let docs = AppDirectories.documents
         let url = docs
             .appendingPathComponent("Downloads", isDirectory: true)
             .appendingPathComponent("Snapshots", isDirectory: true)

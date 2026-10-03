@@ -225,7 +225,7 @@ final class DownloadManager: NSObject, ObservableObject {
     }
 
     private let downloadDir: URL = {
-        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let docs = AppDirectories.documents
         let url = docs.appendingPathComponent("Downloads", isDirectory: true)
         try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
         return url

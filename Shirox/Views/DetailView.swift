@@ -151,7 +151,9 @@ struct DetailView: View {
             }
             .padding(.trailing, 16)
             .padding(.bottom, 24)
+            #if os(iOS)
             .animation(.spring(response: 0.35, dampingFraction: 0.8), value: isSelectionMode)
+            #endif
         }
     }
 
@@ -912,12 +914,13 @@ struct DetailView: View {
         }
     }
 
+    #endif
+
     /// Tracking links, growing out of the button that asked for them.
     private func openLinks(from zoomID: String) {
         linksZoomID = zoomID
         showMatchingSearch = true
     }
-    #endif
 
     @ViewBuilder
     private var libraryEditSheet: some View {
@@ -1364,6 +1367,7 @@ struct DetailView: View {
         offlineSnapshot != nil && detail.episodes.allSatisfy { $0.href.isEmpty }
     }
 
+    #if os(iOS)
     /// Picked episodes that aren't downloaded yet — what the batch download would fetch.
     private func downloadableSelectionCount(_ detail: MediaDetail) -> Int {
         let downloaded = DownloadManager.shared.items.filter { item in
@@ -1374,6 +1378,7 @@ struct DetailView: View {
         }
         return selectedEpisodeNumbers.count - downloaded.count
     }
+    #endif
 
     private func episodesSection(detail: MediaDetail) -> some View {
         #if os(iOS)

@@ -1255,6 +1255,48 @@ struct StorageSettingsView: View {
 }
 #endif
 
+// MARK: - App directories
+
+/// Where the app keeps the files it writes itself: logs, download manifests, downloads.
+enum AppDirectories {
+    /// The app's own Documents on iOS, which the Files app can browse. On the Mac, an
+    /// unsandboxed app's Documents is the user's `~/Documents`, which macOS guards: writing
+    /// logs and manifests there asked for permission to the Documents folder, and asked again
+    /// on every launch of a build signed without a stable identity. Application Support needs
+    /// no permission.
+    static let documents: URL = {
+        #if os(macOS) || targetEnvironment(macCatalyst)
+        let fm = FileManager.default
+        let base = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("Shirox", isDirectory: true)
+        try? fm.createDirectory(at: base, withIntermediateDirectories: true)
+        moveOutOfDocumentsOnce(to: base)
+        return base
+        #else
+        return FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        #endif
+    }()
+
+    #if os(macOS) || targetEnvironment(macCatalyst)
+    /// Brings downloads and their manifests over from `~/Documents`, where earlier Mac builds
+    /// kept them. Once only, whatever happens: if macOS is told not to allow it, the app
+    /// doesn't keep asking.
+    private static func moveOutOfDocumentsOnce(to base: URL) {
+        let key = "movedFilesOutOfDocuments"
+        guard !UserDefaults.standard.bool(forKey: key) else { return }
+        UserDefaults.standard.set(true, forKey: key)
+        let fm = FileManager.default
+        let old = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        for name in ["Downloads", "MangaDownloads", "downloads_manifest.json", "manga_downloads_manifest.json"] {
+            let from = old.appendingPathComponent(name)
+            let to = base.appendingPathComponent(name)
+            guard fm.fileExists(atPath: from.path), !fm.fileExists(atPath: to.path) else { continue }
+            try? fm.moveItem(at: from, to: to)
+        }
+    }
+    #endif
+}
+
 // MARK: - Logger Views & Utilities
 
 private func logTypeColor(_ type: String) -> Color {
@@ -1511,8 +1553,7 @@ class Logger: @unchecked Sendable {
     private let maxLogEntries = 1000 
     
     private init() {
-        let documentDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-        logFileURL = documentDirectory.appendingPathComponent("logs.txt")
+        logFileURL = AppDirectories.documents.appendingPathComponent("logs.txt")
     }
     
     /// Query/fragment keys whose values must never reach the log file.

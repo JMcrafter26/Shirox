@@ -56,6 +56,14 @@ final class LibraryViewModel: ObservableObject {
     private let minAutoRefreshInterval: TimeInterval = 30
     private var cancellables = Set<AnyCancellable>()
 
+    private static func isSignedIn(_ provider: ProviderType) -> Bool {
+        switch provider {
+        case .anilist: return AniListAuthManager.shared.isLoggedIn
+        case .mal: return MALAuthManager.shared.isLoggedIn
+        default: return false
+        }
+    }
+
     init() {
         // Logged-out users have no provider library, so start on the on-device source.
         // Setting this up front (rather than deferring to an .onAppear) keeps the Library's
@@ -68,7 +76,15 @@ final class LibraryViewModel: ObservableObject {
             // `ProviderManager.primary`, manga fetches switch on `source`'s embedded type, and
             // the cache keys on it. A stale default (.anilist while MAL is primary) would fetch
             // one provider for anime and another for manga, and collide their cache snapshots.
-            source = .provider(primary)
+            // But only one the user is signed into: signed into MyAnimeList alone, with AniList
+            // still first in the order, the Library opened on AniList and said "Not logged in."
+            // while Settings showed the MyAnimeList account.
+            if Self.isSignedIn(primary) {
+                source = .provider(primary)
+            } else if let signedIn = ProviderManager.shared.orderedProviders
+                .map(\.providerType).first(where: Self.isSignedIn) {
+                source = .provider(signedIn)
+            }
         }
         restoreList()
 
@@ -90,7 +106,8 @@ final class LibraryViewModel: ObservableObject {
                 // Keep `source` in lock-step with the active provider so switching providers
                 // actually re-keys the cache and reloads the list (rather than early-returning
                 // in `selectSource` because the nominal source didn't change).
-                guard let self, let providerType, case .provider = self.source else { return }
+                guard let self, let providerType, case .provider = self.source,
+                      Self.isSignedIn(providerType) else { return }
                 guard self.source != .provider(providerType) else { return }
                 self.source = .provider(providerType)
                 self.restoreList()

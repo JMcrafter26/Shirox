@@ -626,7 +626,7 @@ private struct StorageUsage: Equatable {
 
     static func measure() async -> StorageUsage {
         await Task.detached(priority: .utility) {
-            let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            let docs = AppDirectories.documents
             let free = (try? docs.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]))?
                 .volumeAvailableCapacityForImportantUsage
             return StorageUsage(

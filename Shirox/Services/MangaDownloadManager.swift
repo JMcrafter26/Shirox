@@ -13,7 +13,7 @@ final class MangaDownloadManager: ObservableObject {
     var bytesOnDisk: Int { DownloadManager.sizeOfDirectory(at: downloadDir) }
 
     let downloadDir: URL = {
-        let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let docs = AppDirectories.documents
         let url = docs.appendingPathComponent("MangaDownloads", isDirectory: true)
         try? FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
         return url

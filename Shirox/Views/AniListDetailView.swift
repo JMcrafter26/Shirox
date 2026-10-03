@@ -324,7 +324,9 @@ struct AniListDetailView: View {
             }
             .padding(.trailing, 16)
             .padding(.bottom, 24)
+            #if os(iOS)
             .animation(.spring(response: 0.35, dampingFraction: 0.8), value: isSelectionMode)
+            #endif
         }
         #if os(iOS)
         .toolbarZoomSource("edit", in: sheetZoom, placement: .topBarTrailing) { editToolbarButton }
