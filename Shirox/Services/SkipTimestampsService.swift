@@ -32,24 +32,28 @@ final class SkipTimestampsService {
         let aniListEpisode = isAbsolute ? episodeNumber - epoffset : episodeNumber
         let tvdbEpisode = isAbsolute ? episodeNumber : episodeNumber + epoffset
 
-        // 1. Try Anira per-episode endpoint first (has intro/outro in seconds)
+        // 1. Anira is the main source (intro/outro in seconds). What it has wins; the other
+        //    databases only fill the segments it lacks. It used to be all or nothing: an Anira
+        //    entry with just the opening left the ending unskippable even where the others had it.
+        var anira = SkipSegments()
         let aniraEp = await TVDBMappingService.shared.fetchAniraEpisode(id: aniListID, episodeNumber: aniListEpisode)
-        if let skips = aniraEp?.skips, !skips.isEmpty {
-            var result = SkipSegments()
-            for skip in skips {
-                let seg = SkipSegments.Segment(startMs: skip.start * 1000, endMs: skip.end * 1000)
-                switch skip.type {
-                case "op", "mixed-op": result.intro = seg
-                case "ed", "mixed-ed": result.credits = seg
-                case "recap": result.recap = seg
-                default: break
-                }
+        for skip in aniraEp?.skips ?? [] {
+            let seg = SkipSegments.Segment(startMs: skip.start * 1000, endMs: skip.end * 1000)
+            switch skip.type {
+            case "op", "mixed-op": anira.intro = seg
+            case "ed", "mixed-ed": anira.credits = seg
+            case "recap": anira.recap = seg
+            default: break
             }
-            cache[key] = result
-            return result
+        }
+        // Opening and ending are what nearly every episode has; a recap is rarer, and asking the
+        // backups for one on every episode isn't worth the requests.
+        if anira.intro != nil, anira.credits != nil {
+            cache[key] = anira
+            return anira
         }
 
-        // 2. Fall back to introdb / theIntroDB
+        // 2. Backups: introdb / theIntroDB, for whatever Anira didn't have.
         let imdbID = await IDMappingService.shared.imdbId(forAnilistId: aniListID)
         let tmdb = await IDMappingService.shared.tmdbId(forAnilistId: aniListID)
         let isMovie = tmdb?.isMovie ?? false
@@ -66,7 +70,12 @@ final class SkipTimestampsService {
         if theIntroDB == nil && tvdbEpisode != episodeNumber {
             theIntroDB = await fetchTheIntroDB(tmdbID: tmdb?.id, season: tvdbSeason, episode: episodeNumber, isMovie: isMovie)
         }
-        let segments = merge(introdb: introDB, theintrodb: theIntroDB)
+        let backup = merge(introdb: introDB, theintrodb: theIntroDB)
+        var segments = anira
+        segments.intro = anira.intro ?? backup.intro
+        segments.credits = anira.credits ?? backup.credits
+        segments.recap = anira.recap ?? backup.recap
+        segments.preview = anira.preview ?? backup.preview
         cache[key] = segments
         return segments
     }
