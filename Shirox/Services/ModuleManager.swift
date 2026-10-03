@@ -182,26 +182,29 @@ final class ModuleManager: ObservableObject {
 
     func checkForUpdates() async {
         var didUpdate = false
-        for i in modules.indices {
-            guard let jsonUrlStr = modules[i].jsonUrl,
+        // A snapshot: `modules` can change while each fetch is awaited (a module removed, adult
+        // ones purged), so positions are looked up again by id before writing back.
+        for module in modules {
+            guard let jsonUrlStr = module.jsonUrl,
                   let jsonURL = URL(string: jsonUrlStr),
                   let (data, _) = try? await URLSession.shared.data(from: jsonURL) else { continue }
             var fresh: ModuleDefinition
             if let seanime = SeanimeManifest.detect(data) {
-                guard seanime.version != modules[i].version,
+                guard seanime.version != module.version,
                       let installed = try? await SeanimeInstaller.module(from: seanime, manifestURL: jsonURL) else { continue }
                 fresh = installed
                 await cacheIcon(for: &fresh)
             } else {
                 guard let decoded = try? JSONDecoder().decode(ModuleDefinition.self, from: data),
-                      decoded.version != modules[i].version else { continue }
+                      decoded.version != module.version else { continue }
                 fresh = decoded
                 fresh.jsonUrl = jsonUrlStr
                 // Cache fresh assets
                 await cacheAssets(for: &fresh)
             }
             // An update that turns a module adult isn't taken.
-            guard !isAdult(fresh) else { continue }
+            guard !isAdult(fresh),
+                  let i = modules.firstIndex(where: { $0.id == module.id }) else { continue }
 
             let wasActive = activeModule?.id == modules[i].id
             modules[i] = fresh

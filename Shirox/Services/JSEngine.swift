@@ -25,7 +25,7 @@ final class JSEngine: ObservableObject {
     private let userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
     private init() {
-        context = JSContext()!
+        context = JSContext.forModule()
         setupContext()
     }
 
@@ -51,7 +51,7 @@ final class JSEngine: ObservableObject {
         }
 
         // Fresh context for each module
-        context = JSContext()!
+        context = JSContext.forModule()
         setupContext()
         SeanimeScripts.prepare(context, module: module)
         context.evaluateScript(script)
@@ -202,20 +202,9 @@ final class JSEngine: ObservableObject {
                             body: body
                         )
                         let responseText = String(data: data, encoding: .utf8) ?? ""
-                        let responseObj = JSValue(newObjectIn: ctx)!
-                        responseObj.setValue(status, forProperty: "status")
-                        responseObj.setValue(status >= 200 && status < 300, forProperty: "ok")
-                        responseObj.setValue(finalURL, forProperty: "url")
-                        responseObj.setValue(headersDict, forProperty: "headers")
-
-                        let textFn: @convention(block) () -> String = { responseText }
-                        responseObj.setObject(textFn, forKeyedSubscript: "text" as NSString)
-
-                        let jsonFn: @convention(block) () -> JSValue = {
-                            let script = "JSON.parse(\(Self.jsStringLiteral(responseText)))"
-                            return ctx.evaluateScript(script) ?? JSValue(undefinedIn: ctx)
-                        }
-                        responseObj.setObject(jsonFn, forKeyedSubscript: "json" as NSString)
+                        let responseObj = ctx.makeFetchResponse(
+                            status: status, statusText: nil, url: finalURL, headers: headersDict, body: responseText
+                        )
 
                         resolve.call(withArguments: [responseObj])
                     } catch {
@@ -295,23 +284,13 @@ final class JSEngine: ObservableObject {
                         headersDict[String(describing: key)] = String(describing: value)
                     }
 
-                    let responseObj = JSValue(newObjectIn: ctx)!
-                    responseObj.setValue(status, forProperty: "status")
-                    responseObj.setValue(HTTPURLResponse.localizedString(forStatusCode: status), forProperty: "statusText")
-                    responseObj.setValue(status >= 200 && status < 300, forProperty: "ok")
-                    responseObj.setValue(httpResponse.url?.absoluteString ?? urlString, forProperty: "url")
-                    responseObj.setValue(headersDict, forProperty: "headers")
-
-                    // text() method
-                    let textFn: @convention(block) () -> String = { responseText }
-                    responseObj.setObject(textFn, forKeyedSubscript: "text" as NSString)
-
-                    // json() method
-                    let jsonFn: @convention(block) () -> JSValue = {
-                        let script = "JSON.parse(\(Self.jsStringLiteral(responseText)))"
-                        return ctx.evaluateScript(script) ?? JSValue(undefinedIn: ctx)
-                    }
-                    responseObj.setObject(jsonFn, forKeyedSubscript: "json" as NSString)
+                    let responseObj = ctx.makeFetchResponse(
+                        status: status,
+                        statusText: HTTPURLResponse.localizedString(forStatusCode: status),
+                        url: httpResponse.url?.absoluteString ?? urlString,
+                        headers: headersDict,
+                        body: responseText
+                    )
 
                     resolve.call(withArguments: [responseObj])
                 } catch {
@@ -571,6 +550,48 @@ final class JSEngine: ObservableObject {
             .replacingOccurrences(of: "\r", with: "\\r")
             .replacingOccurrences(of: "\t", with: "\\t")
         return "\"\(escaped)\""
+    }
+}
+
+extension JSContext {
+    /// One virtual machine for every module context. A bare `JSContext()` brings its own VM, each
+    /// with its own heap and collector, and with a few module rows searching at once that was
+    /// several heaps alive together. All of these contexts run on the main thread, so they can
+    /// share one; each context still gets its own globals.
+    @MainActor private static let moduleVM = JSVirtualMachine()!
+
+    @MainActor static func forModule() -> JSContext {
+        JSContext(virtualMachine: moduleVM)!
+    }
+
+    /// The fetch-style response handed to a module's `fetchv2` promise. It's built in JS around
+    /// one JS copy of the body: `text()` and `json()` read that copy rather than calling back into
+    /// Swift, which converted the body again on every call and held the context from a block the
+    /// context itself owned. A body that isn't JSON makes `json()` return undefined, as before.
+    func makeFetchResponse(status: Int, statusText: String?, url: String, headers: [String: String], body: String) -> JSValue {
+        var make = objectForKeyedSubscript("__shiroxMakeResponse")
+        if make == nil || make?.isUndefined == true {
+            evaluateScript("""
+            var __shiroxMakeResponse = function (status, statusText, url, headers, body) {
+                var response = {
+                    status: status,
+                    ok: status >= 200 && status < 300,
+                    url: url,
+                    headers: headers,
+                    text: function () { return body; },
+                    json: function () {
+                        try { return JSON.parse(body); }
+                        catch (e) { console.log('[fetchv2] json(): ' + e); return undefined; }
+                    }
+                };
+                if (statusText != null) response.statusText = statusText;
+                return response;
+            };
+            """)
+            make = objectForKeyedSubscript("__shiroxMakeResponse")
+        }
+        let args: [Any] = [status, statusText ?? NSNull(), url, headers, body]
+        return make?.call(withArguments: args) ?? JSValue(undefinedIn: self)
     }
 }
 

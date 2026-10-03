@@ -59,7 +59,7 @@ final class ModuleJSRunner {
             script = fetched
         }
         
-        let ctx = JSContext()!
+        let ctx = JSContext.forModule()
         setupContext(ctx)
         SeanimeScripts.prepare(ctx, module: module)
         ctx.evaluateScript(script)
@@ -318,20 +318,9 @@ final class ModuleJSRunner {
                             body: body
                         )
                         let responseText = String(data: data, encoding: .utf8) ?? ""
-                        let responseObj = JSValue(newObjectIn: ctx)!
-                        responseObj.setValue(status, forProperty: "status")
-                        responseObj.setValue(status >= 200 && status < 300, forProperty: "ok")
-                        responseObj.setValue(finalURL, forProperty: "url")
-                        responseObj.setValue(headersDict, forProperty: "headers")
-
-                        let textFn: @convention(block) () -> String = { responseText }
-                        responseObj.setObject(textFn, forKeyedSubscript: "text" as NSString)
-
-                        let jsonFn: @convention(block) () -> JSValue = {
-                            let escaped = JSEngine.jsStringLiteral(responseText)
-                            return ctx.evaluateScript("JSON.parse(\(escaped))") ?? JSValue(undefinedIn: ctx)
-                        }
-                        responseObj.setObject(jsonFn, forKeyedSubscript: "json" as NSString)
+                        let responseObj = ctx.makeFetchResponse(
+                            status: status, statusText: nil, url: finalURL, headers: headersDict, body: responseText
+                        )
 
                         resolve.call(withArguments: [responseObj])
                     } catch {
@@ -407,21 +396,13 @@ final class ModuleJSRunner {
                         headersDict[String(describing: key)] = String(describing: value)
                     }
 
-                    let responseObj = JSValue(newObjectIn: ctx)!
-                    responseObj.setValue(status, forProperty: "status")
-                    responseObj.setValue(HTTPURLResponse.localizedString(forStatusCode: status), forProperty: "statusText")
-                    responseObj.setValue(status >= 200 && status < 300, forProperty: "ok")
-                    responseObj.setValue(httpResponse.url?.absoluteString ?? urlString, forProperty: "url")
-                    responseObj.setValue(headersDict, forProperty: "headers")
-
-                    let textFn: @convention(block) () -> String = { responseText }
-                    responseObj.setObject(textFn, forKeyedSubscript: "text" as NSString)
-
-                    let jsonFn: @convention(block) () -> JSValue = {
-                        let escaped = JSEngine.jsStringLiteral(responseText)
-                        return ctx.evaluateScript("JSON.parse(\(escaped))") ?? JSValue(undefinedIn: ctx)
-                    }
-                    responseObj.setObject(jsonFn, forKeyedSubscript: "json" as NSString)
+                    let responseObj = ctx.makeFetchResponse(
+                        status: status,
+                        statusText: HTTPURLResponse.localizedString(forStatusCode: status),
+                        url: httpResponse.url?.absoluteString ?? urlString,
+                        headers: headersDict,
+                        body: responseText
+                    )
 
                     resolve.call(withArguments: [responseObj])
                 } catch {

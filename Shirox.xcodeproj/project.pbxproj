@@ -750,6 +750,7 @@
 		8D6DC81DF20E6467EBB9BA32 /* LibrarySyncPlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9970B31153A18CDD095323FB /* LibrarySyncPlanner.swift */; };
 		8D6E98F73013EF1B8E8E48D8 /* AVPlayerEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 976920C598CE1A6C087D952F /* AVPlayerEngine.swift */; };
 		8D7453F165A0B0F9F51840D9 /* SimklModuleTracking.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E34560A4389A43C74BE3D1C /* SimklModuleTracking.swift */; };
+		8F30075703B6318F96B6617B /* FetchResponseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = ACD7FA5D9E586679F0223D31 /* FetchResponseTests.swift */; };
 		8F64016C4DE1E3BF3841B342 /* SimklModuleMatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04868E273BE4E7CADEBC05A1 /* SimklModuleMatch.swift */; };
 		8FCC2800860DC8E9F81EE904 /* SimklDiscoverMediaTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74F73D465FDBD0A14432DD5F /* SimklDiscoverMediaTests.swift */; };
 		8FD01E108E707F74437F3695 /* SimklCatalogCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28400498ED297A076CD0BFBB /* SimklCatalogCache.swift */; };
@@ -1416,6 +1417,7 @@
 		AB41BE367D068BA4864EBB02 /* PageCurlTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PageCurlTests.swift; sourceTree = "<group>"; };
 		AB699100F232CDB1648C513F /* MALOfficialDiscoveryService.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MALOfficialDiscoveryService.swift; sourceTree = "<group>"; };
 		ABBDC873D9F2269010B28586 /* SimklResponseClassTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklResponseClassTests.swift; sourceTree = "<group>"; };
+		ACD7FA5D9E586679F0223D31 /* FetchResponseTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = FetchResponseTests.swift; sourceTree = "<group>"; };
 		AE72458EFA629F4C7C996AA9 /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		B105DBC7B7FBEA73CDDFA244 /* HeroParallaxTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HeroParallaxTests.swift; sourceTree = "<group>"; };
 		B1DFF59F54F073D10B1F45FF /* JellyfinModuleFlagTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = JellyfinModuleFlagTests.swift; sourceTree = "<group>"; };
@@ -2142,6 +2144,7 @@
 				B9AB6D5B0544B047ED271782 /* ScrambledPlaylistTests.swift */,
 				EA13A4E136205E598B074A69 /* AirPlaySubtitlesTests.swift */,
 				3C3EAE5B294CD3826CD76E5F /* ScrambledStreamPlaybackTests.swift */,
+				ACD7FA5D9E586679F0223D31 /* FetchResponseTests.swift */,
 			);
 			path = ShiroxTests;
 			sourceTree = SOURCE_ROOT;
@@ -2609,6 +2612,7 @@
 				2F088D0CC43169B0AFE7DC68 /* ScrambledPlaylistTests.swift in Sources */,
 				3002C097CB31D408A5D4A252 /* AirPlaySubtitlesTests.swift in Sources */,
 				2BBFE2A75BDA4885F5A017DD /* ScrambledStreamPlaybackTests.swift in Sources */,
+				8F30075703B6318F96B6617B /* FetchResponseTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
