@@ -750,7 +750,8 @@ struct DetailView: View {
             title: item.streamTitle ?? item.episodeTitle ?? "Episode \(item.episodeNumber)",
             url: url,
             headers: item.headers ?? [:],
-            subtitle: item.subtitle
+            subtitle: item.subtitle,
+            playlistKey: item.playlistKey
         )
 
         let href = vm.detailHref ?? item.detailHref

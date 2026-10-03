@@ -144,7 +144,8 @@ struct ContinueWatchingSection: View {
             headers: item.headers ?? [:],
             subtitle: item.subtitle,
             subtitleHeaders: item.subtitleHeaders ?? [:],
-            allSubtitles: item.allSubtitles
+            allSubtitles: item.allSubtitles,
+            playlistKey: item.playlistKey
         )
 
         var context = PlayerContext(

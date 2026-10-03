@@ -1465,7 +1465,8 @@ struct PlayerView: View {
             streamTitle: context.streamTitle,
             allStreams: availableStreams.count > 1 ? availableStreams.map {
                 StoredStream(title: $0.title, url: $0.url.absoluteString, headers: $0.headers,
-                             subtitle: $0.subtitle, subtitleHeaders: $0.subtitleHeaders.isEmpty ? nil : $0.subtitleHeaders)
+                             subtitle: $0.subtitle, subtitleHeaders: $0.subtitleHeaders.isEmpty ? nil : $0.subtitleHeaders,
+                             playlistKey: $0.playlistKey)
             } : nil,
             aniListID: context.aniListID,
             malID: context.malID,
@@ -1481,6 +1482,7 @@ struct PlayerView: View {
             thumbnailUrl: context.thumbnailUrl
         )
         item.simklTitle = context.simklTitle
+        item.playlistKey = currentStream.playlistKey
         if context.isLocalPlayback {
             // Resume from our own persistent copy, not the transient picker URL.
             item.localImportName = LocalPlaybackCoordinator.shared.importName(for: currentStream.url)
