@@ -65,6 +65,24 @@ final class LocalLibraryTrackingTests: XCTestCase {
     }
 
     /// A manually-chosen status (Paused/Dropped) is preserved by auto-track.
+    /// A title being rewatched on AniList stayed "Watching" in the on-device library, because
+    /// the merge only knew how to promote to Watching.
+    func testRemoteRewatchKeepsLocalRewatching() {
+        let result = LocalLibraryManager.mergedTracking(
+            existingProgress: 12, existingStatus: .current,
+            watchedEpisode: 3, totalEpisodes: 12, isAiring: false, remoteStatus: .repeating)
+        XCTAssertEqual(result.status, .repeating)
+        XCTAssertEqual(result.progress, 3)
+        let fresh = LocalLibraryManager.mergedTracking(
+            existingProgress: nil, existingStatus: nil,
+            watchedEpisode: 1, totalEpisodes: 12, isAiring: false, remoteStatus: .repeating)
+        XCTAssertEqual(fresh.status, .repeating)
+        let finale = LocalLibraryManager.mergedTracking(
+            existingProgress: 11, existingStatus: .repeating,
+            watchedEpisode: 12, totalEpisodes: 12, isAiring: false)
+        XCTAssertEqual(finale.status, .completed)
+    }
+
     func testManualStatusPreserved() {
         let paused = LocalLibraryManager.mergedTracking(
             existingProgress: 3, existingStatus: .paused,
