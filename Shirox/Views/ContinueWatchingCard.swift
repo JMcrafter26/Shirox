@@ -301,12 +301,12 @@ struct ContinueWatchingSection: View {
                     ToastManager.shared.show(message: "Downloaded file is missing — re-download to play offline", type: .error)
                     return
                 }
-                PlayerPresenter.shared.presentPlayer(stream: localStream, context: context, onWatchNext: onWatchNext)
+                PlayerPresenter.shared.presentPlayer(stream: localStream, context: context, onWatchNext: onWatchNext, onSequelNeeded: SequelResolver.loader(aniListID: item.aniListID, moduleId: item.moduleId))
             }
             return
         }
 
-        PlayerPresenter.shared.presentPlayer(stream: stream, streams: storedStreams, context: context, onWatchNext: onWatchNext, onStreamExpired: onExpired)
+        PlayerPresenter.shared.presentPlayer(stream: stream, streams: storedStreams, context: context, onWatchNext: onWatchNext, onStreamExpired: onExpired, onSequelNeeded: SequelResolver.loader(aniListID: item.aniListID, moduleId: item.moduleId))
         #endif
     }
 

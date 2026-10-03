@@ -461,7 +461,7 @@ final class DetailViewModel: ObservableObject {
 
         let onSequelNeeded: SequelLoader? = {
             guard
-                let sequelNode = aniListMedia?.relations?.edges.first(where: { $0.relationType == "SEQUEL" })?.node,
+                let sequelNode = aniListMedia?.relations?.edges.first(where: { $0.relationType == "SEQUEL" && $0.node.type == "ANIME" })?.node,
                 let module = ModuleManager.shared.activeModule
             else { return nil }
             let sequelTitle = sequelNode.title.displayTitle

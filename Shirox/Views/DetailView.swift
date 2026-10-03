@@ -806,6 +806,7 @@ struct DetailView: View {
             context: context,
             onWatchNext: onWatchNext,
             onStreamExpired: onExpired,
+            onSequelNeeded: SequelResolver.loader(aniListID: item.aniListID, moduleId: item.moduleId),
             onFinished: nil
         )
     }
