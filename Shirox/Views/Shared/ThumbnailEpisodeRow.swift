@@ -126,10 +126,14 @@ struct ThumbnailEpisodeRow: View {
                     }
 
                     if let t = title, !t.isEmpty {
+                        // Two lines: one cut most titles off halfway, beside a thumbnail that
+                        // leaves the text column narrow on a phone.
                         Text(t)
                             .font(.caption)
                             .foregroundStyle(.secondary)
-                            .lineLimit(1)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
 
                     if let dateText = Self.formattedAirdate(airdate) {
