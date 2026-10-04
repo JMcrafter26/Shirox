@@ -1318,16 +1318,26 @@ enum AppDirectories {
         let key = "movedFilesOutOfDocuments"
         guard !UserDefaults.standard.bool(forKey: key) else { return }
         UserDefaults.standard.set(true, forKey: key)
-        let fm = FileManager.default
-        let old = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        for name in ["Downloads", "MangaDownloads", "downloads_manifest.json", "manga_downloads_manifest.json"] {
-            let from = old.appendingPathComponent(name)
-            let to = base.appendingPathComponent(name)
-            guard fm.fileExists(atPath: from.path), !fm.fileExists(atPath: to.path) else { continue }
-            try? fm.moveItem(at: from, to: to)
-        }
+        moveDownloads(from: FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0], to: base)
     }
     #endif
+
+    /// Moves Shirox's downloads and their manifests from `old` to `base`. A folder goes only with
+    /// its manifest beside it: `~/Documents/Downloads` is a common name, and one with no Shirox
+    /// manifest next to it is the user's own, which an earlier build moved out of sight.
+    static func moveDownloads(from old: URL, to base: URL) {
+        let fm = FileManager.default
+        for (folder, manifest) in [("Downloads", "downloads_manifest.json"),
+                                   ("MangaDownloads", "manga_downloads_manifest.json")] {
+            guard fm.fileExists(atPath: old.appendingPathComponent(manifest).path) else { continue }
+            for name in [manifest, folder] {
+                let from = old.appendingPathComponent(name)
+                let to = base.appendingPathComponent(name)
+                guard fm.fileExists(atPath: from.path), !fm.fileExists(atPath: to.path) else { continue }
+                try? fm.moveItem(at: from, to: to)
+            }
+        }
+    }
 }
 
 // MARK: - Logger Views & Utilities
