@@ -836,10 +836,21 @@ final class MPVEngine: PlaybackEngine {
         return nil
     }
 
+    /// The text of the subtitle lines mpv shows now, one per row.
+    var shownSubtitleText: String? { getString("sub-text") }
+
     private func applySubtitleSource() {
         // mpv can only take a track once the file's open; this runs again then.
         guard isItemReady else { return }
         removeScriptTracks()
+        // An HLS stream's WebVTT lines carry no byte position, which is all mpv tells a line it
+        // reads again after a seek from a new one by: each seek stacked another copy of the lines
+        // on screen. Those are cleared on a seek and read afresh. Nothing else is: a script is
+        // read once, and a file's own tracks lose a line begun before the seek point. mpv takes
+        // the option when it opens a track, so it's set first.
+        var clearsOnSeek = false
+        if case .embedded(let id) = subtitleSource { clearsOnSeek = subtitleCodec(id: id) == "webvtt" }
+        setProperty("sub-clear-on-seek", clearsOnSeek ? "yes" : "no")
         switch subtitleSource {
         case .none:
             setProperty("sid", "no")
@@ -857,6 +868,16 @@ final class MPVEngine: PlaybackEngine {
             scriptFile = file
             command("sub-add", file.path, "select")
         }
+    }
+
+    /// The codec of the file's subtitle track `id`, as mpv names it ("webvtt", "ass", …).
+    private func subtitleCodec(id: Int) -> String? {
+        let count = Int(getInt64("track-list/count") ?? 0)
+        for index in 0..<count where getString("track-list/\(index)/type") == "sub"
+            && getInt64("track-list/\(index)/id") == Int64(id) {
+            return getString("track-list/\(index)/codec")
+        }
+        return nil
     }
 
     /// Takes out scripts added before; a reopened stream has dropped them anyway.
