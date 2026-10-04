@@ -311,6 +311,10 @@ struct DetailView: View {
             }
         }
         #endif
+        .onReceive(NotificationCenter.default.publisher(for: AniListEntryExtrasChange.notification)) { note in
+            guard let change = note.object as? AniListEntryExtrasChange else { return }
+            existingEntry = change.apply(to: existingEntry)
+        }
         .adaptiveSheet(isPresented: $showLibraryEdit) {
             libraryEditSheet
                 .zoomingOut(of: "edit", in: sheetZoom, fromToolbar: true)

@@ -220,6 +220,10 @@ struct MangaDetailView: View {
                     from: entry, media: editorMedia(provider: .mal, id: mid, detail: detail))
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: AniListEntryExtrasChange.notification)) { note in
+            guard let change = note.object as? AniListEntryExtrasChange else { return }
+            existingAniListEntry = change.apply(to: existingAniListEntry)
+        }
         .adaptiveSheet(isPresented: $showAniListEdit) {
             if let aid = mangaAniListID, let detail = vm.detail {
                 LibraryEntryEditSheet(

@@ -17,6 +17,34 @@ struct AniListRawEntry {
     var notes: String?
 }
 
+/// A privacy or notes change AniList has accepted. The editor sends these apart from status,
+/// progress and score, so the copies of the entry the library and detail pages hold never heard
+/// of them: the editor reopened with the old toggle, and the library's saved copy kept it.
+struct AniListEntryExtrasChange {
+    static let notification = Notification.Name("AniListEntryExtrasChange")
+
+    let mediaId: Int
+    var isPrivate: Bool?
+    /// The new note, nil when the note wasn't changed. An empty note clears it.
+    var notes: String?
+
+    func apply(to entry: inout LibraryEntry) {
+        guard entry.media.provider == .anilist, entry.media.id == mediaId else { return }
+        if let isPrivate { entry.isPrivate = isPrivate }
+        if let notes { entry.notes = notes.isEmpty ? nil : notes }
+    }
+
+    func apply(to entry: LibraryEntry?) -> LibraryEntry? {
+        guard var entry else { return nil }
+        apply(to: &entry)
+        return entry
+    }
+
+    func post() {
+        NotificationCenter.default.post(name: Self.notification, object: self)
+    }
+}
+
 final class AniListLibraryService {
     nonisolated(unsafe) static let shared = AniListLibraryService()
     private let endpoint = URL(string: "https://graphql.anilist.co")!
@@ -265,6 +293,7 @@ final class AniListLibraryService {
         }
         """
         _ = try await post(query: mutation, variables: ["mediaId": mediaId, "notes": notes])
+        await MainActor.run { AniListEntryExtrasChange(mediaId: mediaId, notes: notes).post() }
     }
 
     func setPrivate(mediaId: Int, isPrivate: Bool) async throws {
@@ -276,6 +305,7 @@ final class AniListLibraryService {
         }
         """
         _ = try await post(query: mutation, variables: ["mediaId": mediaId, "private": isPrivate])
+        await MainActor.run { AniListEntryExtrasChange(mediaId: mediaId, isPrivate: isPrivate).post() }
     }
 
     // MARK: - Delete entry

@@ -133,6 +133,12 @@ final class LibraryViewModel: ObservableObject {
             }
             .store(in: &cancellables)
 
+        NotificationCenter.default.publisher(for: AniListEntryExtrasChange.notification)
+            .compactMap { $0.object as? AniListEntryExtrasChange }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] change in self?.apply(change) }
+            .store(in: &cancellables)
+
         NotificationCenter.default.publisher(for: .remoteLibraryProgressDidPush)
             .sink { [weak self] _ in
                 Task { @MainActor in
@@ -146,6 +152,35 @@ final class LibraryViewModel: ObservableObject {
 
     func load() async {
         await fetch()
+    }
+
+    /// An AniList manga list entry, with a manga-tagged Media so `isManga` is reliable and the
+    /// chapter total (episodes field) comes from `chapters`.
+    nonisolated static func aniListMangaEntry(_ r: AniListRawEntry) -> LibraryEntry {
+        let m = r.media
+        let media = Media(
+            id: m.id, idMal: m.idMal, provider: .anilist,
+            title: MediaTitle(romaji: m.title.romaji, english: m.title.english, native: m.title.native),
+            coverImage: MediaCoverImage(large: m.coverImage.large, extraLarge: m.coverImage.extraLarge),
+            bannerImage: m.bannerImage, description: m.description, episodes: m.chapters,
+            status: m.status, averageScore: m.averageScore, genres: m.genres,
+            season: nil, seasonYear: nil, nextAiringEpisode: nil, relations: nil,
+            type: "MANGA", format: m.format)
+        return LibraryEntry(
+            id: r.id, media: media,
+            status: r.status, progress: r.progress, score: r.score,
+            updatedAt: r.updatedAt, customListName: r.customListName,
+            timesRewatched: r.repeat, isPrivate: r.isPrivate, notes: r.notes)
+    }
+
+    /// Privacy and notes are saved apart from `update`, so the lists held here hear of them now.
+    private func apply(_ change: AniListEntryExtrasChange) {
+        for i in allEntries.indices { change.apply(to: &allEntries[i]) }
+        for (key, entries) in cache where key.source == .provider(.anilist) {
+            cache[key] = entries.map { change.apply(to: $0) ?? $0 }
+        }
+        LibraryCacheStore.shared.apply(change)
+        applyFilter()
     }
 
     func selectStatus(_ status: MediaListStatus) {
@@ -425,24 +460,7 @@ final class LibraryViewModel: ObservableObject {
             case .anilist:
                 guard let userId = await AniListAuthManager.shared.authenticatedUserId else { return [] }
                 let raw = try await AniListLibraryService.shared.fetchAllLists(userId: userId, type: .manga)
-                return raw.map { r in
-                    let m = r.media   // AniListMedia
-                    // Build a manga-tagged Media directly so `isManga` is reliable and the
-                    // chapter total (episodes field) is populated from `chapters`.
-                    let media = Media(
-                        id: m.id, idMal: m.idMal, provider: .anilist,
-                        title: MediaTitle(romaji: m.title.romaji, english: m.title.english, native: m.title.native),
-                        coverImage: MediaCoverImage(large: m.coverImage.large, extraLarge: m.coverImage.extraLarge),
-                        bannerImage: m.bannerImage, description: m.description, episodes: m.chapters,
-                        status: m.status, averageScore: m.averageScore, genres: m.genres,
-                        season: nil, seasonYear: nil, nextAiringEpisode: nil, relations: nil,
-                        type: "MANGA", format: m.format)
-                    return LibraryEntry(
-                        id: r.id, media: media,
-                        status: r.status, progress: r.progress, score: r.score,
-                        updatedAt: r.updatedAt, customListName: r.customListName,
-                        timesRewatched: r.repeat)
-                }
+                return raw.map(Self.aniListMangaEntry)
             case .mal:
                 let entries = try await MALMangaLibraryService.shared.fetchLibrary()
                 return entries.map { e in

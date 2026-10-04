@@ -60,6 +60,20 @@ final class LibraryCacheStore {
         persist()
     }
 
+    /// Reflect a privacy or notes change AniList accepted, keeping when the snapshot was synced.
+    func apply(_ change: AniListEntryExtrasChange) {
+        var changed = false
+        for kind in [MediaKind.anime, .manga] {
+            let k = Self.key(.anilist, kind)
+            guard var snap = snapshots[k],
+                  let idx = snap.entries.firstIndex(where: { $0.media.id == change.mediaId }) else { continue }
+            change.apply(to: &snap.entries[idx])
+            snapshots[k] = snap
+            changed = true
+        }
+        if changed { persist() }
+    }
+
     /// Optimistically remove an entry for a queued delete. `mediaType == nil` searches both
     /// (AniList delete doesn't know the type). Matches by mediaId or list-entry id.
     func applyOptimisticDelete(provider: ProviderType, mediaType: MediaKind?, mediaId: Int?, entryId: Int?) {

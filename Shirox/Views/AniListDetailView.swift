@@ -516,6 +516,11 @@ struct AniListDetailView: View {
                 .zoomingOut(of: "edit", in: sheetZoom, fromToolbar: true)
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: AniListEntryExtrasChange.notification)) { note in
+            guard let change = note.object as? AniListEntryExtrasChange else { return }
+            existingEntry = change.apply(to: existingEntry)
+            existingAniListCrossEntry = change.apply(to: existingAniListCrossEntry)
+        }
         .adaptiveSheet(isPresented: $showLibraryEdit) {
             if let media = vm.media {
                 let shouldSyncMAL = isDualAvailable && dualSync
