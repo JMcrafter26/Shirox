@@ -481,6 +481,22 @@ struct PlayerView: View {
             // can resume. .notifyOthersOnDeactivation triggers their auto-resume.
             try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
             #endif
+            if MouseCursorManager.isSupported {
+                MouseCursorManager.unhide()
+            }
+        }
+        .onChangeOf(isPlaying) { playing in
+            if playing {
+                if MouseCursorManager.isSupported {
+                    scheduleHide()
+                }
+            } else {
+                hideTask?.cancel()
+                setControlsVisible(true)
+                if MouseCursorManager.isSupported {
+                    MouseCursorManager.unhide()
+                }
+            }
         }
         .onChangeOf(volume) { newVolume in
             engine?.volume = newVolume
@@ -836,6 +852,7 @@ struct PlayerView: View {
                 },
                 onSeekBackward: { skip(by: -Double(skipShort)); scheduleHide() },
                 onSeekForward: { skip(by: Double(skipShort)); scheduleHide() },
+                onHover: { handleMouseActivity() },
                 seekAmount: Double(skipShort),
                 isLocked: isLocked
             )
@@ -1715,6 +1732,9 @@ struct PlayerView: View {
     /// Single entry point for toggling the controls overlay so appear/disappear always
     /// use the matching curve (fast-in / gentle-out) regardless of which gesture drove it.
     private func setControlsVisible(_ visible: Bool) {
+        if visible && MouseCursorManager.isSupported {
+            MouseCursorManager.unhide()
+        }
         withAnimation(visible ? .playerControlsIn : .playerControlsOut) {
             showControls = visible
         }
@@ -1724,6 +1744,7 @@ struct PlayerView: View {
         // A tap on the video means no menu is open (an open menu would swallow the tap), so
         // clear the pin here too — a self-heal in case the didBecomeKey close signal was missed.
         overlayActive = false
+        handleMouseActivity()
         setControlsVisible(!showControls)
     }
 
@@ -1734,6 +1755,18 @@ struct PlayerView: View {
             try? await Task.sleep(nanoseconds: 3_000_000_000)
             guard !Task.isCancelled, !overlayActive else { return }
             setControlsVisible(false)
+            if MouseCursorManager.isSupported {
+                MouseCursorManager.hide()
+            }
+        }
+    }
+
+    private func handleMouseActivity() {
+        guard MouseCursorManager.isSupported else { return }
+        MouseCursorManager.unhide()
+        setControlsVisible(true)
+        if isPlaying {
+            scheduleHide()
         }
     }
 

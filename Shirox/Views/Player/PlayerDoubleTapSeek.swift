@@ -4,6 +4,7 @@ struct PlayerDoubleTapSeek: View {
     var onSingleTap: () -> Void
     var onSeekBackward: () -> Void
     var onSeekForward: () -> Void
+    var onHover: (() -> Void)? = nil
     let seekAmount: Double
     /// Screen lock is on. Double-tap seeking used to ignore it entirely, so a locked player
     /// still jumped when a pocket or a passing hand caught the screen twice — the one thing
@@ -24,7 +25,8 @@ struct PlayerDoubleTapSeek: View {
             FullScreenSeekView(
                 onSingleTap: onSingleTap,
                 onSeekLeft:  { guard !isLocked else { return }; showFeedback(left: true);  onSeekBackward() },
-                onSeekRight: { guard !isLocked else { return }; showFeedback(left: false); onSeekForward()  }
+                onSeekRight: { guard !isLocked else { return }; showFeedback(left: false); onSeekForward()  },
+                onHover: onHover
             )
             #else
             HStack(spacing: 0) {
@@ -117,9 +119,10 @@ private struct FullScreenSeekView: UIViewRepresentable {
     var onSingleTap: () -> Void
     var onSeekLeft: () -> Void
     var onSeekRight: () -> Void
+    var onHover: (() -> Void)? = nil
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onSingleTap: onSingleTap, onSeekLeft: onSeekLeft, onSeekRight: onSeekRight)
+        Coordinator(onSingleTap: onSingleTap, onSeekLeft: onSeekLeft, onSeekRight: onSeekRight, onHover: onHover)
     }
 
     func makeUIView(context: Context) -> UIView {
@@ -144,8 +147,15 @@ private struct FullScreenSeekView: UIViewRepresentable {
         // is the standard ~0.3s double-tap-detection delay on single-tap-to-show-controls.
         singleTap.require(toFail: doubleTap)
 
+        let hoverGR = UIHoverGestureRecognizer(
+            target: context.coordinator,
+            action: #selector(Coordinator.handleHover(_:))
+        )
+        hoverGR.cancelsTouchesInView = false
+
         view.addGestureRecognizer(doubleTap)
         view.addGestureRecognizer(singleTap)
+        view.addGestureRecognizer(hoverGR)
         return view
     }
 
@@ -153,19 +163,23 @@ private struct FullScreenSeekView: UIViewRepresentable {
         context.coordinator.onSingleTap = onSingleTap
         context.coordinator.onSeekLeft  = onSeekLeft
         context.coordinator.onSeekRight = onSeekRight
+        context.coordinator.onHover     = onHover
     }
 
     final class Coordinator: NSObject {
         var onSingleTap: () -> Void
         var onSeekLeft: () -> Void
         var onSeekRight: () -> Void
+        var onHover: (() -> Void)?
 
         init(onSingleTap: @escaping () -> Void,
              onSeekLeft: @escaping () -> Void,
-             onSeekRight: @escaping () -> Void) {
+             onSeekRight: @escaping () -> Void,
+             onHover: (() -> Void)?) {
             self.onSingleTap = onSingleTap
             self.onSeekLeft  = onSeekLeft
             self.onSeekRight = onSeekRight
+            self.onHover     = onHover
         }
 
         @objc func handleSingle(_ gr: UITapGestureRecognizer) {
@@ -175,6 +189,12 @@ private struct FullScreenSeekView: UIViewRepresentable {
         @objc func handleDouble(_ gr: UITapGestureRecognizer) {
             let isLeft = gr.location(in: gr.view).x < (gr.view?.bounds.width ?? 0) / 2
             if isLeft { onSeekLeft() } else { onSeekRight() }
+        }
+
+        @objc func handleHover(_ gr: UIHoverGestureRecognizer) {
+            if gr.state == .began || gr.state == .changed {
+                onHover?()
+            }
         }
     }
 }
