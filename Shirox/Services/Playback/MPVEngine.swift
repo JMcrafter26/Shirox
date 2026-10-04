@@ -167,6 +167,11 @@ final class MPVEngine: PlaybackEngine {
     private var segmentFailures = SegmentFailureWatch()
     /// Set once the file playing now has been reported dead, so its EOF isn't taken as the end.
     private var reportedDeadStream = false
+    /// When to switch hardware decoding back on after mpv fell back to software (see
+    /// ``HardwareDecodeRetry``).
+    private var hardwareRetry = HardwareDecodeRetry()
+    /// The decoders mpv tries in order, before software.
+    private static let hardwareDecoders = "videotoolbox,videotoolbox-copy"
 
     private(set) var currentTime: Double = 0
     private(set) var duration: Double?
@@ -227,8 +232,9 @@ final class MPVEngine: PlaybackEngine {
             // Copy mode second, for the software renderer Picture in Picture uses, which can't take
             // VideoToolbox's GPU frames. mpv's own fallback to software stays as it is: the decoder
             // a change of output restarts starts from a keyframe, and more slack only blanked a file
-            // VideoToolbox can't decode for seconds before giving up on it.
-            setOption("hwdec", "videotoolbox,videotoolbox-copy")
+            // VideoToolbox can't decode for seconds before giving up on it. Hardware is tried again
+            // later instead (see `retryHardwareDecoding()`).
+            setOption("hwdec", Self.hardwareDecoders)
             // mpv's defaults are a desktop's: Lanczos scaling, dithering, downscaling in linear
             // light, each its own GPU pass on every frame. On a phone's screen bilinear looks the
             // same, and the fast profile cut the renderer's CPU by a third, and the GPU's work with it.
@@ -253,6 +259,7 @@ final class MPVEngine: PlaybackEngine {
         mpv_observe_property(mpv, 0, "eof-reached", MPV_FORMAT_FLAG)
         mpv_observe_property(mpv, 0, "track-list/count", MPV_FORMAT_INT64)
         mpv_observe_property(mpv, 0, "aid", MPV_FORMAT_INT64)
+        if output == .metal { mpv_observe_property(mpv, 0, "hwdec-current", MPV_FORMAT_STRING) }
         mpv_set_wakeup_callback(mpv, { context in
             guard let context else { return }
             Unmanaged<MPVEngine>.fromOpaque(context).takeUnretainedValue().drainSoon()
@@ -295,6 +302,7 @@ final class MPVEngine: PlaybackEngine {
         case double(String, Double?)
         case flag(String, Bool?)
         case int(String, Int64?)
+        case string(String, String?)
         case log(String)
     }
 
@@ -352,6 +360,9 @@ final class MPVEngine: PlaybackEngine {
                 return .flag(name, property.data.map { $0.assumingMemoryBound(to: Int32.self).pointee != 0 })
             case MPV_FORMAT_INT64:
                 return .int(name, property.data?.assumingMemoryBound(to: Int64.self).pointee)
+            case MPV_FORMAT_STRING:
+                let value = property.data?.assumingMemoryBound(to: UnsafePointer<CChar>?.self).pointee
+                return .string(name, value.map { String(cString: $0) })
             default:
                 // Unavailable (no file, or "no" for a track): the format is NONE.
                 return .double(name, nil)
@@ -406,6 +417,7 @@ final class MPVEngine: PlaybackEngine {
             isItemFailed = false
             segmentFailures.reset()
             reportedDeadStream = false
+            hardwareRetry.reset()
             reportTimeControl()
         case .fileLoaded:
             if reloadAfterLoad {
@@ -461,6 +473,7 @@ final class MPVEngine: PlaybackEngine {
                 if let value, !reportedDeadStream {
                     currentTime = value
                     tick(force: false)
+                    if hardwareRetry.shouldRetry(at: value) { retryHardwareDecoding() }
                 }
             case "duration":
                 duration = value
@@ -499,6 +512,13 @@ final class MPVEngine: PlaybackEngine {
             default:
                 break
             }
+        case .string(let name, let value):
+            // Unavailable while the decoder starts, until its first frame.
+            guard name == "hwdec-current", let value else { break }
+            let isHardware = value != "no"
+            Logger.shared.log("[MPV] Decoding \(isHardware ? "with \(value)" : "in software") at \(Int(currentTime))s",
+                              type: "Player")
+            hardwareRetry.decoderChanged(toHardware: isHardware, at: currentTime)
         case .log(let line):
             Logger.shared.log("[MPV] \(line.trimmingCharacters(in: .whitespacesAndNewlines))", type: "Player")
             if isItemReady, !reportedDeadStream,
@@ -516,6 +536,15 @@ final class MPVEngine: PlaybackEngine {
         Logger.shared.log("[MPV] Segments stopped loading at \(currentTime)s — reporting a dead stream", type: "Error")
         tick(force: true)
         events.failedToPlayToEnd(Failure(code: MPV_ERROR_LOADING_FAILED.rawValue))
+    }
+
+    /// Switches hardware decoding off and on again. Setting `hwdec` makes mpv start the decoder
+    /// over from the first in the list, then seek to the frame on screen, so decoding restarts at
+    /// the keyframe before it; setting the value it already has does nothing, hence "no" first.
+    private func retryHardwareDecoding() {
+        Logger.shared.log("[MPV] Trying hardware decoding again at \(Int(currentTime))s", type: "Player")
+        setProperty("hwdec", "no")
+        setProperty("hwdec", Self.hardwareDecoders)
     }
 
     /// About twice a second of playback, and always after a seek, as AVPlayer's periodic

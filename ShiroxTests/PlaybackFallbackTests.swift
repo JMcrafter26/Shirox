@@ -135,4 +135,58 @@ final class PlaybackFallbackTests: XCTestCase {
         XCTAssertFalse(watch.record("[ffmpeg/demuxer] hls: Failed to open segment 300 of playlist 0", position: 1200, at: start.addingTimeInterval(1200)))
         XCTAssertEqual(watch.positionBeforeFailures, 1200)
     }
+
+    /// A few corrupt packets at a stream's start failed VideoToolbox three frames running, and
+    /// mpv decoded the rest of the film in software: ~45% CPU at 1080p on an iPhone 16.
+    func testSoftwareDecodingTriesHardwareAgainTenSecondsOn() {
+        var retry = HardwareDecodeRetry()
+        retry.decoderChanged(toHardware: false, at: 494)
+        XCTAssertFalse(retry.shouldRetry(at: 500))
+        XCTAssertTrue(retry.shouldRetry(at: 504))
+        // Once per fallback, not on every tick after.
+        XCTAssertFalse(retry.shouldRetry(at: 505))
+    }
+
+    /// A file VideoToolbox can't decode at all fails the retry at once: give up on it then,
+    /// rather than interrupting it every ten seconds.
+    func testARetryThatFailsAtOnceGivesUpOnTheFile() {
+        var retry = HardwareDecodeRetry()
+        retry.decoderChanged(toHardware: false, at: 0)
+        XCTAssertTrue(retry.shouldRetry(at: 10))
+        retry.decoderChanged(toHardware: false, at: 10.2)
+        XCTAssertFalse(retry.shouldRetry(at: 25))
+        XCTAssertFalse(retry.shouldRetry(at: 600))
+    }
+
+    /// A retry that worked doesn't use up the next one: corruption later in the film is retried too.
+    func testALaterFallbackAfterAWorkingRetryIsRetried() {
+        var retry = HardwareDecodeRetry()
+        retry.decoderChanged(toHardware: false, at: 494)
+        XCTAssertTrue(retry.shouldRetry(at: 504))
+        retry.decoderChanged(toHardware: true, at: 504.3)
+        retry.decoderChanged(toHardware: false, at: 1300)
+        XCTAssertTrue(retry.shouldRetry(at: 1310))
+    }
+
+    /// The wait is playback time: no retry while paused, or after seeking back before the fallback.
+    func testTheWaitIsPlaybackTime() {
+        var retry = HardwareDecodeRetry()
+        retry.decoderChanged(toHardware: false, at: 494)
+        XCTAssertFalse(retry.shouldRetry(at: 494))
+        XCTAssertFalse(retry.shouldRetry(at: 100))
+        XCTAssertTrue(retry.shouldRetry(at: 504))
+    }
+
+    /// Hardware decoding from the start never retries, and a new file starts with a clean slate.
+    func testHardwareDecodingNeverRetriesAndANewFileStartsOver() {
+        var retry = HardwareDecodeRetry()
+        retry.decoderChanged(toHardware: true, at: 0)
+        XCTAssertFalse(retry.shouldRetry(at: 60))
+        retry.decoderChanged(toHardware: false, at: 0)
+        XCTAssertTrue(retry.shouldRetry(at: 10))
+        retry.decoderChanged(toHardware: false, at: 10.1)
+        retry.reset()
+        retry.decoderChanged(toHardware: false, at: 0)
+        XCTAssertTrue(retry.shouldRetry(at: 10))
+    }
 }

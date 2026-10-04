@@ -137,3 +137,51 @@ struct SegmentFailureWatch {
         positionBeforeFailures = nil
     }
 }
+
+/// When mpv should switch hardware decoding back on after falling back to software.
+///
+/// mpv gives VideoToolbox up after three failed frames in a row and decodes the rest of the file
+/// in software. A few corrupt packets at a stream's start were enough: every frame up to the next
+/// keyframe fails, and a film decoded in software at 1080p kept an iPhone 16 at ~45% CPU. The
+/// fallback stays quick, as a file VideoToolbox can't decode at all would otherwise blank for
+/// seconds; hardware is tried again once playback has moved past the bad stretch, and given up on
+/// for the file when that retry fails at once.
+struct HardwareDecodeRetry {
+    /// How far playback goes on in software before hardware is tried again.
+    static let delay: Double = 10
+    /// A fallback this soon after a retry means the retry failed.
+    static let failedRetryWindow: Double = 5
+
+    /// The position mpv fell back to software at, while a retry is due.
+    private var fellBackAt: Double?
+    private var retriedAt: Double?
+    private var gaveUp = false
+
+    /// mpv reports the decoder it now uses.
+    mutating func decoderChanged(toHardware: Bool, at position: Double) {
+        guard !toHardware else {
+            fellBackAt = nil
+            return
+        }
+        if let retriedAt, abs(position - retriedAt) < Self.failedRetryWindow {
+            gaveUp = true
+            fellBackAt = nil
+            return
+        }
+        fellBackAt = position
+    }
+
+    /// True once, when hardware decoding should be switched back on.
+    mutating func shouldRetry(at position: Double) -> Bool {
+        guard !gaveUp, let fellBackAt, position - fellBackAt >= Self.delay else { return false }
+        self.fellBackAt = nil
+        retriedAt = position
+        return true
+    }
+
+    mutating func reset() {
+        fellBackAt = nil
+        retriedAt = nil
+        gaveUp = false
+    }
+}
