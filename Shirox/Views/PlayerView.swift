@@ -495,7 +495,7 @@ struct PlayerView: View {
             #if os(iOS)
             // Give up audio focus on exit so system music (Spotify/Apple Music)
             // can resume. .notifyOthersOnDeactivation triggers their auto-resume.
-            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+            AppAudioSession.deactivate()
             #endif
         }
         .onChangeOf(volume) { newVolume in
@@ -615,7 +615,7 @@ struct PlayerView: View {
             // player the user left PAUSED doesn't needlessly silence their music; the paused
             // recovery paths reactivate the session themselves when they actually rebuild.
             if isPlaying {
-                try? AVAudioSession.sharedInstance().setActive(true, options: .notifyOthersOnDeactivation)
+                AppAudioSession.activate()
             }
             // How long we were actually suspended (didEnterBackground → now). A transient
             // resign-active never set backgroundedAt, so it reads 0 and we take the cheap path.
@@ -685,7 +685,7 @@ struct PlayerView: View {
                     .map { AVAudioSession.InterruptionOptions(rawValue: $0).contains(.shouldResume) } ?? false
                 guard shouldResume else { return }
                 // The session was deactivated during the interruption — reactivate before resuming.
-                try? AVAudioSession.sharedInstance().setActive(true)
+                AppAudioSession.activate(notifyingOthers: false)
                 engine?.rate = Float(playbackSpeed)
                 isPlaying = true
             @unknown default:
@@ -1526,7 +1526,7 @@ struct PlayerView: View {
             // Keep app alive when screen locks while casting. AVPlayer is paused
             // during cast so the audio session needs explicit reactivation.
             #if os(iOS)
-            try? AVAudioSession.sharedInstance().setActive(true)
+            AppAudioSession.activate(notifyingOthers: false)
             #endif
 
             let subtitleURL = currentStream.subtitle.flatMap { URL(string: $0) }
@@ -1559,7 +1559,7 @@ struct PlayerView: View {
     /// keying off the player would immediately undo the swap and oscillate.
     #if os(iOS)
     static var isAirPlayRouteActive: Bool {
-        AVAudioSession.sharedInstance().currentRoute.outputs.contains { $0.portType == .airPlay }
+        AppAudioSession.isAirPlayRouteActive
     }
     #endif
 
@@ -1753,7 +1753,7 @@ struct PlayerView: View {
             // the session while we sat paused (e.g. across a background), the session is inactive
             // and player.rate alone would wedge in .waitingToPlayAtSpecifiedRate — no audio, no
             // advance. Reactivating here is correct precisely because the user asked to play.
-            try? AVAudioSession.sharedInstance().setActive(true, options: .notifyOthersOnDeactivation)
+            AppAudioSession.activate()
             #endif
             engine.rate = Float(playbackSpeed)
             isPlaying = true
@@ -1947,7 +1947,7 @@ struct PlayerView: View {
         videoReady = false
         // Take audio focus now that a player is actually opening. This is what
         // interrupts system music — deliberately deferred from app launch.
-        try? AVAudioSession.sharedInstance().setActive(true, options: .notifyOthersOnDeactivation)
+        AppAudioSession.activate()
         #endif
 
         if !currentStream.url.isFileURL, HostBlocklist.shared.isBlocked(currentStream.url) {

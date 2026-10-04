@@ -494,6 +494,7 @@
 		309D0DBBF06A45DDD0EF645C /* ModuleWebURLTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10FBCEF93F0BA1C04D772600 /* ModuleWebURLTests.swift */; };
 		30F99AC7601B22559244BB16 /* TrackingLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AD85596DDDE2969C940A38C /* TrackingLinks.swift */; };
 		31E5C6496E10906DA839A64E /* LibrarySourceSwitcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 340C623B04A57EE34B09333C /* LibrarySourceSwitcher.swift */; };
+		325DD05EDEB96E9A3DF41493 /* AppAudioSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDE73B1CB59832DCFDFF4FC7 /* AppAudioSession.swift */; };
 		3293B17DF9DEECB014C8C540 /* SimklTitleReadsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7799F7824536E9E54A2D6903 /* SimklTitleReadsTests.swift */; };
 		32F3A54684036F605CB9A10A /* MPVKit in Frameworks */ = {isa = PBXBuildFile; productRef = AD2529EB8362B5776B962BCC /* MPVKit */; };
 		32FA75AAF4A0DCC20AA15D03 /* CopyTitle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 250387834E819E85E4CD966E /* CopyTitle.swift */; };
@@ -572,6 +573,7 @@
 		4EB62FDB4E0622446849C220 /* MPVEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF7675FF198EE0091C6488D /* MPVEngine.swift */; };
 		4EE63C126AA710EA33B664D3 /* SimklBrowseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EE54AD330121EBCFAC06D19 /* SimklBrowseView.swift */; };
 		4F7EA1855BB98E7A704141B1 /* LibraryListMemory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E61C24FD91CE887F9588F162 /* LibraryListMemory.swift */; };
+		4FB3A265EF14005001D7250A /* AppAudioSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDE73B1CB59832DCFDFF4FC7 /* AppAudioSession.swift */; };
 		4FEE13C60B451415C575834E /* RefreshLimiterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 191208F6B35043F6AC89C555 /* RefreshLimiterTests.swift */; };
 		50F2E2F8FF18C96A8490115C /* SimklDiscoverMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF82054A977EBBA7E707802F /* SimklDiscoverMedia.swift */; };
 		51DFCD9F45B71AB79B6F9ED1 /* SimklSyncPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E157CF84FD16C7DFCC2825C /* SimklSyncPlan.swift */; };
@@ -942,6 +944,7 @@
 		D1A2B3C4E5F60718293A4B64 /* ContinueWatchingSeasonMatchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A2B3C4E5F60718293A4B65 /* ContinueWatchingSeasonMatchTests.swift */; };
 		D21F803B1289756FE8ECCC41 /* PendingWrite.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5A6BA34DDCEF8AFDF2E059 /* PendingWrite.swift */; };
 		D2552A62F80024BCBEC45902 /* PendingWriteTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49DFA57CE44ED5570821789D /* PendingWriteTests.swift */; };
+		D3369B0E9477CBED11F224E9 /* AppAudioSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDE73B1CB59832DCFDFF4FC7 /* AppAudioSession.swift */; };
 		D340465C2F9996D0B7CFAD46 /* SimklAuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = D014C2144DABC77965030616 /* SimklAuthManager.swift */; };
 		D35A711A9A3A9DF150C7DD04 /* JellyfinPosterCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D4FBF1385A6C9330CBE7EAB /* JellyfinPosterCard.swift */; };
 		D40AC9F8DA221DE6E8FB835F /* HomeCacheStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A24D9074CE6FD30E60EEA4C /* HomeCacheStoreTests.swift */; };
@@ -1503,6 +1506,7 @@
 		EBDB6549B0F7E02B0F9EC3B2 /* MediaDestinationTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MediaDestinationTests.swift; sourceTree = "<group>"; };
 		EC154F4B51E6E8262096B6AE /* KingfisherImageCacheTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = KingfisherImageCacheTests.swift; sourceTree = "<group>"; };
 		ED7B709D7B1CC0F49AA736E6 /* SimklEpisodePlanner.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklEpisodePlanner.swift; sourceTree = "<group>"; };
+		EDE73B1CB59832DCFDFF4FC7 /* AppAudioSession.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppAudioSession.swift; sourceTree = "<group>"; };
 		EE954610BF4D5511D8C184B8 /* SimklHomeRows.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklHomeRows.swift; sourceTree = "<group>"; };
 		EEF179C5853A32B15AFE3F8A /* ModuleWebsiteButton.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ModuleWebsiteButton.swift; sourceTree = "<group>"; };
 		EEF962B875F8593B7E95F5B6 /* DownloadRequestHeadersTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DownloadRequestHeadersTests.swift; sourceTree = "<group>"; };
@@ -1773,6 +1777,7 @@
 				6485E655D593CCD035D8737A /* PhotoLibrarySaver.swift */,
 				CC8E0AD5E8FE00AF92A4E88E /* ModuleWebLinks.swift */,
 				0E696EC6140A22B62B4A48B5 /* AirPlaySubtitles.swift */,
+				EDE73B1CB59832DCFDFF4FC7 /* AppAudioSession.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -2909,6 +2914,7 @@
 				9A0C8CEE254FC5E320C9F62F /* SimklAnimeEditSheet.swift in Sources */,
 				618F48B7E938CE21E402D81F /* AirPlaySubtitles.swift in Sources */,
 				991F91921A8E4031FC8A6E6C /* MediaDetailsSheet.swift in Sources */,
+				4FB3A265EF14005001D7250A /* AppAudioSession.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3198,6 +3204,7 @@
 				7001DC4920B99BC1E8CF1E39 /* SimklAnimeEditSheet.swift in Sources */,
 				B4EECCFA50130D2CEAFDFB2D /* AirPlaySubtitles.swift in Sources */,
 				8724CE57BC6810F23916A9D6 /* MediaDetailsSheet.swift in Sources */,
+				D3369B0E9477CBED11F224E9 /* AppAudioSession.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3487,6 +3494,7 @@
 				79DFA17BBFAD2009214F5B55 /* SimklAnimeEditSheet.swift in Sources */,
 				810D354BEEAAB679469A76FF /* AirPlaySubtitles.swift in Sources */,
 				BBC12BC7B6C8F50AE4BBF23A /* MediaDetailsSheet.swift in Sources */,
+				325DD05EDEB96E9A3DF41493 /* AppAudioSession.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
