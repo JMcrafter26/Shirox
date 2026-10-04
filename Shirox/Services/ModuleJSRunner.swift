@@ -447,21 +447,30 @@ final class ModuleJSRunner {
     /// Bridges `fetch` and `soraFetch` to `fetchv2`, properly unwrapping the
     /// Sora-style options object `{ headers, method, body }` into the positional
     /// arguments that `fetchv2` expects.
+    ///
+    /// `fetch` holds Shirox's own `soraFetch` and `fetchv2`, not the globals of those names: a
+    /// module that defines its own `soraFetch` and falls back to `fetch` on a failure (HydraHD)
+    /// otherwise bounced between the two forever on a host that kept failing — one request per
+    /// bounce, ~1,700 a second, for as long as the runner lived.
     private func setupFetchAliases(_ ctx: JSContext) {
         ctx.evaluateScript("""
-        function soraFetch(url, options) {
-            var headers = {}, method = 'GET', body = null, extra = null;
-            if (options && typeof options === 'object') {
-                headers = options.headers || {};
-                method  = options.method  || 'GET';
-                body    = options.body    || null;
-                extra   = options;
+        (function(global) {
+            var shiroxFetchV2 = global.fetchv2;
+            function shiroxSoraFetch(url, options) {
+                var headers = {}, method = 'GET', body = null, extra = null;
+                if (options && typeof options === 'object') {
+                    headers = options.headers || {};
+                    method  = options.method  || 'GET';
+                    body    = options.body    || null;
+                    extra   = options;
+                }
+                return shiroxFetchV2(url, headers, method, body, extra);
             }
-            return fetchv2(url, headers, method, body, extra);
-        }
-        function fetch(url, options) {
-            return soraFetch(url, options);
-        }
+            global.soraFetch = shiroxSoraFetch;
+            global.fetch = function(url, options) {
+                return shiroxSoraFetch(url, options);
+            };
+        })(this);
         """)
     }
 
