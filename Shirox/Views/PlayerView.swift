@@ -497,6 +497,22 @@ struct PlayerView: View {
             // can resume. .notifyOthersOnDeactivation triggers their auto-resume.
             AppAudioSession.deactivate()
             #endif
+            if MouseCursorManager.isSupported {
+                MouseCursorManager.unhide()
+            }
+        }
+        .onChangeOf(isPlaying) { playing in
+            // On a Mac the controls and the pointer go away together while playing and come
+            // back on a pause. Not on iPhone or iPad, where a pause from Control Center or a
+            // call shouldn't bring the controls up.
+            guard MouseCursorManager.isSupported else { return }
+            if playing {
+                scheduleHide()
+            } else {
+                hideTask?.cancel()
+                setControlsVisible(true)
+                MouseCursorManager.unhide()
+            }
         }
         .onChangeOf(volume) { newVolume in
             engine?.volume = newVolume
@@ -764,7 +780,8 @@ struct PlayerView: View {
         }) {
             PlayerNextEpisodePicker(streams: nextEpisodeStreams) { selected in
                 swapStream(selected, episodeNumber: nextEpisodeNumber, allStreams: nextEpisodeStreams, episodeHref: nextEpisodeHref)
-            }            .adaptivePresentationDetents([.height(CGFloat(60 + 56 * max(1, nextEpisodeStreams.count)))])
+            }
+            .adaptivePresentationDetents([.height(nextEpisodePickerHeight)])
         }
         .sheet(isPresented: $showSequelPicker, onDismiss: {
             sequelResults = []
@@ -869,6 +886,7 @@ struct PlayerView: View {
                 },
                 onSeekBackward: { skip(by: -Double(skipShort)); scheduleHide() },
                 onSeekForward: { skip(by: Double(skipShort)); scheduleHide() },
+                onHover: { handleMouseActivity() },
                 seekAmount: Double(skipShort),
                 isLocked: isLocked
             )
@@ -1899,6 +1917,9 @@ struct PlayerView: View {
     /// Single entry point for toggling the controls overlay so appear/disappear always
     /// use the matching curve (fast-in / gentle-out) regardless of which gesture drove it.
     private func setControlsVisible(_ visible: Bool) {
+        if visible && MouseCursorManager.isSupported {
+            MouseCursorManager.unhide()
+        }
         withAnimation(visible ? .playerControlsIn : .playerControlsOut) {
             showControls = visible
         }
@@ -1908,6 +1929,9 @@ struct PlayerView: View {
         // A tap on the video means no menu is open (an open menu would swallow the tap), so
         // clear the pin here too — a self-heal in case the didBecomeKey close signal was missed.
         overlayActive = false
+        // Only the pointer: showing the controls first, as moving the mouse does, made a click
+        // always hide them.
+        MouseCursorManager.unhide()
         setControlsVisible(!showControls)
     }
 
@@ -1918,6 +1942,25 @@ struct PlayerView: View {
             try? await Task.sleep(nanoseconds: 3_000_000_000)
             guard !Task.isCancelled, !overlayActive else { return }
             setControlsVisible(false)
+            if MouseCursorManager.isSupported {
+                MouseCursorManager.hide()
+            }
+        }
+    }
+
+    /// Room for the next-episode picker's rows. Worked out here rather than inline: the body is
+    /// one long modifier chain, and arithmetic inside it is what Xcode 26's type checker gave up
+    /// on ("unable to type-check this expression in reasonable time").
+    private var nextEpisodePickerHeight: CGFloat {
+        CGFloat(60 + 56 * max(1, nextEpisodeStreams.count))
+    }
+
+    private func handleMouseActivity() {
+        guard MouseCursorManager.isSupported else { return }
+        MouseCursorManager.unhide()
+        setControlsVisible(true)
+        if isPlaying {
+            scheduleHide()
         }
     }
 
