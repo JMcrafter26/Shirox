@@ -163,6 +163,9 @@ final class MPVEngine: PlaybackEngine {
     private var metalReturns = 0
     /// Between the app's going to the background and its coming back, when mpv draws nothing.
     private var isInBackground = false
+    /// `hr-seek-demuxer-offset` as last set (see `MPVOptions.hrSeekDemuxerOffset`). mpv's own seeks
+    /// (a track switch, a decoder restart) are to where playback is, so it's kept no further than that.
+    private var demuxerOffset: Double = 0
     /// Segment failures on the file playing now (see ``SegmentFailureWatch``).
     private var segmentFailures = SegmentFailureWatch()
     /// Set once the file playing now has been reported dead, so its EOF isn't taken as the end.
@@ -472,6 +475,7 @@ final class MPVEngine: PlaybackEngine {
                 // The demuxer is skipping through a dead stream: hold the clock where it was.
                 if let value, !reportedDeadStream {
                     currentTime = value
+                    if value < demuxerOffset { setDemuxerOffset(forSeekTo: value) }
                     tick(force: false)
                     if hardwareRetry.shouldRetry(at: value) { retryHardwareDecoding() }
                 }
@@ -582,7 +586,15 @@ final class MPVEngine: PlaybackEngine {
     private func reload(at seconds: Double) {
         guard let opened else { return }
         isItemReady = false
+        setDemuxerOffset(forSeekTo: seconds)
         command("loadfile", location(of: opened.url), "replace", "-1", "start=\(seconds)")
+    }
+
+    private func setDemuxerOffset(forSeekTo seconds: Double) {
+        let offset = MPVOptions.hrSeekDemuxerOffset(forSeekTo: seconds)
+        guard offset != demuxerOffset else { return }
+        demuxerOffset = offset
+        setProperty("hr-seek-demuxer-offset", String(offset))
     }
 
     private func refreshAudioOptions() {
@@ -743,6 +755,7 @@ final class MPVEngine: PlaybackEngine {
             return
         }
         currentTime = seconds
+        setDemuxerOffset(forSeekTo: seconds)
         guard let completion else {
             command("seek", String(seconds), MPVOptions.seekFlags(precision))
             return

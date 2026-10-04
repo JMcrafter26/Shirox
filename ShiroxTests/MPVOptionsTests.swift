@@ -30,6 +30,16 @@ final class MPVOptionsTests: XCTestCase {
         XCTAssertEqual(MPVOptions.seekFlags(.within(0.5)), "absolute")
     }
 
+    /// Ten seconds before a precise seek's target, for a keyframe before it, but never before the
+    /// stream's start: that seek fails, and mpv carries on from as far as it had read ahead.
+    func testAPreciseSeekAsksTheDemuxerForUpToTenSecondsBefore() {
+        XCTAssertEqual(MPVOptions.hrSeekDemuxerOffset(forSeekTo: 600), 10)
+        XCTAssertEqual(MPVOptions.hrSeekDemuxerOffset(forSeekTo: 10), 10)
+        XCTAssertEqual(MPVOptions.hrSeekDemuxerOffset(forSeekTo: 4.7), 4)
+        XCTAssertEqual(MPVOptions.hrSeekDemuxerOffset(forSeekTo: 0.3), 0)
+        XCTAssertEqual(MPVOptions.hrSeekDemuxerOffset(forSeekTo: -1), 0)
+    }
+
     func testABitrateCapOrNone() {
         XCTAssertEqual(MPVOptions.hlsBitrate(nil), "max")
         XCTAssertEqual(MPVOptions.hlsBitrate(2_500_000), "2500000")

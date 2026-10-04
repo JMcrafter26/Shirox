@@ -35,6 +35,16 @@ enum MPVOptions {
         }
     }
 
+    /// `hr-seek-demuxer-offset` for a precise seek to `seconds`: how far before it the demuxer is
+    /// asked to go, for a keyframe to decode forward from. ffmpeg's HLS demuxer lands on the first
+    /// keyframe at or after where it's asked, which on a stream whose segments don't start on one
+    /// can be past the target. Ten seconds puts a keyframe before it on any stream that keys at
+    /// least that often. Never more than the target: a seek before the stream's start fails, and
+    /// mpv then carries on from wherever it had read ahead to.
+    static func hrSeekDemuxerOffset(forSeekTo seconds: Double) -> Double {
+        min(10, max(0, seconds.rounded(.down)))
+    }
+
     /// `hls-bitrate`: the highest variant, or the one nearest a cap.
     static func hlsBitrate(_ bitsPerSecond: Int?) -> String {
         bitsPerSecond.map(String.init) ?? "max"
