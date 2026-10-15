@@ -601,3 +601,11 @@ private struct PhotoPickerModifier: ViewModifier {
 }
 
 #endif
+
+#if os(tvOS)
+/// The Apple TV has no profile screens: its content as it is.
+struct ProfileHost<Content: View>: View {
+    @ViewBuilder let content: () -> Content
+    var body: some View { content() }
+}
+#endif
