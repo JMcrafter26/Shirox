@@ -74,4 +74,34 @@ final class ExtensionRuntimeTests: XCTestCase {
         """)!.toString()
         XCTAssertEqual(r, "One|2|1||a|1")
     }
+
+    func testPrepareLoadsTheRuntimeForExtensionModulesOnly() throws {
+        let json = #"{"sourceName":"A","version":"1","scriptUrl":"https://x/a.js","type":"anime","#
+            + #""ext":{"kind":"nuvio","repoUrl":"https://x/manifest.json","key":"a","config":"{\"supportedTypes\":[\"tv\"]}"}}"#
+        let module = try JSONDecoder().decode(ModuleDefinition.self, from: Data(json.utf8))
+        let c = JSContext()!
+        ExtensionScripts.prepare(c, module: module)
+        XCTAssertEqual(c.evaluateScript("[typeof __extDefine, __ext.key, __ext.config.supportedTypes[0], typeof SCRAPER_SETTINGS].join()")!.toString(),
+                       "function,a,tv,object")
+
+        var plain = module
+        plain.ext = nil
+        let d = JSContext()!
+        ExtensionScripts.prepare(d, module: plain)
+        XCTAssertEqual(d.evaluateScript("typeof __extDefine")!.toString(), "undefined")
+    }
+
+    func testSearchMediaJSON() {
+        var m = ExtensionSearchMedia(anilistId: 5, malId: nil, title: "T", englishTitle: nil)
+        m.season = 2
+        m.episodeOffset = 12
+        m.tmdbId = 7
+        m.tmdbType = "tv"
+        let o = m.jsonObject
+        XCTAssertEqual(o["anilistId"] as? Int, 5)
+        XCTAssertEqual(o["season"] as? Int, 2)
+        XCTAssertEqual(o["episodeOffset"] as? Int, 12)
+        XCTAssertEqual(o["tmdbType"] as? String, "tv")
+        XCTAssertNil(o["imdbId"])
+    }
 }

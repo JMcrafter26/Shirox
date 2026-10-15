@@ -54,7 +54,9 @@ final class JSEngine: ObservableObject {
         context = JSContext.forModule()
         setupContext()
         SeanimeScripts.prepare(context, module: module)
+        ExtensionScripts.prepare(context, module: module)
         context.evaluateScript(script)
+        ExtensionScripts.finish(context, module: module)
         if let exception = context.exception {
             Logger.shared.log("[JSEngine] Script load error: \(exception)", type: "Error")
         }

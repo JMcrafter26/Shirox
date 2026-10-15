@@ -62,7 +62,9 @@ final class ModuleJSRunner {
         let ctx = JSContext.forModule()
         setupContext(ctx)
         SeanimeScripts.prepare(ctx, module: module)
+        ExtensionScripts.prepare(ctx, module: module)
         ctx.evaluateScript(script)
+        ExtensionScripts.finish(ctx, module: module)
         if let exception = ctx.exception {
             Logger.shared.log("[ModuleJSRunner] Script load error: \(exception)", type: "Error")
         }
@@ -74,6 +76,12 @@ final class ModuleJSRunner {
 
     func search(keyword: String) async throws -> [SearchItem] {
         if module?.seanime != nil, let context { SeanimeScripts.setSearchMedia(seanimeMedia, in: context) }
+        if module?.ext != nil, let context {
+            // The anime page's show, with the TMDB/IMDb ids and season Stremio and Nuvio look up.
+            let media: ExtensionSearchMedia?
+            if let seanimeMedia { media = await ExtensionSearchMedia.resolve(seanimeMedia) } else { media = nil }
+            ExtensionScripts.setSearchMedia(media, in: context)
+        }
         let json = try await callAsyncJS("searchResults", args: [keyword])
         guard let data = json.data(using: .utf8),
               let array = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
