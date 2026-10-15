@@ -638,6 +638,7 @@ struct PlayerSettingsView: View {
     @AppStorage("autoNextEpisode") private var autoNextEpisode = true
     @AppStorage("pauseWhenInactive") private var pauseWhenInactive = true
     @AppStorage("playerAmbientMode") private var ambientMode = false
+    @AppStorage("playerSpatialAudio") private var spatialAudio = true
     @AppStorage("autoSkipSegments") private var autoSkipSegments = true
     @AppStorage("watchedPercentage") private var watchedPercentage = 90.0
 
@@ -675,6 +676,14 @@ struct PlayerSettingsView: View {
                 }
 
                 #if os(iOS)
+                if !Self.isMac {
+                    Toggle("Spatial Audio", isOn: $spatialAudio)
+                        .tint(.secondary)
+                        .onChangeOf(spatialAudio) { _ in AppAudioSession.applySpatialAudioSetting() }
+                    Text("Lets iOS play videos in Spatial Audio on AirPods and other headphones that support it. Turn off to hear plain stereo. Takes effect from the next video.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
                 Toggle("Ambient Mode", isOn: $ambientMode)
                     .tint(.secondary)
                 Text("Fills the bars around the video with a soft glow of its colours. Native engine only.")

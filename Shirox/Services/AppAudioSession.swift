@@ -16,7 +16,32 @@ enum AppAudioSession {
     /// a player to open.
     static func configureForPlayback() throws {
         guard isManaged else { return }
-        try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
+        try AVAudioSession.sharedInstance().setCategory(.playback, mode: playbackMode)
+    }
+
+    /// The player's Spatial Audio setting. On, iOS spatializes video sound on AirPods and other
+    /// headphones that can, and Control Center's Spatial Audio choice stays the system's. Off, the
+    /// app asks for none: stereo plays as stereo.
+    static let spatialAudioKey = "playerSpatialAudio"
+    static var spatialAudioEnabled: Bool {
+        UserDefaults.standard.object(forKey: spatialAudioKey) as? Bool ?? true
+    }
+
+    /// `moviePlayback` is the mode iOS spatializes a video app's sound in; `default` leaves stereo
+    /// alone unless the listener turns on Spatialize Stereo themselves.
+    private static var playbackMode: AVAudioSession.Mode {
+        spatialAudioEnabled ? .moviePlayback : .default
+    }
+
+    /// Puts the session back in the mode the setting asks for. mpv's audio output sets
+    /// `moviePlayback` itself each time it opens, so it's called again after that.
+    static func applySpatialAudioSetting() {
+        guard isManaged else { return }
+        let session = AVAudioSession.sharedInstance()
+        if session.mode != playbackMode {
+            try? session.setMode(playbackMode)
+        }
+        try? session.setSupportsMultichannelContent(spatialAudioEnabled)
     }
 
     /// Takes audio focus. `notifyingOthers` lets other apps resume theirs when it's given up.

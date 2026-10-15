@@ -126,6 +126,12 @@ final class AVPlayerEngine: PlaybackEngine {
             ? AVURLAsset(url: source.url)
             : AVURLAsset(url: source.url, options: ["AVURLAssetHTTPHeaderFieldsKey": source.headers])
         let item = AVPlayerItem(asset: asset)
+        #if os(iOS)
+        // Spatial Audio off: no spatializing at all, not even of a 5.1 track.
+        if !AppAudioSession.spatialAudioEnabled {
+            item.allowedAudioSpatializationFormats = []
+        }
+        #endif
         #if os(iOS) || os(macOS)
         // Only for saving a frame — iOS's hold action, a Mac's S key: an output costs a BGRA
         // copy path all along.

@@ -336,6 +336,12 @@ final class MPVEngine: PlaybackEngine {
         var batch: [Event] = []
         while let event = mpv_wait_event(mpv, 0), event.pointee.event_id != MPV_EVENT_NONE {
             if let converted = Self.convert(event.pointee) { batch.append(converted) }
+            #if os(iOS)
+            // mpv's audio output has just set the session's mode to its own `moviePlayback`.
+            if event.pointee.event_id == MPV_EVENT_AUDIO_RECONFIG {
+                AppAudioSession.applySpatialAudioSetting()
+            }
+            #endif
             if event.pointee.event_id == MPV_EVENT_SHUTDOWN { break }
         }
         guard !batch.isEmpty else { return }
