@@ -75,6 +75,29 @@ struct SettingsList<Content: View>: View {
     }
 }
 
+#if !os(tvOS)
+/// The active profile, at the top of Settings.
+private struct ProfileSettingsRow: View {
+    @ObservedObject private var profiles = ProfileManager.shared
+
+    var body: some View {
+        HStack(spacing: 14) {
+            if let active = profiles.active {
+                ProfileAvatarView(profile: active, size: 36)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(profiles.active?.name ?? "Profile")
+                    .font(.subheadline.weight(.semibold))
+                Text(profiles.profiles.count > 1 ? "Switch or Manage Profiles" : "Add a Profile")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 2)
+    }
+}
+#endif
+
 struct SettingsView: View {
     @ObservedObject private var aniListAuth = AniListAuthManager.shared
     @ObservedObject private var malAuth = MALAuthManager.shared
@@ -227,6 +250,13 @@ struct SettingsView: View {
     @ViewBuilder
     private var sections: some View {
             Section {
+                #if !os(tvOS)
+                NavigationLink {
+                    ProfilesView()
+                } label: {
+                    ProfileSettingsRow()
+                }
+                #endif
                 NavigationLink {
                     AccountsSettingsView()
                 } label: {

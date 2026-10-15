@@ -121,6 +121,8 @@ struct ShiroxApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     init() {
+        // Before anything reads the stored data: a profile switch swaps it now.
+        ProfileManager.applyPendingSwitch()
         KingfisherImageCache.configure()
         URLCache.shared = URLCache(
             memoryCapacity: 20 * 1024 * 1024,
@@ -131,6 +133,8 @@ struct ShiroxApp: App {
             _ = CastManager.shared
         #endif
         ProviderManager.shared.setup(providers: [AniListProvider.shared, MALProvider.shared])
+        // Creates the first profile on an install that has none, and keeps its account picture.
+        _ = ProfileManager.shared
         // Anyone who already has the app set up has effectively finished onboarding; don't
         // interrupt an existing install to tell it how to do what it is already doing.
         if !UserDefaults.standard.bool(forKey: "hasCompletedOnboarding"),
