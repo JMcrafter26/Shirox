@@ -57,6 +57,16 @@ final class SimklWriteQueue {
         }
     }
 
+    /// After a profile switch: what the new profile saved, and nothing of the last one's.
+    func reloadForProfileSwitch() {
+        inFlight = []
+        pending = []
+        if let storeURL, let data = try? Data(contentsOf: storeURL),
+           let saved = try? JSONDecoder().decode([SimklWrite].self, from: data) {
+            pending = saved
+        }
+    }
+
     func enqueue(_ write: SimklWrite) {
         pending.append(write)
         persist()

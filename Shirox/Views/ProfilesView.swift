@@ -18,7 +18,8 @@ extension Color {
 // MARK: - Avatar
 
 /// A profile's picture: the one chosen for it, else its account's (AniList, MyAnimeList, Simkl),
-/// else its initial on its colour.
+/// else its initial on its colour. Only one of them is ever drawn, so a picture still loading or
+/// a button pressed never shows the initial through it.
 struct ProfileAvatarView: View {
     let profile: AppProfile
     var size: CGFloat = 44
@@ -27,9 +28,6 @@ struct ProfileAvatarView: View {
     var body: some View {
         ZStack {
             Circle().fill(Color(profileHex: profile.colorHex))
-            Text(profile.initial)
-                .font(.system(size: size * 0.42, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white)
             if profile.hasPhoto, let image = ProfilePhotoCache.image(at: manager.photoURL(for: profile.id),
                                                                      version: manager.photoVersion) {
                 Image(decorative: image, scale: 1)
@@ -38,11 +36,14 @@ struct ProfileAvatarView: View {
             } else if let url = profile.accountAvatarURL {
                 CachedAsyncImage(urlString: url)
                     .aspectRatio(contentMode: .fill)
+            } else {
+                Text(profile.initial)
+                    .font(.system(size: size * 0.42, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white)
             }
         }
         .frame(width: size, height: size)
         .clipShape(Circle())
-        .overlay(Circle().strokeBorder(Color.primary.opacity(0.1), lineWidth: 0.5))
         .accessibilityHidden(true)
     }
 }
@@ -61,133 +62,220 @@ enum ProfilePhotoCache {
     }
 }
 
-// MARK: - Profiles
+/// Shrinks a little while pressed, without the plain style's fading.
+private struct PressScaleStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.94 : 1)
+            .animation(.spring(response: 0.25, dampingFraction: 0.7), value: configuration.isPressed)
+    }
+}
 
-/// Every profile on this device: switch to one, add one, or change one.
-struct ProfilesView: View {
+// MARK: - Host
+
+/// The app's content, rebuilt on every profile switch, with the profile picker over it.
+struct ProfileHost<Content: View>: View {
     @ObservedObject private var manager = ProfileManager.shared
-    @State private var editing: EditorTarget?
-    @State private var switchTarget: AppProfile?
-
-    private let columns = [GridItem(.adaptive(minimum: 104, maximum: 140), spacing: 20)]
+    @ViewBuilder let content: () -> Content
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                LazyVGrid(columns: columns, spacing: 24) {
-                    ForEach(manager.profiles) { profile in
-                        profileTile(profile)
-                    }
-                    addTile
+        content()
+            .id(manager.generation)
+            .overlay {
+                if manager.isPickerShown {
+                    ProfilePickerView()
+                        .transition(.opacity.combined(with: .scale(scale: 1.04)))
                 }
-                .padding(.top, 8)
-
-                Text(Self.footnote)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
             }
-            .padding(20)
-        }
-        .navigationTitle("Profiles")
-        #if os(iOS)
-        .navigationBarTitleDisplayMode(.inline)
+            .animation(.easeInOut(duration: 0.3), value: manager.isPickerShown)
+    }
+}
+
+// MARK: - Picker
+
+/// Who's watching: every profile on this device as a big picture, to switch to with a tap, or
+/// to change in Manage Profiles.
+struct ProfilePickerView: View {
+    @ObservedObject private var manager = ProfileManager.shared
+    @AppStorage(ProfileManager.askAtLaunchKey) private var askAtLaunch = true
+    @AppStorage("playerLiquidGlass") private var liquidGlass = true
+    @State private var managing = false
+    @State private var editing: EditorTarget?
+
+    private var avatarSize: CGFloat {
+        #if os(macOS)
+        120
+        #else
+        UIDevice.current.userInterfaceIdiom == .pad ? 150 : 118
         #endif
+    }
+
+    var body: some View {
+        ZStack {
+            background
+            VStack(spacing: 0) {
+                topBar
+                Text(managing ? "Manage Profiles" : "Who's going on an adventure?")
+                    .font(.system(size: 30, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.white)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+                ScrollView {
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: avatarSize + 20, maximum: avatarSize + 60), spacing: 24)],
+                              spacing: 30) {
+                        ForEach(manager.profiles) { profile in
+                            tile(profile)
+                        }
+                        addTile
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 40)
+                    .frame(maxWidth: 720)
+                    .frame(maxWidth: .infinity)
+                }
+                bottomBar
+            }
+            if let target = manager.switchingTo {
+                switchingCover(target)
+            }
+        }
+        .animation(.easeInOut(duration: 0.25), value: managing)
+        .animation(.easeInOut(duration: 0.25), value: manager.switchingTo)
         .sheet(item: $editing) { target in
             NavigationStack {
                 ProfileEditorView(target: target)
             }
+            .interactiveDismissDisabled(true)
             #if os(macOS)
-            .frame(minWidth: 460, minHeight: 560)
+            .frame(minWidth: 460, minHeight: 600)
             #endif
         }
-        .confirmationDialog(switchTitle, isPresented: Binding(
-            get: { switchTarget != nil }, set: { if !$0 { switchTarget = nil } }
-        ), titleVisibility: .visible, presenting: switchTarget) { profile in
-            Button("Switch to \(profile.name)") { manager.switchTo(profile.id) }
-            Button("Cancel", role: .cancel) {}
-        } message: { _ in
-            Text(Self.switchMessage)
+    }
+
+    private var background: some View {
+        LinearGradient(colors: [Color(red: 0.03, green: 0.02, blue: 0.02),
+                                Color(red: 0.16, green: 0.08, blue: 0.04),
+                                Color(red: 0.36, green: 0.19, blue: 0.08)],
+                       startPoint: .top, endPoint: .bottom)
+            .ignoresSafeArea()
+    }
+
+    private var topBar: some View {
+        HStack {
+            Spacer()
+            Button {
+                if managing { managing = false } else { manager.isPickerShown = false }
+            } label: {
+                Image(systemName: "xmark")
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 40, height: 40)
+                    .mediaGlassChrome(Circle(), enabled: liquidGlass, off: Color.white.opacity(0.15))
+            }
+            .buttonStyle(PressScaleStyle())
+            .accessibilityLabel(managing ? "Done" : "Close")
+            .keyboardShortcut(.cancelAction)
         }
+        .padding(.horizontal, 20)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
     }
 
-    private var switchTitle: String {
-        switchTarget.map { "Switch to \($0.name)?" } ?? ""
+    private var bottomBar: some View {
+        VStack(spacing: 14) {
+            if managing {
+                Toggle("Ask at Launch", isOn: $askAtLaunch)
+                    .tint(.white.opacity(0.6))
+                    .foregroundStyle(.white)
+                    .font(.subheadline)
+                    .frame(maxWidth: 280)
+            }
+            Button {
+                managing.toggle()
+            } label: {
+                Text(managing ? "DONE" : "MANAGE PROFILES")
+                    .font(.system(size: 16, weight: .bold))
+                    .tracking(0.8)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 22)
+                    .padding(.vertical, 12)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(PressScaleStyle())
+        }
+        .padding(.bottom, 24)
     }
 
-    private static var switchMessage: String {
-        #if os(macOS)
-        "Shirox restarts with this profile's library, progress, accounts and settings."
-        #else
-        "Shirox closes to load this profile's library, progress, accounts and settings. Open it again to continue."
-        #endif
-    }
-
-    private static let footnote = "Each profile has its own library, watch progress, settings and sign-ins, and works without an account. Downloads are shared by every profile on this device."
-
-    private func profileTile(_ profile: AppProfile) -> some View {
+    private func tile(_ profile: AppProfile) -> some View {
         let isActive = profile.id == manager.active?.id
         return Button {
-            if !isActive { switchTarget = profile }
+            if managing {
+                editing = .edit(profile.id)
+            } else if isActive {
+                manager.isPickerShown = false
+            } else {
+                Task { await manager.switchTo(profile.id) }
+            }
         } label: {
-            VStack(spacing: 8) {
-                ProfileAvatarView(profile: profile, size: 84)
-                    .overlay(
-                        Circle().strokeBorder(Color.accentColor, lineWidth: isActive ? 3 : 0)
-                            .padding(-5)
-                    )
+            VStack(spacing: 12) {
+                ProfileAvatarView(profile: profile, size: avatarSize)
+                    .overlay(Circle().strokeBorder(.white, lineWidth: isActive && !managing ? 3 : 0).padding(-6))
+                    .overlay {
+                        if managing {
+                            ZStack {
+                                Circle().fill(.black.opacity(0.35))
+                                Image(systemName: "pencil")
+                                    .font(.system(size: 24, weight: .semibold))
+                                    .foregroundStyle(.white)
+                                    .frame(width: 58, height: 58)
+                                    .mediaGlassChrome(Circle(), enabled: liquidGlass, off: Color.white.opacity(0.2))
+                            }
+                            .transition(.opacity)
+                        }
+                    }
                 Text(profile.name)
-                    .font(.subheadline.weight(isActive ? .semibold : .regular))
-                    .foregroundStyle(.primary)
-                    .lineLimit(1)
-                Text(isActive ? "Current" : sharingNote(profile) ?? " ")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(.white)
                     .lineLimit(1)
             }
-            .frame(maxWidth: .infinity)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
-        .contextMenu {
-            Button { editing = .edit(profile.id) } label: { Label("Edit", systemImage: "pencil") }
-            if !isActive {
-                Button { switchTarget = profile } label: { Label("Switch to \(profile.name)", systemImage: "arrow.left.arrow.right") }
-            }
-        }
-        .overlay(alignment: .topTrailing) {
-            Button { editing = .edit(profile.id) } label: {
-                Image(systemName: "pencil.circle.fill")
-                    .font(.title3)
-                    .symbolRenderingMode(.palette)
-                    .foregroundStyle(.white, Color.secondary)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Edit \(profile.name)")
-            .offset(x: -6, y: -2)
-        }
-    }
-
-    private func sharingNote(_ profile: AppProfile) -> String? {
-        let sharers = manager.moduleSharers(of: profile)
-        guard !sharers.isEmpty else { return nil }
-        return "Modules shared"
+        .buttonStyle(PressScaleStyle())
+        .accessibilityLabel(managing ? "Edit \(profile.name)" : isActive ? "\(profile.name), current" : "Switch to \(profile.name)")
     }
 
     private var addTile: some View {
         Button { editing = .create } label: {
-            VStack(spacing: 8) {
+            VStack(spacing: 12) {
                 ZStack {
-                    Circle().strokeBorder(Color.secondary.opacity(0.5), style: StrokeStyle(lineWidth: 2, dash: [6, 5]))
-                    Image(systemName: "plus").font(.title.weight(.medium)).foregroundStyle(.secondary)
+                    Circle().fill(Color.black.opacity(0.35))
+                    Circle().strokeBorder(.white, lineWidth: 2)
+                    Image(systemName: "plus")
+                        .font(.system(size: avatarSize * 0.3, weight: .light))
+                        .foregroundStyle(.white)
                 }
-                .frame(width: 84, height: 84)
-                Text("Add Profile").font(.subheadline).foregroundStyle(.primary)
-                Text(" ").font(.caption2)
+                .frame(width: avatarSize, height: avatarSize)
+                Text("Add Profile")
+                    .font(.system(size: 17, weight: .regular))
+                    .foregroundStyle(.white)
             }
-            .frame(maxWidth: .infinity)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PressScaleStyle())
+    }
+
+    private func switchingCover(_ profile: AppProfile) -> some View {
+        ZStack {
+            background
+            VStack(spacing: 20) {
+                ProfileAvatarView(profile: profile, size: avatarSize)
+                ProgressView().tint(.white)
+                Text("Switching to \(profile.name)…")
+                    .font(.headline)
+                    .foregroundStyle(.white.opacity(0.85))
+            }
+        }
+        .transition(.opacity)
     }
 }
 
@@ -205,7 +293,7 @@ enum EditorTarget: Identifiable, Hashable {
 // MARK: - Editor
 
 /// Making a profile, or changing one: its name, picture and colour, and for a new one, where its
-/// modules come from.
+/// modules come from. Closes only through Cancel or Save.
 struct ProfileEditorView: View {
     let target: EditorTarget
     @ObservedObject private var manager = ProfileManager.shared
@@ -218,8 +306,10 @@ struct ProfileEditorView: View {
     @State private var moduleChoice = ModuleChoiceTag.own
     @State private var moduleSource: UUID?
     @State private var showFileImporter = false
+    @State private var showPhotoPicker = false
     @State private var confirmDelete = false
     @State private var loaded = false
+
     enum ModuleChoiceTag: Hashable { case own, copy, share }
 
     private var editing: AppProfile? {
@@ -234,16 +324,22 @@ struct ProfileEditorView: View {
         profile.name = name.isEmpty ? (editing?.name ?? "?") : name
         profile.colorHex = colorHex
         if photoRemoved { profile.hasPhoto = false }
-        if editing == nil { profile.accountAvatarURL = nil }
         return profile
     }
+
+    private var hasPicture: Bool { photo != nil || (preview.hasPhoto && !photoRemoved) }
 
     var body: some View {
         Form {
             Section {
-                VStack(spacing: 14) {
+                VStack(spacing: 12) {
                     avatarPreview
-                    photoButtons
+                    pictureMenu
+                    Text("Without a picture, the profile uses its AniList picture, then MyAnimeList's, then Simkl's, or else its initial.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 8)
@@ -265,7 +361,7 @@ struct ProfileEditorView: View {
                 Text("Shown when the profile has no picture of its own or from its account.")
             }
 
-            if editing == nil, manager.profiles.count > 0 {
+            if editing == nil {
                 modulesSection
             } else if let editing, !manager.moduleSharers(of: editing).isEmpty {
                 Section("Modules") {
@@ -289,6 +385,7 @@ struct ProfileEditorView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .interactiveDismissDisabled(true)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
             ToolbarItem(placement: .confirmationAction) {
@@ -303,6 +400,7 @@ struct ProfileEditorView: View {
             defer { if scoped { url.stopAccessingSecurityScopedResource() } }
             if let data = try? Data(contentsOf: url) { usePhoto(data) }
         }
+        .modifier(PhotoPickerModifier(isPresented: $showPhotoPicker) { usePhoto($0) })
         .confirmationDialog("Delete \(editing?.name ?? "")?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete Profile", role: .destructive) {
                 if let id = editing?.id { manager.delete(id) }
@@ -322,44 +420,34 @@ struct ProfileEditorView: View {
             Image(decorative: image, scale: 1)
                 .resizable()
                 .scaledToFill()
-                .frame(width: 96, height: 96)
+                .frame(width: 104, height: 104)
                 .clipShape(Circle())
         } else {
-            ProfileAvatarView(profile: preview, size: 96)
+            ProfileAvatarView(profile: preview, size: 104)
         }
     }
 
-    @ViewBuilder
-    private var photoButtons: some View {
-        HStack(spacing: 12) {
-            #if canImport(PhotosUI)
-            if #available(iOS 16.0, macOS 13.0, *) {
-                PhotoPickerButton { usePhoto($0) }
+    /// One button under the picture, whatever there is to do with it, so the row never changes
+    /// shape when a picture is chosen.
+    private var pictureMenu: some View {
+        Menu {
+            if PhotoPickerModifier.isAvailable {
+                Button { showPhotoPicker = true } label: { Label("Choose Photo", systemImage: "photo.on.rectangle") }
             }
-            #endif
-            Button { showFileImporter = true } label: {
-                Label("Choose File", systemImage: "folder")
-            }
-            .buttonStyle(.bordered)
-            if photo != nil || (preview.hasPhoto && !photoRemoved) {
+            Button { showFileImporter = true } label: { Label("Choose File", systemImage: "folder") }
+            if hasPicture {
+                Divider()
                 Button(role: .destructive) {
                     photo = nil
                     photoRemoved = true
-                } label: {
-                    Label("Remove", systemImage: "trash")
-                }
-                .buttonStyle(.bordered)
+                } label: { Label("Remove Picture", systemImage: "trash") }
             }
+        } label: {
+            Text(hasPicture ? "Change Picture" : "Add Picture")
+                .font(.subheadline.weight(.semibold))
         }
-        .font(.subheadline)
-        Text(pictureNote)
-            .font(.caption)
-            .foregroundStyle(.secondary)
-            .multilineTextAlignment(.center)
-    }
-
-    private var pictureNote: String {
-        "Without a picture, the profile uses its AniList picture, then MyAnimeList's, then Simkl's, or else its initial."
+        .menuStyle(.borderlessButton)
+        .fixedSize()
     }
 
     private var colorSwatches: some View {
@@ -424,7 +512,6 @@ struct ProfileEditorView: View {
             name = editing.name
             colorHex = editing.colorHex
         } else {
-            name = ""
             colorHex = ProfilePalette.pick(avoiding: manager.profiles.map(\.colorHex))
             moduleSource = manager.active?.id
         }
@@ -464,29 +551,53 @@ struct ProfileEditorView: View {
     }
 }
 
-#if canImport(PhotosUI)
-/// The Photos library's picker, handing back the chosen image's data.
-@available(iOS 16.0, macOS 13.0, *)
-private struct PhotoPickerButton: View {
+/// The Photos library's picker where the system has one (iOS 16, macOS 13), handing back the
+/// chosen image's data.
+private struct PhotoPickerModifier: ViewModifier {
+    @Binding var isPresented: Bool
     let onPick: (Data) -> Void
-    @State private var item: PhotosPickerItem?
 
-    var body: some View {
-        PhotosPicker(selection: $item, matching: .images) {
-            Label("Choose Photo", systemImage: "photo")
+    static var isAvailable: Bool {
+        #if canImport(PhotosUI)
+        if #available(iOS 16.0, macOS 13.0, *) { return true }
+        #endif
+        return false
+    }
+
+    func body(content: Content) -> some View {
+        #if canImport(PhotosUI)
+        if #available(iOS 16.0, macOS 13.0, *) {
+            content.modifier(Picker16(isPresented: $isPresented, onPick: onPick))
+        } else {
+            content
         }
-        .buttonStyle(.bordered)
-        .onChange(of: item) { newItem in
-            guard let newItem else { return }
-            Task {
-                if let data = try? await newItem.loadTransferable(type: Data.self) {
-                    await MainActor.run { onPick(data) }
+        #else
+        content
+        #endif
+    }
+
+    #if canImport(PhotosUI)
+    @available(iOS 16.0, macOS 13.0, *)
+    private struct Picker16: ViewModifier {
+        @Binding var isPresented: Bool
+        let onPick: (Data) -> Void
+        @State private var item: PhotosPickerItem?
+
+        func body(content: Content) -> some View {
+            content
+                .photosPicker(isPresented: $isPresented, selection: $item, matching: .images)
+                .onChange(of: item) { newItem in
+                    guard let newItem else { return }
+                    Task {
+                        if let data = try? await newItem.loadTransferable(type: Data.self) {
+                            await MainActor.run { onPick(data) }
+                        }
+                        item = nil
+                    }
                 }
-                item = nil
-            }
         }
     }
+    #endif
 }
-#endif
 
 #endif

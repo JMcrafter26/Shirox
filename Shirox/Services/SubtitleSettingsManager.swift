@@ -74,6 +74,18 @@ final class SubtitleSettingsManager: ObservableObject {
         foregroundColor   = SubtitleSettingsManager.loadColorFromDefaults()
     }
 
+    /// After a profile switch: what the new profile saved, and nothing of the last one's.
+    func reloadForProfileSwitch() {
+        let d = UserDefaults.standard
+        enabled           = d.bool(forKey: Keys.enabled)
+        fontSize          = d.double(forKey: Keys.fontSize)
+        shadowRadius      = d.double(forKey: Keys.shadowRadius)
+        backgroundEnabled = d.bool(forKey: Keys.backgroundEnabled)
+        bottomPadding     = d.double(forKey: Keys.bottomPadding)
+        delaySeconds      = d.double(forKey: Keys.delay)
+        foregroundColor   = SubtitleSettingsManager.loadColorFromDefaults()
+    }
+
     /// Every setting back to how it ships.
     func restoreDefaults() {
         enabled = true

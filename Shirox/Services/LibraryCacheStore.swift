@@ -118,6 +118,12 @@ final class LibraryCacheStore {
         }
     }
 
+    /// After a profile switch: what the new profile saved, and nothing of the last one's.
+    func reloadForProfileSwitch() {
+        snapshots = [:]
+        load()
+    }
+
     private func load() {
         guard let data = try? Data(contentsOf: fileURL),
               let store = try? JSONDecoder().decode(Store.self, from: data) else { return }

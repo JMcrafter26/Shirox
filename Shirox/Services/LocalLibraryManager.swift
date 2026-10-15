@@ -375,6 +375,13 @@ import Combine
         persist()
     }
 
+    /// After a profile switch: what the new profile saved, and nothing of the last one's.
+    func reloadForProfileSwitch() {
+        entries = []
+        collections = []
+        load()
+    }
+
     private func load() {
         guard let data = try? Data(contentsOf: Self.fileURL),
               let store = try? JSONDecoder().decode(Store.self, from: data) else { return }

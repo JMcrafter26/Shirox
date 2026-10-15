@@ -51,6 +51,13 @@ final class JellyfinAuthManager: ObservableObject {
             && UserDefaults.standard.string(forKey: Keys.serverURL) != nil
     }
 
+    /// After a profile switch: what the new profile saved, and nothing of the last one's.
+    func reloadForProfileSwitch() {
+        serverName = UserDefaults.standard.string(forKey: Keys.serverName)
+        isAuthenticated = JellyfinKeychain.read(Keys.tokenAccount) != nil
+            && UserDefaults.standard.string(forKey: Keys.serverURL) != nil
+    }
+
     // MARK: - Stored values
 
     var serverURL: URL? {

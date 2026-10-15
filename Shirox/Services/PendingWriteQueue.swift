@@ -129,6 +129,12 @@ final class PendingWriteQueue {
         catch { assertionFailure("PendingWriteQueue: encode/write failed — \(error)") }
     }
 
+    /// After a profile switch: what the new profile saved, and nothing of the last one's.
+    func reloadForProfileSwitch() {
+        queue = []
+        load()
+    }
+
     private func load() {
         guard let data = try? Data(contentsOf: fileURL),
               let items = try? JSONDecoder().decode([PendingWrite].self, from: data) else { return }

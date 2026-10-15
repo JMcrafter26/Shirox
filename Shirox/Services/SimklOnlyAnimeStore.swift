@@ -18,6 +18,11 @@ final class SimklOnlyAnimeStore {
         entries = (try? JSONDecoder().decode([LibraryEntry].self, from: Data(contentsOf: file))) ?? []
     }
 
+    /// After a profile switch: what the new profile saved, and nothing of the last one's.
+    func reloadForProfileSwitch() {
+        entries = (try? JSONDecoder().decode([LibraryEntry].self, from: Data(contentsOf: file))) ?? []
+    }
+
     func replace(_ entries: [LibraryEntry]) {
         self.entries = entries
         save()

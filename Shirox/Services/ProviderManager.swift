@@ -38,6 +38,14 @@ final class ProviderManager: ObservableObject {
         }
     }
 
+    /// After a profile switch: what the new profile saved, and nothing of the last one's.
+    func reloadForProfileSwitch() {
+        fallbackActive = false
+        fallbackReason = nil
+        fallbackServedBy = nil
+        setup(providers: orderedProviders)
+    }
+
     func saveOrder() {
         UserDefaults.standard.set(orderedProviders.map { $0.providerType.rawValue }, forKey: orderKey)
     }

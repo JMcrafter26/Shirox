@@ -61,6 +61,14 @@ final class DiscoverySource: ObservableObject {
         update()
     }
 
+    /// After a profile switch: what the new profile saved, and nothing of the last one's.
+    func reloadForProfileSwitch() {
+        choice = Choice(rawValue: defaults.string(forKey: Self.choiceKey) ?? "") ?? .providers
+        let stored = MediaKind(rawValue: defaults.string(forKey: Self.kindKey) ?? "")
+        simklKind = stored.flatMap { MediaKind.simklKinds.contains($0) ? $0 : nil } ?? .anime
+        update()
+    }
+
     private func update() {
         let value = choice == .simkl && signedIn
         if usesSimkl != value { usesSimkl = value }

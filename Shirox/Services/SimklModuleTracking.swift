@@ -16,6 +16,11 @@ final class SimklModulePages {
         pages = (try? JSONDecoder().decode([String: [String]].self, from: Data(contentsOf: file))) ?? [:]
     }
 
+    /// After a profile switch: what the new profile saved, and nothing of the last one's.
+    func reloadForProfileSwitch() {
+        pages = (try? JSONDecoder().decode([String: [String]].self, from: Data(contentsOf: file))) ?? [:]
+    }
+
     /// A page's episode addresses, in the page's order.
     func remember(_ hrefs: [String], for key: String) {
         guard pages[key] != hrefs else { return }

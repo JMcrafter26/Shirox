@@ -92,7 +92,12 @@ private struct ProfileSettingsRow: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
+            Spacer()
+            Image(systemName: "chevron.right")
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(.tertiary)
         }
+        .contentShape(Rectangle())
         .padding(.vertical, 2)
     }
 }
@@ -251,11 +256,12 @@ struct SettingsView: View {
     private var sections: some View {
             Section {
                 #if !os(tvOS)
-                NavigationLink {
-                    ProfilesView()
+                Button {
+                    ProfileManager.shared.isPickerShown = true
                 } label: {
                     ProfileSettingsRow()
                 }
+                .buttonStyle(.plain)
                 #endif
                 NavigationLink {
                     AccountsSettingsView()

@@ -1482,6 +1482,15 @@ struct SimklTrackWrite: Equatable {
         }
     }
 
+    /// After a profile switch: what the new profile saved, and nothing of the last one's.
+    func reloadForProfileSwitch() {
+        items = []
+        watchedKeys = []
+        watchedHrefKeys = []
+        resetFloors = [:]
+        load()
+    }
+
     private func load() {
         let storedVersion = UserDefaults.standard.integer(forKey: Keys.dataVersion)
         if storedVersion != Self.currentDataVersion {

@@ -104,6 +104,13 @@ import Combine
         }
     }
 
+    /// After a profile switch: what the new profile saved, and nothing of the last one's.
+    func reloadForProfileSwitch() {
+        items = []
+        readChapters = [:]
+        load()
+    }
+
     private func load() {
         if let data = UserDefaults.standard.data(forKey: Keys.items),
            let decoded = try? JSONDecoder().decode([MangaReadingItem].self, from: data) {

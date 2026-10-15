@@ -10,8 +10,8 @@ import AppKit
 
 /// The device's profiles: who they are, which is active, and switching between them.
 ///
-/// Switching restarts the app: the new profile's data is swapped in at the next launch, before
-/// any of it is read (`applyPendingSwitch`), so nothing already loaded can mix two people's.
+/// Switching happens in place: the data is swapped on disk (`ProfileSwap`), every store that
+/// holds some in memory reads it again, and the screens are rebuilt (`generation`).
 @MainActor
 final class ProfileManager: ObservableObject {
     static let shared = ProfileManager()
@@ -138,12 +138,80 @@ final class ProfileManager: ObservableObject {
 
     // MARK: - Switching
 
-    /// Remembers the switch and restarts the app, which swaps the profiles in at launch.
-    func switchTo(_ id: UUID) {
-        guard id != registry.activeID, profiles.contains(where: { $0.id == id }) else { return }
-        registry.pendingID = id
+    /// The profile picker, over everything: at launch, and from Settings.
+    @Published var isPickerShown = false
+    /// While a switch is under way, the profile being switched to.
+    @Published private(set) var switchingTo: AppProfile?
+    /// Changes on every switch; the app's screens are rebuilt for it, so none keeps state from
+    /// the last profile.
+    @Published private(set) var generation = UUID()
+
+    /// Whether the picker opens at launch, when there's more than one profile.
+    static let askAtLaunchKey = "profilesAskAtLaunch"
+
+    /// Shows the picker at launch when there's a choice to make.
+    func presentAtLaunchIfNeeded() {
+        let ask = UserDefaults.standard.object(forKey: Self.askAtLaunchKey) as? Bool ?? true
+        if ask, profiles.count > 1 { isPickerShown = true }
+    }
+
+    /// Switches profile in place: the outgoing profile's data goes aside, the incoming one's
+    /// comes in, every store reloads from it, and the screens are built again.
+    func switchTo(_ id: UUID) async {
+        guard id != registry.activeID, switchingTo == nil,
+              let outgoing = active, let incoming = profiles.first(where: { $0.id == id }) else { return }
+        switchingTo = incoming
+        defer { switchingTo = nil }
+        // Lets the switching cover come up before the work starts.
+        try? await Task.sleep(nanoseconds: 350_000_000)
+        UserDefaults.standard.synchronize()
+        do {
+            try swap.switchProfile(from: outgoing, to: incoming)
+        } catch {
+            Logger.shared.log("[Profiles] Couldn't switch to \(incoming.name): \(error)", type: "Error")
+            #if os(iOS)
+            ToastManager.shared.show(message: "Couldn't switch profiles. Unlock your device and try again.", type: .error)
+            #endif
+            return
+        }
+        registry.activeID = incoming.id
+        registry.pendingID = nil
         save()
-        AppRelauncher.relaunch()
+        Self.reloadStores()
+        generation = UUID()
+        Logger.shared.log("[Profiles] Switched from \(outgoing.name) to \(incoming.name)", type: "Info")
+        try? await Task.sleep(nanoseconds: 300_000_000)
+        isPickerShown = false
+    }
+
+    /// Every store that keeps a profile's data in memory, reading it again after a switch.
+    private static func reloadStores() {
+        ContinueWatchingManager.shared.reloadForProfileSwitch()
+        MangaProgressManager.shared.reloadForProfileSwitch()
+        WatchHistoryService.shared.reloadForProfileSwitch()
+        LocalLibraryManager.shared.reloadForProfileSwitch()
+        MangaMatchManager.shared.reloadForProfileSwitch()
+        LibraryCacheStore.shared.reloadForProfileSwitch()
+        HomeCacheStore.shared.reloadForProfileSwitch()
+        ProfileCacheStore.shared.reloadForProfileSwitch()
+        PendingWriteQueue.shared.reloadForProfileSwitch()
+        SubtitleSettingsManager.shared.reloadForProfileSwitch()
+        TrackingLinkStore.shared.reloadForProfileSwitch()
+        ModuleWebLinks.shared.reloadForProfileSwitch()
+        AniListMappingManager.shared.reloadForProfileSwitch()
+        NewEpisodeTracker.shared.reloadForProfileSwitch()
+        #if !os(tvOS)
+        SimklOnlyAnimeStore.shared.reloadForProfileSwitch()
+        SimklModulePages.shared.reloadForProfileSwitch()
+        SimklLibraryService.shared.reloadForProfileSwitch()
+        SimklAuthManager.shared.reloadForProfileSwitch()
+        DiscoverySource.shared.reloadForProfileSwitch()
+        #endif
+        AniListAuthManager.shared.reloadForProfileSwitch()
+        MALAuthManager.shared.reloadForProfileSwitch()
+        JellyfinAuthManager.shared.reloadForProfileSwitch()
+        ProviderManager.shared.reloadForProfileSwitch()
+        ModuleManager.shared.reloadForProfileSwitch()
     }
 
     // MARK: - Pictures
@@ -189,6 +257,9 @@ final class ProfileManager: ObservableObject {
             .receive(on: RunLoop.main)
             .sink { [weak self] url in
                 guard let self, let id = self.active?.id, self.active?.accountAvatarURL != url else { return }
+                // Signed in but its picture not loaded yet (a switch, a launch): keep the last one.
+                if url == nil, AniListAuthManager.shared.isLoggedIn || MALAuthManager.shared.isLoggedIn
+                    || SimklAuthManager.shared.isLoggedIn { return }
                 self.update(id) { $0.accountAvatarURL = url }
             }
             .store(in: &cancellables)
@@ -232,27 +303,5 @@ final class ProfileManager: ObservableObject {
         if let name = names.compactMap({ $0 }).first(where: { !$0.isEmpty }) { return name }
         #endif
         return "Profile 1"
-    }
-}
-
-/// Restarts the app, for a profile switch.
-enum AppRelauncher {
-    @MainActor static func relaunch() {
-        UserDefaults.standard.synchronize()
-        #if os(macOS)
-        // Opened again once this process has gone, so the two never touch the data at once.
-        let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/bin/sh")
-        task.arguments = ["-c", "while kill -0 \(ProcessInfo.processInfo.processIdentifier) 2>/dev/null; do sleep 0.2; done; /usr/bin/open \"\(Bundle.main.bundleURL.path)\""]
-        try? task.run()
-        NSApp.terminate(nil)
-        #elseif os(iOS)
-        // An app can't open itself again on iOS: it goes to the Home Screen and quits, and opens
-        // as the new profile next time.
-        UIApplication.shared.perform(NSSelectorFromString("suspend"))
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { exit(0) }
-        #else
-        exit(0)
-        #endif
     }
 }

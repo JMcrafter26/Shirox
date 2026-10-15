@@ -19,6 +19,13 @@ final class ModuleWebLinks: @unchecked Sendable {
         entries = (defaults.array(forKey: Self.storageKey) as? [[String]])?.filter { $0.count == 2 } ?? []
     }
 
+    /// After a profile switch: what the new profile saved, and nothing of the last one's.
+    func reloadForProfileSwitch() {
+        lock.lock()
+        defer { lock.unlock() }
+        entries = (defaults.array(forKey: Self.storageKey) as? [[String]])?.filter { $0.count == 2 } ?? []
+    }
+
     private static func key(moduleId: String, href: String) -> String { "\(moduleId)\n\(href)" }
 
     /// Records the `pageUrl` of each search result that has one. `hrefKey` names the field the

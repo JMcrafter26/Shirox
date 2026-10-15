@@ -871,6 +871,12 @@ final class AniListMappingManager {
         migrateManualTrackingKeys()
     }
 
+    /// After a profile switch: what the new profile saved, and nothing of the last one's.
+    func reloadForProfileSwitch() {
+        mappings = [:]
+        loadMappings()
+    }
+
     /// The entry the player checks for a title. A Simkl anime is keyed by its MAL id; a Simkl
     /// show or movie carries no AniList or MAL id, so the player can't tell it apart and it has none.
     private func manualTrackingEntry(for media: Media) -> String? {

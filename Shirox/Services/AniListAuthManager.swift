@@ -52,6 +52,19 @@ final class AniListAuthManager: NSObject, ObservableObject {
         }
     }
 
+    /// After a profile switch: what the new profile saved, and nothing of the last one's.
+    func reloadForProfileSwitch() {
+        isLoggedIn = accessToken != nil
+        needsReauthentication = false
+        username = nil
+        avatarURL = nil
+        unreadNotificationCount = 0
+        let id = UserDefaults.standard.integer(forKey: "anilist_user_id")
+        userId = id == 0 ? nil : id
+        scoreFormat = ScoreFormat(rawValue: UserDefaults.standard.string(forKey: "anilist_score_format") ?? "") ?? .point10Decimal
+        if isLoggedIn { Task { await fetchViewer() } }
+    }
+
     // MARK: - Token
 
     var accessToken: String? {

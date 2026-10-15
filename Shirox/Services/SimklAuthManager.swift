@@ -73,6 +73,21 @@ final class SimklAuthManager: NSObject, ObservableObject {
         }
     }
 
+    /// After a profile switch: what the new profile saved, and nothing of the last one's.
+    func reloadForProfileSwitch() {
+        refreshTask?.cancel()
+        refreshTask = nil
+        isLoggedIn = false
+        needsReauthorization = false
+        username = nil
+        avatarURL = nil
+        userId = nil
+        accountType = nil
+        guard let token = keychainRead(key: accessTokenKey), SimklOAuth.isV2AccessToken(token) else { return }
+        isLoggedIn = true
+        restoreCachedProfile()
+    }
+
     // MARK: - Keychain
 
     // Copied from `MALAuthManager`'s shape deliberately. AniList, MyAnimeList and Jellyfin each

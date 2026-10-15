@@ -70,6 +70,16 @@ final class TrackingLinkStore {
         }
     }
 
+    /// After a profile switch: what the new profile saved, and nothing of the last one's.
+    func reloadForProfileSwitch() {
+        if let data = defaults.data(forKey: Self.storageKey),
+           let decoded = try? JSONDecoder().decode([String: TrackingLinks].self, from: data) {
+            all = decoded
+        } else {
+            all = [:]
+        }
+    }
+
     nonisolated static func key(anilist id: Int) -> String { "anilist:\(id)" }
     nonisolated static func key(mal id: Int) -> String { "mal:\(id)" }
 

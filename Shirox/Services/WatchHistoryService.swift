@@ -49,6 +49,12 @@ final class WatchHistoryService: ObservableObject {
         }
     }
 
+    /// After a profile switch: what the new profile saved, and nothing of the last one's.
+    func reloadForProfileSwitch() {
+        history = []
+        loadFromStorage()
+    }
+
     private func loadFromStorage() {
         guard let data = UserDefaults.standard.data(forKey: storageKey),
               let saved = try? JSONDecoder().decode([WatchProgress].self, from: data)

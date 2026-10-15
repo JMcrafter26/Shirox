@@ -161,7 +161,7 @@ struct ShiroxApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootTabView()
+            ProfileHost { RootTabView() }
                 .environmentObject(moduleManager)
                 .tint(.primary)
                 #if os(macOS)
@@ -190,6 +190,7 @@ struct ShiroxApp: App {
                     // it would just be revealed by the fade instead of arriving on its own.
                     guard !stillShowing else { return }
                     showOnboarding = !hasCompletedOnboarding
+                    if hasCompletedOnboarding { ProfileManager.shared.presentAtLaunchIfNeeded() }
                 }
                 .onChange(of: scenePhase) { phase in
                     switch phase {

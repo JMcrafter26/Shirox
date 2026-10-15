@@ -54,6 +54,20 @@ final class MALAuthManager: NSObject, ObservableObject {
         }
     }
 
+    /// After a profile switch: what the new profile saved, and nothing of the last one's.
+    func reloadForProfileSwitch() {
+        isLoggedIn = accessToken != nil
+        userId = nil
+        username = nil
+        avatarURL = nil
+        if isLoggedIn, let data = UserDefaults.standard.data(forKey: profileKey),
+           let cached = try? JSONDecoder().decode(CachedProfile.self, from: data) {
+            userId = cached.id
+            username = cached.name
+            avatarURL = cached.avatarURL
+        }
+    }
+
     // MARK: - Keychain
 
     var accessToken: String? { keychainRead(key: accessTokenKey) }

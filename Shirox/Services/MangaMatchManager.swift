@@ -76,6 +76,12 @@ import Combine
         }
     }
 
+    /// After a profile switch: what the new profile saved, and nothing of the last one's.
+    func reloadForProfileSwitch() {
+        matches = [:]
+        load()
+    }
+
     private func load() {
         if let data = UserDefaults.standard.data(forKey: Keys.matches),
            let decoded = try? JSONDecoder().decode([String: MangaMatch].self, from: data) {

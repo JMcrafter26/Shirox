@@ -385,6 +385,21 @@ final class ModuleManager: ObservableObject {
         }
     }
 
+    /// After a profile switch: what the new profile saved, and nothing of the last one's.
+    func reloadForProfileSwitch() {
+        modules = []
+        activeModule = nil
+        moduleReadyId = nil
+        errorMessage = nil
+        checkResults = [:]
+        loadFromStorage()
+        if let data = UserDefaults.standard.data(forKey: checkResultsKey),
+           let saved = try? JSONDecoder().decode([String: ModuleCheckResult].self, from: data) {
+            checkResults = saved
+        }
+        Task { await restoreActiveModule() }
+    }
+
     private func loadFromStorage() {
         guard let data = storage.load(),
               let saved = try? JSONDecoder().decode([ModuleDefinition].self, from: data) else { return }

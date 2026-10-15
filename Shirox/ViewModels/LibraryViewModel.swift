@@ -527,6 +527,13 @@ final class NewEpisodeTracker: ObservableObject {
         seen = UserDefaults.standard.dictionary(forKey: Self.seenKey) as? [String: Int] ?? [:]
     }
 
+    /// After a profile switch: what the new profile saved, and nothing of the last one's.
+    func reloadForProfileSwitch() {
+        seen = UserDefaults.standard.dictionary(forKey: Self.seenKey) as? [String: Int] ?? [:]
+        fetched = [:]
+        lastFetch = [:]
+    }
+
     /// Episodes out so far, for an anime that's on air; nil otherwise.
     func aired(_ entry: LibraryEntry) -> Int? {
         let media = entry.media

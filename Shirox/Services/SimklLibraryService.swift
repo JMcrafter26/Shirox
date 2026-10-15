@@ -423,6 +423,12 @@ final class SimklLibraryService {
     /// lines rather than four hundred.
     private var loggedWriteSamples = 0
 
+    /// After a profile switch: what the new profile saved, and nothing of the last one's.
+    func reloadForProfileSwitch() {
+        cached = [:]
+        queue.reloadForProfileSwitch()
+    }
+
     /// Last library read per kind, in memory for this session.
     private var cached: [MediaKind: [LibraryEntry]] = [:]
 
