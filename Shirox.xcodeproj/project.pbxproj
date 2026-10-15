@@ -531,6 +531,7 @@
 		3895D9C271B8FA23CC1E57B7 /* TrackingLinksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8F4DB53F4EB28F86CD383A7 /* TrackingLinksView.swift */; };
 		3898719C0DBA3F7A7719CCD4 /* DownloadFileMenuItems.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24F98AA93223943DF6BF978E /* DownloadFileMenuItems.swift */; };
 		38E18F8546C14A3E97FF19B3 /* ModuleScriptEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6325817BD7440B271005CBE /* ModuleScriptEditorView.swift */; };
+		39601E10A48D69AAB5E35E60 /* NuvioRuntimeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6204E4FF759A26CA4667818 /* NuvioRuntimeTests.swift */; };
 		3A42CE0D50F5B4711F556C97 /* ShiroxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4BE8F22DF8EF4BBAC15BAB79 /* ShiroxApp.swift */; };
 		3B0F4401F22F1CEF3F30B8EE /* GooeyRefresh.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8ED34D3615A79E601F9274DD /* GooeyRefresh.swift */; };
 		3B13C3604F0998907BC0F5A0 /* MALOfficialDiscoveryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB699100F232CDB1648C513F /* MALOfficialDiscoveryService.swift */; };
@@ -1678,6 +1679,7 @@
 		F4F397C9FA6A14A5DDD98D3F /* PlaybackFallback.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PlaybackFallback.swift; sourceTree = "<group>"; };
 		F5167EDD4F7D833A5721B0FB /* ProfileCacheStoreTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProfileCacheStoreTests.swift; sourceTree = "<group>"; };
 		F592860D1C8F12E4C54C22CA /* SimklTitle.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklTitle.swift; sourceTree = "<group>"; };
+		F6204E4FF759A26CA4667818 /* NuvioRuntimeTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NuvioRuntimeTests.swift; sourceTree = "<group>"; };
 		F6AB4FB215071F688F19B394 /* JellyfinConnectView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = JellyfinConnectView.swift; sourceTree = "<group>"; };
 		F7E6FD57408E513472BB8B3E /* ExtensionRepoLoaderTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExtensionRepoLoaderTests.swift; sourceTree = "<group>"; };
 		F9BC33D61B80B1A9FDCE7496 /* ModuleArtworkTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ModuleArtworkTests.swift; sourceTree = "<group>"; };
@@ -2365,6 +2367,7 @@
 				33D6514A525E118FF317FFD3 /* ZipReaderTests.swift */,
 				000560984DC1CC8ADB4366C2 /* ExtensionInstallerTests.swift */,
 				566FE19E327AD3C0E5A2D3F8 /* StremioRuntimeTests.swift */,
+				F6204E4FF759A26CA4667818 /* NuvioRuntimeTests.swift */,
 			);
 			path = ShiroxTests;
 			sourceTree = SOURCE_ROOT;
@@ -2859,6 +2862,7 @@
 				7220E621181C2F9F0D9D31D8 /* ZipReaderTests.swift in Sources */,
 				B6CA5DC5B0A58ED3145944BF /* ExtensionInstallerTests.swift in Sources */,
 				E3D2F0EF7FE00478156C32A6 /* StremioRuntimeTests.swift in Sources */,
+				39601E10A48D69AAB5E35E60 /* NuvioRuntimeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
