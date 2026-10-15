@@ -50,6 +50,21 @@ final class LibraryCacheStoreTests: XCTestCase {
         XCTAssertNil(store.snapshot(provider: .mal, mediaType: .manga))
     }
 
+    /// Reported: on the Simkl list, Anime, Shows and Movies all showed the same titles. The three
+    /// kinds were saved under one key, each over the last.
+    func testSimklsThreeKindsAreKeptApart() {
+        let dir = tempDir()
+        let store = LibraryCacheStore(directory: dir)
+        store.save(entries: [makeEntry(id: 1, title: "Anime")], provider: .simkl, mediaType: .anime)
+        store.save(entries: [makeEntry(id: 2, title: "Show")], provider: .simkl, mediaType: .tv)
+        store.save(entries: [makeEntry(id: 3, title: "Movie")], provider: .simkl, mediaType: .movie)
+
+        let reopened = LibraryCacheStore(directory: dir)
+        XCTAssertEqual(reopened.snapshot(provider: .simkl, mediaType: .anime)?.entries.map(\.id), [1])
+        XCTAssertEqual(reopened.snapshot(provider: .simkl, mediaType: .tv)?.entries.map(\.id), [2])
+        XCTAssertEqual(reopened.snapshot(provider: .simkl, mediaType: .movie)?.entries.map(\.id), [3])
+    }
+
     func testCorruptFileLoadsAsEmpty() throws {
         let dir = tempDir()
         try "not json".data(using: .utf8)!.write(to: dir.appendingPathComponent("library-cache.json"))

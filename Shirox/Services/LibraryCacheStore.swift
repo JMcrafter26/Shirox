@@ -96,8 +96,10 @@ final class LibraryCacheStore {
 
     // MARK: - Keys
 
+    /// One per kind: Simkl's Shows and Movies lists used to share the anime key, so each saved
+    /// list replaced the others and all three tabs showed whichever was read last.
     private static func key(_ provider: ProviderType, _ mediaType: MediaKind) -> String {
-        "\(provider.rawValue)-\(mediaType == .manga ? "manga" : "anime")"
+        "\(provider.rawValue)-\(mediaType.rawValue)"
     }
 
     // MARK: - Persistence

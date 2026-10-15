@@ -456,10 +456,11 @@ final class SimklLibraryService {
 
     /// Bumped when a read starts keeping something it used to drop — a delta refreshes only titles
     /// that changed, so the one full read is taken again, once. 2: poster, year and type. Anime 3:
-    /// the Simkl-only anime already on the list.
-    nonisolated static let cacheVersion = 2
+    /// the Simkl-only anime already on the list. 3 (anime 4): each kind saved under its own key;
+    /// before, the three shared one and the saved copy could be another kind's list.
+    nonisolated static let cacheVersion = 3
 
-    nonisolated static func cacheVersion(for kind: MediaKind) -> Int { kind == .anime ? 3 : cacheVersion }
+    nonisolated static func cacheVersion(for kind: MediaKind) -> Int { kind == .anime ? 4 : cacheVersion }
 
     nonisolated static func cacheIsCurrent(storedVersion: Int, kind: MediaKind = .tv) -> Bool {
         storedVersion >= cacheVersion(for: kind)

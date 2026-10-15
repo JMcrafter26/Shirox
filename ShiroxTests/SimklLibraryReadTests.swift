@@ -108,11 +108,14 @@ final class SimklLibraryReadTests: XCTestCase {
         XCTAssertEqual(only.first?.score, 8)
     }
 
-    /// The anime copy is read again in full once, so Simkl-only anime already listed turn up.
-    func testTheAnimeCopyIsReadAgainOnce() {
-        XCTAssertFalse(SimklLibraryService.cacheIsCurrent(storedVersion: 2, kind: .anime))
-        XCTAssertTrue(SimklLibraryService.cacheIsCurrent(storedVersion: 3, kind: .anime))
-        XCTAssertTrue(SimklLibraryService.cacheIsCurrent(storedVersion: 2, kind: .tv), "Shows and movies aren't")
+    /// Every kind is read again in full once: the copies saved while the three kinds shared a key
+    /// may hold another kind's list.
+    func testEveryCopyIsReadAgainOnceAfterTheSharedKey() {
+        XCTAssertFalse(SimklLibraryService.cacheIsCurrent(storedVersion: 3, kind: .anime))
+        XCTAssertTrue(SimklLibraryService.cacheIsCurrent(storedVersion: 4, kind: .anime))
+        XCTAssertFalse(SimklLibraryService.cacheIsCurrent(storedVersion: 2, kind: .tv))
+        XCTAssertFalse(SimklLibraryService.cacheIsCurrent(storedVersion: 2, kind: .movie))
+        XCTAssertTrue(SimklLibraryService.cacheIsCurrent(storedVersion: 3, kind: .tv))
     }
 
     @MainActor

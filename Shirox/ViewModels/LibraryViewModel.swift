@@ -278,9 +278,11 @@ final class LibraryViewModel: ObservableObject {
             return (snap.entries, snap.syncedAt)
         }
         // `SimklLibraryService` keeps the Simkl list's snapshots under the same store, per kind.
+        // Through the service, which turns down a copy saved before its current format.
         if key.source == .simkl,
-           let snap = LibraryCacheStore.shared.snapshot(provider: .simkl, mediaType: key.mediaType) {
-            return (snap.entries, snap.syncedAt)
+           let entries = SimklLibraryService.shared.cachedLibrary(key.mediaType) {
+            let syncedAt = LibraryCacheStore.shared.snapshot(provider: .simkl, mediaType: key.mediaType)?.syncedAt
+            return (entries, syncedAt ?? .distantPast)
         }
         return nil
     }
