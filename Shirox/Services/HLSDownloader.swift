@@ -19,6 +19,8 @@ actor HLSDownloader {
     private let session: URLSession = {
         let config = URLSessionConfiguration.default
         config.timeoutIntervalForRequest = 30
+        // Room for the most `HostRequestGate` ever lets out to one host (the default is 6).
+        config.httpMaximumConnectionsPerHost = HostRequestGate.AdaptiveLimit.ceiling
         return URLSession(configuration: config)
     }()
 
@@ -160,9 +162,10 @@ actor HLSDownloader {
         let namePrefix = "\(prefix)seg_"
         Logger.shared.log("[HLS] Downloading \(segments.count) \(prefix.isEmpty ? "" : "audio ")segments (ext=\(segmentExt), fMP4=\(plan.isFMP4), encrypted=\(segments.first?.key != nil)) to \(folder.lastPathComponent)...", type: "Download")
 
-        // Kept very low: owocdn/kwik-style segment CDNs 429 even a burst of 4. 2 keeps
-        // some parallelism while the jittered backoff in fetchData absorbs the rest.
-        let maxConcurrentSegments = 2
+        // As many as a host could ever be allowed; how many actually go out at once is the
+        // host's own limit in `HostRequestGate`, found as it goes (kwik-style CDNs 429 a burst
+        // of 4, most hosts take far more).
+        let maxConcurrentSegments = HostRequestGate.AdaptiveLimit.ceiling
         try await withThrowingTaskGroup(of: Int.self) { group in
             var index = 0
             while index < min(segments.count, maxConcurrentSegments) {
@@ -301,12 +304,28 @@ actor HLSDownloader {
             if let range = byteRange {
                 req.setValue("bytes=\(range.offset)-\(range.offset + range.length - 1)", forHTTPHeaderField: "Range")
             }
-            let (data, response) = try await session.data(for: req)
+            // Only the request itself holds a place under the host's limit, not the wait
+            // after a 429: two segments sleeping off a backoff used to stall the whole download.
+            let host = url.host ?? ""
+            await HostRequestGate.shared.acquire(host)
+            let result: (Data, URLResponse)
+            do {
+                result = try await session.data(for: req)
+            } catch {
+                await HostRequestGate.shared.release(host)
+                throw error
+            }
+            await HostRequestGate.shared.release(host)
+            let (data, response) = result
             let http = response as? HTTPURLResponse
             let status = http?.statusCode ?? 200
 
-            if (200..<300).contains(status) { return data }
+            if (200..<300).contains(status) {
+                await HostRequestGate.shared.succeeded(host)
+                return data
+            }
 
+            if status == 429 || status == 503 { await HostRequestGate.shared.throttled(host) }
             if (status == 429 || status == 503), attempt < maxRetries {
                 // Exponential backoff floor: 2, 4, 8, 16, 30, 30… seconds. We honor
                 // Retry-After only when it asks for MORE than the floor — these CDNs

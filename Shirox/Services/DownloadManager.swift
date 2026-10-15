@@ -104,6 +104,7 @@ final class DownloadManager: NSObject, ObservableObject {
         processQueue()
         observeAppLifecycle()
         convertOldDownloads()
+        repairAudioConfigsOnce()
     }
 
     /// Retries downloads a previous session left interrupted, when the user has opted in.
@@ -1600,6 +1601,48 @@ extension DownloadManager {
                 guard let newName, let idx = items.firstIndex(where: { $0.id == id }) else { continue }
                 items[idx].fileName = newName
                 persist()
+            }
+        }
+    }
+}
+
+extension DownloadManager {
+    /// Downloads made into MP4s before the AAC config was written from the audio itself: some
+    /// (AnimePahe's) say "AAC Main", which the native player can't decode, and played silent.
+    /// Each is checked once, in the background, and rewritten in place when it needs it.
+    fileprivate func repairAudioConfigsOnce() {
+        let doneKey = "downloadsAudioConfigChecked"
+        var done = Set(UserDefaults.standard.stringArray(forKey: doneKey) ?? [])
+        let pending = items.filter {
+            $0.state == .completed && !done.contains($0.id.uuidString)
+                && $0.fileName?.lowercased().hasSuffix(".mp4") == true
+        }.map(\.id)
+        guard !pending.isEmpty else { return }
+        Task {
+            // After the launch's own work, and after `convertOldDownloads` has started.
+            try? await Task.sleep(nanoseconds: 8_000_000_000)
+            for id in pending {
+                guard let item = items.first(where: { $0.id == id }), item.state == .completed,
+                      !playedThisSession.contains(id), let fileName = item.fileName else { continue }
+                let file = downloadDir.appendingPathComponent(fileName)
+                let size = (try? file.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
+                if let free = try? downloadDir.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey])
+                    .volumeAvailableCapacityForImportantUsage, free < Int64(size) + 300_000_000 {
+                    continue  // Tried again next launch, when there may be room for the copy.
+                }
+                let repaired = await Task.detached(priority: .utility) {
+                    Result { try MediaRemuxer.repairAudioConfig(file) }
+                }.value
+                switch repaired {
+                case .success(true):
+                    Logger.shared.log("[Downloads] Rewrote \(file.lastPathComponent)'s audio config for the native player", type: "Download")
+                case .failure(let error):
+                    Logger.shared.log("[Downloads] Couldn't check \(file.lastPathComponent)'s audio: \(error.localizedDescription)", type: "Error")
+                case .success(false):
+                    break
+                }
+                done.insert(id.uuidString)
+                UserDefaults.standard.set(Array(done), forKey: doneKey)
             }
         }
     }
