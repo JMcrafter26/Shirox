@@ -105,6 +105,7 @@ final class DownloadManager: NSObject, ObservableObject {
         observeAppLifecycle()
         convertOldDownloads()
         repairAudioConfigsOnce()
+        restoreMissingAudio()
     }
 
     /// Retries downloads a previous session left interrupted, when the user has opted in.
@@ -1644,6 +1645,106 @@ extension DownloadManager {
                 done.insert(id.uuidString)
                 UserDefaults.standard.set(Array(done), forKey: doneKey)
             }
+        }
+    }
+}
+
+extension DownloadManager {
+    /// Downloads saved before separately delivered audio was fetched (before 2026-10-03) are
+    /// video only. Each finished file with no audio track gets its stream's audio downloaded and
+    /// added, in the background, one at a time. The saved stream link is tried first, then a
+    /// fresh one from the episode's module. A file found to need nothing, or done, isn't looked
+    /// at again; one that failed is tried at the next three launches.
+    fileprivate func restoreMissingAudio() {
+        let doneKey = "downloadsAudioRestoreChecked"
+        let triesKey = "downloadsAudioRestoreTries"
+        var done = Set(UserDefaults.standard.stringArray(forKey: doneKey) ?? [])
+        var tries = UserDefaults.standard.dictionary(forKey: triesKey) as? [String: Int] ?? [:]
+        let candidates = items.filter {
+            $0.state == .completed && !done.contains($0.id.uuidString) && (tries[$0.id.uuidString] ?? 0) < 3
+                && ["mp4", "mkv"].contains(($0.fileName as NSString?)?.pathExtension.lowercased() ?? "")
+        }.map(\.id)
+        guard !candidates.isEmpty else { return }
+        Task {
+            // After the conversions and the config repair have had their turn.
+            try? await Task.sleep(nanoseconds: 15_000_000_000)
+            var restored: [String] = []
+            for id in candidates {
+                guard let item = items.first(where: { $0.id == id }), item.state == .completed,
+                      !playedThisSession.contains(id), let fileName = item.fileName else { continue }
+                let file = downloadDir.appendingPathComponent(fileName)
+                let count = await Task.detached(priority: .utility) { MediaRemuxer.audioTrackCount(file) }.value
+                guard count == 0 else {
+                    if count != nil { done.insert(id.uuidString) }
+                    UserDefaults.standard.set(Array(done), forKey: doneKey)
+                    continue
+                }
+                switch await restoreAudio(of: item, file: file) {
+                case .restored:
+                    done.insert(id.uuidString)
+                    restored.append("\(item.mediaTitle) E\(item.episodeNumber)")
+                case .nothingSeparate:
+                    done.insert(id.uuidString)
+                case .failed:
+                    tries[id.uuidString, default: 0] += 1
+                }
+                UserDefaults.standard.set(Array(done), forKey: doneKey)
+                UserDefaults.standard.set(tries, forKey: triesKey)
+            }
+            guard !restored.isEmpty else { return }
+            #if os(iOS)
+            ToastManager.shared.show(
+                message: restored.count == 1 ? "Added the missing audio to \(restored[0])"
+                    : "Added the missing audio to \(restored.count) downloads",
+                type: .info, duration: 4)
+            #endif
+        }
+    }
+
+    private enum AudioRestore { case restored, nothingSeparate, failed }
+
+    private func restoreAudio(of item: DownloadItem, file: URL) async -> AudioRestore {
+        let folder = downloadDir.appendingPathComponent(".audio-\(item.id.uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let label = "\(item.mediaTitle) E\(item.episodeNumber)"
+
+        func fetch(_ url: URL, _ headers: [String: String], _ key: String?) async throws -> HLSDownloader.SeparateAudio? {
+            try await hlsDownloader.downloadSeparateAudio(url: url, headers: headers, playlistKey: key, folder: folder)
+        }
+        var audio: HLSDownloader.SeparateAudio?
+        do {
+            guard let url = item.streamURL else { throw URLError(.badURL) }
+            audio = try await fetch(url, item.headers, item.playlistKey)
+        } catch {
+            // The saved link has expired: ask the episode's module for a fresh one.
+            Logger.shared.log("[Downloads] \(label): saved stream gone (\(error.localizedDescription)), asking its module", type: "Download")
+            guard let moduleID = item.moduleId,
+                  let module = ModuleManager.shared.modules.first(where: { $0.id == moduleID }) else { return .failed }
+            do {
+                let runner = ModuleJSRunner()
+                try await runner.load(module: module)
+                let streams = try await runner.fetchStreams(episodeUrl: item.episodeHref)
+                guard let stream = streams.first(where: { $0.title == item.streamTitle }) ?? streams.first else { return .failed }
+                try? FileManager.default.removeItem(at: folder)
+                audio = try await fetch(stream.url, stream.headers, stream.playlistKey)
+            } catch {
+                Logger.shared.log("[Downloads] \(label): couldn't get its audio: \(error.localizedDescription)", type: "Error")
+                return .failed
+            }
+        }
+        guard let audio else { return .nothingSeparate }
+        let sources = audio.tracks.map {
+            MediaRemuxer.AudioSource(playlist: $0.playlist, name: $0.name, language: $0.language, isDefault: $0.isDefault)
+        }
+        do {
+            try await Task.detached(priority: .utility) {
+                try MediaRemuxer.addAudio(to: file, from: sources, videoReference: audio.videoReference)
+            }.value
+            Logger.shared.log("[Downloads] Added \(sources.count) audio track(s) to \(file.lastPathComponent)", type: "Download")
+            return .restored
+        } catch {
+            Logger.shared.log("[Downloads] \(label): couldn't add the audio: \(error.localizedDescription)", type: "Error")
+            return .failed
         }
     }
 }

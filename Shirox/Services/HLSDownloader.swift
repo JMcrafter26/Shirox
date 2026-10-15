@@ -125,6 +125,67 @@ actor HLSDownloader {
         return "\(id.uuidString)/\(manifestName)"
     }
 
+    /// A stream's separately delivered audio, downloaded on its own, for a file saved without it.
+    struct SeparateAudio {
+        struct Track {
+            var playlist: URL
+            var name: String
+            var language: String?
+            var isDefault: Bool
+        }
+        var tracks: [Track]
+        /// The variant's first video segment, whose clock the audio's is measured against.
+        var videoReference: URL
+    }
+
+    /// Downloads every audio rendition of `url`'s master playlist into `folder`, and the first
+    /// video segment to line the audio up with the video already on disk. Nil when the stream's
+    /// audio isn't separate: then no audio was ever missing from its downloads.
+    func downloadSeparateAudio(url: URL, headers: [String: String], playlistKey: String?,
+                               folder: URL) async throws -> SeparateAudio? {
+        let master = try await fetchManifest(url: url, headers: headers, playlistKey: playlistKey)
+        guard master.contains("#EXT-X-STREAM-INF"),
+              let choice = HLSManifestParser.selectBestVariantChoice(master, baseURL: url, quality: "lowest"),
+              !choice.audioRenditions.isEmpty else { return nil }
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+
+        let videoPlan = HLSManifestParser.parseMediaPlaylist(
+            try await fetchManifest(url: choice.video, headers: headers, playlistKey: playlistKey), baseURL: choice.video)
+        guard let first = videoPlan.segments.first else { throw HLSError.invalidManifest }
+        var reference = Data()
+        if let initSegment = videoPlan.initSegment {
+            reference = try await fetchResource(url: initSegment.url, byteRange: initSegment.byteRange, key: initSegment.key,
+                                                mediaSequence: 0, headers: headers, label: "video init segment")
+        }
+        reference += try await fetchResource(url: first.url, byteRange: first.byteRange, key: first.key,
+                                             mediaSequence: first.mediaSequence, headers: headers, label: "first video segment")
+        let referenceURL = folder.appendingPathComponent(videoPlan.isFMP4 ? "video_first.mp4" : "video_first.ts")
+        try reference.write(to: referenceURL, options: .atomic)
+
+        var plans: [(HLSAudioRendition, HLSDownloadPlan)] = []
+        for rendition in choice.audioRenditions {
+            do {
+                let text = try await fetchManifest(url: rendition.url, headers: headers, playlistKey: playlistKey)
+                let plan = HLSManifestParser.parseMediaPlaylist(text, baseURL: rendition.url)
+                if !plan.segments.isEmpty { plans.append((rendition, plan)) }
+            } catch where rendition.url != choice.audio {
+                Logger.shared.log("[HLS] Skipping audio '\(rendition.name)': \(error.localizedDescription)", type: "Download")
+            }
+        }
+        guard !plans.isEmpty else { throw HLSError.invalidManifest }
+        let counter = ProgressCounter(total: plans.reduce(0) { $0 + $1.1.segments.count }) { _ in }
+        var tracks: [SeparateAudio.Track] = []
+        for (index, (rendition, plan)) in plans.enumerated() {
+            let playlist = try await downloadRendition(plan, prefix: "a\(index)_", folder: folder,
+                                                       headers: headers, counter: counter)
+            let name = "audio_\(index).m3u8"
+            try playlist.write(to: folder.appendingPathComponent(name), atomically: true, encoding: .utf8)
+            tracks.append(.init(playlist: folder.appendingPathComponent(name), name: rendition.name,
+                                language: rendition.language, isDefault: rendition.url == choice.audio))
+        }
+        return SeparateAudio(tracks: tracks, videoReference: referenceURL)
+    }
+
     /// Counts finished segments across renditions into one progress figure.
     private final class ProgressCounter: @unchecked Sendable {
         private let lock = NSLock()

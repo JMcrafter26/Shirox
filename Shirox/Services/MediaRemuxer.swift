@@ -56,6 +56,204 @@ enum MediaRemuxer {
         return true
     }
 
+    /// How many audio tracks a file has; nil when it can't be read.
+    static func audioTrackCount(_ file: URL) -> Int? {
+        var ctx: UnsafeMutablePointer<AVFormatContext>?
+        guard avformat_open_input(&ctx, file.path, nil, nil) >= 0, let opened = ctx else { return nil }
+        defer { avformat_close_input(&ctx) }
+        guard avformat_find_stream_info(opened, nil) >= 0 else { return nil }
+        return (0..<Int(opened.pointee.nb_streams)).filter {
+            opened.pointee.streams[$0]?.pointee.codecpar.pointee.codec_type == AVMEDIA_TYPE_AUDIO
+        }.count
+    }
+
+    /// One audio track to add to a file: a local HLS playlist and how to label it.
+    struct AudioSource {
+        var playlist: URL
+        var name: String
+        var language: String?
+        var isDefault: Bool
+    }
+
+    /// Adds audio to a downloaded file that has none, in place: its video as it is, and each
+    /// source's audio, moved onto the file's clock. The file's video was moved to start at zero
+    /// when it was made, from where the stream's clock had it; `videoReference` (the stream's
+    /// first video segment) says where that was, so the audio moves by the same amount.
+    static func addAudio(to file: URL, from sources: [AudioSource], videoReference: URL) throws {
+        let temp = file.deletingLastPathComponent()
+            .appendingPathComponent(".\(UUID().uuidString).audio.\(file.pathExtension)")
+        do {
+            try mergeAudio(video: file, sources: sources, videoReference: videoReference, output: temp,
+                           format: file.pathExtension.lowercased() == "mkv" ? "matroska" : "mp4")
+            _ = try FileManager.default.replaceItemAt(file, withItemAt: temp)
+        } catch {
+            try? FileManager.default.removeItem(at: temp)
+            throw error
+        }
+    }
+
+    private static func mergeAudio(video: URL, sources: [AudioSource], videoReference: URL,
+                                   output: URL, format: String) throws {
+        // Where the stream's clock started the video.
+        var refCtx: UnsafeMutablePointer<AVFormatContext>?
+        try check(avformat_open_input(&refCtx, videoReference.path, nil, nil), "open video reference")
+        defer { avformat_close_input(&refCtx) }
+        guard let refCtx else { throw RemuxError.failed("no reference") }
+        try check(avformat_find_stream_info(refCtx, nil), "read reference")
+        let videoStart = refCtx.pointee.start_time == noPTS ? 0 : refCtx.pointee.start_time
+
+        struct Input {
+            var ctx: UnsafeMutablePointer<AVFormatContext>?
+            var mapping: [Int32]
+            /// Subtracted from every timestamp, in AV_TIME_BASE units.
+            var shift: Int64
+            var aac: [Int: AACPlan]
+            var done = false
+        }
+        var inputs: [Input] = []
+        defer { for i in inputs.indices { avformat_close_input(&inputs[i].ctx) } }
+
+        var outCtx: UnsafeMutablePointer<AVFormatContext>?
+        try check(avformat_alloc_output_context2(&outCtx, nil, format, output.path), "create \(format)")
+        guard let outCtx else { throw RemuxError.failed("no output") }
+        defer {
+            if outCtx.pointee.pb != nil { avio_closep(&outCtx.pointee.pb) }
+            avformat_free_context(outCtx)
+        }
+
+        func open(_ url: URL) throws -> UnsafeMutablePointer<AVFormatContext> {
+            var ctx: UnsafeMutablePointer<AVFormatContext>?
+            try check(avformat_open_input(&ctx, url.path, nil, nil), "open \(url.lastPathComponent)")
+            guard let ctx else { throw RemuxError.failed("no input") }
+            inputs.append(Input(ctx: ctx, mapping: [], shift: 0, aac: [:]))
+            try check(avformat_find_stream_info(ctx, nil), "read \(url.lastPathComponent)")
+            return ctx
+        }
+
+        // The file's video, as it is.
+        let videoCtx = try open(video)
+        var videoMapping = [Int32](repeating: -1, count: Int(videoCtx.pointee.nb_streams))
+        for index in 0..<Int(videoCtx.pointee.nb_streams) {
+            guard let source = videoCtx.pointee.streams[index],
+                  source.pointee.codecpar.pointee.codec_type == AVMEDIA_TYPE_VIDEO,
+                  source.pointee.disposition & AV_DISPOSITION_ATTACHED_PIC == 0,
+                  let target = avformat_new_stream(outCtx, nil) else { continue }
+            try check(avcodec_parameters_copy(target.pointee.codecpar, source.pointee.codecpar), "copy video")
+            target.pointee.codecpar.pointee.codec_tag = 0
+            target.pointee.time_base = source.pointee.time_base
+            target.pointee.disposition = AV_DISPOSITION_DEFAULT
+            videoMapping[index] = target.pointee.index
+        }
+        inputs[0].mapping = videoMapping
+        guard videoMapping.contains(where: { $0 >= 0 }) else { throw RemuxError.failed("no video") }
+
+        // Each language's audio.
+        let hasDefault = sources.contains(where: \.isDefault)
+        for (number, source) in sources.enumerated() {
+            let ctx = try open(source.playlist)
+            let plans = format == "mp4" ? try aacConfigs(for: source.playlist) : [:]
+            var mapping = [Int32](repeating: -1, count: Int(ctx.pointee.nb_streams))
+            for index in 0..<Int(ctx.pointee.nb_streams) {
+                guard let stream = ctx.pointee.streams[index],
+                      stream.pointee.codecpar.pointee.codec_type == AVMEDIA_TYPE_AUDIO,
+                      let target = avformat_new_stream(outCtx, nil) else { continue }
+                try check(avcodec_parameters_copy(target.pointee.codecpar, stream.pointee.codecpar), "copy audio")
+                target.pointee.codecpar.pointee.codec_tag = 0
+                target.pointee.time_base = stream.pointee.time_base
+                if let plan = plans[index] { setExtradata(plan.fixed.bytes, on: target.pointee.codecpar) }
+                if let language = source.language {
+                    av_dict_set(&target.pointee.metadata, "language", isoLanguage(language), 0)
+                }
+                av_dict_set(&target.pointee.metadata, "title", source.name, 0)
+                av_dict_set(&target.pointee.metadata, "handler_name", source.name, 0)
+                target.pointee.disposition = (hasDefault ? source.isDefault : number == 0) ? AV_DISPOSITION_DEFAULT : 0
+                mapping[index] = target.pointee.index
+                break // one track per rendition
+            }
+            let last = inputs.count - 1
+            inputs[last].mapping = mapping
+            inputs[last].shift = videoStart
+            inputs[last].aac = plans
+        }
+
+        if outCtx.pointee.oformat.pointee.flags & AVFMT_NOFILE == 0 {
+            try check(avio_open(&outCtx.pointee.pb, output.path, AVIO_FLAG_WRITE), "create file")
+        }
+        var options: OpaquePointer?
+        if format == "mp4" { av_dict_set(&options, "movflags", "+faststart", 0) }
+        defer { av_dict_free(&options) }
+        try check(avformat_write_header(outCtx, &options), "write header")
+
+        // One packet waiting per input; the earliest goes next, so the file comes out
+        // interleaved without holding whole tracks in memory.
+        var pending: [UnsafeMutablePointer<AVPacket>?] = inputs.map { _ in av_packet_alloc() }
+        defer { for i in pending.indices { av_packet_free(&pending[i]) } }
+        var ready = [Bool](repeating: false, count: inputs.count)
+        let outputCount = Int(outCtx.pointee.nb_streams)
+        var lastDTS = [Int64](repeating: noPTS, count: outputCount)
+        var offset = [Int64](repeating: 0, count: outputCount)
+        let microseconds = AVRational(num: 1, den: 1_000_000)
+
+        func fill(_ i: Int) throws {
+            guard !inputs[i].done, !ready[i], let packet = pending[i] else { return }
+            while true {
+                let read = av_read_frame(inputs[i].ctx, packet)
+                if read == averrorEOF { inputs[i].done = true; return }
+                try check(read, "read")
+                let index = Int(packet.pointee.stream_index)
+                if index < inputs[i].mapping.count, inputs[i].mapping[index] >= 0 {
+                    if inputs[i].aac[index] != nil { try stripADTSHeader(packet) }
+                    ready[i] = true
+                    return
+                }
+                av_packet_unref(packet)
+            }
+        }
+
+        func seconds(_ i: Int) -> Double {
+            guard let packet = pending[i], let stream = inputs[i].ctx?.pointee.streams[Int(packet.pointee.stream_index)] else { return .infinity }
+            let ts = packet.pointee.dts != noPTS ? packet.pointee.dts : packet.pointee.pts
+            guard ts != noPTS else { return -.infinity }
+            return Double(ts) * av_q2d(stream.pointee.time_base) - Double(inputs[i].shift) / 1_000_000
+        }
+
+        while true {
+            for i in inputs.indices { try fill(i) }
+            guard let next = inputs.indices.filter({ ready[$0] }).min(by: { seconds($0) < seconds($1) }),
+                  let packet = pending[next], let ctx = inputs[next].ctx else { break }
+            let sourceIndex = Int(packet.pointee.stream_index)
+            let source = ctx.pointee.streams[sourceIndex]!
+            let targetIndex = Int(inputs[next].mapping[sourceIndex])
+            let target = outCtx.pointee.streams[targetIndex]!
+            packet.pointee.stream_index = Int32(targetIndex)
+            av_packet_rescale_ts(packet, source.pointee.time_base, target.pointee.time_base)
+            packet.pointee.pos = -1
+            let shift = av_rescale_q(inputs[next].shift, microseconds, target.pointee.time_base)
+            if packet.pointee.dts != noPTS {
+                var dts = packet.pointee.dts - shift + offset[targetIndex]
+                if lastDTS[targetIndex] != noPTS, dts <= lastDTS[targetIndex] {
+                    let bump = lastDTS[targetIndex] + max(packet.pointee.duration, 1) - dts
+                    offset[targetIndex] += bump
+                    dts += bump
+                }
+                packet.pointee.dts = dts
+                if packet.pointee.pts != noPTS { packet.pointee.pts += offset[targetIndex] - shift }
+                lastDTS[targetIndex] = dts
+            } else if packet.pointee.pts != noPTS {
+                packet.pointee.pts += offset[targetIndex] - shift
+            }
+            // Audio from before the video's first frame has nowhere to go.
+            if packet.pointee.pts != noPTS, packet.pointee.pts < 0, target.pointee.codecpar.pointee.codec_type == AVMEDIA_TYPE_AUDIO {
+                av_packet_unref(packet)
+                ready[next] = false
+                continue
+            }
+            try check(av_interleaved_write_frame(outCtx, packet), "write")
+            ready[next] = false
+        }
+        try check(av_write_trailer(outCtx), "finish")
+    }
+
     // MARK: - libavformat
 
     private static let averrorEOF: Int32 = -0x2046_4F45 // FFERRTAG('E','O','F',' ')
