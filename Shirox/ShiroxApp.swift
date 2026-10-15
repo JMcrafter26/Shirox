@@ -235,7 +235,7 @@ struct ShiroxApp: App {
                     .keyboardShortcut("o", modifiers: .command)
             }
             // The player window's actions, where a Mac looks for them. Its keys (space, the
-            // arrows, F, S, P) work as well while it's in front.
+            // arrows, F, S, P, M) work as well while it's in front.
             CommandMenu("Playback") {
                 Button("Play/Pause") { MacPlayerCommand.send(.playPause) }
                     .keyboardShortcut(.space, modifiers: [.option])
@@ -246,6 +246,8 @@ struct ShiroxApp: App {
                 Divider()
                 Button("Picture in Picture") { MacPlayerWindowManager.shared.togglePictureInPicture() }
                     .keyboardShortcut("p", modifiers: [.command, .option])
+                Button("Mute/Unmute") { MacPlayerCommand.send(.toggleMute) }
+                    .keyboardShortcut("m", modifiers: [.command, .option])
                 Button("Save Frame") { MacPlayerCommand.send(.saveFrame) }
                     .keyboardShortcut("s", modifiers: [.command, .option])
             }

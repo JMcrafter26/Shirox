@@ -7,6 +7,8 @@ struct PlayerTopBar: View {
     let title: String
     var onDismiss: () -> Void
     @Binding var isLocked: Bool
+    /// The player's own mute, apart from the device's volume.
+    @Binding var isMuted: Bool
     var onPiP: (() -> Void)? = nil
     var topPadding: CGFloat = 24
     var isLandscape: Bool = true
@@ -105,7 +107,7 @@ struct PlayerTopBar: View {
 
                 Spacer()
 
-                // Right capsule group: AirPlay | PiP | Lock
+                // Right capsule group: AirPlay | PiP | Mute | Lock
                 Group {
                     if isLandscape {
                         HStack(spacing: isPad ? 14 : 8) { rightButtons }
@@ -186,7 +188,10 @@ struct PlayerTopBar: View {
         }
         .buttonStyle(.plain)
         .help(isPictureInPicture ? "Back to the full window (P)" : "Picture in Picture (P)")
+        muteButton(iconSize: iconSize, frameSize: frameSize)
+            .help(isMuted ? "Unmute (M)" : "Mute (M)")
         #else
+        muteButton(iconSize: iconSize, frameSize: frameSize)
         Button {
             withAnimation(.easeInOut(duration: 0.2)) { isLocked.toggle() }
         } label: {
@@ -197,6 +202,19 @@ struct PlayerTopBar: View {
         }
         .buttonStyle(.plain)
         #endif
+    }
+
+    private func muteButton(iconSize: CGFloat, frameSize: CGFloat) -> some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) { isMuted.toggle() }
+        } label: {
+            Image(systemName: isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                .font(.system(size: iconSize, weight: .medium))
+                .foregroundStyle(.white)
+                .frame(width: frameSize, height: frameSize)
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(isMuted ? "Unmute" : "Mute")
     }
 }
 

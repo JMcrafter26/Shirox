@@ -214,6 +214,10 @@ struct PlayerView: View {
     @AppStorage("preferredQuality") private var preferredQuality: String = "auto"
     @State private var playbackSpeed: Double = 1.0
     @State private var volume: Float = 1.0
+    /// The top bar's mute button. The engine plays at no volume while it's on; `volume` keeps
+    /// what it comes back to.
+    @State private var isMuted = false
+    private var engineVolume: Float { isMuted ? 0 : volume }
     @State private var showSubtitleSettings = false
     @State private var showSubtitleImporter = false
     /// True while a bottom-bar pull-down menu is open, so the whole controls overlay is
@@ -555,8 +559,11 @@ struct PlayerView: View {
             }
         }
         .onChangeOf(volume) { newVolume in
-            engine?.volume = newVolume
+            engine?.volume = engineVolume
             castManager.setVolume(newVolume)
+        }
+        .onChangeOf(isMuted) { _ in
+            engine?.volume = engineVolume
         }
         .onChangeOf(playbackSpeed) { newSpeed in
             if castManager.isConnected {
@@ -870,6 +877,7 @@ struct PlayerView: View {
             case .longBack: skip(by: -Double(skipLong)); scheduleHide()
             case .longForward: skip(by: Double(skipLong)); scheduleHide()
             case .saveFrame: if let engine { saveCurrentFrame(from: engine) }
+            case .toggleMute: isMuted.toggle()
             }
         }
         #endif
@@ -1278,6 +1286,7 @@ struct PlayerView: View {
             title: currentStream.title,
             onDismiss: castManager.isConnected ? exitCastMode : handleDismiss,
             isLocked: $isLocked,
+            isMuted: $isMuted,
             // MPV's Picture in Picture goes through its software renderer.
             onPiP: {
                 #if os(macOS)
@@ -2415,7 +2424,7 @@ struct PlayerView: View {
         // network-sized buffer. A downloaded episode is already on disk (or a hop away over
         // loopback), so applying it there is what produced "buffering even after download".
         e.waitsToMinimizeStalling = !isLocalPlayback
-        e.volume = volume
+        e.volume = engineVolume
         e.rate = Float(playbackSpeed)
         e.play() // Ensure player starts
         isPlaying = true
@@ -3881,6 +3890,7 @@ private extension View {
                 #if os(macOS)
                 .onKeyPress(KeyEquivalent("f")) { MacPlayerWindowManager.shared.toggleFullScreen(); return .handled }
                 .onKeyPress(KeyEquivalent("s")) { saveFrame(); return .handled }
+                .onKeyPress(KeyEquivalent("m")) { MacPlayerCommand.send(.toggleMute); return .handled }
                 .onKeyPress(KeyEquivalent("p")) { MacPlayerWindowManager.shared.togglePictureInPicture(); return .handled }
                 #endif
         } else {
@@ -3915,7 +3925,7 @@ struct MacVideoPlayerView: NSViewRepresentable {
 
 /// The Playback menu's commands, for the player on screen.
 enum MacPlayerCommand: String {
-    case playPause, skipBack, skipForward, longBack, longForward, saveFrame
+    case playPause, skipBack, skipForward, longBack, longForward, saveFrame, toggleMute
 
     static let notification = Notification.Name("MacPlayerCommand")
 
@@ -4391,6 +4401,7 @@ final class MacPlayerWindowManager: NSObject, ObservableObject {
             case (_, "l"): MacPlayerCommand.send(.longForward)
             case (_, "f"): toggleFullScreen()
             case (_, "s"): MacPlayerCommand.send(.saveFrame)
+            case (_, "m"): MacPlayerCommand.send(.toggleMute)
             case (_, "p"): togglePictureInPicture()
             default: return false
             }
