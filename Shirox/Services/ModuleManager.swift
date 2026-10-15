@@ -104,7 +104,7 @@ final class ModuleManager: ObservableObject {
                         return
                     }
                     guard let entry = repo.entries.first(where: { $0.key == key }) else { throw ModuleLinkError.notAModule }
-                    module = try await ExtensionInstaller.module(entry: entry, repo: repo) { try await URLSession.shared.data(from: $0).0 }
+                    module = try await ExtensionInstaller.module(entry: entry, repo: repo) { try await ExtensionInstaller.download($0) }
                     await cacheIcon(for: &module)
                 case .stremio(let manifest):
                     module = try ExtensionInstaller.module(stremio: manifest)
@@ -232,7 +232,7 @@ final class ModuleManager: ObservableObject {
     }
 
     private func extensionLink(_ data: Data, url: URL) async throws -> ExtensionLink? {
-        try await ExtensionRepoLoader.detect(data, url: url) { try await URLSession.shared.data(from: $0).0 }
+        try await ExtensionRepoLoader.detect(data, url: url) { try await ExtensionInstaller.download($0) }
     }
 
     /// Installs providers chosen from a repo sheet. Returns why each one that failed did, by key.
@@ -240,7 +240,7 @@ final class ModuleManager: ObservableObject {
         var failures: [String: String] = [:]
         for entry in entries {
             do {
-                var module = try await ExtensionInstaller.module(entry: entry, repo: repo) { try await URLSession.shared.data(from: $0).0 }
+                var module = try await ExtensionInstaller.module(entry: entry, repo: repo) { try await ExtensionInstaller.download($0) }
                 await cacheIcon(for: &module)
                 guard !isAdult(module) else { throw ExtensionInstallError.adult }
                 install(module)
@@ -263,7 +263,7 @@ final class ModuleManager: ObservableObject {
             // An entry that's gone from the repo, or is now hidden as adult, isn't found: the
             // installed one stays, and removeAdultModules() judges it as it does any module.
             guard let entry = repo.entries.first(where: { $0.key == ext.key }), entry.version != module.version,
-                  let m = try? await ExtensionInstaller.module(entry: entry, repo: repo, fetch: { try await URLSession.shared.data(from: $0).0 })
+                  let m = try? await ExtensionInstaller.module(entry: entry, repo: repo, fetch: { try await ExtensionInstaller.download($0) })
             else { return nil }
             fresh = m
         }

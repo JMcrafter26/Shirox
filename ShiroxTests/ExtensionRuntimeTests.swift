@@ -104,4 +104,14 @@ final class ExtensionRuntimeTests: XCTestCase {
         XCTAssertEqual(o["tmdbType"] as? String, "tv")
         XCTAssertNil(o["imdbId"])
     }
+
+    func testFetchResponsesHaveStandardHeaders() {
+        // Nuvio scrapers read `res.headers.get(…)`; the engine's response has a plain object.
+        let c = ctx(["https://s.test/": "hello"])
+        let r = ExtensionJSHarness.call(c, """
+        (async () => { const res = await fetch('https://s.test/');
+          return [res.ok, res.headers.get('Content-Type'), res.headers.has('x-none'), await res.text()].join('|'); })
+        """)
+        XCTAssertEqual(r, .success("true|text/plain|false|hello"))
+    }
 }

@@ -1,4 +1,5 @@
 import Foundation
+import JavaScriptCore
 
 enum ExtensionInstallError: LocalizedError, Equatable {
     case missingFiles([String])
@@ -41,7 +42,7 @@ enum ExtensionInstaller {
         switch repo.kind {
         case .nuvio:
             let source = String(decoding: try await fetch(entry.fileURL), as: UTF8.self)
-            guard !source.isEmpty else { throw ExtensionInstallError.noPlugin }
+            guard isJavaScript(source) else { throw ExtensionInstallError.noPlugin }
             let config: [String: Any] = ["supportedTypes": entry.raw["supportedTypes"] as? [String] ?? ["movie", "tv"]]
             return try make(kind: .nuvio, name: entry.name, version: entry.version, scriptUrl: entry.fileURL.absoluteString,
                             repoUrl: repo.url.absoluteString, key: entry.key, icon: entry.iconUrl, language: entry.language,
@@ -50,7 +51,7 @@ enum ExtensionInstaller {
             var parts: [String] = [], missing: [String] = []
             for name in vegaFiles {
                 if let data = try? await fetch(entry.fileURL.appendingPathComponent("\(name).js")),
-                   let text = String(data: data, encoding: .utf8), !text.isEmpty {
+                   let text = String(data: data, encoding: .utf8), isJavaScript(text) {
                     parts.append(wrap(name, text))
                 } else if vegaRequired.contains(name) {
                     missing.append(name)
@@ -63,7 +64,7 @@ enum ExtensionInstaller {
                             baseUrl: nil, config: config, script: parts.joined(separator: "\n"))
         case .skystream:
             let zip = try await fetch(entry.fileURL)
-            guard let js = ZipReader.file(named: "plugin.js", in: zip).flatMap({ String(data: $0, encoding: .utf8) }), !js.isEmpty
+            guard let js = ZipReader.file(named: "plugin.js", in: zip).flatMap({ String(data: $0, encoding: .utf8) }), isJavaScript(js)
             else { throw ExtensionInstallError.noPlugin }
             var manifest = ZipReader.file(named: "plugin.json", in: zip)
                 .flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] } ?? entry.raw
@@ -75,6 +76,23 @@ enum ExtensionInstaller {
         case .stremio:
             throw ExtensionInstallError.noPlugin
         }
+    }
+
+    /// Downloads a plugin file; an error page (GitHub's "404: Not Found") is an error, not a script.
+    static func download(_ url: URL) async throws -> Data {
+        let (data, response) = try await URLSession.shared.data(from: url)
+        if let status = (response as? HTTPURLResponse)?.statusCode, status >= 400 { throw ModuleLinkError.unreachable(status) }
+        return data
+    }
+
+    /// Whether `source` parses as JavaScript. Saved parts are evaluated as one script, so a part
+    /// that doesn't parse would stop all of them from loading.
+    static func isJavaScript(_ source: String) -> Bool {
+        guard !source.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              let context = JSContext.forModule().jsGlobalContextRef else { return false }
+        let script = JSStringCreateWithUTF8CString(source)
+        defer { JSStringRelease(script) }
+        return JSCheckScriptSyntax(context, script, nil, 1, nil)
     }
 
     /// A CommonJS file, kept apart from its neighbours: each gets its own `module`, `exports` and scope.

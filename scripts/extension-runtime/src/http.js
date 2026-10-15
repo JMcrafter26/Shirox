@@ -70,9 +70,53 @@ function headersFrom(arg) {
 }
 const skyResponse = (r) => ({ status: r.status, statusCode: r.status, body: r.body, headers: r.headers, url: r.url });
 
+/// The Fetch API's Headers, over the engine's plain header object.
+class Headers {
+  constructor(init) {
+    this._map = new Map();
+    const entries = init instanceof Headers ? [...init.entries()] : Array.isArray(init) ? init : Object.entries(init || {});
+    for (const [k, v] of entries) this._map.set(String(k).toLowerCase(), String(v));
+  }
+  get(name) { return this._map.get(String(name).toLowerCase()) ?? null; }
+  has(name) { return this._map.has(String(name).toLowerCase()); }
+  set(name, value) { this._map.set(String(name).toLowerCase(), String(value)); }
+  append(name, value) { const k = String(name).toLowerCase(); this._map.set(k, this._map.has(k) ? `${this._map.get(k)}, ${value}` : String(value)); }
+  delete(name) { this._map.delete(String(name).toLowerCase()); }
+  forEach(fn) { for (const [k, v] of this._map) fn(v, k, this); }
+  entries() { return this._map.entries(); }
+  keys() { return this._map.keys(); }
+  values() { return this._map.values(); }
+  [Symbol.iterator]() { return this._map.entries(); }
+}
+
+/// A Fetch API response around the engine's.
+function standardResponse(res, url) {
+  const status = res.status ?? 0;
+  let text = null;
+  const body = () => (text ??= Promise.resolve(typeof res.text === "function" ? res.text() : String(res.body ?? "")));
+  const out = {
+    status, ok: status >= 200 && status < 300, statusText: res.statusText || "", url: res.url || url, redirected: false,
+    headers: new Headers(res.headers && typeof res.headers.get === "function" ? [...res.headers.entries()] : res.headers),
+    text: () => body(),
+    json: () => body().then((t) => JSON.parse(t)),
+    arrayBuffer: () => body().then((t) => new TextEncoder().encode(t).buffer),
+    clone: () => out,
+  };
+  return out;
+}
+
 export function installHTTP(g) {
   // The engine's own fetch, kept before a plugin or a bundled polyfill replaces the global.
   g.__extHostFetch = g.fetch;
+  g.Headers ??= Headers;
+  g.fetch = async (input, init = {}) => {
+    const url = typeof input === "string" ? input : (input && (input.url || input.href)) || String(input);
+    const headers = init.headers instanceof Headers ? Object.fromEntries(init.headers.entries()) : init.headers || {};
+    let body = init.body ?? null;
+    if (body instanceof URLSearchParams) body = body.toString();
+    const res = await g.__extHostFetch(url, { ...init, headers, body });
+    return standardResponse(res, url);
+  };
   g.axios = makeAxios();
   g.http_get = async (url, opts) => skyResponse(await request({ url, headers: headersFrom(opts) }));
   g.http_post = async (url, headers, body) =>

@@ -86,4 +86,30 @@ final class ExtensionInstallerTests: XCTestCase {
             XCTFail("installed")
         } catch { XCTAssertEqual(error as? ExtensionInstallError, .adult) }
     }
+
+    func testVegaSkipsAnOptionalFileThatIsntJavaScript() async throws {
+        // GitHub answers a missing file with a "404: Not Found" page; taken as a script part, its
+        // syntax error stopped the whole provider from loading.
+        let e = entry("v", "https://raw.test/o/r/main/dist/v/")
+        var files = ["posts", "meta", "stream"].reduce(into: [String: String]()) {
+            $0["https://raw.test/o/r/main/dist/v/\($1).js"] = "exports.x = 1;"
+        }
+        files["https://raw.test/o/r/main/dist/v/episodes.js"] = "404: Not Found"
+        let m = try await ExtensionInstaller.module(entry: e, repo: repo(.vega, [e]), fetch: fetcher(files))
+        XCTAssertFalse(m.scriptContent!.contains("__extDefine(\"episodes\""))
+
+        files["https://raw.test/o/r/main/dist/v/meta.js"] = "404: Not Found"
+        do {
+            _ = try await ExtensionInstaller.module(entry: e, repo: repo(.vega, [e]), fetch: fetcher(files))
+            XCTFail("installed")
+        } catch { XCTAssertEqual(error as? ExtensionInstallError, .missingFiles(["meta"])) }
+    }
+
+    func testNuvioScriptThatIsntJavaScriptIsRefused() async {
+        let e = entry("a", "https://raw.test/a.js")
+        do {
+            _ = try await ExtensionInstaller.module(entry: e, repo: repo(.nuvio, [e]), fetch: fetcher(["https://raw.test/a.js": "404: Not Found"]))
+            XCTFail("installed")
+        } catch { XCTAssertEqual(error as? ExtensionInstallError, .noPlugin) }
+    }
 }
