@@ -66,6 +66,8 @@ struct ExtensionRepo: Identifiable, Equatable {
     /// Where relative files resolve: the folder holding the manifest.
     let base: URL
     let entries: [ExtensionRepoEntry]
+    /// Keys of the entries dropped as adult — an installed one of these is removed on update.
+    var adultKeys: Set<String> = []
     var id: String { url.absoluteString }
 }
 

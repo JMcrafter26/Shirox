@@ -112,4 +112,53 @@ final class ExtensionInstallerTests: XCTestCase {
             XCTFail("installed")
         } catch { XCTAssertEqual(error as? ExtensionInstallError, .noPlugin) }
     }
+
+    // MARK: - Updates
+
+    private func installed(_ kind: ExtensionKind, key: String, version: String = "1.0") -> ModuleDefinition {
+        let json = #"{"sourceName":"A","version":"\#(version)","scriptUrl":"https://raw.test/\#(key)","type":"anime","ext":{"kind":"\#(kind.rawValue)","repoUrl":"https://raw.test/o/r/main/manifest.json","key":"\#(key)","config":"{}"}}"#
+        return try! JSONDecoder().decode(ModuleDefinition.self, from: Data(json.utf8))
+    }
+
+    func testUpdateDecisions() {
+        let e = entry("a", "https://raw.test/a.js")
+        var r = repo(.nuvio, [e])
+        XCTAssertEqual(ExtensionUpdate.decide(installed(.nuvio, key: "a", version: "1.0"), link: .repo(r)), .keep)
+        XCTAssertEqual(ExtensionUpdate.decide(installed(.nuvio, key: "a", version: "0.9"), link: .repo(r)), .update)
+        XCTAssertEqual(ExtensionUpdate.decide(installed(.nuvio, key: "gone"), link: .repo(r)), .keep)
+        // The repo now flags it adult: it was dropped from the list, and the installed one goes too.
+        r = ExtensionRepo(kind: .nuvio, name: "R", url: r.url, base: r.base, entries: [], adultKeys: ["a"])
+        XCTAssertEqual(ExtensionUpdate.decide(installed(.nuvio, key: "a"), link: .repo(r)), .remove)
+    }
+
+    func testStremioUpdateThatTurnsAdultRemoves() {
+        let url = URL(string: "https://x.test/manifest.json")!
+        let module = installed(.stremio, key: url.absoluteString)
+        let raw: [String: Any] = ["id": "x", "name": "X", "version": "2", "resources": ["stream"], "types": ["series"], "behaviorHints": ["adult": true]]
+        let m = StremioManifest(url: url, id: "x", name: "X", version: "2", description: nil, logo: nil, raw: raw)
+        XCTAssertEqual(ExtensionUpdate.decide(module, link: .stremio(m)), .remove)
+    }
+
+    func testDetectRemembersTheAdultEntriesItHid() async throws {
+        let data = try JSONSerialization.data(withJSONObject: ["name": "R", "scrapers": [
+            ["id": "ok", "name": "Ok", "version": "1", "filename": "a.js"],
+            ["id": "h", "name": "Nightly", "version": "1", "filename": "b.js", "categories": ["NSFW"]]]])
+        guard case .repo(let r)? = try await ExtensionRepoLoader.detect(data, url: URL(string: "https://raw.test/m.json")!, fetch: { _ in Data() })
+        else { return XCTFail() }
+        XCTAssertEqual(r.entries.map(\.key), ["ok"])
+        XCTAssertEqual(r.adultKeys, ["h"])
+    }
+
+    func testRevertReinstallsFromTheModulesOwnLink() async throws {
+        // Reverting an edited script re-fetches it through the installer, wrapped as at install —
+        // not by downloading scriptUrl raw (for Vega that's a folder).
+        let manifest = #"{"name":"R","scrapers":[{"id":"a","name":"A","version":"2","filename":"a.js"}]}"#
+        let files = ["https://raw.test/o/r/main/manifest.json": manifest, "https://raw.test/o/r/main/a.js": "module.exports = {};"]
+        var module = installed(.nuvio, key: "a", version: "1.0")
+        module.jsonUrl = "https://raw.test/o/r/main/manifest.json#ext=a"
+        module.scriptContent = "edited"
+        let fresh = try await ExtensionInstaller.reinstall(module, fetch: fetcher(files))
+        XCTAssertTrue(fresh.scriptContent!.hasPrefix("__extDefine(\"main\""))
+        XCTAssertEqual(fresh.version, "2")
+    }
 }

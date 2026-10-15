@@ -92,12 +92,15 @@ async function episodes(href) {
   const videos = (m.videos || []).filter((v) => v && v.id && (v.season ?? 1) > 0);
   if (!videos.length) return [{ href: encode(m.id), number: 1 }];
   videos.sort((a, b) => (a.season ?? 1) - (b.season ?? 1) || ep(a) - ep(b));
-  // From an anime page: only the AniList entry's part of its season (Kitsu entries already are one).
+  // From an anime page, for the show it maps to: only the AniList entry's part of its season
+  // (Kitsu entries already are one). When that leaves nothing, the numbering differs: list it all.
   const md = media();
-  if (md && md.season != null && !String(m.id).startsWith("kitsu") && videos.some((v) => v.season === md.season)) {
+  if (md && md.season != null && md.imdbId && m.id === md.imdbId) {
     const offset = md.episodeOffset || 0;
-    return videos.filter((v) => v.season === md.season && ep(v) > offset)
+    const end = md.episodeEnd ?? Infinity;
+    const part = videos.filter((v) => v.season === md.season && ep(v) > offset && ep(v) <= end)
       .map((v) => ({ href: encode(v.id), number: ep(v) - offset }));
+    if (part.length) return part;
   }
   if (new Set(videos.map((v) => v.season ?? 1)).size <= 1) return videos.map((v) => ({ href: encode(v.id), number: ep(v) }));
   return videos.map((v, i) => ({ href: encode(v.id), number: i + 1 }));

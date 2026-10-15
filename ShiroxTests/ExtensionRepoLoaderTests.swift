@@ -98,4 +98,19 @@ final class ExtensionRepoLoaderTests: XCTestCase {
         guard case .repo(let r)? = try await load(m, url: url) else { return XCTFail() }
         XCTAssertEqual(r.url.absoluteString, "https://raw.test/o/r/main/manifest.json")
     }
+
+    // printf '{"packageName":"p.one","name":"One","version":4,"baseUrl":"https://one.test","categories":["Anime"]}' > plugin.json,
+    // a one-line plugin.js, then zip -X one.sky plugin.json plugin.js && base64 -i one.sky
+    static let oneSky = "UEsDBBQAAAAIADgFUF2YY9S9WgAAAGQAAAALAAAAcGx1Z2luLmpzb26rVipITM5OTE/1S8xNVbJSKtDLz0tV0lHKg3D9wZyy1KLizPw8JSsTHaWkxOLU0KIcoFxGSUlBsZW+PlCDXklqcQlQYXJiSWp6flFmarGSVbSSY14m0JDYWgBQSwMECgAAAAAAOAVQXYlGGx5LAAAASwAAAAkAAABwbHVnaW4uanNnbG9iYWxUaGlzLnNlYXJjaCA9IGZ1bmN0aW9uIChxLCBjYikgeyBjYih7IHN1Y2Nlc3M6IHRydWUsIGRhdGE6IFtdIH0pOyB9OwpQSwECHgMUAAAACAA4BVBdmGPUvVoAAABkAAAACwAAAAAAAAABAAAApIEAAAAAcGx1Z2luLmpzb25QSwECHgMKAAAAAAA4BVBdiUYbHksAAABLAAAACQAAAAAAAAABAAAApIGDAAAAcGx1Z2luLmpzUEsFBgAAAAACAAIAcAAAAPUAAAAAAA=="
+
+    func testASingleSkyFileIsAOneEntryRepo() async throws {
+        let url = URL(string: "https://raw.test/dist/one.sky")!
+        let link = try await ExtensionRepoLoader.detect(Data(base64Encoded: Self.oneSky)!, url: url) { _ in Data() }
+        guard case .repo(let r)? = link else { return XCTFail("not detected") }
+        XCTAssertEqual(r.kind, .skystream)
+        XCTAssertEqual(r.entries.map(\.key), ["p.one"])
+        XCTAssertEqual(r.entries.first?.version, "4")
+        XCTAssertEqual(r.entries.first?.fileURL, url)
+        XCTAssertTrue(ExtensionRepoLoader.isSingleFile(r))
+    }
 }

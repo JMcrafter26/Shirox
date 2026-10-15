@@ -15,6 +15,8 @@ struct ExtensionSearchMedia: Equatable {
     var season: Int?
     /// Episodes of that season before this entry — a second cour's offset.
     var episodeOffset: Int = 0
+    /// The season's last episode that is still this entry's, when known: where the next cour starts.
+    var episodeEnd: Int?
 
     init(anilistId: Int, malId: Int?, title: String, englishTitle: String?) {
         self.anilistId = anilistId
@@ -31,6 +33,7 @@ struct ExtensionSearchMedia: Equatable {
         if let tmdbType { o["tmdbType"] = tmdbType }
         if let imdbId { o["imdbId"] = imdbId }
         if let season { o["season"] = season }
+        if let episodeEnd { o["episodeEnd"] = episodeEnd }
         return o
     }
 
@@ -44,11 +47,23 @@ struct ExtensionSearchMedia: Equatable {
         }
         out.imdbId = await map.imdbId(forAnilistId: media.id)
         if let tvdb = map.tvdbId(forAnilistId: media.id),
-           let sibling = map.siblings(forTvdbId: tvdb).first(where: { $0.aniListID == media.id }) {
-            out.season = sibling.tvdbSeason
-            out.episodeOffset = sibling.tvdbEpoffset
+           let b = bounds(anilistId: media.id, siblings: map.siblings(forTvdbId: tvdb), episodeCount: media.episodeCount) {
+            out.season = b.season
+            out.episodeOffset = b.offset
+            out.episodeEnd = b.end
         }
         return out
+    }
+
+    /// Where an AniList entry sits in its TVDB season: the season, the episodes before it, and the
+    /// last one that is its own — up to where the next entry in the same season starts, or its
+    /// episode count — so a second cour doesn't run on into the third.
+    static func bounds(anilistId: Int, siblings: [SiblingSeason], episodeCount: Int?) -> (season: Int, offset: Int, end: Int?)? {
+        guard let me = siblings.first(where: { $0.aniListID == anilistId }) else { return nil }
+        let next = siblings.filter { $0.tvdbSeason == me.tvdbSeason && $0.tvdbEpoffset > me.tvdbEpoffset }
+            .map(\.tvdbEpoffset).min()
+        let count = episodeCount ?? me.episodeCount
+        return (me.tvdbSeason, me.tvdbEpoffset, next ?? count.map { me.tvdbEpoffset + $0 })
     }
 }
 

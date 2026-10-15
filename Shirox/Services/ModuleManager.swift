@@ -96,8 +96,10 @@ final class ModuleManager: ObservableObject {
             if let link = try await extensionLink(data, url: jsonURL) {
                 switch link {
                 case .repo(let repo):
-                    // One provider's own link (a backup restoring it): install that one.
-                    guard let key = ExtensionRepoLoader.entryKey(in: jsonURL) else {
+                    if ExtensionRepoLoader.isSingleFile(repo), repo.entries.isEmpty { throw ModuleLinkError.adult }
+                    // One provider's own link (a backup restoring it), or a single .sky: install that one.
+                    guard let key = ExtensionRepoLoader.entryKey(in: jsonURL)
+                            ?? (ExtensionRepoLoader.isSingleFile(repo) ? repo.entries.first?.key : nil) else {
                         // A repo: the sheet listing its providers installs them.
                         pendingRepo = repo
                         isLoading = false
@@ -209,8 +211,16 @@ final class ModuleManager: ObservableObject {
     func revertScript(for moduleID: String) async -> Bool {
         guard let original = modules.first(where: { $0.id == moduleID }) else { return false }
         var module = original
-        module.scriptContent = nil
-        await cacheScript(for: &module)
+        if original.ext != nil {
+            // An extension's script is assembled at install (wrapped, unzipped); fetch it the same way.
+            guard var fresh = try? await ExtensionInstaller.reinstall(original, fetch: { try await ExtensionInstaller.download($0) }),
+                  !isAdult(fresh) else { return false }
+            fresh.iconData = original.iconData
+            module = fresh
+        } else {
+            module.scriptContent = nil
+            await cacheScript(for: &module)
+        }
         guard module.scriptContent != nil,
               let i = modules.firstIndex(where: { $0.id == moduleID }) else { return false }
         module.scriptEdited = nil
@@ -251,18 +261,15 @@ final class ModuleManager: ObservableObject {
         return failures
     }
 
-    /// A newer version of an installed extension, from its repo or addon manifest; nil when none.
-    private func updatedExtension(_ module: ModuleDefinition, ext: ExtensionInfo, data: Data, url: URL) async -> ModuleDefinition? {
-        guard let link = try? await extensionLink(data, url: url) else { return nil }
+    /// The current version of an installed extension, from what its link holds now.
+    private func updatedExtension(_ module: ModuleDefinition, ext: ExtensionInfo, link: ExtensionLink) async -> ModuleDefinition? {
         var fresh: ModuleDefinition
         switch link {
         case .stremio(let manifest):
-            guard manifest.version != module.version, let m = try? ExtensionInstaller.module(stremio: manifest) else { return nil }
+            guard let m = try? ExtensionInstaller.module(stremio: manifest) else { return nil }
             fresh = m
         case .repo(let repo):
-            // An entry that's gone from the repo, or is now hidden as adult, isn't found: the
-            // installed one stays, and removeAdultModules() judges it as it does any module.
-            guard let entry = repo.entries.first(where: { $0.key == ext.key }), entry.version != module.version,
+            guard let entry = repo.entries.first(where: { $0.key == ext.key }),
                   let m = try? await ExtensionInstaller.module(entry: entry, repo: repo, fetch: { try await ExtensionInstaller.download($0) })
             else { return nil }
             fresh = m
@@ -383,8 +390,17 @@ final class ModuleManager: ObservableObject {
                   let (data, _) = try? await URLSession.shared.data(from: jsonURL) else { continue }
             var fresh: ModuleDefinition
             if let ext = module.ext {
-                guard let updated = await updatedExtension(module, ext: ext, data: data, url: jsonURL) else { continue }
-                fresh = updated
+                guard let link = try? await extensionLink(data, url: jsonURL) else { continue }
+                switch ExtensionUpdate.decide(module, link: link) {
+                case .keep: continue
+                case .remove:
+                    Logger.shared.log("[ModuleManager] Removed \(module.sourceName): its source now marks it adult", type: "Info")
+                    removeModule(module)
+                    continue
+                case .update:
+                    guard let updated = await updatedExtension(module, ext: ext, link: link) else { continue }
+                    fresh = updated
+                }
             } else if let seanime = SeanimeManifest.detect(data) {
                 guard seanime.version != module.version,
                       let installed = try? await SeanimeInstaller.module(from: seanime, manifestURL: jsonURL) else { continue }
@@ -398,9 +414,12 @@ final class ModuleManager: ObservableObject {
                 // Cache fresh assets
                 await cacheAssets(for: &fresh)
             }
-            // An update that turns a module adult isn't taken.
-            guard !isAdult(fresh),
-                  let i = modules.firstIndex(where: { $0.id == module.id }) else { continue }
+            // An update that turns a module adult isn't taken; an extension that has turned adult goes.
+            if isAdult(fresh) {
+                if module.ext != nil { removeModule(module) }
+                continue
+            }
+            guard let i = modules.firstIndex(where: { $0.id == module.id }) else { continue }
 
             let wasActive = activeModule?.id == modules[i].id
             modules[i] = fresh

@@ -67,4 +67,23 @@ final class NuvioRuntimeTests: XCTestCase {
         XCTAssertEqual(list.map { $0["href"] as? String }, ["tmdb:tv:7:1:1", "tmdb:tv:7:1:2", "tmdb:tv:7:2:1"])
         XCTAssertEqual(list.map { $0["number"] as? Int }, [1, 2, 3])
     }
+
+    func testNuvioSecondCourStopsAtTheNextCour() throws {
+        let eps: [[String: Any]] = (1...36).map { ["episode_number": $0] }
+        let c = ctx(media: ["anilistId": 1, "title": "X", "tmdbId": 7, "tmdbType": "tv", "season": 1, "episodeOffset": 12, "episodeEnd": 24],
+                    routes: ["\(tmdb)/tv/7/season/1?api_key=TMDBKEY&include_adult=false": ["episodes": eps]])
+        let list = ExtensionJSHarness.json(try ExtensionJSHarness.call(c, "extractEpisodes", ["tmdb:tv:7"]).get()) as! [[String: Any]]
+        XCTAssertEqual(list.count, 12)
+        XCTAssertEqual(list.last?["href"] as? String, "tmdb:tv:7:1:24")
+    }
+
+    func testMissingTMDBSeasonFallsBackToEverySeason() throws {
+        let c = ctx(media: ["anilistId": 1, "title": "X", "tmdbId": 7, "tmdbType": "tv", "season": 3, "episodeOffset": 0],
+                    routes: [
+                        "\(tmdb)/tv/7/season/3?api_key=TMDBKEY&include_adult=false": [404, "{}"],
+                        "\(tmdb)/tv/7?api_key=TMDBKEY&include_adult=false": ["seasons": [["season_number": 1]]],
+                        "\(tmdb)/tv/7/season/1?api_key=TMDBKEY&include_adult=false": ["episodes": [["episode_number": 1], ["episode_number": 2]]]])
+        let list = ExtensionJSHarness.json(try ExtensionJSHarness.call(c, "extractEpisodes", ["tmdb:tv:7"]).get()) as! [[String: Any]]
+        XCTAssertEqual(list.map { $0["href"] as? String }, ["tmdb:tv:7:1:1", "tmdb:tv:7:1:2"])
+    }
 }

@@ -78,6 +78,24 @@ enum ExtensionInstaller {
         }
     }
 
+    /// An installed extension fetched again from its own link, as at install — for Revert, after
+    /// its script was edited.
+    static func reinstall(_ module: ModuleDefinition, fetch: Fetch) async throws -> ModuleDefinition {
+        guard let ext = module.ext, let link = module.jsonUrl.flatMap(URL.init(string:)),
+              var parts = URLComponents(url: link, resolvingAgainstBaseURL: false) else { throw ExtensionInstallError.noPlugin }
+        parts.fragment = nil
+        let url = parts.url ?? link
+        switch try await ExtensionRepoLoader.detect(try await fetch(url), url: url, fetch: fetch) {
+        case .stremio(let manifest)?:
+            return try self.module(stremio: manifest)
+        case .repo(let repo)?:
+            guard let entry = repo.entries.first(where: { $0.key == ext.key }) else { throw ExtensionInstallError.noPlugin }
+            return try await self.module(entry: entry, repo: repo, fetch: fetch)
+        case nil:
+            throw ExtensionInstallError.noPlugin
+        }
+    }
+
     /// Downloads a plugin file; an error page (GitHub's "404: Not Found") is an error, not a script.
     static func download(_ url: URL) async throws -> Data {
         let (data, response) = try await URLSession.shared.data(from: url)
@@ -143,5 +161,25 @@ enum StremioSupport {
             }
         }
         return raw["idPrefixes"] as? [String]
+    }
+}
+
+/// What an update check means for an installed extension module.
+enum ExtensionUpdate: Equatable {
+    case keep, update, remove
+
+    /// `link` is what the module's link holds now. An entry or addon that has turned adult is
+    /// removed rather than left running at the version installed before.
+    static func decide(_ module: ModuleDefinition, link: ExtensionLink) -> ExtensionUpdate {
+        guard let ext = module.ext else { return .keep }
+        switch link {
+        case .stremio(let manifest):
+            if ExtensionAdultCheck.isAdult(stremio: manifest.raw) { return .remove }
+            return manifest.version != module.version ? .update : .keep
+        case .repo(let repo):
+            if repo.adultKeys.contains(ext.key) { return .remove }
+            guard let entry = repo.entries.first(where: { $0.key == ext.key }) else { return .keep }
+            return entry.version != module.version ? .update : .keep
+        }
     }
 }

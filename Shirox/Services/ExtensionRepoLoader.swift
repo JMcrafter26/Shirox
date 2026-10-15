@@ -26,11 +26,18 @@ enum ExtensionRepoLoader {
         return key.isEmpty ? nil : key.removingPercentEncoding ?? key
     }
 
+    /// A link to one SkyStream `.sky` rather than a repo: a repo of just that plugin.
+    static func isSingleFile(_ repo: ExtensionRepo) -> Bool {
+        repo.kind == .skystream && repo.entries.count + repo.adultKeys.count == 1
+            && (repo.entries.first?.fileURL ?? repo.url) == repo.url
+    }
+
     static func detect(_ data: Data, url: URL, fetch: Fetch) async throws -> ExtensionLink? {
-        guard let json = try? JSONSerialization.jsonObject(with: data) else { return nil }
         var parts = URLComponents(url: url, resolvingAgainstBaseURL: false)
         parts?.fragment = nil
         let url = parts?.url ?? url
+        if data.starts(with: [0x50, 0x4b, 0x03, 0x04]) { return sky(data, url: url) }
+        guard let json = try? JSONSerialization.jsonObject(with: data) else { return nil }
         let base = url.deletingLastPathComponent()
 
         if let object = json as? [String: Any] {
@@ -42,6 +49,7 @@ enum ExtensionRepoLoader {
                                                 logo: object["logo"] as? String ?? object["icon"] as? String, raw: object))
             }
             if let scrapers = object["scrapers"] as? [[String: Any]] {
+                let adult = Set(scrapers.filter(ExtensionAdultCheck.isAdult(entry:)).compactMap { $0["id"] as? String })
                 let entries = scrapers.compactMap { s -> ExtensionRepoEntry? in
                     guard s["enabled"] as? Bool != false, !ExtensionAdultCheck.isAdult(entry: s),
                           let id = s["id"] as? String, let file = s["filename"] as? String,
@@ -51,15 +59,17 @@ enum ExtensionRepoLoader {
                                               description: s["description"] as? String, fileURL: fileURL, raw: s)
                 }
                 return .repo(ExtensionRepo(kind: .nuvio, name: object["name"] as? String ?? repoName(url),
-                                           url: url, base: base, entries: entries))
+                                           url: url, base: base, entries: entries, adultKeys: adult))
             }
             if let lists = object["pluginLists"] as? [String] {
                 var entries: [ExtensionRepoEntry] = []
+                var adult: Set<String> = []
                 for list in lists {
                     guard let listURL = URL(string: list, relativeTo: base)?.absoluteURL,
                           let listData = try? await fetch(listURL),
                           let items = try? JSONSerialization.jsonObject(with: listData) as? [[String: Any]] else { continue }
                     for p in items {
+                        if ExtensionAdultCheck.isAdult(entry: p), let key = p["packageName"] as? String { adult.insert(key) }
                         guard !ExtensionAdultCheck.isAdult(entry: p), let key = p["packageName"] as? String,
                               let file = p["url"] as? String, let fileURL = URL(string: file, relativeTo: listURL)?.absoluteURL,
                               !entries.contains(where: { $0.key == key }) else { continue }
@@ -69,11 +79,12 @@ enum ExtensionRepoLoader {
                     }
                 }
                 return .repo(ExtensionRepo(kind: .skystream, name: object["name"] as? String ?? repoName(url),
-                                           url: url, base: base, entries: entries))
+                                           url: url, base: base, entries: entries, adultKeys: adult))
             }
         }
         if let array = json as? [[String: Any]], !array.isEmpty,
            array.allSatisfy({ $0["value"] is String && $0["display_name"] is String }) {
+            let adult = Set(array.filter(ExtensionAdultCheck.isAdult(entry:)).compactMap { $0["value"] as? String })
             let entries = array.compactMap { p -> ExtensionRepoEntry? in
                 guard p["disabled"] as? Bool != true, !ExtensionAdultCheck.isAdult(entry: p),
                       let value = p["value"] as? String,
@@ -82,9 +93,22 @@ enum ExtensionRepoLoader {
                                           iconUrl: p["icon"] as? String, language: nil,
                                           description: nil, fileURL: dir, raw: p)
             }
-            return .repo(ExtensionRepo(kind: .vega, name: repoName(url), url: url, base: base, entries: entries))
+            return .repo(ExtensionRepo(kind: .vega, name: repoName(url), url: url, base: base, entries: entries, adultKeys: adult))
         }
         return nil
+    }
+
+    /// A single `.sky`, described by its own plugin.json.
+    private static func sky(_ zip: Data, url: URL) -> ExtensionLink? {
+        guard let json = ZipReader.file(named: "plugin.json", in: zip),
+              let p = try? JSONSerialization.jsonObject(with: json) as? [String: Any],
+              let key = p["packageName"] as? String else { return nil }
+        let adult = ExtensionAdultCheck.isAdult(entry: p)
+        let entry = ExtensionRepoEntry(key: key, name: p["name"] as? String ?? key, version: string(p["version"]),
+                                       iconUrl: p["iconUrl"] as? String, language: (p["languages"] as? [String])?.first,
+                                       description: p["description"] as? String, fileURL: url, raw: p)
+        return .repo(ExtensionRepo(kind: .skystream, name: entry.name, url: url, base: url.deletingLastPathComponent(),
+                                   entries: adult ? [] : [entry], adultKeys: adult ? [key] : []))
     }
 
     private static func string(_ value: Any?) -> String {

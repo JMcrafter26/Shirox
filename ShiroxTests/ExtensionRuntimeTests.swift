@@ -114,4 +114,16 @@ final class ExtensionRuntimeTests: XCTestCase {
         """)
         XCTAssertEqual(r, .success("true|text/plain|false|hello"))
     }
+
+    func testSeasonBoundsFromSiblings() {
+        let siblings = [SiblingSeason(aniListID: 1, malID: nil, tvdbSeason: 1, tvdbEpoffset: 0, episodeCount: nil),
+                        SiblingSeason(aniListID: 2, malID: nil, tvdbSeason: 1, tvdbEpoffset: 12, episodeCount: nil),
+                        SiblingSeason(aniListID: 3, malID: nil, tvdbSeason: 1, tvdbEpoffset: 24, episodeCount: nil),
+                        SiblingSeason(aniListID: 4, malID: nil, tvdbSeason: 2, tvdbEpoffset: 0, episodeCount: nil)]
+        let b2 = ExtensionSearchMedia.bounds(anilistId: 2, siblings: siblings, episodeCount: nil)
+        XCTAssertEqual(b2?.season, 1); XCTAssertEqual(b2?.offset, 12); XCTAssertEqual(b2?.end, 24)
+        XCTAssertEqual(ExtensionSearchMedia.bounds(anilistId: 3, siblings: siblings, episodeCount: 13)?.end, 37)
+        XCTAssertNil(ExtensionSearchMedia.bounds(anilistId: 4, siblings: siblings, episodeCount: nil)?.end)
+        XCTAssertNil(ExtensionSearchMedia.bounds(anilistId: 99, siblings: siblings, episodeCount: 12))
+    }
 }

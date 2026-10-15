@@ -90,4 +90,34 @@ final class StremioRuntimeTests: XCTestCase {
         XCTAssertEqual(eps.map { $0["number"] as? Int }, [1, 2, 3])
         XCTAssertTrue((eps[2]["href"] as! String).contains("\"a\""))
     }
+
+    private func cinemetaCtx(media: [String: Any], videos: [[String: Any]], metaId: String = "tt1") -> JSContext {
+        let m: [String: Any] = ["id": "x", "resources": ["stream"], "types": ["series"], "idPrefixes": ["tt"]]
+        return ctx(manifest: m, media: media,
+                   routes: ["\(cinemeta)/meta/series/\(metaId).json": ["meta": ["id": metaId, "type": "series", "name": "X", "videos": videos]]])
+    }
+    private func episodes(_ c: JSContext, _ id: String = "tt1") throws -> [[String: Any]] {
+        let href = "stremio:" + #"{"s":"cinemeta","t":"series","id":"\#(id)"}"#
+        return ExtensionJSHarness.json(try ExtensionJSHarness.call(c, "extractEpisodes", [href]).get()) as! [[String: Any]]
+    }
+
+    func testSecondCourStopsWhereTheThirdBegins() throws {
+        let videos: [[String: Any]] = (1...36).map { ["id": "tt1:1:\($0)", "season": 1, "episode": $0] }
+        let c = cinemetaCtx(media: ["anilistId": 9, "title": "X", "imdbId": "tt1", "season": 1, "episodeOffset": 12, "episodeEnd": 24], videos: videos)
+        let eps = try episodes(c)
+        XCTAssertEqual(eps.count, 12)
+        XCTAssertTrue((eps.last?["href"] as! String).contains("tt1:1:24"))
+    }
+
+    func testSeasonOffsetOnlyForTheMappedShow() throws {
+        let videos: [[String: Any]] = (1...24).map { ["id": "tt9:1:\($0)", "season": 1, "episode": $0] }
+        let c = cinemetaCtx(media: ["anilistId": 9, "title": "X", "imdbId": "tt1", "season": 1, "episodeOffset": 12], videos: videos, metaId: "tt9")
+        XCTAssertEqual(try episodes(c, "tt9").count, 24)
+    }
+
+    func testOffsetPastTheSeasonFallsBackToEveryEpisode() throws {
+        let videos: [[String: Any]] = (1...12).map { ["id": "tt1:1:\($0)", "season": 1, "episode": $0] }
+        let c = cinemetaCtx(media: ["anilistId": 9, "title": "X", "imdbId": "tt1", "season": 1, "episodeOffset": 12], videos: videos)
+        XCTAssertEqual(try episodes(c).count, 12)
+    }
 }

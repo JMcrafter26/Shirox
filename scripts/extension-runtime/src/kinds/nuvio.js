@@ -38,12 +38,16 @@ async function episodes(href) {
   const { type, id } = parse(href);
   if (type === "movie") return [{ href: `tmdb:movie:${id}`, number: 1 }];
   // From an anime page: only the AniList entry's part of its season.
+  // From an anime page: only the AniList entry's part of its season. When TMDB numbers the
+  // seasons differently (no such season, or nothing past the offset), list every season instead.
   const m = media();
   if (m && String(m.tmdbId) === String(id) && m.season != null) {
     const offset = m.episodeOffset || 0;
-    const s = await tmdb(`/tv/${id}/season/${m.season}`);
-    return (s.episodes || []).filter((e) => e.episode_number > offset)
+    const end = m.episodeEnd ?? Infinity;
+    const s = await tmdb(`/tv/${id}/season/${m.season}`).catch(() => null);
+    const part = ((s && s.episodes) || []).filter((e) => e.episode_number > offset && e.episode_number <= end)
       .map((e) => ({ href: `tmdb:tv:${id}:${m.season}:${e.episode_number}`, number: e.episode_number - offset }));
+    if (part.length) return part;
   }
   const show = await tmdb(`/tv/${id}`);
   const seasons = (show.seasons || []).map((s) => s.season_number).filter((n) => n > 0).sort((a, b) => a - b);
