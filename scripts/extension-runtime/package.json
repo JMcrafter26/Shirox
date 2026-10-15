@@ -1,0 +1,15 @@
+{
+  "name": "shirox-extension-runtime",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "bun build.js"
+  },
+  "dependencies": {
+    "buffer": "6.0.3",
+    "cheerio": "1.2.0",
+    "core-js-pure": "3.50.0",
+    "crypto-js": "4.2.0",
+    "fast-text-encoding": "1.0.6"
+  }
+}

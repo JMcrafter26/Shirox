@@ -51,3 +51,4 @@ conductor/
 
 # Seanime runtime build dependencies (the built bundles in Shirox/Resources are committed)
 scripts/seanime-runtime/node_modules/
+scripts/extension-runtime/node_modules/
