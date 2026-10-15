@@ -554,6 +554,7 @@
 		3FB1DB2B887CC986A42431B2 /* JellyfinCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = C372736CDF3DAFB6621F4326 /* JellyfinCore.swift */; };
 		3FCE85F869EA43650A0AED85 /* ProfileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1B7B5CA1E030CB133AAAB78 /* ProfileManager.swift */; };
 		3FCE9A2E8111478BC412C937 /* LibrarySyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6D4488D593D0B711FA06E32 /* LibrarySyncService.swift */; };
+		3FF820200DB5D2049AEC8FF5 /* ExtensionRepoSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E326785BDD3567C0B399C894 /* ExtensionRepoSheet.swift */; };
 		408862BA9DA473140FE66302 /* HomeCacheStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F766E2B1601412A7B7D9F02 /* HomeCacheStore.swift */; };
 		409D07C4C0B2E6A5D4905655 /* SimklTitlePayloadTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E20D11D840B9E8CFB4E28652 /* SimklTitlePayloadTests.swift */; };
 		40B24A0864D764C080CF4171 /* SeanimeInstall.js in Resources */ = {isa = PBXBuildFile; fileRef = FCBEAC7148133CCF2D13E786 /* SeanimeInstall.js */; };
@@ -883,6 +884,7 @@
 		A116F1F16FA3F31588F7D0B7 /* SimklPlayTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D916039C879C3C82C435886 /* SimklPlayTracker.swift */; };
 		A147502B402E4F1121420096 /* PendingWrite.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4A5A6BA34DDCEF8AFDF2E059 /* PendingWrite.swift */; };
 		A1DCD2213941F4A33E837E37 /* ViewerPlayIntentTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37D027FAEA3BB907E2677817 /* ViewerPlayIntentTests.swift */; };
+		A1F63165E8F1BD5241273381 /* ExtensionRepoSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E326785BDD3567C0B399C894 /* ExtensionRepoSheet.swift */; };
 		A2D2EFB4D55B12D686DA4F63 /* AssRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = DDE30B9763346F02AE6DEFBB /* AssRenderer.swift */; };
 		A2E73FF64F5BF85131459E21 /* AniListMangaMappingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FB508B47E45CCA9A0D55958 /* AniListMangaMappingTests.swift */; };
 		A2F08929BC653D6A90CA88DB /* SimklTitleEditSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 301F5C306717CC5992FDB32A /* SimklTitleEditSheet.swift */; };
@@ -1149,6 +1151,7 @@
 		FB1F41A3B622DF404AFB0D61 /* SearchBrowseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C581970F3C23C369DD7CA074 /* SearchBrowseView.swift */; };
 		FB270DEEDEA846171283493B /* MangaPageHeaders.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77146386C120B4AA3400F4DD /* MangaPageHeaders.swift */; };
 		FB5A4E863E0B76F8D0EDB5CA /* Toast.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E38625953CEB8CB390672D8 /* Toast.swift */; };
+		FC92F661FA8300FD3C48B436 /* ExtensionRepoSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E326785BDD3567C0B399C894 /* ExtensionRepoSheet.swift */; };
 		FCB3E2BB0BB80870BB440E86 /* AniListThrottle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 685D06D87E62A9D2A9907F5C /* AniListThrottle.swift */; };
 		FCE3980671F64CF38B707BFA /* LocalPlaybackCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E548862288E04B9EA60BBCF3 /* LocalPlaybackCoordinator.swift */; };
 		FD2680D743E0545E4EDAD21C /* SimklCatalogTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D13B1910CD76238778905D3 /* SimklCatalogTests.swift */; };
@@ -1646,6 +1649,7 @@
 		E2724D13591401331A3D0EA0 /* SimklOAuth.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklOAuth.swift; sourceTree = "<group>"; };
 		E291C27758B26EC8AB9B812B /* PendingWriteQueueTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PendingWriteQueueTests.swift; sourceTree = "<group>"; };
 		E2DAFA9A196583A0A148F391 /* AssRendererTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AssRendererTests.swift; sourceTree = "<group>"; };
+		E326785BDD3567C0B399C894 /* ExtensionRepoSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExtensionRepoSheet.swift; sourceTree = "<group>"; };
 		E37B7CD8693C6FC1D916A96C /* TrackingScoreTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TrackingScoreTests.swift; sourceTree = "<group>"; };
 		E3800962BA82FB8E9A66BFEE /* SimklDecodingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklDecodingTests.swift; sourceTree = "<group>"; };
 		E40320ED82E9CC8506F18D47 /* SimklOnlyAnimeStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklOnlyAnimeStore.swift; sourceTree = "<group>"; };
@@ -2135,6 +2139,7 @@
 				A6325817BD7440B271005CBE /* ModuleScriptEditorView.swift */,
 				09C6B828F7625A21A7F9BC74 /* ProfilesView.swift */,
 				C5EF33C932D8246C4F5A0F84 /* ModuleImportView.swift */,
+				E326785BDD3567C0B399C894 /* ExtensionRepoSheet.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -3187,6 +3192,7 @@
 				373131E560BDBE7CF643E3B2 /* ZipReader.swift in Sources */,
 				549541560CF91E069A98AFE0 /* ExtensionInstaller.swift in Sources */,
 				8B1B7ADA4F7B5D1C5D0CD9E9 /* ExtensionScripts.swift in Sources */,
+				3FF820200DB5D2049AEC8FF5 /* ExtensionRepoSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3505,6 +3511,7 @@
 				87949060689092040A23D2AC /* ZipReader.swift in Sources */,
 				9C3EFEA272B0B31271144FB4 /* ExtensionInstaller.swift in Sources */,
 				E0D28B47BD04E00D1AC9B46D /* ExtensionScripts.swift in Sources */,
+				FC92F661FA8300FD3C48B436 /* ExtensionRepoSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3824,6 +3831,7 @@
 				85FB2BA2CB20EB793A2E73B7 /* ZipReader.swift in Sources */,
 				79A6E157FCB2237929236531 /* ExtensionInstaller.swift in Sources */,
 				F78362EDA290A7763C01D0E8 /* ExtensionScripts.swift in Sources */,
+				A1F63165E8F1BD5241273381 /* ExtensionRepoSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -256,6 +256,13 @@ struct ModuleListView: View {
             #endif
         }
         #endif
+        .sheet(item: $moduleManager.pendingRepo) { repo in
+            ExtensionRepoSheet(repo: repo)
+                .environmentObject(moduleManager)
+                #if os(macOS)
+                .frame(minWidth: 520, minHeight: 560)
+                #endif
+        }
     }
 
     private struct EditingScript: Identifiable {
@@ -348,7 +355,7 @@ struct ModuleListView: View {
         } header: {
             Text("Add Module")
         } footer: {
-            Text("Paste a module's .json link, or import its .js file (and its .json, if you have it).")
+            Text("Paste a module's .json link, a Stremio addon, or a Nuvio, Vega or SkyStream repo, or import a module's .js file (and its .json, if you have it).")
         }
     }
 
@@ -623,8 +630,8 @@ struct ModuleListView: View {
                                 .padding(.horizontal, 5).padding(.vertical, 1)
                                 .background(Color.secondary.opacity(0.15), in: Capsule())
                         }
-                        if module.seanime != nil {
-                            Text("Seanime")
+                        if let badge = module.seanime != nil ? "Seanime" : module.ext?.kind.badge {
+                            Text(badge)
                                 .font(.caption2.weight(.semibold))
                                 .padding(.horizontal, 5).padding(.vertical, 1)
                                 .background(Color.secondary.opacity(0.15), in: Capsule())
