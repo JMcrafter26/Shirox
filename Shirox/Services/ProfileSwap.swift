@@ -67,7 +67,7 @@ struct ProfileSwap {
         "com.shirox.hasLaunchedSinceInstall", "hasCompletedOnboarding",
         "movedFilesIntoSupportFolder", "movedFilesOutOfDocuments",
         "downloadsNotRemuxed", "downloadsAudioConfigChecked", "jellyfin_device_id",
-        "downloadsAudioRestoreChecked", "downloadsAudioRestoreTries", "profilesAskAtLaunch",
+        "downloadsAudioRestoreChecked", "downloadsAudioRestoreTries", "profilesAskAtLaunch", "profilesPickerColor",
     ]
 
     static func isDeviceKey(_ key: String) -> Bool {

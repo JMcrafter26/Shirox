@@ -977,7 +977,7 @@ struct LibraryView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Edit \(entry.media.title.displayTitle)")
-                // Bottom-right of the 2:3 poster, above the progress bar.
+                // Bottom-right of the 2:3 poster, above the progress bar on its edge.
                 .position(x: geo.size.width - 20, y: geo.size.width * 1.5 - 24)
             }
         }
@@ -1392,9 +1392,9 @@ private struct LibraryGridCard: View {
         return "\(unit) \(entry.progress)"
     }
 
-    /// How far through, when the total's known.
+    /// How far through, when the total's known and there's something to show.
     private var fraction: Double? {
-        guard let total = entry.media.episodes, total > 0 else { return nil }
+        guard entry.showsProgressBar, let total = entry.media.episodes, total > 0 else { return nil }
         return min(Double(entry.progress) / Double(total), 1)
     }
 
@@ -1414,17 +1414,16 @@ private struct LibraryGridCard: View {
                     }
                 )
                 .overlay(alignment: .bottom) {
+                    // Along the poster's bottom edge, clear of the edit button above its corner.
                     if let fraction {
                         GeometryReader { geo in
                             ZStack(alignment: .leading) {
-                                Capsule().fill(.white.opacity(0.25))
-                                Capsule().fill(.white)
-                                    .frame(width: max(geo.size.width * fraction, fraction > 0 ? 4 : 0))
+                                Rectangle().fill(.white.opacity(0.25))
+                                Rectangle().fill(.white)
+                                    .frame(width: max(geo.size.width * fraction, 4))
                             }
                         }
                         .frame(height: 3)
-                        .padding(.horizontal, 8)
-                        .padding(.bottom, 7)
                     }
                 }
                 .overlay(alignment: .topTrailing) {
@@ -1570,7 +1569,7 @@ private struct LibraryRowView: View {
                     NewEpisodesBadge(entry: entry)
                 }
 
-                if let total = entry.media.episodes, total > 0 {
+                if entry.showsProgressBar, let total = entry.media.episodes, total > 0 {
                     ProgressView(value: min(Double(entry.progress), Double(total)), total: Double(total))
                         .tint(.primary)
                         .scaleEffect(x: 1, y: 0.8, anchor: .center)

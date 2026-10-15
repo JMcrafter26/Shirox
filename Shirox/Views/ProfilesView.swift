@@ -101,6 +101,9 @@ struct ProfilePickerView: View {
     @AppStorage("playerLiquidGlass") private var liquidGlass = true
     @State private var managing = false
     @State private var editing: EditorTarget?
+    @State private var width: CGFloat = 0
+    /// The picker's colour, the device's (not a profile's): red unless changed.
+    @AppStorage(ProfilePickerTheme.key) private var themeHex = ProfilePickerTheme.defaultHex
 
     private var avatarSize: CGFloat {
         #if os(macOS)
@@ -121,18 +124,16 @@ struct ProfilePickerView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
                 ScrollView {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: avatarSize + 20, maximum: avatarSize + 60), spacing: 24)],
-                              spacing: 30) {
-                        ForEach(manager.profiles) { profile in
-                            tile(profile)
-                        }
-                        addTile
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 40)
-                    .frame(maxWidth: 720)
-                    .frame(maxWidth: .infinity)
+                    centeredRows
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 40)
+                        .frame(maxWidth: 720)
+                        .frame(maxWidth: .infinity)
                 }
+                .background(GeometryReader { geo in
+                    Color.clear.preference(key: PickerWidthKey.self, value: geo.size.width)
+                })
+                .onPreferenceChange(PickerWidthKey.self) { width = $0 }
                 bottomBar
             }
             if let target = manager.switchingTo {
@@ -153,11 +154,42 @@ struct ProfilePickerView: View {
     }
 
     private var background: some View {
-        LinearGradient(colors: [Color(red: 0.03, green: 0.02, blue: 0.02),
-                                Color(red: 0.16, green: 0.08, blue: 0.04),
-                                Color(red: 0.36, green: 0.19, blue: 0.08)],
-                       startPoint: .top, endPoint: .bottom)
-            .ignoresSafeArea()
+        ProfilePickerTheme.gradient(themeHex).ignoresSafeArea()
+    }
+
+    private enum Item: Identifiable {
+        case profile(AppProfile)
+        case add
+        var id: String {
+            if case .profile(let profile) = self { return profile.id.uuidString }
+            return "add"
+        }
+    }
+
+    /// Rows of tiles, each centred, so a lone Add Profile sits in the middle of its row.
+    private var centeredRows: some View {
+        let items = manager.profiles.map(Item.profile) + [.add]
+        let spacing: CGFloat = 24
+        let tileWidth = avatarSize + 24
+        let available = min(max(width - 48, tileWidth), 720 - 48)
+        let perRow = max(1, Int((available + spacing) / (tileWidth + spacing)))
+        let rows = stride(from: 0, to: items.count, by: perRow).map { Array(items[$0..<min($0 + perRow, items.count)]) }
+        return VStack(spacing: 30) {
+            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                HStack(alignment: .top, spacing: spacing) {
+                    ForEach(row) { item in
+                        Group {
+                            switch item {
+                            case .profile(let profile): tile(profile)
+                            case .add: addTile
+                            }
+                        }
+                        .frame(width: tileWidth)
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity)
     }
 
     private var topBar: some View {
@@ -184,6 +216,19 @@ struct ProfilePickerView: View {
     private var bottomBar: some View {
         VStack(spacing: 14) {
             if managing {
+                HStack(spacing: 12) {
+                    ForEach(ProfilePickerTheme.colors, id: \.self) { hex in
+                        Button { themeHex = hex } label: {
+                            Circle()
+                                .fill(Color(profileHex: hex))
+                                .frame(width: 26, height: 26)
+                                .overlay(Circle().strokeBorder(.white, lineWidth: themeHex == hex ? 2.5 : 0).padding(-4))
+                        }
+                        .buttonStyle(PressScaleStyle())
+                        .accessibilityLabel("Background colour")
+                    }
+                }
+                .padding(.bottom, 4)
                 Toggle("Ask at Launch", isOn: $askAtLaunch)
                     .tint(.white.opacity(0.6))
                     .foregroundStyle(.white)
@@ -276,6 +321,25 @@ struct ProfilePickerView: View {
             }
         }
         .transition(.opacity)
+    }
+}
+
+private struct PickerWidthKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
+}
+
+/// The profile picker's background: a dark gradient into the chosen colour.
+enum ProfilePickerTheme {
+    static let key = "profilesPickerColor"
+    static let defaultHex = "#E5484D"
+    static let colors = ["#E5484D", "#F76B15", "#C9A227", "#46A758", "#12A594", "#3E63DD", "#6E56CF", "#D6409F", "#8D6E63"]
+
+    static func gradient(_ hex: String) -> LinearGradient {
+        let (r, g, b) = ProfilePalette.rgb(hex) ?? (0.9, 0.28, 0.3)
+        func shade(_ f: Double) -> Color { Color(red: r * f, green: g * f, blue: b * f) }
+        return LinearGradient(colors: [Color(red: 0.03, green: 0.02, blue: 0.02), shade(0.22), shade(0.45)],
+                              startPoint: .top, endPoint: .bottom)
     }
 }
 

@@ -1361,6 +1361,27 @@ struct DetailView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 40)
+            } else if watchOrder.isEmpty, vm.aniListMedia != nil || vm.aniListID != nil {
+                // Linked, with nothing related: a film or a one-off. It used to fall through to
+                // "Not linked", as if no relations meant no link.
+                VStack(spacing: 8) {
+                    Image(systemName: "checkmark.seal")
+                        .font(.largeTitle)
+                        .foregroundStyle(.secondary.opacity(0.5))
+                    Text("No related entries")
+                        .font(.subheadline.weight(.semibold))
+                    Text("This title is linked to AniList and has no sequels, prequels or side stories.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                    Button("Change Link") { openLinks(from: "linkButton") }
+                        .font(.caption.weight(.semibold))
+                        .padding(.top, 4)
+                        .zoomSource("linkButton", in: sheetZoom, cornerRadius: 20)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 32)
+                .padding(.vertical, 40)
             } else if watchOrder.isEmpty {
                 VStack(spacing: 16) {
                     Image(systemName: "link.badge.plus")

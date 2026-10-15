@@ -58,10 +58,26 @@ struct ModuleImportView: View {
                 fileRow(title: "Script", systemImage: "curlybraces", file: scriptName,
                         detail: script.map { "\($0.split(separator: "\n", omittingEmptySubsequences: false).count) lines" },
                         action: "Choose .js File") { picking = .script }
+                NavigationLink {
+                    ScriptDraftView(script: Binding(
+                        get: { script ?? "" },
+                        set: { newValue in
+                            script = newValue.isEmpty ? nil : newValue
+                            scriptName = newValue.isEmpty ? nil : "Written in the editor"
+                            if !newValue.isEmpty { asyncJS = newValue.contains("async ") }
+                        }))
+                } label: {
+                    Label {
+                        Text(scriptName == "Written in the editor" ? "Edit in Editor" : "Write or Paste in Editor")
+                            .foregroundStyle(Color.primary)
+                    } icon: {
+                        Image(systemName: "square.and.pencil").foregroundStyle(.secondary)
+                    }
+                }
             } header: {
                 Text("Script")
             } footer: {
-                Text("Required. The module's JavaScript: what it searches, lists and plays.")
+                Text("Required. The module's JavaScript, from a .js file or written in the editor: what it searches, lists and plays.")
             }
 
             Section {
@@ -116,7 +132,9 @@ struct ModuleImportView: View {
                 TextField("Stream type (e.g. HLS)", text: $streamType)
                 TextField("Quality (e.g. 1080p)", text: $quality)
                 Toggle("Soft Subtitles", isOn: $softsub)
+                    .tint(.secondary)
                 Toggle("Async Script", isOn: $asyncJS)
+                    .tint(.secondary)
             }
         }
         #if os(macOS)
@@ -312,6 +330,76 @@ struct ModuleImportView: View {
         } catch {
             problem = error.localizedDescription
         }
+    }
+}
+
+
+/// The import form's script, typed or pasted.
+private struct ScriptDraftView: View {
+    @Binding var script: String
+    @State private var text = ""
+    @State private var loaded = false
+    @State private var confirmPaste = false
+    @State private var syntaxError: String?
+    @State private var check: Task<Void, Never>?
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(spacing: 0) {
+            CodeTextEditor(text: $text)
+            if let syntaxError {
+                Label(syntaxError, systemImage: "exclamationmark.triangle.fill")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(.regularMaterial)
+            }
+        }
+        .navigationTitle("Script")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+        .toolbar {
+            ToolbarItem(placement: .automatic) {
+                Button {
+                    if text.isEmpty { paste() } else { confirmPaste = true }
+                } label: {
+                    Label("Paste", systemImage: "doc.on.clipboard")
+                }
+            }
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Done") {
+                    script = text
+                    dismiss()
+                }
+            }
+        }
+        .onAppear {
+            guard !loaded else { return }
+            loaded = true
+            text = script
+        }
+        .onChangeOf(text) { newValue in
+            // Checked once typing pauses, not on every key of a long script.
+            check?.cancel()
+            check = Task {
+                try? await Task.sleep(nanoseconds: 600_000_000)
+                guard !Task.isCancelled else { return }
+                syntaxError = newValue.isEmpty ? nil : ModuleFileImport.syntaxError(in: newValue)
+            }
+        }
+        .confirmationDialog("Replace the whole script?", isPresented: $confirmPaste, titleVisibility: .visible) {
+            Button("Delete All and Paste", role: .destructive, action: paste)
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Everything in the editor is replaced with what's on your clipboard.")
+        }
+    }
+
+    private func paste() {
+        if let pasted = Clipboard.string, !pasted.isEmpty { text = pasted }
     }
 }
 

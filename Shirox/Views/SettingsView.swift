@@ -83,11 +83,11 @@ private struct ProfileSettingsRow: View {
     var body: some View {
         HStack(spacing: 14) {
             if let active = profiles.active {
-                ProfileAvatarView(profile: active, size: 36)
+                ProfileAvatarView(profile: active, size: 52)
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(profiles.active?.name ?? "Profile")
-                    .font(.subheadline.weight(.semibold))
+                    .font(.headline.weight(.semibold))
                 Text(profiles.profiles.count > 1 ? "Switch or Manage Profiles" : "Add a Profile")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -98,7 +98,7 @@ private struct ProfileSettingsRow: View {
                 .foregroundStyle(.tertiary)
         }
         .contentShape(Rectangle())
-        .padding(.vertical, 2)
+        .padding(.vertical, 4)
     }
 }
 #endif
@@ -114,100 +114,14 @@ struct SettingsView: View {
     @State private var totalUsage = 0
     #endif
 
-    private var isAnyAccountSignedIn: Bool {
-        aniListAuth.isLoggedIn || malAuth.isLoggedIn || simklAuth.isLoggedIn
-    }
-
-    private var accountDisplayName: String {
-        if let username = aniListAuth.username, !username.isEmpty {
-            return username
-        }
-        if let username = malAuth.username, !username.isEmpty {
-            return username
-        }
-        if let username = simklAuth.username, !username.isEmpty {
-            return username
-        }
-        if aniListAuth.isLoggedIn {
-            return "AniList User"
-        }
-        if malAuth.isLoggedIn {
-            return "MyAnimeList User"
-        }
-        if simklAuth.isLoggedIn {
-            return "Simkl User"
-        }
-        return "Sign In"
-    }
-
-    private var accountSubtitle: String {
+    /// The services signed in, short, for the Providers row.
+    private var providersSubtitle: String {
         let services = [
             aniListAuth.isLoggedIn ? "AniList" : nil,
-            malAuth.isLoggedIn ? "MyAnimeList" : nil,
+            malAuth.isLoggedIn ? "MAL" : nil,
             simklAuth.isLoggedIn ? "Simkl" : nil,
         ].compactMap { $0 }
-        switch services.count {
-        case 0:  return "Connect AniList, MyAnimeList or Simkl"
-        case 1:  return "\(services[0]) Account & Tracking"
-        default: return services.joined(separator: ", ") + ", and Tracking"
-        }
-    }
-
-    private var accountInitials: String {
-        let name = accountDisplayName
-        let parts = name.split(separator: " ")
-        if parts.count >= 2 {
-            let first = parts[0].prefix(1)
-            let second = parts[1].prefix(1)
-            return "\(first)\(second)".uppercased()
-        } else if name.count >= 2 {
-            return String(name.prefix(2)).uppercased()
-        } else if !name.isEmpty {
-            return name.uppercased()
-        }
-        return "S"
-    }
-
-    private var accountAvatarURL: String? {
-        if aniListAuth.isLoggedIn, let url = aniListAuth.avatarURL, !url.isEmpty {
-            return url
-        }
-        if malAuth.isLoggedIn, let url = malAuth.avatarURL, !url.isEmpty {
-            return url
-        }
-        if simklAuth.isLoggedIn, let url = simklAuth.avatarURL, !url.isEmpty {
-            return url
-        }
-        return nil
-    }
-
-    @ViewBuilder
-    private var accountAvatar: some View {
-        if let url = accountAvatarURL {
-            CachedAsyncImage(urlString: url)
-                .aspectRatio(contentMode: .fill)
-                .frame(width: 52, height: 52)
-                .clipShape(Circle())
-                .overlay(Circle().strokeBorder(Color.white.opacity(0.15), lineWidth: 0.5))
-        } else if isAnyAccountSignedIn {
-            ZStack {
-                Circle()
-                    .fill(Color(red: 0.35, green: 0.75, blue: 0.98))
-                    .frame(width: 52, height: 52)
-                Text(accountInitials)
-                    .font(.system(size: 20, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white)
-            }
-        } else {
-            ZStack {
-                Circle()
-                    .fill(Color(red: 0.35, green: 0.75, blue: 0.98))
-                    .frame(width: 52, height: 52)
-                Image(systemName: "person.fill")
-                    .font(.system(size: 22, weight: .medium))
-                    .foregroundStyle(.white)
-            }
-        }
+        return services.isEmpty ? "Sign In" : services.joined(separator: ", ")
     }
 
     private var modulesSubtitle: String? {
@@ -263,25 +177,19 @@ struct SettingsView: View {
                 }
                 .buttonStyle(.plain)
                 #endif
-                NavigationLink {
-                    AccountsSettingsView()
-                } label: {
-                    HStack(spacing: 14) {
-                        accountAvatar
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(accountDisplayName)
-                                .font(.headline.weight(.semibold))
-                                .foregroundStyle(.primary)
-                            Text(accountSubtitle)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .padding(.vertical, 4)
-                }
             }
 
             Section {
+                NavigationLink {
+                    AccountsSettingsView()
+                } label: {
+                    SettingsNavRow(
+                        icon: "person.2",
+                        title: "Providers",
+                        subtitle: providersSubtitle
+                    )
+                }
+
                 NavigationLink {
                     PlayerSettingsView()
                 } label: {
