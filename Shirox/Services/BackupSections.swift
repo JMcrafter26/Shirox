@@ -250,13 +250,16 @@ struct SettingsBackupSection: BackupSection {
 
 struct ModulesBackupPayload: Codable {
     struct Entry: Codable {
-        /// The manifest URL a restore re-fetches. Modules without one can't be reinstalled
-        /// and are never exported.
+        /// The manifest URL a restore re-fetches. Empty for a module installed from files,
+        /// which travels whole in `definition` instead.
         var jsonUrl: String
         /// Recorded so a failed restore can name the module rather than just its URL.
         var sourceName: String
         /// `ModuleDefinition.id` is its `scriptUrl`; kept so `activeModuleId` can be matched.
         var scriptUrl: String
+        /// The whole module, script included, for one installed from files or with a script
+        /// edited in the app: re-fetching would lose it. Nil for the rest, and in older backups.
+        var definition: ModuleDefinition?
     }
 
     var modules: [Entry]
@@ -277,10 +280,13 @@ struct ModulesBackupSection: BackupSection {
     @MainActor func export() throws -> ModulesBackupPayload? {
         let d = UserDefaults.standard
         let entries = ModuleManager.shared.modules.compactMap { module -> ModulesBackupPayload.Entry? in
-            guard let jsonUrl = module.jsonUrl, !jsonUrl.isEmpty else { return nil }
+            let carriedWhole = module.isFromFile || module.isScriptEdited
+            let jsonUrl = module.jsonUrl ?? ""
+            guard carriedWhole || !jsonUrl.isEmpty else { return nil }
             return .init(jsonUrl: jsonUrl,
                          sourceName: module.sourceName,
-                         scriptUrl: module.scriptUrl)
+                         scriptUrl: module.scriptUrl,
+                         definition: carriedWhole ? module : nil)
         }
         return ModulesBackupPayload(modules: entries,
                                     activeModuleId: d.string(forKey: Keys.active),
@@ -289,8 +295,16 @@ struct ModulesBackupSection: BackupSection {
 
     @MainActor func apply(_ payload: ModulesBackupPayload) async throws -> [String] {
         let failedUrls = await ModuleManager.shared.restoreModules(
-            jsonUrls: payload.modules.map(\.jsonUrl),
+            jsonUrls: payload.modules.filter { $0.definition == nil }.map(\.jsonUrl),
             activeId: payload.activeModuleId)
+        for case let module? in payload.modules.map(\.definition) {
+            ModuleManager.shared.restoreWhole(module)
+        }
+        if let activeId = payload.activeModuleId,
+           ModuleManager.shared.activeModule?.id != activeId,
+           let module = ModuleManager.shared.modules.first(where: { $0.id == activeId }) {
+            ModuleManager.shared.selectModule(module)
+        }
 
         if let lastUsed = payload.lastUsedModuleId {
             UserDefaults.standard.set(lastUsed, forKey: Keys.lastUsed)

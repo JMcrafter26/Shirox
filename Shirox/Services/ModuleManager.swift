@@ -128,6 +128,87 @@ final class ModuleManager: ObservableObject {
         isLoading = false
     }
 
+    /// Installs a module from files picked on the device (see `ModuleFileImport`).
+    func addModule(fromFiles urls: [URL]) async {
+        isLoading = true
+        errorMessage = nil
+        lastAddedModuleID = nil
+        defer { isLoading = false }
+        do {
+            let files = try urls.map { url -> ModuleFileImport.File in
+                let scoped = url.startAccessingSecurityScopedResource()
+                defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+                return ModuleFileImport.File(name: url.lastPathComponent, data: try Data(contentsOf: url))
+            }
+            let built = try ModuleFileImport.build(from: files)
+            var module = built.module
+            if built.needsScriptDownload {
+                await cacheScript(for: &module)
+                guard module.scriptContent != nil else {
+                    throw ModuleLinkError.scriptMissing(module.scriptUrl)
+                }
+            }
+            await cacheIcon(for: &module)
+            if isAdult(module) { throw ModuleLinkError.adult }
+            install(module)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    /// Puts a module in the list, in place of one with the same id.
+    private func install(_ module: ModuleDefinition) {
+        if let i = modules.firstIndex(where: { $0.id == module.id }) {
+            let wasActive = activeModule?.id == module.id
+            modules[i] = module
+            if wasActive { selectModule(module) }
+        } else {
+            modules.append(module)
+        }
+        saveToStorage()
+        lastAddedModuleID = module.id
+        checkResults.removeValue(forKey: module.id)
+        persistCheckResults()
+        if activeModule == nil { selectModule(module) }
+    }
+
+    /// Puts back a module a backup carried whole: one from files, or one with an edited script.
+    func restoreWhole(_ module: ModuleDefinition) {
+        guard !isAdult(module) else { return }
+        install(module)
+    }
+
+    // MARK: - Script Editing
+
+    /// Saves a module's script as edited in the app, and reloads it if it's the one in use.
+    func saveScript(_ script: String, for moduleID: String) {
+        guard let i = modules.firstIndex(where: { $0.id == moduleID }) else { return }
+        modules[i].scriptContent = script
+        // A module from files has no original to go back to; its script is simply its own.
+        if !modules[i].isFromFile { modules[i].scriptEdited = true }
+        saveToStorage()
+        checkResults.removeValue(forKey: moduleID)
+        persistCheckResults()
+        if activeModule?.id == moduleID { selectModule(modules[i]) }
+    }
+
+    /// Downloads an edited module's script again and drops the edits. False when it couldn't.
+    func revertScript(for moduleID: String) async -> Bool {
+        guard let original = modules.first(where: { $0.id == moduleID }) else { return false }
+        var module = original
+        module.scriptContent = nil
+        await cacheScript(for: &module)
+        guard module.scriptContent != nil,
+              let i = modules.firstIndex(where: { $0.id == moduleID }) else { return false }
+        module.scriptEdited = nil
+        modules[i] = module
+        saveToStorage()
+        checkResults.removeValue(forKey: moduleID)
+        persistCheckResults()
+        if activeModule?.id == moduleID { selectModule(module) }
+        return true
+    }
+
     /// Adult modules installed before Shirox refused them. Run once the host list has loaded,
     /// so the sites they reach are checked too.
     func removeAdultModules() {
@@ -242,7 +323,9 @@ final class ModuleManager: ObservableObject {
         // A snapshot: `modules` can change while each fetch is awaited (a module removed, adult
         // ones purged), so positions are looked up again by id before writing back.
         for module in modules {
-            guard let jsonUrlStr = module.jsonUrl,
+            // Edits made in the app aren't replaced; reverting them brings updates back.
+            guard !module.isScriptEdited,
+                  let jsonUrlStr = module.jsonUrl,
                   let jsonURL = URL(string: jsonUrlStr),
                   let (data, _) = try? await URLSession.shared.data(from: jsonURL) else { continue }
             var fresh: ModuleDefinition

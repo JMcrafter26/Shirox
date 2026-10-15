@@ -10,6 +10,8 @@ enum ModuleLinkError: LocalizedError, Equatable {
     case seanimeList
     case notAModule
     case adult
+    /// A manifest picked from files whose script couldn't be downloaded.
+    case scriptMissing(String)
 
     var errorDescription: String? {
         switch self {
@@ -20,13 +22,15 @@ enum ModuleLinkError: LocalizedError, Equatable {
         case .webPage:
             return "That link is a web page, not a module. On GitHub, open the file and use its Raw link."
         case .script:
-            return "That link is a script, not a module. Paste the .json link beside it instead."
+            return "That link is a script, not a module. Paste the .json link beside it instead, or download the .js and pick it with Import from Files."
         case .seanimeList:
             return "That link is a list of modules. Adding a whole list isn't supported yet — paste one module's .json link."
         case .notAModule:
             return "That link isn't a module Shirox can add."
         case .adult:
             return "Shirox doesn't add adult modules."
+        case .scriptMissing(let url):
+            return "Couldn't download this module's script from \(url). Pick its .js file together with the .json."
         }
     }
 

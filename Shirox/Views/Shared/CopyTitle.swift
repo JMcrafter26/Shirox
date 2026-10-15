@@ -17,6 +17,17 @@ enum Clipboard {
         NSPasteboard.general.setString(string, forType: .string)
         #endif
     }
+
+    /// The text on the clipboard, if any. iOS may ask the user before handing it over.
+    static var string: String? {
+        #if os(iOS)
+        UIPasteboard.general.string
+        #elseif os(macOS)
+        NSPasteboard.general.string(forType: .string)
+        #else
+        nil
+        #endif
+    }
 }
 
 /// The full title, then Copy Title: the top of a card's long-press menu.

@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct ModuleListView: View {
     @EnvironmentObject private var moduleManager: ModuleManager
@@ -20,6 +21,9 @@ struct ModuleListView: View {
     @State private var offerRemovingBroken = false
     /// A module just added whose check failed, to keep or remove.
     @State private var failedNewModule: (module: ModuleDefinition, step: ModuleCheckStep, reason: String)?
+    @State private var showModuleFileImporter = false
+    /// The module whose script is open in the editor.
+    @State private var editingScriptOf: ModuleDefinition?
 
     private static var localFilesBlurb: String {
         #if os(macOS) || targetEnvironment(macCatalyst)
@@ -112,6 +116,13 @@ struct ModuleListView: View {
                                 .contextMenu {
                                     seanimeDubAction(module)
                                     shareModuleActions(module)
+                                    #if !os(tvOS)
+                                    Button {
+                                        editingScriptOf = module
+                                    } label: {
+                                        Label("Edit Script", systemImage: "chevron.left.forwardslash.chevron.right")
+                                    }
+                                    #endif
                                     Button {
                                         Task { await moduleManager.check(module) }
                                     } label: {
@@ -226,6 +237,31 @@ struct ModuleListView: View {
             addModuleError = nil
             moduleManager.errorMessage = nil
         }
+        #if !os(tvOS)
+        .fileImporter(isPresented: $showModuleFileImporter,
+                      allowedContentTypes: [.json, .javaScript],
+                      allowsMultipleSelection: true) { result in
+            switch result {
+            case .success(let urls): addModuleFromFiles(urls)
+            case .failure(let error): addModuleError = error.localizedDescription
+            }
+        }
+        .sheet(item: Binding(get: { editingScriptOf.map(EditingScript.init) },
+                             set: { editingScriptOf = $0?.module })) { editing in
+            NavigationStack {
+                ModuleScriptEditorView(moduleID: editing.module.id)
+            }
+            .environmentObject(moduleManager)
+            #if os(macOS)
+            .frame(minWidth: 640, minHeight: 520)
+            #endif
+        }
+        #endif
+    }
+
+    private struct EditingScript: Identifiable {
+        let module: ModuleDefinition
+        var id: String { module.id }
     }
 
     private var brokenTitle: String {
@@ -310,6 +346,35 @@ struct ModuleListView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+
+            #if !os(tvOS)
+            Button {
+                showModuleFileImporter = true
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "doc.badge.plus")
+                        .foregroundStyle(.secondary)
+                        .frame(width: 20)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Import from Files")
+                            .foregroundStyle(Color.primary)
+                        Text("A module's .json, its .js, or both together")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    if moduleManager.isLoading && !isAddingModule {
+                        ProgressView().scaleEffect(0.8)
+                    }
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(moduleManager.isLoading)
+            #endif
         }
         .padding(.vertical, 8)
         .background(Color.clear)
@@ -580,6 +645,12 @@ struct ModuleListView: View {
                             Text("·").font(.caption).foregroundStyle(.secondary)
                             Text(author.name).font(.caption).foregroundStyle(.secondary)
                         }
+                        if module.isFromFile || module.isScriptEdited {
+                            Text(module.isFromFile ? "File" : "Edited")
+                                .font(.caption2.weight(.semibold))
+                                .padding(.horizontal, 5).padding(.vertical, 1)
+                                .background(Color.secondary.opacity(0.15), in: Capsule())
+                        }
                         if module.seanime != nil {
                             Text("Seanime")
                                 .font(.caption2.weight(.semibold))
@@ -707,6 +778,25 @@ struct ModuleListView: View {
                         #endif
                     }
                 }
+            }
+        }
+    }
+
+    private func addModuleFromFiles(_ urls: [URL]) {
+        addModuleError = nil
+        Task {
+            await moduleManager.addModule(fromFiles: urls)
+            if let error = moduleManager.errorMessage {
+                addModuleError = error
+                moduleManager.errorMessage = nil
+                #if os(iOS)
+                UINotificationFeedbackGenerator().notificationOccurred(.error)
+                #endif
+            } else {
+                #if os(iOS)
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+                #endif
+                checkNewModule()
             }
         }
     }
