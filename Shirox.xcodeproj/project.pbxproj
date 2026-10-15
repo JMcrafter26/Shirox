@@ -1081,6 +1081,7 @@
 		E227DA58285C280ED3980B82 /* KingfisherImageCacheTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EC154F4B51E6E8262096B6AE /* KingfisherImageCacheTests.swift */; };
 		E22B37618182D3AEE628DF7C /* MangaReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A163F438470905CAA8B912B0 /* MangaReaderView.swift */; };
 		E2DED848AB0194CA89742299 /* SimklLibraryDestinationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5235A4299A8399E255557D32 /* SimklLibraryDestinationTests.swift */; };
+		E3D2F0EF7FE00478156C32A6 /* StremioRuntimeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 566FE19E327AD3C0E5A2D3F8 /* StremioRuntimeTests.swift */; };
 		E40ED5A5A03F9A3ECCE3BEC7 /* FreshInstallKeychainPurge.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF9A299B7B1F54AA1675478F /* FreshInstallKeychainPurge.swift */; };
 		E4203D3CAE16695490890C1C /* MangaDownloadPlanningTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 00F7945A220799EBCB4893BD /* MangaDownloadPlanningTests.swift */; };
 		E47395E4C41916F4EDFCC2C1 /* LibraryCollapsingHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D6742C550B97293CCFDC834 /* LibraryCollapsingHeader.swift */; };
@@ -1417,6 +1418,7 @@
 		53E7756C8213511509BA7B15 /* DiscoverySourceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiscoverySourceTests.swift; sourceTree = "<group>"; };
 		5466CA925AC3A26F6DFD01BF /* SimklSearch.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklSearch.swift; sourceTree = "<group>"; };
 		5507C974E32C5C64D76B9755 /* ModuleLinkErrorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ModuleLinkErrorTests.swift; sourceTree = "<group>"; };
+		566FE19E327AD3C0E5A2D3F8 /* StremioRuntimeTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StremioRuntimeTests.swift; sourceTree = "<group>"; };
 		56C921630CAED5B7B10A681B /* JellyfinPlaybackCoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = JellyfinPlaybackCoordinator.swift; sourceTree = "<group>"; };
 		5796C5DA072B0EA72EC14914 /* ContinueWatchingResetTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ContinueWatchingResetTests.swift; sourceTree = "<group>"; };
 		5844D8774F9B1B6C5A7A3C3E /* JellyfinLibraryView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = JellyfinLibraryView.swift; sourceTree = "<group>"; };
@@ -2362,6 +2364,7 @@
 				F7E6FD57408E513472BB8B3E /* ExtensionRepoLoaderTests.swift */,
 				33D6514A525E118FF317FFD3 /* ZipReaderTests.swift */,
 				000560984DC1CC8ADB4366C2 /* ExtensionInstallerTests.swift */,
+				566FE19E327AD3C0E5A2D3F8 /* StremioRuntimeTests.swift */,
 			);
 			path = ShiroxTests;
 			sourceTree = SOURCE_ROOT;
@@ -2855,6 +2858,7 @@
 				4280D0D910E4ADDEB6C1FBAB /* ExtensionRepoLoaderTests.swift in Sources */,
 				7220E621181C2F9F0D9D31D8 /* ZipReaderTests.swift in Sources */,
 				B6CA5DC5B0A58ED3145944BF /* ExtensionInstallerTests.swift in Sources */,
+				E3D2F0EF7FE00478156C32A6 /* StremioRuntimeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
