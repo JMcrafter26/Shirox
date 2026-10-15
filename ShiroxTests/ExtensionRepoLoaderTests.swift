@@ -89,4 +89,13 @@ final class ExtensionRepoLoaderTests: XCTestCase {
         let none = try await load(["sourceName": "Sora", "version": "1", "scriptUrl": "x", "type": "anime"], url: "https://x/m.json")
         XCTAssertNil(none)
     }
+
+    func testEntryLinkNamesItsProvider() async throws {
+        let url = "https://raw.test/o/r/main/manifest.json#ext=a"
+        XCTAssertEqual(ExtensionRepoLoader.entryKey(in: URL(string: url)!), "a")
+        XCTAssertNil(ExtensionRepoLoader.entryKey(in: URL(string: "https://raw.test/manifest.json")!))
+        let m: [String: Any] = ["name": "R", "scrapers": [["id": "a", "name": "A", "version": "1", "filename": "a.js"]]]
+        guard case .repo(let r)? = try await load(m, url: url) else { return XCTFail() }
+        XCTAssertEqual(r.url.absoluteString, "https://raw.test/o/r/main/manifest.json")
+    }
 }

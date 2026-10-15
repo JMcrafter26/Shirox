@@ -27,6 +27,8 @@ final class ModuleManager: ObservableObject {
     @Published private(set) var checking: Set<String> = []
     /// The module the last successful add installed, for the add screen to check.
     private(set) var lastAddedModuleID: String?
+    /// A repo link just added: the sheet listing its providers shows while this is set.
+    @Published var pendingRepo: ExtensionRepo?
     private let checkResultsKey = "moduleCheckResults"
 
     /// Megabytes of scripts, kept out of UserDefaults (see `StoredFile`).
@@ -88,9 +90,27 @@ final class ModuleManager: ObservableObject {
         errorMessage = nil
         lastAddedModuleID = nil
         do {
+            let jsonURL = ExtensionRepoLoader.normalized(jsonURL)
             let (data, response) = try await URLSession.shared.data(from: jsonURL)
             var module: ModuleDefinition
-            if let seanime = SeanimeManifest.detect(data) {
+            if let link = try await extensionLink(data, url: jsonURL) {
+                switch link {
+                case .repo(let repo):
+                    // One provider's own link (a backup restoring it): install that one.
+                    guard let key = ExtensionRepoLoader.entryKey(in: jsonURL) else {
+                        // A repo: the sheet listing its providers installs them.
+                        pendingRepo = repo
+                        isLoading = false
+                        return
+                    }
+                    guard let entry = repo.entries.first(where: { $0.key == key }) else { throw ModuleLinkError.notAModule }
+                    module = try await ExtensionInstaller.module(entry: entry, repo: repo) { try await URLSession.shared.data(from: $0).0 }
+                    await cacheIcon(for: &module)
+                case .stremio(let manifest):
+                    module = try ExtensionInstaller.module(stremio: manifest)
+                    await cacheIcon(for: &module)
+                }
+            } else if let seanime = SeanimeManifest.detect(data) {
                 // A Seanime provider's manifest: its script is fetched, converted and checked here.
                 module = try await SeanimeInstaller.module(from: seanime, manifestURL: jsonURL)
                 await cacheIcon(for: &module)
@@ -98,6 +118,14 @@ final class ModuleManager: ObservableObject {
                 do {
                     module = try JSONDecoder().decode(ModuleDefinition.self, from: data)
                 } catch {
+                    // A Vega repo given by its folder rather than its manifest.json.
+                    if jsonURL.pathExtension.isEmpty,
+                       let (manifestData, _) = try? await URLSession.shared.data(from: jsonURL.appendingPathComponent("manifest.json")),
+                       case .repo(let repo)? = try? await extensionLink(manifestData, url: jsonURL.appendingPathComponent("manifest.json")) {
+                        pendingRepo = repo
+                        isLoading = false
+                        return
+                    }
                     // Not a module: say what the link is instead.
                     throw ModuleLinkError.diagnose(data, response: response, url: jsonURL)
                 }
@@ -201,6 +229,46 @@ final class ModuleManager: ObservableObject {
             Logger.shared.log("[ModuleManager] Removed adult module \(module.sourceName)", type: "Info")
             removeModule(module)
         }
+    }
+
+    private func extensionLink(_ data: Data, url: URL) async throws -> ExtensionLink? {
+        try await ExtensionRepoLoader.detect(data, url: url) { try await URLSession.shared.data(from: $0).0 }
+    }
+
+    /// Installs providers chosen from a repo sheet. Returns why each one that failed did, by key.
+    func install(entries: [ExtensionRepoEntry], from repo: ExtensionRepo) async -> [String: String] {
+        var failures: [String: String] = [:]
+        for entry in entries {
+            do {
+                var module = try await ExtensionInstaller.module(entry: entry, repo: repo) { try await URLSession.shared.data(from: $0).0 }
+                await cacheIcon(for: &module)
+                guard !isAdult(module) else { throw ExtensionInstallError.adult }
+                install(module)
+            } catch {
+                failures[entry.key] = error.localizedDescription
+            }
+        }
+        return failures
+    }
+
+    /// A newer version of an installed extension, from its repo or addon manifest; nil when none.
+    private func updatedExtension(_ module: ModuleDefinition, ext: ExtensionInfo, data: Data, url: URL) async -> ModuleDefinition? {
+        guard let link = try? await extensionLink(data, url: url) else { return nil }
+        var fresh: ModuleDefinition
+        switch link {
+        case .stremio(let manifest):
+            guard manifest.version != module.version, let m = try? ExtensionInstaller.module(stremio: manifest) else { return nil }
+            fresh = m
+        case .repo(let repo):
+            // An entry that's gone from the repo, or is now hidden as adult, isn't found: the
+            // installed one stays, and removeAdultModules() judges it as it does any module.
+            guard let entry = repo.entries.first(where: { $0.key == ext.key }), entry.version != module.version,
+                  let m = try? await ExtensionInstaller.module(entry: entry, repo: repo, fetch: { try await URLSession.shared.data(from: $0).0 })
+            else { return nil }
+            fresh = m
+        }
+        await cacheIcon(for: &fresh)
+        return fresh
     }
 
     private func isAdult(_ module: ModuleDefinition) -> Bool {
@@ -314,7 +382,10 @@ final class ModuleManager: ObservableObject {
                   let jsonURL = URL(string: jsonUrlStr),
                   let (data, _) = try? await URLSession.shared.data(from: jsonURL) else { continue }
             var fresh: ModuleDefinition
-            if let seanime = SeanimeManifest.detect(data) {
+            if let ext = module.ext {
+                guard let updated = await updatedExtension(module, ext: ext, data: data, url: jsonURL) else { continue }
+                fresh = updated
+            } else if let seanime = SeanimeManifest.detect(data) {
                 guard seanime.version != module.version,
                       let installed = try? await SeanimeInstaller.module(from: seanime, manifestURL: jsonURL) else { continue }
                 fresh = installed

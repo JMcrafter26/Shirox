@@ -1,0 +1,24 @@
+import XCTest
+@testable import Shirox
+
+final class ZipReaderTests: XCTestCase {
+    // printf 'hello' > a.txt && zip -0 -X s.zip a.txt && base64 -i s.zip
+    let stored = "UEsDBAoAAAAAAG+2T12GphA2BQAAAAUAAAAFAAAAYS50eHRoZWxsb1BLAQIeAwoAAAAAAG+2T12GphA2BQAAAAUAAAAFAAAAAAAAAAAAAACkgQAAAABhLnR4dFBLBQYAAAAAAQABADMAAAAoAAAAAAA="
+    // for i in $(seq 20); do printf 'globalThis.search = 1;\n'; done > plugin.js && zip -9 -X d.zip plugin.js && base64 -i d.zip
+    let deflated = "UEsDBBQAAgAIAG+2T12gXm2DHgAAAMwBAAAJAAAAcGx1Z2luLmpzS8/JT0rMCcnILNYrTk0sSs5QsFUwtOZKHxUeesIAUEsBAh4DFAACAAgAb7ZPXaBebYMeAAAAzAEAAAkAAAAAAAAAAQAAAKSBAAAAAHBsdWdpbi5qc1BLBQYAAAAAAQABADcAAABFAAAAAAA="
+
+    func testStoredFile() {
+        let text = ZipReader.file(named: "a.txt", in: Data(base64Encoded: stored)!).map { String(decoding: $0, as: UTF8.self) }
+        XCTAssertEqual(text, "hello")
+    }
+
+    func testDeflatedFile() {
+        let text = ZipReader.file(named: "plugin.js", in: Data(base64Encoded: deflated)!).map { String(decoding: $0, as: UTF8.self) }
+        XCTAssertEqual(text, String(repeating: "globalThis.search = 1;\n", count: 20))
+    }
+
+    func testMissingFileAndGarbage() {
+        XCTAssertNil(ZipReader.file(named: "nope", in: Data(base64Encoded: stored)!))
+        XCTAssertNil(ZipReader.file(named: "a.txt", in: Data("not a zip".utf8)))
+    }
+}

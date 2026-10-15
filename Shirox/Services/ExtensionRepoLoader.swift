@@ -12,8 +12,25 @@ enum ExtensionRepoLoader {
         return parts.url ?? url
     }
 
+    /// A provider's own link: its repo's, with `#ext=<key>` — what backups keep and restore by.
+    static func entryLink(repo: URL, key: String) -> String {
+        var parts = URLComponents(url: repo, resolvingAgainstBaseURL: false)
+        parts?.fragment = "ext=\(key)"
+        return parts?.url?.absoluteString ?? repo.absoluteString
+    }
+
+    /// The provider an entry link names.
+    static func entryKey(in url: URL) -> String? {
+        guard let fragment = url.fragment, fragment.hasPrefix("ext=") else { return nil }
+        let key = String(fragment.dropFirst(4))
+        return key.isEmpty ? nil : key.removingPercentEncoding ?? key
+    }
+
     static func detect(_ data: Data, url: URL, fetch: Fetch) async throws -> ExtensionLink? {
         guard let json = try? JSONSerialization.jsonObject(with: data) else { return nil }
+        var parts = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        parts?.fragment = nil
+        let url = parts?.url ?? url
         let base = url.deletingLastPathComponent()
 
         if let object = json as? [String: Any] {
