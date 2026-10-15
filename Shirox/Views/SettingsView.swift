@@ -716,7 +716,7 @@ struct PlayerSettingsView: View {
                     Toggle("Spatial Audio", isOn: $spatialAudio)
                         .tint(.secondary)
                         .onChangeOf(spatialAudio) { _ in AppAudioSession.applySpatialAudioSetting() }
-                    Text("Lets iOS play videos in Spatial Audio on AirPods and other headphones that support it. Turn off to hear plain stereo. Takes effect from the next video.")
+                    Text("Lets iOS play videos in Spatial Audio, with its movie sound processing, on AirPods and other headphones. Turn off for plain stereo, or if headphones play quieter here than in other apps. Takes effect from the next video.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
