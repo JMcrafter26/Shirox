@@ -450,6 +450,7 @@
 		1D35FCAF1184526713F84562 /* SimklKindPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99368291A4FD4331E25F2FEA /* SimklKindPicker.swift */; };
 		1D7B6DE660793B6C4499B61D /* ModuleScriptEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6325817BD7440B271005CBE /* ModuleScriptEditorView.swift */; };
 		1D7E00496481B46D86C0E530 /* SyncTargets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1FCF5D4BE28837126DC12CF1 /* SyncTargets.swift */; };
+		1E8E3B5069C68D6045B4BF3F /* ExtensionAdultCheck.swift in Sources */ = {isa = PBXBuildFile; fileRef = 209E8A79176D69B7AC334928 /* ExtensionAdultCheck.swift */; };
 		1E9C0F13D08F553EC0BF3F9E /* LocalCollection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A013F4638FEFB8E37C2E53A /* LocalCollection.swift */; };
 		1EC02510E39975D92376E45B /* StoredFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B02286E77DB0BD73AD3303E /* StoredFile.swift */; };
 		1EF89167D3E014ECF13C8657 /* TVDBLogo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74A691F1B345D1C7447C46B2 /* TVDBLogo.swift */; };
@@ -577,6 +578,7 @@
 		47136FE4FAB4E486C602D7AB /* SimklWriteQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D9BBDAAE6189B464E64BBC5 /* SimklWriteQueue.swift */; };
 		47BBE712FAC005A9A0C020AA /* JellyfinLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5844D8774F9B1B6C5A7A3C3E /* JellyfinLibraryView.swift */; };
 		487D4362E36FEB276271DC6F /* PlayerAssOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A08E27B4A688BE98644F700 /* PlayerAssOverlay.swift */; };
+		488139684F57CE126403EB1E /* ExtensionAdultCheck.swift in Sources */ = {isa = PBXBuildFile; fileRef = 209E8A79176D69B7AC334928 /* ExtensionAdultCheck.swift */; };
 		4901D0B3725A729C1ACC215A /* TrackingIDInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D86F9ECC723417E1CFE1019 /* TrackingIDInput.swift */; };
 		49405686E3A7A09037D3891E /* SimklSyncPlanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D76D661EDB11E936A894C15B /* SimklSyncPlanTests.swift */; };
 		49945AAE0868AF20636E8A0B /* LibraryDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1659CAEADDD8118DA5FF4FFF /* LibraryDataSource.swift */; };
@@ -724,6 +726,7 @@
 		7001DC4920B99BC1E8CF1E39 /* SimklAnimeEditSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8C16892D7318AC9921F236D /* SimklAnimeEditSheet.swift */; };
 		7014036E276C2A50DA725879 /* CastProxyBusyPortTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D3BD42D4ABFF5BC4A121CFDE /* CastProxyBusyPortTests.swift */; };
 		70636969427E9B8452576377 /* SimklEpisodePlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED7B709D7B1CC0F49AA736E6 /* SimklEpisodePlanner.swift */; };
+		7162B03C358E28EB224D530E /* ExtensionRepoLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D967E193B36DBB828CDEC9D /* ExtensionRepoLoader.swift */; };
 		71AB5890ACFE2D0B19626AD0 /* SeanimeWrapperTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 612F3CFA914CE3875ED7121D /* SeanimeWrapperTests.swift */; };
 		722DD11EAB70F45D04DAC355 /* SimklModuleTracking.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E34560A4389A43C74BE3D1C /* SimklModuleTracking.swift */; };
 		72BF12E3C8B27A9D432103DD /* ModuleCheck.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4534F7D6371D3DF209BAF6A /* ModuleCheck.swift */; };
@@ -795,6 +798,7 @@
 		8802A42E6286FEE602207CF1 /* CardTitle.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED868467208862F86E43436C /* CardTitle.swift */; };
 		8805D5CFDC59FE5C56353BBC /* CacheManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1562D4E4D14DC5387134649 /* CacheManagerTests.swift */; };
 		880C6E7ED756F8167F4B197B /* SimklPlayRef.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51CCA7446EA6D04AED7FAE2B /* SimklPlayRef.swift */; };
+		88AB09421D849149957F0345 /* ExtensionAdultCheck.swift in Sources */ = {isa = PBXBuildFile; fileRef = 209E8A79176D69B7AC334928 /* ExtensionAdultCheck.swift */; };
 		8A38ECB64A6717CEED682DF0 /* HLSManifestParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 434062BAE638F3D33467EBCF /* HLSManifestParser.swift */; };
 		8A3B1A010F48F8614C2559F0 /* LibraryDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1659CAEADDD8118DA5FF4FFF /* LibraryDataSource.swift */; };
 		8A498D4DF0E6C8AEF64F5211 /* CinematicDetail.swift in Sources */ = {isa = PBXBuildFile; fileRef = 728B11086BBC1DC32FD7F97C /* CinematicDetail.swift */; };
@@ -1107,6 +1111,7 @@
 		F347119BB1CD5612676F79B0 /* NotificationBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A88804D3B352FD28723122E3 /* NotificationBadge.swift */; };
 		F34D4ABCD234457BEB1E186C /* ZoomableContainer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7067BDBACB2F7A173AA486EC /* ZoomableContainer.swift */; };
 		F37F644897820C9D2466E987 /* SearchBrowseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C581970F3C23C369DD7CA074 /* SearchBrowseView.swift */; };
+		F40E5C688A33F84069A32E5C /* ExtensionRepoLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D967E193B36DBB828CDEC9D /* ExtensionRepoLoader.swift */; };
 		F4B629DD0CE540A681EBF6A5 /* LocalPlaybackCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E548862288E04B9EA60BBCF3 /* LocalPlaybackCoordinator.swift */; };
 		F5E70692522D64E3E8D95328 /* SimklTitleLabels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EEEE6BC436B400EC32EFB21 /* SimklTitleLabels.swift */; };
 		F5F09B5AEE05E5CB69F486A6 /* SeanimeInstall.js in Resources */ = {isa = PBXBuildFile; fileRef = FCBEAC7148133CCF2D13E786 /* SeanimeInstall.js */; };
@@ -1142,6 +1147,7 @@
 		FF0C14E2BFB7E229AC061F3D /* FreshInstallKeychainPurge.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF9A299B7B1F54AA1675478F /* FreshInstallKeychainPurge.swift */; };
 		FF17377B81BE09D95EFB573C /* MediaDestination.swift in Sources */ = {isa = PBXBuildFile; fileRef = F448D8EACA889534B3F509C6 /* MediaDestination.swift */; };
 		FF2F81D3615940308F608BD6 /* SubtitleRouting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 881989087D5AEFEADB010420 /* SubtitleRouting.swift */; };
+		FFFEDFBBB37573B50961C268 /* ExtensionRepoLoader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D967E193B36DBB828CDEC9D /* ExtensionRepoLoader.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -1324,6 +1330,7 @@
 		1FB508B47E45CCA9A0D55958 /* AniListMangaMappingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AniListMangaMappingTests.swift; sourceTree = "<group>"; };
 		1FCF5D4BE28837126DC12CF1 /* SyncTargets.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SyncTargets.swift; sourceTree = "<group>"; };
 		2063F643CA2437FD3A6B2F7F /* SubtitleLoaderTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SubtitleLoaderTests.swift; sourceTree = "<group>"; };
+		209E8A79176D69B7AC334928 /* ExtensionAdultCheck.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExtensionAdultCheck.swift; sourceTree = "<group>"; };
 		21201D48C8E94395977F4564 /* ScoreInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreInputView.swift; sourceTree = "<group>"; };
 		2213E017B4F4B5BDAF065144 /* HostRequestGate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HostRequestGate.swift; sourceTree = "<group>"; };
 		225725D9D612397018C48688 /* SimklBudget.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklBudget.swift; sourceTree = "<group>"; };
@@ -1446,6 +1453,7 @@
 		6C1DEB4F3024780F6AA72BF7 /* SimklEpisodePlannerTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklEpisodePlannerTests.swift; sourceTree = "<group>"; };
 		6CD7DB6AB4D4669A5E102076 /* BackupSettingsSectionTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BackupSettingsSectionTests.swift; sourceTree = "<group>"; };
 		6D86F9ECC723417E1CFE1019 /* TrackingIDInput.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TrackingIDInput.swift; sourceTree = "<group>"; };
+		6D967E193B36DBB828CDEC9D /* ExtensionRepoLoader.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExtensionRepoLoader.swift; sourceTree = "<group>"; };
 		6E058F5105C524B077072AF6 /* AppDirectoriesTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppDirectoriesTests.swift; sourceTree = "<group>"; };
 		6E157CF84FD16C7DFCC2825C /* SimklSyncPlan.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklSyncPlan.swift; sourceTree = "<group>"; };
 		6EA13A2F15016892850F349E /* JellyfinAuthManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = JellyfinAuthManager.swift; sourceTree = "<group>"; };
@@ -1924,6 +1932,8 @@
 				F1B7B5CA1E030CB133AAAB78 /* ProfileManager.swift */,
 				61F02FFBDD8907A1858ABAA5 /* ProfileSwap.swift */,
 				9C70B00EDD0234AB98F6938A /* ExtensionInfo.swift */,
+				6D967E193B36DBB828CDEC9D /* ExtensionRepoLoader.swift */,
+				209E8A79176D69B7AC334928 /* ExtensionAdultCheck.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -3133,6 +3143,8 @@
 				DE9F456F41FDB0D6A154E688 /* AnchoredShareButton.swift in Sources */,
 				4C1AD97A92334CDC1398B62D /* JavaScriptHighlighter.swift in Sources */,
 				3FA555FB4A08D225BBE3C044 /* ExtensionInfo.swift in Sources */,
+				7162B03C358E28EB224D530E /* ExtensionRepoLoader.swift in Sources */,
+				1E8E3B5069C68D6045B4BF3F /* ExtensionAdultCheck.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3446,6 +3458,8 @@
 				647CFD07AAD61421EA20395A /* AnchoredShareButton.swift in Sources */,
 				2464790BF31FE8A206B07965 /* JavaScriptHighlighter.swift in Sources */,
 				AD2F33EC428D7F95DA17C0EC /* ExtensionInfo.swift in Sources */,
+				F40E5C688A33F84069A32E5C /* ExtensionRepoLoader.swift in Sources */,
+				488139684F57CE126403EB1E /* ExtensionAdultCheck.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3760,6 +3774,8 @@
 				0463683298F6BE8C5CCE60A2 /* AnchoredShareButton.swift in Sources */,
 				A47C396C29DE63A0C946FF13 /* JavaScriptHighlighter.swift in Sources */,
 				3B4465EB44C6066DCE1A807D /* ExtensionInfo.swift in Sources */,
+				FFFEDFBBB37573B50961C268 /* ExtensionRepoLoader.swift in Sources */,
+				88AB09421D849149957F0345 /* ExtensionAdultCheck.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
