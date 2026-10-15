@@ -128,32 +128,17 @@ final class ModuleManager: ObservableObject {
         isLoading = false
     }
 
-    /// Installs a module from files picked on the device (see `ModuleFileImport`).
-    func addModule(fromFiles urls: [URL]) async {
-        isLoading = true
+    /// Installs a module put together on the device (`ModuleImportView`).
+    func addModule(_ module: ModuleDefinition) async {
         errorMessage = nil
         lastAddedModuleID = nil
-        defer { isLoading = false }
-        do {
-            let files = try urls.map { url -> ModuleFileImport.File in
-                let scoped = url.startAccessingSecurityScopedResource()
-                defer { if scoped { url.stopAccessingSecurityScopedResource() } }
-                return ModuleFileImport.File(name: url.lastPathComponent, data: try Data(contentsOf: url))
-            }
-            let built = try ModuleFileImport.build(from: files)
-            var module = built.module
-            if built.needsScriptDownload {
-                await cacheScript(for: &module)
-                guard module.scriptContent != nil else {
-                    throw ModuleLinkError.scriptMissing(module.scriptUrl)
-                }
-            }
-            await cacheIcon(for: &module)
-            if isAdult(module) { throw ModuleLinkError.adult }
-            install(module)
-        } catch {
-            errorMessage = error.localizedDescription
+        var module = module
+        if module.iconData == nil { await cacheIcon(for: &module) }
+        guard !isAdult(module) else {
+            errorMessage = ModuleLinkError.adult.localizedDescription
+            return
         }
+        install(module)
     }
 
     /// Puts a module in the list, in place of one with the same id.

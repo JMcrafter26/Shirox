@@ -21,7 +21,7 @@ struct ModuleListView: View {
     @State private var offerRemovingBroken = false
     /// A module just added whose check failed, to keep or remove.
     @State private var failedNewModule: (module: ModuleDefinition, step: ModuleCheckStep, reason: String)?
-    @State private var showModuleFileImporter = false
+    @State private var showModuleImport = false
     /// The module whose script is open in the editor.
     @State private var editingScriptOf: ModuleDefinition?
 
@@ -38,14 +38,7 @@ struct ModuleListView: View {
 
     var body: some View {
         List {
-                Section {
-                    addModuleCard
-                }
-                .listRowInsets(EdgeInsets())
-                .listRowBackground(Color.clear)
-                #if !os(tvOS)
-                .listRowSeparator(.hidden)
-                #endif
+                addModuleSection
 
                 if !isLocalModuleInstalled {
                     Section {
@@ -121,6 +114,11 @@ struct ModuleListView: View {
                                         editingScriptOf = module
                                     } label: {
                                         Label("Edit Script", systemImage: "chevron.left.forwardslash.chevron.right")
+                                    }
+                                    if #available(iOS 16.0, macOS 13.0, *), let files = ModuleShareFiles.urls(for: module) {
+                                        ShareLink(items: files) {
+                                            Label("Share as Files", systemImage: "doc.on.doc")
+                                        }
                                     }
                                     #endif
                                     Button {
@@ -238,13 +236,14 @@ struct ModuleListView: View {
             moduleManager.errorMessage = nil
         }
         #if !os(tvOS)
-        .fileImporter(isPresented: $showModuleFileImporter,
-                      allowedContentTypes: [.json, .javaScript],
-                      allowsMultipleSelection: true) { result in
-            switch result {
-            case .success(let urls): addModuleFromFiles(urls)
-            case .failure(let error): addModuleError = error.localizedDescription
+        .sheet(isPresented: $showModuleImport, onDismiss: checkNewModule) {
+            NavigationStack {
+                ModuleImportView()
             }
+            .environmentObject(moduleManager)
+            #if os(macOS)
+            .frame(minWidth: 520, minHeight: 640)
+            #endif
         }
         .sheet(item: Binding(get: { editingScriptOf.map(EditingScript.init) },
                              set: { editingScriptOf = $0?.module })) { editing in
@@ -300,84 +299,57 @@ struct ModuleListView: View {
         }
     }
 
-    // MARK: - Add Module Card
-    private var addModuleCard: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Add Module")
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(.secondary)
-                .textCase(.uppercase)
-                .padding(.horizontal, 16)
-
+    // MARK: - Add Module
+    /// A link to paste, or a module's files.
+    private var addModuleSection: some View {
+        Section {
             HStack(spacing: 10) {
                 Image(systemName: "link")
                     .foregroundStyle(.secondary)
-                    .frame(width: 20)
-
+                    .frame(width: 22)
                 TextField("Module JSON URL", text: $moduleURL)
                     .textContentType(.URL)
                     .autocorrectionDisabled()
                     #if os(iOS)
                     .textInputAutocapitalization(.never)
                     .keyboardType(.URL)
+                    .submitLabel(.go)
                     #endif
                     .focused($isTextFieldFocused)
                     .disabled(isAddingModule)
-                    .onSubmit {
-                        addModule()
+                    .onSubmit { addModule() }
+                if isAddingModule {
+                    ProgressView()
+                } else if !moduleURL.isEmpty {
+                    Button("Add", action: addModule)
+                        .font(.body.weight(.semibold))
+                        .buttonStyle(.borderless)
+                } else {
+                    Button {
+                        if let text = Clipboard.string?.trimmingCharacters(in: .whitespacesAndNewlines) { moduleURL = text }
+                    } label: {
+                        Image(systemName: "doc.on.clipboard")
                     }
-
-                Button {
-                    addModule()
-                } label: {
-                    if isAddingModule {
-                        ProgressView()
-                            .scaleEffect(0.8)
-                            .frame(width: 28, height: 28)
-                    } else {
-                        Image(systemName: "plus.circle.fill")
-                            .font(.title2)
-                            .foregroundStyle(moduleURL.isEmpty ? Color.secondary : Color.primary)
-                    }
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel("Paste Link")
                 }
-                .buttonStyle(.plain)
-                .disabled(moduleURL.isEmpty || isAddingModule)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
-
             #if !os(tvOS)
             Button {
-                showModuleFileImporter = true
+                showModuleImport = true
             } label: {
-                HStack(spacing: 10) {
-                    Image(systemName: "doc.badge.plus")
-                        .foregroundStyle(.secondary)
-                        .frame(width: 20)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Import from Files")
-                            .foregroundStyle(Color.primary)
-                        Text("A module's .json, its .js, or both together")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    if moduleManager.isLoading && !isAddingModule {
-                        ProgressView().scaleEffect(0.8)
-                    }
+                Label {
+                    Text("Import from Files…").foregroundStyle(Color.primary)
+                } icon: {
+                    Image(systemName: "doc.badge.plus").foregroundStyle(.secondary)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
-                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
-                .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
-            .disabled(moduleManager.isLoading)
             #endif
+        } header: {
+            Text("Add Module")
+        } footer: {
+            Text("Paste a module's .json link, or import its .js file (and its .json, if you have it).")
         }
-        .padding(.vertical, 8)
-        .background(Color.clear)
     }
 
     // MARK: - Local Files Promo
@@ -782,25 +754,6 @@ struct ModuleListView: View {
         }
     }
 
-    private func addModuleFromFiles(_ urls: [URL]) {
-        addModuleError = nil
-        Task {
-            await moduleManager.addModule(fromFiles: urls)
-            if let error = moduleManager.errorMessage {
-                addModuleError = error
-                moduleManager.errorMessage = nil
-                #if os(iOS)
-                UINotificationFeedbackGenerator().notificationOccurred(.error)
-                #endif
-            } else {
-                #if os(iOS)
-                UINotificationFeedbackGenerator().notificationOccurred(.success)
-                #endif
-                checkNewModule()
-            }
-        }
-    }
-
     /// Tests a module just added, and warns when it doesn't get as far as a stream.
     private func checkNewModule() {
         guard let id = moduleManager.lastAddedModuleID,
@@ -928,3 +881,19 @@ private struct DoneItem: ViewModifier {
         }
     }
 }
+
+#if !os(tvOS)
+/// A module's .json and .js, written once per version of it, for Share as Files.
+@MainActor
+enum ModuleShareFiles {
+    private static var made: [String: [URL]] = [:]
+
+    static func urls(for module: ModuleDefinition) -> [URL]? {
+        let key = "\(module.id)|\(module.version)|\(module.scriptContent?.hashValue ?? 0)"
+        if let urls = made[key], urls.allSatisfy({ FileManager.default.fileExists(atPath: $0.path) }) { return urls }
+        guard module.scriptContent != nil, let urls = try? ModuleFileImport.exportFiles(for: module) else { return nil }
+        made[key] = urls
+        return urls
+    }
+}
+#endif

@@ -2,58 +2,22 @@ import XCTest
 @testable import Shirox
 
 final class ModuleFileImportTests: XCTestCase {
-    private let manifest = Data("""
-    {"sourceName":"Pahe","version":"2.1","scriptUrl":"https://example.com/pahe.js","type":"anime","baseUrl":"https://example.com"}
-    """.utf8)
     private let script = "async function searchResults(q) { return '[]' }\nasync function extractStreamUrl(u) { return u }"
 
-    private func file(_ name: String, _ text: String) -> ModuleFileImport.File {
-        .init(name: name, data: Data(text.utf8))
+    private func module(scriptUrl: String) throws -> ModuleDefinition {
+        var module = try JSONDecoder().decode(ModuleDefinition.self, from: Data("""
+        {"sourceName":"Pahe / Mirror","version":"2.1","scriptUrl":"\(scriptUrl)","type":"anime",
+         "author":{"name":"someone"},"iconUrl":"https://example.com/i.png"}
+        """.utf8))
+        module.scriptContent = script
+        module.iconData = Data([1, 2, 3]).base64EncodedString()
+        module.fromFile = true
+        return module
     }
 
-    func testManifestAndScriptTogether() throws {
-        let result = try ModuleFileImport.build(from: [
-            .init(name: "pahe.json", data: manifest), file("pahe.js", script),
-        ])
-        XCTAssertFalse(result.needsScriptDownload)
-        XCTAssertEqual(result.module.sourceName, "Pahe")
-        XCTAssertEqual(result.module.id, "https://example.com/pahe.js")
-        XCTAssertEqual(result.module.scriptContent, script)
-        XCTAssertTrue(result.module.isFromFile)
-        XCTAssertNil(result.module.jsonUrl)
-    }
-
-    func testManifestAloneDownloadsItsScript() throws {
-        let result = try ModuleFileImport.build(from: [.init(name: "PAHE.JSON", data: manifest)])
-        XCTAssertTrue(result.needsScriptDownload)
-        XCTAssertNil(result.module.scriptContent)
-    }
-
-    func testScriptAloneGetsAManifestNamedAfterTheFile() throws {
-        let result = try ModuleFileImport.build(from: [file("My Source.js", script)], makeID: { "abc" })
-        XCTAssertEqual(result.module.sourceName, "My Source")
-        XCTAssertEqual(result.module.scriptUrl, "shirox-file://abc/My%20Source.js")
-        XCTAssertEqual(result.module.type, "anime")
-        XCTAssertEqual(result.module.scriptContent, script)
-        XCTAssertFalse(result.needsScriptDownload)
-    }
-
-    func testMangaScriptIsAMangaModule() throws {
-        let manga = "async function extractChapters(u) {}\nasync function extractImages(u) {}"
-        XCTAssertEqual(try ModuleFileImport.build(from: [file("m.js", manga)]).module.type, "manga")
-    }
-
-    func testRejectsOtherFilesAndPairs() {
-        XCTAssertThrowsError(try ModuleFileImport.build(from: [file("a.txt", "x")])) {
-            XCTAssertEqual($0 as? ModuleFileImport.Failure, .nothingPicked)
-        }
-        XCTAssertThrowsError(try ModuleFileImport.build(from: [file("a.js", "x"), file("b.js", "y")])) {
-            XCTAssertEqual($0 as? ModuleFileImport.Failure, .tooMany)
-        }
-        XCTAssertThrowsError(try ModuleFileImport.build(from: [file("a.json", "{\"sourceName\":\"x\"}")])) {
-            guard case .notAModule(let name, _)? = $0 as? ModuleFileImport.Failure else { return XCTFail("\($0)") }
-            XCTAssertEqual(name, "a.json")
-        }
+    func testMangaScriptsAreTold() {
+        XCTAssertTrue(ModuleFileImport.looksLikeManga("async function extractChapters(u) {}\nasync function extractImages(u) {}"))
+        XCTAssertFalse(ModuleFileImport.looksLikeManga(script))
     }
 
     func testSyntaxCheckDoesNotRunTheScript() {
@@ -64,8 +28,29 @@ final class ModuleFileImportTests: XCTestCase {
         XCTAssertTrue(error?.contains("line") == true, error ?? "")
     }
 
+    func testAFileModuleIsSharedAsAManifestAndItsScript() throws {
+        let urls = try ModuleFileImport.exportFiles(for: module(scriptUrl: ModuleFileImport.fileScriptURL(named: "pahe.js")))
+        defer { try? FileManager.default.removeItem(at: urls[0].deletingLastPathComponent()) }
+        XCTAssertEqual(urls.map(\.lastPathComponent), ["Pahe  Mirror.json", "Pahe  Mirror.js"])
+        XCTAssertEqual(try String(contentsOf: urls[1], encoding: .utf8), script)
+        let shared = try JSONDecoder().decode(ModuleDefinition.self, from: Data(contentsOf: urls[0]))
+        XCTAssertEqual(shared.sourceName, "Pahe / Mirror")
+        XCTAssertEqual(shared.scriptUrl, "Pahe  Mirror.js", "a device-only address isn't shared")
+        XCTAssertEqual(shared.author?.name, "someone")
+        XCTAssertNotNil(shared.iconData, "the icon travels inside the manifest")
+        XCTAssertNil(shared.scriptContent)
+        XCTAssertFalse(shared.isFromFile)
+    }
+
+    func testALinkedModuleKeepsItsScriptAddress() throws {
+        let urls = try ModuleFileImport.exportFiles(for: module(scriptUrl: "https://example.com/pahe.js"))
+        defer { try? FileManager.default.removeItem(at: urls[0].deletingLastPathComponent()) }
+        let shared = try JSONDecoder().decode(ModuleDefinition.self, from: Data(contentsOf: urls[0]))
+        XCTAssertEqual(shared.scriptUrl, "https://example.com/pahe.js")
+    }
+
     func testFlagsSurviveEncoding() throws {
-        var module = try ModuleFileImport.build(from: [file("x.js", script)]).module
+        var module = try module(scriptUrl: ModuleFileImport.fileScriptURL(named: "x.js"))
         module.scriptEdited = true
         let decoded = try JSONDecoder().decode(ModuleDefinition.self, from: JSONEncoder().encode(module))
         XCTAssertTrue(decoded.isFromFile)
