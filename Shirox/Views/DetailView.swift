@@ -1382,6 +1382,10 @@ struct DetailView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.horizontal, 32)
                 .padding(.vertical, 40)
+            } else if watchOrder.isEmpty, let detail = vm.detail, isSingleEpisode(detail) {
+                // A film not on AniList: most often one that isn't anime at all, where a panel
+                // asking to link it only got in the way. The link button above still links it.
+                EmptyView()
             } else if watchOrder.isEmpty {
                 VStack(spacing: 16) {
                     Image(systemName: "link.badge.plus")

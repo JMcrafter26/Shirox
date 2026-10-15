@@ -12,6 +12,10 @@ struct RatingPromptView: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
+        sheetBody.macGroupedForms()
+    }
+
+    @ViewBuilder private var sheetBody: some View {
         NavigationStack {
             Form {
                 Section {

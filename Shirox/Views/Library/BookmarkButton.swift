@@ -156,6 +156,10 @@ private struct LocalCollectionPickerSheet: View {
     @State private var newCollectionName = ""
 
     var body: some View {
+        sheetBody.macGroupedForms()
+    }
+
+    @ViewBuilder private var sheetBody: some View {
         NavigationStack {
             Form {
                 Section("Collections") {

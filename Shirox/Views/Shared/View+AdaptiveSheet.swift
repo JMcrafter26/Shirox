@@ -301,6 +301,17 @@ extension View {
 
 
 extension View {
+    /// Forms inside laid out grouped on a Mac, as on iOS. The Mac's default puts labels in a
+    /// column of their own, and in a sheet the controls ran off its right edge.
+    @ViewBuilder
+    func macGroupedForms() -> some View {
+        #if os(macOS)
+        formStyle(.grouped)
+        #else
+        self
+        #endif
+    }
+
     /// A sheet's size on a Mac: room for a list of sources or a form without scrolling straight
     /// away. Sheets open at the ideal size.
     /// Nothing elsewhere: a phone's or iPad's sheet sizes itself.
@@ -335,8 +346,18 @@ struct MacShelf<Item: Identifiable, Card: View>: View {
     var initialIndex: Int? = nil
     @ViewBuilder let card: (Item) -> Card
 
-    @State private var visible: Set<Int> = []
+    /// Each card's horizontal extent in the row's viewport, by index: those the row has laid out.
+    @State private var frames: [Int: ClosedRange<CGFloat>] = [:]
+    @State private var viewport: CGFloat = 0
     @State private var isHovering = false
+    private let space = "MacShelf"
+
+    /// Cards wholly or partly on screen. Worked out from where they are, not from appearing and
+    /// disappearing: the row keeps cards it has scrolled past laid out, so they never
+    /// "disappeared", and Previous scrolled to where the row already was.
+    private var onScreen: [Int] {
+        frames.filter { $0.value.upperBound > 1 && $0.value.lowerBound < viewport - 1 }.map(\.key).sorted()
+    }
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -345,42 +366,65 @@ struct MacShelf<Item: Identifiable, Card: View>: View {
                     ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                         card(item)
                             .scrollTarget(index, margin: horizontalPadding)
-                            .onAppear { visible.insert(index) }
-                            .onDisappear { visible.remove(index) }
+                            .background(GeometryReader { geo in
+                                let frame = geo.frame(in: .named(space))
+                                Color.clear.preference(key: ShelfFramesKey.self, value: [index: frame.minX...frame.maxX])
+                            })
                     }
                 }
                 .padding(.horizontal, horizontalPadding)
                 .padding(.vertical, verticalPadding)
             }
+            .coordinateSpace(name: space)
+            .background(GeometryReader { geo in
+                Color.clear.preference(key: ShelfViewportKey.self, value: geo.size.width)
+            })
+            .onPreferenceChange(ShelfFramesKey.self) { frames = $0 }
+            .onPreferenceChange(ShelfViewportKey.self) { viewport = $0 }
             .scrollToInitialIndex(initialIndex, with: proxy)
             .overlay(alignment: .leading) {
-                if isHovering, let first = visible.min(), first > 0 {
-                    arrow("chevron.left") {
-                        // Back by about a window's worth.
-                        let page = max(1, visible.count - 1)
-                        withAnimation(.easeInOut(duration: 0.35)) {
-                            proxy.scrollTo(ShelfScrollTarget(index: max(0, first - page)), anchor: .leading)
-                        }
+                arrow("chevron.left") {
+                    guard let target = previousPageStart else { return }
+                    withAnimation(.easeInOut(duration: 0.35)) {
+                        proxy.scrollTo(ShelfScrollTarget(index: target), anchor: .leading)
                     }
-                    .padding(.leading, 6)
-                    .transition(.opacity)
                 }
+                .padding(.leading, 6)
+                .opacity(isHovering && (onScreen.first ?? 0) > 0 ? 1 : 0)
+                .allowsHitTesting(isHovering && (onScreen.first ?? 0) > 0)
             }
             .overlay(alignment: .trailing) {
-                if isHovering, let last = visible.max(), last < items.count - 1 {
-                    arrow("chevron.right") {
-                        withAnimation(.easeInOut(duration: 0.35)) {
-                            proxy.scrollTo(ShelfScrollTarget(index: last), anchor: .leading)
-                        }
+                arrow("chevron.right") {
+                    guard let target = nextPageStart else { return }
+                    withAnimation(.easeInOut(duration: 0.35)) {
+                        proxy.scrollTo(ShelfScrollTarget(index: target), anchor: .leading)
                     }
-                    .padding(.trailing, 6)
-                    .transition(.opacity)
                 }
+                .padding(.trailing, 6)
+                .opacity(isHovering && (onScreen.last ?? items.count - 1) < items.count - 1 ? 1 : 0)
+                .allowsHitTesting(isHovering && (onScreen.last ?? items.count - 1) < items.count - 1)
             }
-            .onHover { hovering in
-                withAnimation(.easeOut(duration: 0.15)) { isHovering = hovering }
-            }
+            .animation(.easeOut(duration: 0.15), value: isHovering)
+            .onHover { isHovering = $0 }
         }
+    }
+
+    /// The first card cut off at the right edge, or the next one: Next starts the row with it.
+    private var nextPageStart: Int? {
+        if let cut = frames.filter({ $0.value.upperBound > viewport + 1 && $0.value.lowerBound < viewport }).keys.min() {
+            return cut
+        }
+        return onScreen.last.map { min($0 + 1, items.count - 1) }
+    }
+
+    /// The card that starts the page before: the earliest whose start is within a viewport's
+    /// width before the current one, so the card now first ends up at the right edge.
+    private var previousPageStart: Int? {
+        guard let first = onScreen.first, first > 0 else { return nil }
+        let firstStart = frames[first]?.lowerBound ?? 0
+        let earlier = frames.filter { $0.key < first && $0.value.lowerBound >= firstStart - viewport + horizontalPadding * 2 }
+        if let target = earlier.keys.min() { return target }
+        return max(0, first - max(1, onScreen.count - 1))
     }
 
     private func arrow(_ symbol: String, action: @escaping () -> Void) -> some View {
@@ -395,5 +439,17 @@ struct MacShelf<Item: Identifiable, Card: View>: View {
         }
         .buttonStyle(.plain)
     }
+}
+
+private struct ShelfFramesKey: PreferenceKey {
+    static var defaultValue: [Int: ClosedRange<CGFloat>] = [:]
+    static func reduce(value: inout [Int: ClosedRange<CGFloat>], nextValue: () -> [Int: ClosedRange<CGFloat>]) {
+        value.merge(nextValue()) { $1 }
+    }
+}
+
+private struct ShelfViewportKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
 }
 #endif

@@ -53,8 +53,10 @@ enum TrackPreferences {
 
     // MARK: - Matching
 
-    /// The audio track to select: the wanted one, when it's offered under that name alone. Two
-    /// tracks of one name (mpv lists each variant's own audio) say nothing about which was meant.
+    /// The audio track to select: the first one under the wanted name. mpv lists a copy of each
+    /// language for every quality variant of an HLS stream; leaving a name two tracks shared alone
+    /// let the stream's default play instead, now and then, after a refetch (reported). Any copy
+    /// of "Japanese" is Japanese.
     ///
     /// Selected even when it reads as on already. While an item loads, AVPlayer reports the
     /// stream's default, then moves to the device's language as it turns ready unless a track
@@ -63,9 +65,7 @@ enum TrackPreferences {
     /// downloaded episode on its loading screen.
     nonisolated static func audioToRestore(_ wanted: String?, options: [PlaybackAudioOption]) -> PlaybackAudioOption.ID? {
         guard let wanted else { return nil }
-        let matches = options.filter { same($0.title, wanted) }
-        guard matches.count == 1 else { return nil }
-        return matches.first?.id
+        return options.first { same($0.title, wanted) }?.id
     }
 
     nonisolated static func externalTrack(_ remembered: TrackChoice.SubtitleChoice?,

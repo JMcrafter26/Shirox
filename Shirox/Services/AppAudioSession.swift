@@ -23,8 +23,10 @@ enum AppAudioSession {
     /// headphones that can, and Control Center's Spatial Audio choice stays the system's. Off, the
     /// app asks for none: stereo plays as stereo.
     static let spatialAudioKey = "playerSpatialAudio"
+    /// Off unless turned on: iOS kept AirPods in Spatial Audio for a video app even with it off
+    /// in Control Center (reported for this app, Sora and others).
     static var spatialAudioEnabled: Bool {
-        UserDefaults.standard.object(forKey: spatialAudioKey) as? Bool ?? true
+        UserDefaults.standard.object(forKey: spatialAudioKey) as? Bool ?? false
     }
 
     /// `moviePlayback` is the mode iOS spatializes a video app's sound in; `default` leaves stereo

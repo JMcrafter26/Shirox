@@ -660,11 +660,19 @@ struct PlayerView: View {
             // transient resign-active like Control Center or a banner. The foreground handler
             // reads this to decide whether we were suspended long enough that the source died.
             backgroundedAt = Date()
-            // Leaving the app keeps playing in the background as it always has; the pause was
-            // only meant for an overlay. A slow home swipe can outlast the delay, so undo it.
+            // The inactive pause was only meant for an overlay. A slow home swipe can outlast the
+            // delay, so undo it.
             inactivePauseTask?.cancel()
             inactivePauseTask = nil
             resumeAfterInactivePause()
+            // Leaving the app pauses, unless Play in Background is on or the video is still being
+            // watched somewhere: Picture in Picture, AirPlay, a TV the phone mirrors to, a cast.
+            if !UserDefaults.standard.bool(forKey: "playerPlayInBackground"), isPlaying,
+               !castManager.isConnected, !Self.isAirPlayRouteActive, !externalDisplayConnected,
+               !PlayerPresenter.shared.isPlayerHiddenForPictureInPicture {
+                Logger.shared.log("[Player] Left the app; pausing (Play in Background is off)", type: "Player")
+                togglePlayPause()
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
             inactivePauseTask?.cancel()

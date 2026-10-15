@@ -225,14 +225,17 @@ struct ModuleScriptEditorView: View {
 // MARK: - Code text view
 
 /// Plain monospaced text with every typing aid off: smart quotes and dashes would turn `"` and
-/// `--` into characters JavaScript can't read.
+/// `--` into characters JavaScript can't read. Coloured as VS Code colours JavaScript, a moment
+/// after typing stops.
 #if os(iOS)
 struct CodeTextEditor: UIViewRepresentable {
     @Binding var text: String
 
+    static let font = UIFont.monospacedSystemFont(ofSize: 13, weight: .regular)
+
     func makeUIView(context: Context) -> UITextView {
         let view = UITextView()
-        view.font = .monospacedSystemFont(ofSize: 13, weight: .regular)
+        view.font = Self.font
         view.autocorrectionType = .no
         view.autocapitalizationType = .none
         view.spellCheckingType = .no
@@ -246,29 +249,52 @@ struct CodeTextEditor: UIViewRepresentable {
         view.backgroundColor = .systemBackground
         view.delegate = context.coordinator
         view.text = text
+        context.coordinator.highlight(view)
         return view
     }
 
     func updateUIView(_ view: UITextView, context: Context) {
-        if view.text != text { view.text = text }
+        if view.text != text {
+            view.text = text
+            context.coordinator.highlight(view)
+        }
     }
 
     func makeCoordinator() -> Coordinator { Coordinator(text: $text) }
 
     final class Coordinator: NSObject, UITextViewDelegate {
         var text: Binding<String>
+        private var pending: DispatchWorkItem?
         init(text: Binding<String>) { self.text = text }
-        func textViewDidChange(_ view: UITextView) { text.wrappedValue = view.text }
+
+        func textViewDidChange(_ view: UITextView) {
+            text.wrappedValue = view.text
+            view.typingAttributes = [.font: CodeTextEditor.font, .foregroundColor: UIColor.label]
+            pending?.cancel()
+            let work = DispatchWorkItem { [weak self, weak view] in
+                guard let self, let view else { return }
+                self.highlight(view)
+            }
+            pending = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: work)
+        }
+
+        func highlight(_ view: UITextView) {
+            JavaScriptHighlighter.apply(to: view.textStorage, font: CodeTextEditor.font)
+            view.typingAttributes = [.font: CodeTextEditor.font, .foregroundColor: UIColor.label]
+        }
     }
 }
 #elseif os(macOS)
 struct CodeTextEditor: NSViewRepresentable {
     @Binding var text: String
 
+    static let font = NSFont.monospacedSystemFont(ofSize: 12, weight: .regular)
+
     func makeNSView(context: Context) -> NSScrollView {
         let scroll = NSTextView.scrollableTextView()
         guard let view = scroll.documentView as? NSTextView else { return scroll }
-        view.font = .monospacedSystemFont(ofSize: 12, weight: .regular)
+        view.font = Self.font
         view.isAutomaticQuoteSubstitutionEnabled = false
         view.isAutomaticDashSubstitutionEnabled = false
         view.isAutomaticTextReplacementEnabled = false
@@ -280,22 +306,41 @@ struct CodeTextEditor: NSViewRepresentable {
         view.textContainerInset = NSSize(width: 6, height: 10)
         view.delegate = context.coordinator
         view.string = text
+        context.coordinator.highlight(view)
         return scroll
     }
 
     func updateNSView(_ scroll: NSScrollView, context: Context) {
         guard let view = scroll.documentView as? NSTextView else { return }
-        if view.string != text { view.string = text }
+        if view.string != text {
+            view.string = text
+            context.coordinator.highlight(view)
+        }
     }
 
     func makeCoordinator() -> Coordinator { Coordinator(text: $text) }
 
     final class Coordinator: NSObject, NSTextViewDelegate {
         var text: Binding<String>
+        private var pending: DispatchWorkItem?
         init(text: Binding<String>) { self.text = text }
+
         func textDidChange(_ note: Notification) {
             guard let view = note.object as? NSTextView else { return }
             text.wrappedValue = view.string
+            pending?.cancel()
+            let work = DispatchWorkItem { [weak self, weak view] in
+                guard let self, let view else { return }
+                self.highlight(view)
+            }
+            pending = work
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: work)
+        }
+
+        func highlight(_ view: NSTextView) {
+            guard let storage = view.textStorage else { return }
+            JavaScriptHighlighter.apply(to: storage, font: CodeTextEditor.font)
+            view.typingAttributes = [.font: CodeTextEditor.font, .foregroundColor: NSColor.textColor]
         }
     }
 }

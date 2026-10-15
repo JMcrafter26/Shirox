@@ -145,15 +145,20 @@ struct ContinueReadingCardDisplay: View {
                 }
                 .overlay(alignment: .bottom) {
                     if progressFraction > 0 {
+                        // Inset by the card's corner radius and lifted off the edge: along the
+                        // very bottom the rounded corners cut the ends off, and a bar nearly full
+                        // looked full.
                         GeometryReader { geo in
                             ZStack(alignment: .leading) {
-                                Color.white.opacity(0.2)
-                                Color.primary
-                                    .frame(width: geo.size.width * progressFraction)
+                                Capsule().fill(Color.white.opacity(0.25))
+                                Capsule().fill(Color.primary)
+                                    .frame(width: max(geo.size.width * progressFraction, 3))
                                     .shadow(color: Color.primary.opacity(0.5), radius: 3, x: 0, y: 0)
                             }
                         }
                         .frame(height: 3)
+                        .padding(.horizontal, 10)
+                        .padding(.bottom, 4)
                     }
                 }
                 .overlay {

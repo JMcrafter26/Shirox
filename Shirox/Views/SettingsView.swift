@@ -365,33 +365,9 @@ struct AccountsSettingsView: View {
         SettingsList {
             ProvidersSettingsSection()
 
-            if aniListAuth.isLoggedIn || malAuth.isLoggedIn || simklAuth.isLoggedIn {
-                Section("Tracking") {
-                    if aniListAuth.isLoggedIn {
-                        Toggle("Track on AniList", isOn: $aniListTrackingEnabled)
-                            .tint(.secondary)
-                    }
-                    if malAuth.isLoggedIn {
-                        Toggle("Track on MyAnimeList", isOn: $malTrackingEnabled)
-                            .tint(.secondary)
-                    }
-                    if simklAuth.isLoggedIn {
-                        Toggle("Track on Simkl", isOn: $simklTrackingEnabled)
-                            .tint(.secondary)
-                    }
-                    Toggle("Never reduce progress", isOn: $skipReWatchTracking)
-                        .tint(.secondary)
-                    Toggle("Prompt to rate after finishing", isOn: $rateOnFinish)
-                        .tint(.secondary)
-                    Text("Automatically update your watch progress as you watch.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
-            // Simkl is a write-side tracker, not a browsing source, so it sits here rather than in
-            // the provider list above.
-            Section("Simkl") {
+            // Simkl is a write-side tracker, not a browsing source, so it isn't in the provider list,
+            // but sits right under it: below the tracking toggles, it was off the first screen.
+            Section {
                 HStack(spacing: 12) {
                     CachedAsyncImage(urlString: ProviderType.simkl.iconURL)
                         .frame(width: 28, height: 28)
@@ -428,10 +404,33 @@ struct AccountsSettingsView: View {
                 if simklAuth.isLoggedIn {
                     SimklBudgetRow()
                 }
-                Text("Tracks your anime library on Simkl alongside AniList and MyAnimeList. "
-                     + "Simkl has no manga, so manga tracking is unaffected.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+            } footer: {
+                Text("Tracks your anime, shows and movies on Simkl alongside AniList and MyAnimeList. Simkl has no manga.")
+            }
+
+
+            if aniListAuth.isLoggedIn || malAuth.isLoggedIn || simklAuth.isLoggedIn {
+                Section("Tracking") {
+                    if aniListAuth.isLoggedIn {
+                        Toggle("Track on AniList", isOn: $aniListTrackingEnabled)
+                            .tint(.secondary)
+                    }
+                    if malAuth.isLoggedIn {
+                        Toggle("Track on MyAnimeList", isOn: $malTrackingEnabled)
+                            .tint(.secondary)
+                    }
+                    if simklAuth.isLoggedIn {
+                        Toggle("Track on Simkl", isOn: $simklTrackingEnabled)
+                            .tint(.secondary)
+                    }
+                    Toggle("Never reduce progress", isOn: $skipReWatchTracking)
+                        .tint(.secondary)
+                    Toggle("Prompt to rate after finishing", isOn: $rateOnFinish)
+                        .tint(.secondary)
+                    Text("Automatically update your watch progress as you watch.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
             }
 
             if signedInSides.count >= 2 {
@@ -477,7 +476,7 @@ struct AccountsSettingsView: View {
             }
         }
         .softScrollEdges()
-        .navigationTitle("Accounts & Tracking")
+        .navigationTitle("Providers")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -582,7 +581,8 @@ struct PlayerSettingsView: View {
     @AppStorage("autoNextEpisode") private var autoNextEpisode = true
     @AppStorage("pauseWhenInactive") private var pauseWhenInactive = true
     @AppStorage("playerAmbientMode") private var ambientMode = false
-    @AppStorage("playerSpatialAudio") private var spatialAudio = true
+    @AppStorage("playerSpatialAudio") private var spatialAudio = false
+    @AppStorage("playerPlayInBackground") private var playInBackground = false
     @AppStorage("autoSkipSegments") private var autoSkipSegments = true
     @AppStorage("watchedPercentage") private var watchedPercentage = 90.0
 
@@ -621,6 +621,11 @@ struct PlayerSettingsView: View {
 
                 #if os(iOS)
                 if !Self.isMac {
+                    Toggle("Play in Background", isOn: $playInBackground)
+                        .tint(.secondary)
+                    Text("Keeps a video playing when you leave the app. Off, it pauses, unless it's in Picture in Picture, on AirPlay or cast to a TV.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                     Toggle("Spatial Audio", isOn: $spatialAudio)
                         .tint(.secondary)
                         .onChangeOf(spatialAudio) { _ in AppAudioSession.applySpatialAudioSetting() }
@@ -2067,11 +2072,10 @@ private struct ProvidersSettingsSection: View {
             .onMove { from, to in
                 manager.moveProvider(from: from, to: to)
             }
-            Text("Drag to reorder. The first provider is primary; the second is used as fallback.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
         } header: {
             Text("Providers")
+        } footer: {
+            Text("Drag to reorder. The first provider is primary; the second is used as fallback.")
         }
         #if os(iOS)
         .environment(\.editMode, .constant(.active))

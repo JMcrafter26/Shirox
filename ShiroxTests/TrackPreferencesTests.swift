@@ -87,13 +87,13 @@ final class TrackPreferencesTests: XCTestCase {
         XCTAssertEqual(TrackPreferences.choice(for: ["al:1", "title:x"])?.audio, "English")
     }
 
-    /// mpv lists each variant's own audio beside the renditions; a name two tracks share
-    /// doesn't say which one was meant.
-    func testANameTwoTracksShareIsLeftAlone() {
+    /// mpv lists a copy of each language for every variant. Reported: now and then, after a
+    /// refetch, the other language played, because a shared name was left alone.
+    func testANameTwoTracksShareStillPicksThatLanguage() {
         let options = [PlaybackAudioOption(id: 1, title: "Japanese"),
                        PlaybackAudioOption(id: 2, title: "Japanese"),
                        PlaybackAudioOption(id: 3, title: "English")]
-        XCTAssertNil(TrackPreferences.audioToRestore("Japanese", options: options))
+        XCTAssertEqual(TrackPreferences.audioToRestore("Japanese", options: options), 1)
         XCTAssertEqual(TrackPreferences.audioToRestore("English", options: options), 3)
     }
 }

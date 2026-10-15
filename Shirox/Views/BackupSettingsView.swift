@@ -84,10 +84,18 @@ struct BackupSettingsView: View {
             Button("Create Backup") { createBackup() }
             #endif
 
-            if let exportedURL, #available(iOS 16.0, macOS 13.0, *) {
-                ShareLink(item: exportedURL) {
+            if let exportedURL {
+                #if os(iOS)
+                AnchoredShareButton(items: [exportedURL]) {
                     Label("Share \(exportedURL.lastPathComponent)", systemImage: "square.and.arrow.up")
                 }
+                #else
+                if #available(macOS 13.0, *) {
+                    ShareLink(item: exportedURL) {
+                        Label("Share \(exportedURL.lastPathComponent)", systemImage: "square.and.arrow.up")
+                    }
+                }
+                #endif
             }
         }
     }

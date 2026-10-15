@@ -58,3 +58,29 @@ final class ModuleFileImportTests: XCTestCase {
         XCTAssertEqual(decoded.scriptContent, script)
     }
 }
+
+#if !os(tvOS)
+final class JavaScriptHighlighterTests: XCTestCase {
+    private func kinds(_ text: String) -> [String: JavaScriptHighlighter.Kind] {
+        let ns = text as NSString
+        return Dictionary(JavaScriptHighlighter.ranges(in: text).map { (ns.substring(with: $0.0), $0.1) },
+                          uniquingKeysWith: { a, _ in a })
+    }
+
+    func testColoursTheParts() {
+        let found = kinds("async function load(url) { // fetch it\n  if (x === 42) return \"if (no)\" }")
+        XCTAssertEqual(found["async"], .keyword)
+        XCTAssertEqual(found["function"], .keyword)
+        XCTAssertEqual(found["load"], .function)
+        XCTAssertEqual(found["// fetch it"], .comment)
+        XCTAssertEqual(found["42"], .number)
+        XCTAssertEqual(found["\"if (no)\""], .string)
+        XCTAssertEqual(found["return"], .keyword)
+    }
+
+    func testNothingInsideAStringOrCommentIsColouredAgain() {
+        let ranges = JavaScriptHighlighter.ranges(in: "'return 1' /* if (x) */")
+        XCTAssertEqual(ranges.count, 2, "\(ranges)")
+    }
+}
+#endif

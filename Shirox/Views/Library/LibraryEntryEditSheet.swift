@@ -272,6 +272,10 @@ struct LibraryEntryEditSheet: View {
     }
 
     var body: some View {
+        sheetBody.macGroupedForms()
+    }
+
+    @ViewBuilder private var sheetBody: some View {
         NavigationStack {
             Form {
                 Section("Status") {

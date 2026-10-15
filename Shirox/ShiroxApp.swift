@@ -386,6 +386,17 @@ private struct RootTabView: View {
     #if targetEnvironment(macCatalyst) || os(macOS)
     @State private var sidebarTab: SidebarTab = .home
     #endif
+    #if os(macOS)
+    /// Bumped when the tab already showing is clicked again, which rebuilds it at its first page,
+    /// as iOS's tab bar pops to the root.
+    @State private var tabResets: [SidebarTab: Int] = [:]
+
+    private var macTabSelection: Binding<SidebarTab> {
+        Binding(get: { sidebarTab }, set: { tab in
+            if tab == sidebarTab { tabResets[tab, default: 0] += 1 } else { sidebarTab = tab }
+        })
+    }
+    #endif
 
     #if os(iOS)
     private func routePendingQuickAction() {
@@ -430,21 +441,21 @@ private struct RootTabView: View {
                 #elseif os(macOS)
                 // Tabs in the window's toolbar, as iOS has them in its tab bar, rather than a
                 // sidebar taking a column of the window for five rows.
-                TabView(selection: $sidebarTab) {
+                TabView(selection: macTabSelection) {
                     Tab(SidebarTab.home.label, systemImage: SidebarTab.home.icon, value: SidebarTab.home) {
-                        HomeView()
+                        HomeView().id(tabResets[.home, default: 0])
                     }
                     Tab(SidebarTab.search.label, systemImage: SidebarTab.search.icon, value: SidebarTab.search) {
-                        SearchView()
+                        SearchView().id(tabResets[.search, default: 0])
                     }
                     Tab(SidebarTab.library.label, systemImage: SidebarTab.library.icon, value: SidebarTab.library) {
-                        LibraryView()
+                        LibraryView().id(tabResets[.library, default: 0])
                     }
                     Tab(SidebarTab.downloads.label, systemImage: SidebarTab.downloads.icon, value: SidebarTab.downloads) {
-                        DownloadsView()
+                        DownloadsView().id(tabResets[.downloads, default: 0])
                     }
                     Tab(SidebarTab.settings.label, systemImage: SidebarTab.settings.icon, value: SidebarTab.settings) {
-                        SettingsView()
+                        SettingsView().id(tabResets[.settings, default: 0])
                     }
                 }
                 .tabViewStyle(.tabBarOnly)

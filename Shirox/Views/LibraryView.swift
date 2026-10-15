@@ -978,7 +978,7 @@ struct LibraryView: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Edit \(entry.media.title.displayTitle)")
                 // Bottom-right of the 2:3 poster, above the progress bar on its edge.
-                .position(x: geo.size.width - 20, y: geo.size.width * 1.5 - 24)
+                .position(x: geo.size.width - 20, y: geo.size.width * 1.5 - 30)
             }
         }
         .zoomSource(entry.id, in: sheetZoom)
@@ -1414,16 +1414,19 @@ private struct LibraryGridCard: View {
                     }
                 )
                 .overlay(alignment: .bottom) {
-                    // Along the poster's bottom edge, clear of the edit button above its corner.
+                    // Inside the poster's rounded corners, which cut a bar along the very edge
+                    // short (263 of 272 looked full), and under the edit button.
                     if let fraction {
                         GeometryReader { geo in
                             ZStack(alignment: .leading) {
-                                Rectangle().fill(.white.opacity(0.25))
-                                Rectangle().fill(.white)
-                                    .frame(width: max(geo.size.width * fraction, 4))
+                                Capsule().fill(.white.opacity(0.25))
+                                Capsule().fill(.white)
+                                    .frame(width: max(geo.size.width * fraction, 3))
                             }
                         }
                         .frame(height: 3)
+                        .padding(.horizontal, 12)
+                        .padding(.bottom, 5)
                     }
                 }
                 .overlay(alignment: .topTrailing) {

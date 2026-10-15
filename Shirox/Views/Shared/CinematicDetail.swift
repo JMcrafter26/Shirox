@@ -115,6 +115,11 @@ struct CinematicPage<Backdrop: View, Hero: View, Rows: View>: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .coordinateSpace(name: "heroScroll")
+                #if os(macOS)
+                // With a mouse, a Mac's scroll bar is always there and takes its own strip down the
+                // right, which the rows' black backing can't reach: the artwork showed through it.
+                .scrollIndicators(.hidden)
+                #endif
                 .onPreferenceChange(CinematicHeroTopKey.self) { scrolled = max(0, -$0) }
                 .softScrollEdges([.bottom, .leading, .trailing])
                 .hideScrollEdgeEffect(.top)
