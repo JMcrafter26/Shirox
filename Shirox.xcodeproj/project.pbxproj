@@ -606,6 +606,7 @@
 		4F7EA1855BB98E7A704141B1 /* LibraryListMemory.swift in Sources */ = {isa = PBXBuildFile; fileRef = E61C24FD91CE887F9588F162 /* LibraryListMemory.swift */; };
 		4FB3A265EF14005001D7250A /* AppAudioSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDE73B1CB59832DCFDFF4FC7 /* AppAudioSession.swift */; };
 		4FEE13C60B451415C575834E /* RefreshLimiterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 191208F6B35043F6AC89C555 /* RefreshLimiterTests.swift */; };
+		5049246F7D7C5F43419F5238 /* SkyStreamRuntimeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF0E7B33317FF24B0C7CCE88 /* SkyStreamRuntimeTests.swift */; };
 		50F2E2F8FF18C96A8490115C /* SimklDiscoverMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF82054A977EBBA7E707802F /* SimklDiscoverMedia.swift */; };
 		51BC614EA0F08E896FA1AC3A /* ProfileSwap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61F02FFBDD8907A1858ABAA5 /* ProfileSwap.swift */; };
 		51DFCD9F45B71AB79B6F9ED1 /* SimklSyncPlan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E157CF84FD16C7DFCC2825C /* SimklSyncPlan.swift */; };
@@ -1671,6 +1672,7 @@
 		EEF179C5853A32B15AFE3F8A /* ModuleWebsiteButton.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ModuleWebsiteButton.swift; sourceTree = "<group>"; };
 		EEF962B875F8593B7E95F5B6 /* DownloadRequestHeadersTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DownloadRequestHeadersTests.swift; sourceTree = "<group>"; };
 		EEFA93DA5617959381E10D85 /* BookmarkButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookmarkButton.swift; sourceTree = "<group>"; };
+		EF0E7B33317FF24B0C7CCE88 /* SkyStreamRuntimeTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SkyStreamRuntimeTests.swift; sourceTree = "<group>"; };
 		EFFA5648772AF00F30DCBC7A /* SimklHomeViewModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklHomeViewModelTests.swift; sourceTree = "<group>"; };
 		F0CBC894AABB84BE53704387 /* SimklModuleDownloadsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklModuleDownloadsTests.swift; sourceTree = "<group>"; };
 		F1B7B5CA1E030CB133AAAB78 /* ProfileManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProfileManager.swift; sourceTree = "<group>"; };
@@ -2371,6 +2373,7 @@
 				566FE19E327AD3C0E5A2D3F8 /* StremioRuntimeTests.swift */,
 				F6204E4FF759A26CA4667818 /* NuvioRuntimeTests.swift */,
 				1AAFF29AD1F4E9696A1A1C78 /* VegaRuntimeTests.swift */,
+				EF0E7B33317FF24B0C7CCE88 /* SkyStreamRuntimeTests.swift */,
 			);
 			path = ShiroxTests;
 			sourceTree = SOURCE_ROOT;
@@ -2867,6 +2870,7 @@
 				E3D2F0EF7FE00478156C32A6 /* StremioRuntimeTests.swift in Sources */,
 				39601E10A48D69AAB5E35E60 /* NuvioRuntimeTests.swift in Sources */,
 				91F7228D5116CD80BEB40CEB /* VegaRuntimeTests.swift in Sources */,
+				5049246F7D7C5F43419F5238 /* SkyStreamRuntimeTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
