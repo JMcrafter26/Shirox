@@ -20,7 +20,7 @@ enum AdultModuleCheck {
     }
 
     static func isAdult(_ module: ModuleDefinition, blockedHost: (String) -> Bool) -> Bool {
-        let names = [module.sourceName, module.seanime?.id]
+        let names = [module.sourceName, module.seanime?.id, module.ext?.key]
             + [module.jsonUrl, module.scriptUrl].map { $0.flatMap(URL.init(string:))?.path }
         if names.contains(where: { $0.map(hasAdultName) == true }) { return true }
         return hosts(of: module).contains(where: blockedHost)

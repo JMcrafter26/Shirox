@@ -26,6 +26,8 @@ struct ModuleDefinition: Codable, Identifiable, Equatable {
     var fromFile: Bool?
     /// Its script was changed in the app. Updates leave it alone until it's reverted.
     var scriptEdited: Bool?
+    /// Set for a Stremio addon, or a Nuvio, Vega or SkyStream provider.
+    var ext: ExtensionInfo?
 
     var isFromFile: Bool { fromFile == true }
     var isScriptEdited: Bool { scriptEdited == true }
@@ -67,7 +69,7 @@ struct ModuleDefinition: Codable, Identifiable, Equatable {
         case sourceName, iconUrl, author, version, baseUrl, searchBaseUrl,
              scriptUrl, type, asyncJS, streamType, quality, language, softsub,
              supportsLocalPlayback, supportsJellyfin, jsonUrl, scriptContent, iconData, seanime,
-             fromFile, scriptEdited
+             fromFile, scriptEdited, ext
     }
 
     /// Luna-style manifests capitalize URL ("iconURL"/"scriptURL") and omit baseUrl.
@@ -106,6 +108,7 @@ struct ModuleDefinition: Codable, Identifiable, Equatable {
         seanime = try c.decodeIfPresent(SeanimeProviderInfo.self, forKey: .seanime)
         fromFile = try c.decodeIfPresent(Bool.self, forKey: .fromFile)
         scriptEdited = try c.decodeIfPresent(Bool.self, forKey: .scriptEdited)
+        ext = try c.decodeIfPresent(ExtensionInfo.self, forKey: .ext)
     }
 }
 
