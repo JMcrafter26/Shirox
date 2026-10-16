@@ -196,18 +196,21 @@ struct SeanimeSearchMedia: Equatable {
     let status: String?
     let year: Int?
     let isAdult: Bool
+    /// The catalogue `id` is from: the page's source. A MyAnimeList page's `id` is a MAL id.
+    let idSource: ProviderType
 
     init(id: Int, idMal: Int?, romajiTitle: String?, englishTitle: String?, synonyms: [String],
-         episodeCount: Int?, format: String?, status: String?, year: Int?, isAdult: Bool) {
+         episodeCount: Int?, format: String?, status: String?, year: Int?, isAdult: Bool,
+         idSource: ProviderType = .anilist) {
         self.id = id; self.idMal = idMal; self.romajiTitle = romajiTitle; self.englishTitle = englishTitle
         self.synonyms = synonyms; self.episodeCount = episodeCount; self.format = format
-        self.status = status; self.year = year; self.isAdult = isAdult
+        self.status = status; self.year = year; self.isAdult = isAdult; self.idSource = idSource
     }
 
     init(media: Media) {
         self.init(id: media.id, idMal: media.idMal, romajiTitle: media.title.romaji, englishTitle: media.title.english,
                   synonyms: [], episodeCount: media.episodes, format: media.format, status: media.status,
-                  year: media.seasonYear, isAdult: false)
+                  year: media.seasonYear, isAdult: false, idSource: media.provider)
     }
 
     var jsonObject: [String: Any] {

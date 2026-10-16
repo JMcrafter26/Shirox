@@ -155,4 +155,26 @@ final class ExtensionRuntimeTests: XCTestCase {
         XCTAssertEqual(ExtensionRepoSheet.header(kind: .vega, count: 1), "Vega · 1 provider")
         XCTAssertEqual(ExtensionRepoSheet.header(kind: .nuvio, count: 3), "Nuvio · 3 providers")
     }
+
+    func testTheAniListIdComesFromTheSourceThePageUses() async {
+        func media(id: Int, idMal: Int?, source: ProviderType) -> SeanimeSearchMedia {
+            SeanimeSearchMedia(id: id, idMal: idMal, romajiTitle: "Violet Evergarden", englishTitle: nil, synonyms: [],
+                               episodeCount: 13, format: "TV", status: nil, year: 2018, isAdult: false, idSource: source)
+        }
+        let lookUp: (Int) async -> Int? = { $0 == 33352 ? 21827 : nil }
+        // An AniList page's id is the AniList id.
+        let anilist = await ExtensionSearchMedia.anilistId(for: media(id: 21827, idMal: 33352, source: .anilist), lookUp: lookUp)
+        XCTAssertEqual(anilist, 21827)
+        // A MyAnimeList page's id is the MAL id: it's looked up, never taken as an AniList id.
+        let mal = await ExtensionSearchMedia.anilistId(for: media(id: 33352, idMal: 33352, source: .mal), lookUp: lookUp)
+        XCTAssertEqual(mal, 21827)
+        let unknown = await ExtensionSearchMedia.anilistId(for: media(id: 99, idMal: nil, source: .simkl), lookUp: lookUp)
+        XCTAssertNil(unknown)
+        let malPage = Media(id: 33352, idMal: 33352, provider: .mal,
+                            title: MediaTitle(romaji: "Violet Evergarden", english: nil, native: nil),
+                            coverImage: MediaCoverImage(large: nil, extraLarge: nil), bannerImage: nil, description: nil,
+                            episodes: 13, status: nil, averageScore: nil, genres: nil, season: nil, seasonYear: 2018,
+                            nextAiringEpisode: nil, relations: nil, type: "ANIME", format: "TV")
+        XCTAssertEqual(SeanimeSearchMedia(media: malPage).idSource, .mal)
+    }
 }

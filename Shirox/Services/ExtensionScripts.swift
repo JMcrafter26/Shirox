@@ -4,7 +4,8 @@ import JavaScriptCore
 /// The show an extension's next search is for, from the anime page's AniList entry, with the
 /// ids its metadata sources need.
 struct ExtensionSearchMedia: Equatable {
-    let anilistId: Int
+    /// Nil when the page's source has no AniList entry for the show.
+    let anilistId: Int?
     let malId: Int?
     let title: String
     let englishTitle: String?
@@ -18,7 +19,7 @@ struct ExtensionSearchMedia: Equatable {
     /// The season's last episode that is still this entry's, when known: where the next cour starts.
     var episodeEnd: Int?
 
-    init(anilistId: Int, malId: Int?, title: String, englishTitle: String?) {
+    init(anilistId: Int?, malId: Int?, title: String, englishTitle: String?) {
         self.anilistId = anilistId
         self.malId = malId
         self.title = title
@@ -26,7 +27,8 @@ struct ExtensionSearchMedia: Equatable {
     }
 
     var jsonObject: [String: Any] {
-        var o: [String: Any] = ["anilistId": anilistId, "title": title, "episodeOffset": episodeOffset]
+        var o: [String: Any] = ["title": title, "episodeOffset": episodeOffset]
+        if let anilistId { o["anilistId"] = anilistId }
         if let malId { o["malId"] = malId }
         if let englishTitle { o["englishTitle"] = englishTitle }
         if let tmdbId { o["tmdbId"] = tmdbId }
@@ -37,19 +39,30 @@ struct ExtensionSearchMedia: Equatable {
         return o
     }
 
+    /// The AniList id of the page's show. An AniList page's `id` is one; a MyAnimeList (or
+    /// Simkl) page's isn't, and is looked up from its MAL id rather than mistaken for one.
+    static func anilistId(for media: SeanimeSearchMedia, lookUp: (Int) async -> Int?) async -> Int? {
+        if media.idSource == .anilist { return media.id }
+        let mal = media.idMal ?? (media.idSource == .mal ? media.id : nil)
+        guard let mal else { return nil }
+        return await lookUp(mal)
+    }
+
     static func resolve(_ media: SeanimeSearchMedia) async -> ExtensionSearchMedia {
         let map = IDMappingService.shared
-        var malId = media.idMal
-        if malId == nil { malId = await map.malId(forAnilistId: media.id) }
-        var out = ExtensionSearchMedia(anilistId: media.id, malId: malId,
+        let anilist = await anilistId(for: media) { await map.anilistId(forMALId: $0) }
+        var malId = media.idMal ?? (media.idSource == .mal ? media.id : nil)
+        if malId == nil, let anilist { malId = await map.malId(forAnilistId: anilist) }
+        var out = ExtensionSearchMedia(anilistId: anilist, malId: malId,
                                        title: media.romajiTitle ?? media.englishTitle ?? "", englishTitle: media.englishTitle)
-        if let tmdb = await map.tmdbId(forAnilistId: media.id) {
+        guard let anilist else { return out }
+        if let tmdb = await map.tmdbId(forAnilistId: anilist) {
             out.tmdbId = tmdb.id
             out.tmdbType = tmdb.isMovie ? "movie" : "tv"
         }
-        out.imdbId = await map.imdbId(forAnilistId: media.id)
-        if let tvdb = map.tvdbId(forAnilistId: media.id),
-           let b = bounds(anilistId: media.id, siblings: map.siblings(forTvdbId: tvdb), episodeCount: media.episodeCount) {
+        out.imdbId = await map.imdbId(forAnilistId: anilist)
+        if let tvdb = map.tvdbId(forAnilistId: anilist),
+           let b = bounds(anilistId: anilist, siblings: map.siblings(forTvdbId: tvdb), episodeCount: media.episodeCount) {
             out.season = b.season
             out.episodeOffset = b.offset
             out.episodeEnd = b.end
