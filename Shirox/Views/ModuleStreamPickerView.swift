@@ -595,7 +595,7 @@ private struct ModuleStreamRow: View {
         case .searchResults(let items): return items.count == 1 ? "1 result" : "\(items.count) results"
         case .selectingEpisode: return "Episode \(episodeNumber) wasn't matched — pick it:"
         case .notFound: return rowVm.cloudflareURL != nil ? "Blocked by Cloudflare" : "No results"
-        case .error: return "Couldn't load"
+        case .error: return rowVm.cloudflareURL != nil ? "Blocked by Cloudflare" : "Couldn't load"
         }
     }
 
@@ -653,11 +653,16 @@ private struct ModuleStreamRow: View {
             }
 
         case .error(let msg):
-            ModulePickerMessage(icon: "exclamationmark.triangle", title: "Couldn't load",
-                                detail: msg, tint: .orange) {
-                if rowVm.cloudflareURL != nil {
+            if rowVm.cloudflareURL != nil {
+                // The module's real failure is the site's browser check, whatever it reported.
+                ModulePickerMessage(icon: "shield.lefthalf.filled", title: "Blocked by Cloudflare",
+                                    detail: "The site asked for a browser check. Verify, and this module tries again.",
+                                    tint: .orange) {
                     CloudflareVerifyInlineButton { rowVm.verifyAndRetry() }
                 }
+            } else {
+                ModulePickerMessage(icon: "exclamationmark.triangle", title: "Couldn't load",
+                                    detail: msg, tint: .orange)
             }
         }
     }

@@ -111,6 +111,12 @@ export function installHTTP(g) {
   g.Headers ??= Headers;
   g.fetch = async (input, init = {}) => {
     const url = typeof input === "string" ? input : (input && (input.url || input.href)) || String(input);
+    // A lookup about the show being opened that Shirox can answer itself (kinds/nuvio.js).
+    const known = typeof g.__extKnownAnswer === "function" ? g.__extKnownAnswer(url) : null;
+    if (known) {
+      const body = JSON.stringify(known);
+      return standardResponse({ status: 200, headers: { "content-type": "application/json" }, url, text: () => Promise.resolve(body) }, url);
+    }
     const headers = init.headers instanceof Headers ? Object.fromEntries(init.headers.entries()) : init.headers || {};
     let body = init.body ?? null;
     if (body instanceof URLSearchParams) body = body.toString();

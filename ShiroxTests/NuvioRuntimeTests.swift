@@ -95,4 +95,44 @@ final class NuvioRuntimeTests: XCTestCase {
         let items = ExtensionJSHarness.json(try ExtensionJSHarness.call(c, "searchResults", ["one"]).get()) as! [[String: Any]]
         XCTAssertEqual(items.map { $0["href"] as? String }, ["tmdb:tv:7", "tmdb:tv:8"])
     }
+
+    func testTheShowsOwnIdsAnswerTheScrapersLookups() throws {
+        // AnimePahe's scraper asks a Hugging Face service for the MAL id, then Jikan for the
+        // title, before it searches; the service is gone. On an anime page Shirox knows both.
+        let script = """
+        __extDefine("main", function (module, exports, require) {
+          async function getStreams(tmdbId, type, season, episode) {
+            const map = await (await fetch(`https://id-mapping-api-malid.hf.space/api/resolve?id=tt1&s=${season}&e=${episode}`)).json();
+            const anime = await (await fetch(`https://api.jikan.moe/v4/anime/${map.mal_id}`)).json();
+            return [{ name: "P", title: anime.data.title + " " + map.mal_episode, url: "https://cdn.test/" + map.mal_id + "/" + map.mal_episode + ".m3u8" }];
+          }
+          module.exports = { getStreams };
+        });
+        """
+        let c = ExtensionJSHarness.context(kind: "nuvio", key: "animepahe", config: ["supportedTypes": ["tv"]],
+                                           media: ["anilistId": 154587, "malId": 52991, "title": "Sousou no Frieren", "englishTitle": "Frieren",
+                                                   "imdbId": "tt1", "tmdbId": 7, "tmdbType": "tv", "season": 1, "episodeOffset": 12],
+                                           script: script)
+        let s = ExtensionJSHarness.json(try ExtensionJSHarness.call(c, "extractStreamUrl", ["tmdb:tv:7:1:13"]).get()) as! [String: Any]
+        let first = (s["streams"] as! [[String: Any]])[0]
+        XCTAssertEqual(first["streamUrl"] as? String, "https://cdn.test/52991/1.m3u8")
+        XCTAssertEqual(first["title"] as? String, "P · Sousou no Frieren 1")
+    }
+
+    func testOtherShowsLookupsGoToTheNetwork() throws {
+        // Asked about a show other than the one being opened, the real service answers (here: nothing).
+        let script = """
+        __extDefine("main", function (module, exports, require) {
+          async function getStreams() {
+            const res = await fetch("https://api.jikan.moe/v4/anime/1");
+            return res.ok ? [{ name: "X", url: "https://cdn.test/x.m3u8" }] : [];
+          }
+          module.exports = { getStreams };
+        });
+        """
+        let c = ExtensionJSHarness.context(kind: "nuvio", key: "x", config: ["supportedTypes": ["tv"]],
+                                           media: ["anilistId": 1, "malId": 52991, "title": "T", "tmdbId": 7, "tmdbType": "tv"], script: script)
+        XCTAssertEqual(ExtensionJSHarness.call(c, "extractStreamUrl", ["tmdb:tv:7:1:1"]),
+                       .failure(.init(message: "Test found no playable streams for this episode.")))
+    }
 }

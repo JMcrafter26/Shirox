@@ -39,7 +39,9 @@ struct ExtensionSearchMedia: Equatable {
 
     static func resolve(_ media: SeanimeSearchMedia) async -> ExtensionSearchMedia {
         let map = IDMappingService.shared
-        var out = ExtensionSearchMedia(anilistId: media.id, malId: media.idMal,
+        var malId = media.idMal
+        if malId == nil { malId = await map.malId(forAnilistId: media.id) }
+        var out = ExtensionSearchMedia(anilistId: media.id, malId: malId,
                                        title: media.romajiTitle ?? media.englishTitle ?? "", englishTitle: media.englishTitle)
         if let tmdb = await map.tmdbId(forAnilistId: media.id) {
             out.tmdbId = tmdb.id

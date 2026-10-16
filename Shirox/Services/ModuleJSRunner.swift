@@ -136,7 +136,9 @@ final class ModuleJSRunner {
             throw JSEngineError.parseError("Could not parse stream result")
         }
 
-        return parseStreamResults(from: obj)
+        let streams = parseStreamResults(from: obj)
+        // Extensions' scrapers list dead links and download pages alongside real streams.
+        return module?.ext != nil ? await StreamProbe.playable(streams) : streams
     }
 
     // MARK: - Promise resolution

@@ -67,8 +67,33 @@ async function episodes(href) {
   return out;
 }
 
+/// Lookups scrapers make about the show being opened that Shirox can answer from the AniList
+/// entry: its MAL id and episode (the id-mapping service AnimePahe's scraper asks has gone) and
+/// its titles on Jikan. A lookup about any other show goes to the network as usual.
+let opening = null;
+function knownAnswer(url) {
+  const m = media();
+  if (!m || !m.malId || !opening) return null;
+  let u;
+  try { u = new URL(url); } catch { return null; }
+  if (u.hostname === "id-mapping-api-malid.hf.space" && u.pathname === "/api/resolve") {
+    const asked = u.searchParams.get("id");
+    if (m.imdbId && asked && asked !== m.imdbId) return null;
+    return { mal_id: m.malId, mal_episode: opening.episode };
+  }
+  const jikan = u.hostname === "api.jikan.moe" && /^\/v4\/anime\/(\d+)\/?$/.exec(u.pathname);
+  if (jikan && jikan[1] === String(m.malId)) {
+    return { data: { mal_id: m.malId, title: m.title, title_english: m.englishTitle || m.title } };
+  }
+  return null;
+}
+
 async function streams(href) {
   const { type, id, season, episode } = parse(href);
+  // The episode as the AniList entry numbers it: a second cour's TMDB 1x13 is its episode 1.
+  const m = media();
+  const sameSeason = m && String(m.tmdbId) === String(id) && m.season != null && Number(season) === m.season;
+  opening = { episode: sameSeason ? Number(episode) - (m.episodeOffset || 0) : Number(episode) || 1 };
   const mod = globalThis.__extModule("main") || {};
   const getStreams = mod.getStreams || (mod.default && mod.default.getStreams) || globalThis.getStreams;
   if (typeof getStreams !== "function") throw new Error(`${cfg().name} has no getStreams.`);
@@ -86,6 +111,7 @@ async function streams(href) {
 }
 
 export function install(g) {
+  g.__extKnownAnswer = knownAnswer;
   g.__extFunctions = {
     searchResults: asJSON(search),
     extractDetails: asJSON(details),
