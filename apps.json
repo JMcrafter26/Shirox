@@ -32,7 +32,7 @@
           "date": "2026-10-16",
           "localizedDescription": "Extensions: besides Sora modules and Seanime providers, Modules now takes Stremio addons and Nuvio, Vega and SkyStream repos. Paste an addon's link to add it, or a repo's link to pick its providers from a list, one at a time or all at once. Each works like any module: search, the anime page, the player, downloads, Continue Watching and backups, on iPhone, iPad, Mac and Apple TV, and updates from its repo. Stremio addons find shows through the addon itself, Kitsu or Cinemeta; Nuvio scrapers through TMDB. From an anime page the right show and the right part of a split season come first.\n\nSafe for work only: adult addons and providers are never listed or installed, and are removed if their source later marks them adult; adult titles are left out of results. Torrent links are never played.\n\nStreams: links that are dead, web pages or ZIP files are left out before you pick, so the list only has ones that play. When a provider's site is behind Cloudflare (AnimePahe from Nuvio, for one), its row says so and offers Verify Cloudflare, including on MyAnimeList pages.",
           "downloadURL": "https://github.com/xibrox/Shirox/releases/download/latest/Shirox.ipa",
-          "size": 25236160,
+          "size": 25473069,
           "minOSVersion": "15.0"
         },
         {
