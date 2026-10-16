@@ -7,6 +7,8 @@ cd "$(dirname "$0")"
 WORKING_LOCATION="$(pwd)"
 APPLICATION_NAME=Shirox
 SCHEME_NAME="Shirox_tvOS"
+# The tvOS target builds as Shirox_tvOS.app with a Shirox_tvOS executable.
+PRODUCT_NAME="Shirox_tvOS"
 
 PROJECT_PATH="$WORKING_LOCATION/$APPLICATION_NAME.xcodeproj"
 
@@ -40,7 +42,7 @@ xcodebuild -project "$PROJECT_PATH" \
    CODE_SIGN_ENTITLEMENTS="" \
    CODE_SIGNING_ALLOWED="NO"
 
-DD_APP_PATH="$WORKING_LOCATION/build/DerivedDataTVOS/Build/Products/Release-appletvos/$APPLICATION_NAME.app"
+DD_APP_PATH="$WORKING_LOCATION/build/DerivedDataTVOS/Build/Products/Release-appletvos/$PRODUCT_NAME.app"
 TARGET_APP="$WORKING_LOCATION/build/$APPLICATION_NAME.app"
 
 if [ ! -d "$DD_APP_PATH" ]; then
@@ -66,7 +68,7 @@ echo "--- Packaging IPA ---"
 mkdir Payload
 cp -r "$APPLICATION_NAME.app" "Payload/$APPLICATION_NAME.app"
 
-strip "Payload/$APPLICATION_NAME.app/$APPLICATION_NAME"
+strip "Payload/$APPLICATION_NAME.app/$PRODUCT_NAME"
 
 zip -vr "$APPLICATION_NAME-tvos.ipa" Payload
 
