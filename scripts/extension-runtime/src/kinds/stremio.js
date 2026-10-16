@@ -43,18 +43,20 @@ const item = (s, m) => ({ title: m.name || "", image: m.poster || "", href: SHOW
 async function search(query) {
   const s = source();
   if (!s) throw new Error("This addon has nothing Shirox can search.");
+  // From an anime page: the show the AniList entry maps to first, then the search.
   const m = media();
+  let mapped = [];
   if (m && s === "kitsu" && m.anilistId) {
     try {
       const meta = (await getJSON(`${KITSU}/meta/anime/anilist:${m.anilistId}.json`)).meta;
-      if (meta && !adultMeta(meta)) return [item(s, meta)];
+      if (meta && !adultMeta(meta)) mapped = [item(s, meta)];
     } catch {}
   }
   if (m && s === "cinemeta" && m.imdbId) {
     try {
       const type = m.tmdbType === "movie" ? "movie" : "series";
       const meta = (await getJSON(`${CINEMETA}/meta/${type}/${m.imdbId}.json`)).meta;
-      if (meta && !adultMeta(meta)) return [item(s, meta)];
+      if (meta && !adultMeta(meta)) mapped = [item(s, meta)];
     } catch {}
   }
   const q = encodeURIComponent(query);
@@ -68,7 +70,8 @@ async function search(query) {
     urls = [`${CINEMETA}/catalog/series/top/search=${q}.json`, `${CINEMETA}/catalog/movie/top/search=${q}.json`];
   }
   const lists = await Promise.all(urls.map((u) => getJSON(u).then((j) => j.metas || [], () => [])));
-  return lists.flat().filter((m) => !adultMeta(m)).map((m) => item(s, m));
+  const found = lists.flat().filter((x) => !adultMeta(x)).map((x) => item(s, x));
+  return [...mapped, ...found.filter((f) => !mapped.some((x) => x.href === f.href))];
 }
 
 const parseShow = (href) => JSON.parse(String(href).slice(SHOW.length));

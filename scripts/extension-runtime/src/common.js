@@ -6,7 +6,8 @@ export const media = () => globalThis.__shiroxMedia || null;
 export function isAdultText(text) {
   if (!text) return false;
   const words = cfg().adultWords || [];
-  const tokens = String(text).toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+  // "Adult Swim" is a channel, not an adult rating — as in Swift's AdultModuleCheck.
+  const tokens = String(text).toLowerCase().replace(/\badult\s+swim\b/g, " ").split(/[^a-z0-9]+/).filter(Boolean);
   const stems = ["hentai", "porn", "xxx", "nsfw", "rule34"];
   return tokens.some((t) => words.includes(t) || stems.some((s) => t.includes(s)));
 }

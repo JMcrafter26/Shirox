@@ -15,15 +15,24 @@ const types = () => (cfg().config && cfg().config.supportedTypes) || ["movie", "
 const item = (type, r) => ({ title: r.name || r.title || "", image: r.poster_path ? IMAGE + r.poster_path : "", href: `tmdb:${type}:${r.id}` });
 
 async function search(query) {
+  // From an anime page: the show the AniList entry maps to first, then the search, so a wrong
+  // mapping can still be worked around.
   const m = media();
+  let mapped = [];
   if (m && m.tmdbId && types().includes(m.tmdbType)) {
     try {
       const r = await tmdb(`/${m.tmdbType}/${m.tmdbId}`);
-      if (!r.adult) return [item(m.tmdbType, r)];
+      if (!r.adult) mapped = [item(m.tmdbType, r)];
     } catch {}
   }
-  const r = await tmdb("/search/multi", `&query=${encodeURIComponent(query)}`);
-  return (r.results || []).filter((x) => types().includes(x.media_type) && !x.adult).map((x) => item(x.media_type, x));
+  let found = [];
+  try {
+    const r = await tmdb("/search/multi", `&query=${encodeURIComponent(query)}`);
+    found = (r.results || []).filter((x) => types().includes(x.media_type) && !x.adult).map((x) => item(x.media_type, x));
+  } catch (e) {
+    if (!mapped.length) throw e;
+  }
+  return [...mapped, ...found.filter((f) => !mapped.some((x) => x.href === f.href))];
 }
 
 const parse = (href) => { const [, type, id, season, episode] = String(href).split(":"); return { type, id, season, episode }; };

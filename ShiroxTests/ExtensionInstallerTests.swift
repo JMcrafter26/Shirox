@@ -54,7 +54,7 @@ final class ExtensionInstallerTests: XCTestCase {
         let zip = Data(base64Encoded: ZipReaderTests().deflated)!
         let e = entry("p.a", "https://raw.test/a.sky", raw: ["baseUrl": "https://a.test", "name": "A"])
         let m = try await ExtensionInstaller.module(entry: e, repo: repo(.skystream, [e])) { _ in zip }
-        XCTAssertTrue(m.scriptContent!.hasPrefix("globalThis.search = 1;"))
+        XCTAssertTrue(m.scriptContent!.contains("globalThis.search = 1;"))
         XCTAssertEqual(m.baseUrl, "https://a.test")
         XCTAssertEqual(m.ext?.key, "p.a")
     }
@@ -160,5 +160,31 @@ final class ExtensionInstallerTests: XCTestCase {
         let fresh = try await ExtensionInstaller.reinstall(module, fetch: fetcher(files))
         XCTAssertTrue(fresh.scriptContent!.hasPrefix("__extDefine(\"main\""))
         XCTAssertEqual(fresh.version, "2")
+    }
+
+    func testVegaBaseUrlFromUrlsJSON() async throws {
+        // The provider's site, so the adult host check sees where it really goes.
+        let e = entry("v", "https://raw.test/o/r/main/dist/v/")
+        var files = ["posts", "meta", "stream"].reduce(into: [String: String]()) {
+            $0["https://raw.test/o/r/main/dist/v/\($1).js"] = "exports.x = 1;"
+        }
+        files["https://raw.test/o/r/main/urls.json"] = #"{"v":{"name":"V","url":"https://v-site.test"}}"#
+        let m = try await ExtensionInstaller.module(entry: e, repo: repo(.vega, [e]), fetch: fetcher(files))
+        XCTAssertEqual(m.baseUrl, "https://v-site.test")
+    }
+
+    func testANetworkFailureIsNotAMissingFile() async {
+        let e = entry("v", "https://raw.test/o/r/main/dist/v/")
+        do {
+            _ = try await ExtensionInstaller.module(entry: e, repo: repo(.vega, [e])) { _ in throw URLError(.notConnectedToInternet) }
+            XCTFail("installed")
+        } catch { XCTAssertEqual((error as? URLError)?.code, .notConnectedToInternet) }
+    }
+
+    func testSkyStreamPluginIsWrapped() async throws {
+        let zip = Data(base64Encoded: ZipReaderTests().deflated)!
+        let e = entry("p.a", "https://raw.test/a.sky", raw: ["name": "A"])
+        let m = try await ExtensionInstaller.module(entry: e, repo: repo(.skystream, [e])) { _ in zip }
+        XCTAssertEqual(m.scriptContent, ExtensionInstaller.wrapSkyStream(String(repeating: "globalThis.search = 1;\n", count: 20)))
     }
 }

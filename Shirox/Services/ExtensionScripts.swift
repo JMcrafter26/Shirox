@@ -82,13 +82,17 @@ enum ExtensionScripts {
         guard let ext = module.ext, let runtimeSource else { return }
         let config = (try? JSONSerialization.jsonObject(with: Data(ext.config.utf8))) ?? [String: Any]()
         let words = Array(NSFWContentFilter.blockedKeywords) + AdultModuleCheck.adultStems
+        // Only Nuvio looks shows up on TMDB; other plugins aren't handed the app's key.
+        let key = ext.kind == .nuvio ? tmdbKey : ""
         let info: [String: Any] = ["kind": ext.kind.rawValue, "name": module.sourceName, "key": ext.key, "config": config,
-                                   "tmdbKey": tmdbKey, "adultWords": words]
+                                   "tmdbKey": key, "adultWords": words]
         context.setObject(info, forKeyedSubscript: "__ext" as NSString)
         context.setObject(NSNull(), forKeyedSubscript: "__shiroxMedia" as NSString)
-        // Nuvio scrapers read these globals.
-        context.setObject(tmdbKey, forKeyedSubscript: "TMDB_API_KEY" as NSString)
-        context.evaluateScript("globalThis.SCRAPER_SETTINGS = globalThis.SCRAPER_SETTINGS || {};")
+        if ext.kind == .nuvio {
+            // Nuvio scrapers read these globals.
+            context.setObject(key, forKeyedSubscript: "TMDB_API_KEY" as NSString)
+            context.evaluateScript("globalThis.SCRAPER_SETTINGS = globalThis.SCRAPER_SETTINGS || {};")
+        }
         context.evaluateScript(runtimeSource)
     }
 

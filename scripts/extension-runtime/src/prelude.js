@@ -33,6 +33,19 @@ if (typeof g.AbortController !== "function") {
   g.AbortSignal = AbortSignal;
 }
 
+// In memory, per module context.
+if (typeof g.localStorage !== "object" || !g.localStorage) {
+  const items = new Map();
+  g.localStorage = {
+    getItem: (k) => (items.has(String(k)) ? items.get(String(k)) : null),
+    setItem: (k, v) => { items.set(String(k), String(v)); },
+    removeItem: (k) => { items.delete(String(k)); },
+    clear: () => items.clear(),
+    key: (i) => [...items.keys()][i] ?? null,
+    get length() { return items.size; },
+  };
+}
+
 g.crypto ??= {};
 g.crypto.getRandomValues ??= (array) => {
   for (let i = 0; i < array.length; i++) array[i] = Math.floor(Math.random() * 256);

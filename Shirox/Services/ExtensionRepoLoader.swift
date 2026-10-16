@@ -32,6 +32,25 @@ enum ExtensionRepoLoader {
             && (repo.entries.first?.fileURL ?? repo.url) == repo.url
     }
 
+    /// Plugin files come from the web only, never from paths on the device.
+    private static func web(_ string: String, relativeTo base: URL) -> URL? {
+        guard let url = URL(string: string, relativeTo: base)?.absoluteURL,
+              ["http", "https"].contains(url.scheme?.lowercased() ?? "") else { return nil }
+        return url
+    }
+
+    /// Nuvio scrapers are looked up by TMDB, which has shows and films.
+    private static func nuvioPlays(_ s: [String: Any]) -> Bool {
+        guard let types = s["supportedTypes"] as? [String] else { return true }
+        return types.contains { ["tv", "movie", "anime", "series"].contains($0.lowercased()) }
+    }
+
+    /// SkyStream plugins that only carry live channels, which Shirox doesn't play.
+    private static func skyPlays(_ p: [String: Any]) -> Bool {
+        let categories = (p["categories"] as? [String] ?? []).map { $0.lowercased() }
+        return categories.isEmpty || categories.contains { !$0.contains("live") }
+    }
+
     static func detect(_ data: Data, url: URL, fetch: Fetch) async throws -> ExtensionLink? {
         var parts = URLComponents(url: url, resolvingAgainstBaseURL: false)
         parts?.fragment = nil
@@ -51,9 +70,9 @@ enum ExtensionRepoLoader {
             if let scrapers = object["scrapers"] as? [[String: Any]] {
                 let adult = Set(scrapers.filter(ExtensionAdultCheck.isAdult(entry:)).compactMap { $0["id"] as? String })
                 let entries = scrapers.compactMap { s -> ExtensionRepoEntry? in
-                    guard s["enabled"] as? Bool != false, !ExtensionAdultCheck.isAdult(entry: s),
+                    guard s["enabled"] as? Bool != false, !ExtensionAdultCheck.isAdult(entry: s), nuvioPlays(s),
                           let id = s["id"] as? String, let file = s["filename"] as? String,
-                          let fileURL = URL(string: file, relativeTo: base)?.absoluteURL else { return nil }
+                          let fileURL = web(file, relativeTo: base) else { return nil }
                     return ExtensionRepoEntry(key: id, name: s["name"] as? String ?? id, version: string(s["version"]),
                                               iconUrl: s["logo"] as? String, language: (s["contentLanguage"] as? [String])?.first,
                                               description: s["description"] as? String, fileURL: fileURL, raw: s)
@@ -65,13 +84,13 @@ enum ExtensionRepoLoader {
                 var entries: [ExtensionRepoEntry] = []
                 var adult: Set<String> = []
                 for list in lists {
-                    guard let listURL = URL(string: list, relativeTo: base)?.absoluteURL,
+                    guard let listURL = web(list, relativeTo: base),
                           let listData = try? await fetch(listURL),
                           let items = try? JSONSerialization.jsonObject(with: listData) as? [[String: Any]] else { continue }
                     for p in items {
                         if ExtensionAdultCheck.isAdult(entry: p), let key = p["packageName"] as? String { adult.insert(key) }
-                        guard !ExtensionAdultCheck.isAdult(entry: p), let key = p["packageName"] as? String,
-                              let file = p["url"] as? String, let fileURL = URL(string: file, relativeTo: listURL)?.absoluteURL,
+                        guard !ExtensionAdultCheck.isAdult(entry: p), skyPlays(p), let key = p["packageName"] as? String,
+                              let file = p["url"] as? String, let fileURL = web(file, relativeTo: listURL),
                               !entries.contains(where: { $0.key == key }) else { continue }
                         entries.append(ExtensionRepoEntry(key: key, name: p["name"] as? String ?? key, version: string(p["version"]),
                                                           iconUrl: p["iconUrl"] as? String, language: (p["languages"] as? [String])?.first,

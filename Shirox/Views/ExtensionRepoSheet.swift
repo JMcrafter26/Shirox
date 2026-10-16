@@ -9,6 +9,10 @@ struct ExtensionRepoSheet: View {
     @State private var installing: Set<String> = []
     @State private var failures: [String: String] = [:]
 
+    static func header(kind: ExtensionKind, count: Int) -> String {
+        "\(kind.badge) · \(count) \(count == 1 ? "provider" : "providers")"
+    }
+
     private func isInstalled(_ entry: ExtensionRepoEntry) -> Bool {
         moduleManager.modules.contains { $0.ext?.key == entry.key && $0.ext?.repoUrl == repo.url.absoluteString }
     }
@@ -25,7 +29,7 @@ struct ExtensionRepoSheet: View {
                         row(entry)
                     }
                 } header: {
-                    Text("\(repo.kind.badge) · \(repo.entries.count) providers")
+                    Text(Self.header(kind: repo.kind, count: repo.entries.count))
                 } footer: {
                     Text("Adult providers and torrent links are never offered.")
                 }

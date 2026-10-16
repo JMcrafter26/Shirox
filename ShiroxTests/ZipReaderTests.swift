@@ -21,4 +21,17 @@ final class ZipReaderTests: XCTestCase {
         XCTAssertNil(ZipReader.file(named: "nope", in: Data(base64Encoded: stored)!))
         XCTAssertNil(ZipReader.file(named: "a.txt", in: Data("not a zip".utf8)))
     }
+
+    func testAnEntryClaimingAHugeSizeIsRefused() {
+        // The deflated fixture with its central-directory size set to 0x7FFFFFFF: a hostile .sky
+        // would otherwise make the reader allocate gigabytes.
+        var bytes = [UInt8](Data(base64Encoded: deflated)!)
+        let eocd = bytes.count - 22
+        let cd = Int(bytes[eocd + 16]) | Int(bytes[eocd + 17]) << 8
+        bytes.replaceSubrange((cd + 24)..<(cd + 28), with: [0xff, 0xff, 0xff, 0x7f])
+        XCTAssertNil(ZipReader.file(named: "plugin.js", in: Data(bytes)))
+        // The limit is what keeps that from being allocated: a real file over it is refused too.
+        XCTAssertNil(ZipReader.file(named: "plugin.js", in: Data(base64Encoded: deflated)!, maxSize: 100))
+        XCTAssertNotNil(ZipReader.file(named: "plugin.js", in: Data(base64Encoded: deflated)!, maxSize: 1000))
+    }
 }

@@ -68,4 +68,17 @@ final class SkyStreamRuntimeTests: XCTestCase {
     func testManifestBaseUrlSet() {
         XCTAssertEqual(ctx().evaluateScript("manifest.baseUrl")!.toString(), "https://a.test")
     }
+
+    func testPluginWithConstEntryPointsAndClashingNames() throws {
+        // Top-level `const` entry points never reach globalThis, and a `const` named like one of the
+        // engine's helpers (getAttribute) would stop the script loading — wrapping fixes both.
+        let plugin = """
+        const getAttribute = 1;
+        const search = async (q, cb) => cb({ success: true, data: [new MultimediaItem({ title: "C", url: "/c", posterUrl: "", type: "movie" })] });
+        """
+        let c = ExtensionJSHarness.context(kind: "skystream", key: "p.c", config: ["manifest": ["name": "C", "baseUrl": "https://c.test"]],
+                                           script: "function getAttribute() {}\n" + ExtensionInstaller.wrapSkyStream(plugin))
+        let items = ExtensionJSHarness.json(try ExtensionJSHarness.call(c, "searchResults", ["x"]).get()) as! [[String: Any]]
+        XCTAssertEqual(items.map { $0["href"] as? String }, ["/c"])
+    }
 }

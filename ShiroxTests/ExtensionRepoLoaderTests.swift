@@ -113,4 +113,25 @@ final class ExtensionRepoLoaderTests: XCTestCase {
         XCTAssertEqual(r.entries.first?.fileURL, url)
         XCTAssertTrue(ExtensionRepoLoader.isSingleFile(r))
     }
+
+    func testOnlyWebLinksAndPlayableTypes() async throws {
+        let m: [String: Any] = ["name": "R", "scrapers": [
+            ["id": "ok", "name": "Ok", "version": "1", "filename": "a.js", "supportedTypes": ["tv"]],
+            ["id": "local", "name": "Local", "version": "1", "filename": "file:///etc/hosts"],
+            ["id": "books", "name": "Books", "version": "1", "filename": "b.js", "supportedTypes": ["book"]]]]
+        guard case .repo(let r)? = try await load(m, url: "https://raw.test/manifest.json") else { return XCTFail() }
+        XCTAssertEqual(r.entries.map(\.key), ["ok"])
+
+        let sky: [String: Any] = ["name": "S", "pluginLists": ["https://raw.test/l.json"]]
+        let list: [[String: Any]] = [["packageName": "p.tv", "name": "TV", "version": 1, "url": "https://raw.test/a.sky", "categories": ["Livestream"]],
+                                     ["packageName": "p.ok", "name": "Ok", "version": 1, "url": "https://raw.test/b.sky", "categories": ["Movie", "Livestream"]],
+                                     ["packageName": "p.f", "name": "F", "version": 1, "url": "file:///tmp/x.sky"]]
+        guard case .repo(let s)? = try await load(sky, url: "https://raw.test/repo.json", extra: ["https://raw.test/l.json": list])
+        else { return XCTFail() }
+        XCTAssertEqual(s.entries.map(\.key), ["p.ok"])
+    }
+
+    func testLinkErrorNamesTheExtensionFormats() {
+        XCTAssertTrue(ModuleLinkError.notAModule.localizedDescription.contains("Stremio"))
+    }
 }

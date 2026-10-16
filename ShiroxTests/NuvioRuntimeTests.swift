@@ -86,4 +86,13 @@ final class NuvioRuntimeTests: XCTestCase {
         let list = ExtensionJSHarness.json(try ExtensionJSHarness.call(c, "extractEpisodes", ["tmdb:tv:7"]).get()) as! [[String: Any]]
         XCTAssertEqual(list.map { $0["href"] as? String }, ["tmdb:tv:7:1:1", "tmdb:tv:7:1:2"])
     }
+
+    func testMappedShowFirstThenTheSearch() throws {
+        let c = ctx(media: ["anilistId": 1, "title": "One", "tmdbId": 7, "tmdbType": "tv"],
+                    routes: ["\(tmdb)/tv/7?api_key=TMDBKEY&include_adult=false": ["id": 7, "name": "Mapped"],
+                             "\(tmdb)/search/multi?api_key=TMDBKEY&include_adult=false&query=one": ["results": [
+                                ["id": 7, "media_type": "tv", "name": "Mapped"], ["id": 8, "media_type": "tv", "name": "Other"]]]])
+        let items = ExtensionJSHarness.json(try ExtensionJSHarness.call(c, "searchResults", ["one"]).get()) as! [[String: Any]]
+        XCTAssertEqual(items.map { $0["href"] as? String }, ["tmdb:tv:7", "tmdb:tv:8"])
+    }
 }

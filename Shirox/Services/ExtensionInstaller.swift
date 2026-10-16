@@ -50,18 +50,29 @@ enum ExtensionInstaller {
         case .vega:
             var parts: [String] = [], missing: [String] = []
             for name in vegaFiles {
-                if let data = try? await fetch(entry.fileURL.appendingPathComponent("\(name).js")),
-                   let text = String(data: data, encoding: .utf8), isJavaScript(text) {
+                let text: String?
+                do {
+                    text = String(data: try await fetch(entry.fileURL.appendingPathComponent("\(name).js")), encoding: .utf8)
+                } catch where isMissing(error) {
+                    text = nil
+                }
+                if let text, isJavaScript(text) {
                     parts.append(wrap(name, text))
                 } else if vegaRequired.contains(name) {
                     missing.append(name)
                 }
             }
             guard missing.isEmpty else { throw ExtensionInstallError.missingFiles(missing) }
+            // The provider's current site, from the repo's urls.json: kept as its baseUrl so the
+            // adult host check sees where it really goes.
+            let site = (try? await fetch(repo.base.appendingPathComponent("urls.json")))
+                .flatMap { try? JSONSerialization.jsonObject(with: $0) as? [String: Any] }
+                .flatMap { $0[entry.key] }
+                .flatMap { ($0 as? String) ?? ($0 as? [String: Any])?["url"] as? String }
             let config: [String: Any] = ["repoBase": repo.base.absoluteString, "value": entry.key]
             return try make(kind: .vega, name: entry.name, version: entry.version, scriptUrl: entry.fileURL.absoluteString,
                             repoUrl: repo.url.absoluteString, key: entry.key, icon: entry.iconUrl, language: nil,
-                            baseUrl: nil, config: config, script: parts.joined(separator: "\n"))
+                            baseUrl: site, config: config, script: parts.joined(separator: "\n"))
         case .skystream:
             let zip = try await fetch(entry.fileURL)
             guard let js = ZipReader.file(named: "plugin.js", in: zip).flatMap({ String(data: $0, encoding: .utf8) }), isJavaScript(js)
@@ -72,7 +83,7 @@ enum ExtensionInstaller {
             if ExtensionAdultCheck.isAdult(entry: manifest) { throw ExtensionInstallError.adult }
             return try make(kind: .skystream, name: entry.name, version: entry.version, scriptUrl: entry.fileURL.absoluteString,
                             repoUrl: repo.url.absoluteString, key: entry.key, icon: entry.iconUrl, language: entry.language,
-                            baseUrl: manifest["baseUrl"] as? String, config: ["manifest": manifest], script: js)
+                            baseUrl: manifest["baseUrl"] as? String, config: ["manifest": manifest], script: wrapSkyStream(js))
         case .stremio:
             throw ExtensionInstallError.noPlugin
         }
@@ -96,6 +107,13 @@ enum ExtensionInstaller {
         }
     }
 
+    /// A file that isn't there (as opposed to the network failing): an optional Vega file left out.
+    private static func isMissing(_ error: Error) -> Bool {
+        if (error as? URLError)?.code == .fileDoesNotExist { return true }
+        if case .unreachable(let status)? = error as? ModuleLinkError { return status == 404 || status == 403 }
+        return false
+    }
+
     /// Downloads a plugin file; an error page (GitHub's "404: Not Found") is an error, not a script.
     static func download(_ url: URL) async throws -> Data {
         let (data, response) = try await URLSession.shared.data(from: url)
@@ -111,6 +129,15 @@ enum ExtensionInstaller {
         let script = JSStringCreateWithUTF8CString(source)
         defer { JSStringRelease(script) }
         return JSCheckScriptSyntax(context, script, nil, 1, nil)
+    }
+
+    /// A SkyStream plugin in its own scope: its top-level names can't collide with the engine's
+    /// globals, and entry points it declares with `const`/`let` are still found.
+    static func wrapSkyStream(_ source: String) -> String {
+        let entries = ["search", "load", "loadStreams", "getHome"].map { name in
+            "try { if (typeof \(name) === \"function\" && typeof globalThis.\(name) !== \"function\") globalThis.\(name) = \(name); } catch (e) {}"
+        }.joined(separator: "\n")
+        return "(function () {\n\(source)\n;\n\(entries)\n})();"
     }
 
     /// A CommonJS file, kept apart from its neighbours: each gets its own `module`, `exports` and scope.

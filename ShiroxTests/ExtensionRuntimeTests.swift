@@ -126,4 +126,33 @@ final class ExtensionRuntimeTests: XCTestCase {
         XCTAssertNil(ExtensionSearchMedia.bounds(anilistId: 4, siblings: siblings, episodeCount: nil)?.end)
         XCTAssertNil(ExtensionSearchMedia.bounds(anilistId: 99, siblings: siblings, episodeCount: 12))
     }
+
+    func testTMDBKeyOnlyForNuvio() throws {
+        func prepared(_ kind: String) throws -> JSContext {
+            let json = #"{"sourceName":"A","version":"1","scriptUrl":"https://x/a.js","type":"anime","ext":{"kind":"\#(kind)","repoUrl":"https://x/m.json","key":"a","config":"{}"}}"#
+            let c = JSContext()!
+            ExtensionScripts.prepare(c, module: try JSONDecoder().decode(ModuleDefinition.self, from: Data(json.utf8)))
+            return c
+        }
+        XCTAssertEqual(try prepared("vega").evaluateScript("typeof TMDB_API_KEY + '|' + __ext.tmdbKey")!.toString(), "undefined|")
+        XCTAssertEqual(try prepared("skystream").evaluateScript("typeof TMDB_API_KEY")!.toString(), "undefined")
+        XCTAssertEqual(try prepared("nuvio").evaluateScript("typeof TMDB_API_KEY")!.toString(), "string")
+    }
+
+    func testLocalStorageAndAdultSwim() {
+        let c = ctx()
+        XCTAssertEqual(c.evaluateScript("localStorage.setItem('a', 1); localStorage.getItem('a') + '|' + localStorage.getItem('b')")!.toString(), "1|null")
+        // Swift's name check lets "Adult Swim" through; the runtime agrees.
+        let r = ExtensionJSHarness.context(kind: "stremio", config: ["manifest": ["id": "x", "resources": ["stream"], "types": ["series"], "idPrefixes": ["tt"]]],
+                                           routes: ["https://v3-cinemeta.strem.io/catalog/series/top/search=x.json": ["metas": [
+                                               ["id": "tt1", "type": "series", "name": "Smiling Friends", "genres": ["Adult Swim"]],
+                                               ["id": "tt2", "type": "series", "name": "Bad", "genres": ["Adult"]]]]])
+        let items = ExtensionJSHarness.json(try! ExtensionJSHarness.call(r, "searchResults", ["x"]).get()) as! [[String: Any]]
+        XCTAssertEqual(items.map { $0["title"] as? String }, ["Smiling Friends"])
+    }
+
+    func testRepoSheetHeader() {
+        XCTAssertEqual(ExtensionRepoSheet.header(kind: .vega, count: 1), "Vega · 1 provider")
+        XCTAssertEqual(ExtensionRepoSheet.header(kind: .nuvio, count: 3), "Nuvio · 3 providers")
+    }
 }

@@ -3,7 +3,8 @@ import Foundation
 
 /// Reads one file out of a zip — enough for a SkyStream `.sky` (stored or deflated entries).
 enum ZipReader {
-    static func file(named name: String, in zip: Data) -> Data? {
+    /// `maxSize` bounds what's unpacked: a file claiming more is refused rather than allocated.
+    static func file(named name: String, in zip: Data, maxSize: Int = 32 << 20) -> Data? {
         let bytes = [UInt8](zip)
         func u16(_ o: Int) -> Int { o >= 0 && o + 2 <= bytes.count ? Int(bytes[o]) | Int(bytes[o + 1]) << 8 : 0 }
         func u32(_ o: Int) -> Int { u16(o) | u16(o + 2) << 16 }
@@ -26,7 +27,7 @@ enum ZipReader {
             guard o + 46 + nameLength <= bytes.count else { return nil }
             let entryName = String(decoding: bytes[(o + 46)..<(o + 46 + nameLength)], as: UTF8.self)
             if entryName == name {
-                guard u32(local) == 0x0403_4b50 else { return nil }
+                guard u32(local) == 0x0403_4b50, size <= maxSize, compressed <= maxSize else { return nil }
                 let start = local + 30 + u16(local + 26) + u16(local + 28)
                 guard start + compressed <= bytes.count else { return nil }
                 let payload = Array(bytes[start..<(start + compressed)])

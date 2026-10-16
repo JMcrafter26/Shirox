@@ -120,4 +120,13 @@ final class StremioRuntimeTests: XCTestCase {
         let c = cinemetaCtx(media: ["anilistId": 9, "title": "X", "imdbId": "tt1", "season": 1, "episodeOffset": 12], videos: videos)
         XCTAssertEqual(try episodes(c).count, 12)
     }
+
+    func testKitsuMappedEntryFirstThenTheSearch() throws {
+        let c = ctx(manifest: kitsuStreams, media: ["anilistId": 5, "title": "Frieren", "episodeOffset": 0],
+                    routes: ["\(kitsu)/meta/anime/anilist:5.json": ["meta": ["id": "kitsu:1", "type": "series", "name": "Frieren"]],
+                             "\(kitsu)/catalog/anime/kitsu-anime-list/search=Frieren.json": ["metas": [
+                                ["id": "kitsu:1", "type": "series", "name": "Frieren"], ["id": "kitsu:2", "type": "series", "name": "Frieren Mini"]]]])
+        let items = ExtensionJSHarness.json(try ExtensionJSHarness.call(c, "searchResults", ["Frieren"]).get()) as! [[String: Any]]
+        XCTAssertEqual(items.map { $0["title"] as? String }, ["Frieren", "Frieren Mini"])
+    }
 }
