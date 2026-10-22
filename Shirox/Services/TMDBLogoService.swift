@@ -45,17 +45,26 @@ final class TMDBLogoService {
     private var logos: [String: LogoCacheEntry] = [:]
     private var tasks: [String: Task<String?, Never>] = [:]
 
-    private static let session: URLSession = {
+    private let session: URLSession
+    private let hosts: TMDBHosts
+    private let persists: Bool
+
+    nonisolated static func sessionConfiguration() -> URLSessionConfiguration {
         let config = URLSessionConfiguration.default
         config.urlCache = nil
         config.timeoutIntervalForRequest = 10
         config.timeoutIntervalForResource = 20
-        return URLSession(configuration: config)
-    }()
+        return config
+    }
 
-    private init() {
-        apiKey = Self.apiKey(in: Bundle.main.infoDictionary ?? [:])
-        if let data = UserDefaults.standard.data(forKey: Self.storageKey),
+    /// Tests hand in their own session, hosts and key; the app uses `shared`.
+    init(configuration: URLSessionConfiguration = sessionConfiguration(), hosts: TMDBHosts = .shared,
+         apiKey: String? = apiKey(in: Bundle.main.infoDictionary ?? [:]), persists: Bool = true) {
+        session = URLSession(configuration: configuration)
+        self.hosts = hosts
+        self.apiKey = apiKey
+        self.persists = persists
+        if persists, let data = UserDefaults.standard.data(forKey: Self.storageKey),
            let decoded = try? JSONDecoder().decode([String: LogoCacheEntry].self, from: data) {
             logos = decoded
         }
@@ -133,7 +142,7 @@ final class TMDBLogoService {
 
     private func get<T: Decodable>(_ type: T.Type, _ address: String) async throws -> Fetched<T> {
         guard let url = URL(string: address) else { return .failed }
-        let (data, response) = try await Self.session.data(from: url)
+        let (data, response) = try await hosts.send(URLRequest(url: url)) { try await self.session.data(for: $0) }
         switch (response as? HTTPURLResponse)?.statusCode {
         case 200: return (try? JSONDecoder().decode(T.self, from: data)).map { .found($0) } ?? .failed
         case 404: return .notFound
@@ -142,6 +151,7 @@ final class TMDBLogoService {
     }
 
     private func save() {
+        guard persists else { return }
         let snapshot = logos
         let key = Self.storageKey
         Task.detached(priority: .background) {

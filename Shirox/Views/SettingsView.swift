@@ -284,6 +284,9 @@ struct SettingsView: View {
                         title: "App Logs"
                     )
                 }
+
+                // Expert settings for blocked regions, deliberately last.
+                NavigationLink { AdvancedNetworkSettingsView() } label: { SettingsNavRow(icon: "network", title: "Advanced Network") }
             }
 
             Section {
@@ -2230,5 +2233,95 @@ private struct OverwritePreviewSheet: View {
             Text("\(count)")
                 .foregroundStyle(tint)
         }
+    }
+}
+
+// MARK: - Advanced Network
+
+/// Expert settings for regions where TMDB or DNS is blocked, kept out of the way at the end of
+/// Settings: custom TMDB proxies (`TMDBHosts`) and encrypted DNS (`SecureDNS`).
+struct AdvancedNetworkSettingsView: View {
+    @AppStorage(TMDBHostSettings.useProxiesKey) private var useProxies = false
+    @AppStorage(TMDBHostSettings.apiBaseKey) private var apiBase = ""
+    @AppStorage(TMDBHostSettings.imageBaseKey) private var imageBase = ""
+    @AppStorage(SecureDNSSettings.enabledKey) private var secureDNS = false
+    @AppStorage(SecureDNSSettings.serverURLKey) private var dnsServerURL = ""
+    @AppStorage(SecureDNSSettings.serverAddressesKey) private var dnsServerAddresses = ""
+
+    var body: some View {
+        SettingsList {
+            Section {
+                Toggle("Use Custom TMDB Proxies", isOn: $useProxies)
+                    .tint(.secondary)
+                    .onChangeOf(useProxies) { isOn in
+                        guard isOn else { return }
+                        if apiBase.isEmpty { apiBase = TMDBHostSettings.defaultAPIBase }
+                        if imageBase.isEmpty { imageBase = TMDBHostSettings.defaultImageBase }
+                    }
+            } header: {
+                Text("TMDB")
+            } footer: {
+                Text("Bypasses regional access blocks and restrictions in regions like Russia, India, and China by routing TMDB traffic through your own endpoints.")
+            }
+            if useProxies {
+                Section {
+                    urlField("Custom API Base URL", text: $apiBase, prompt: TMDBHostSettings.defaultAPIBase)
+                    urlField("Custom Image Base URL", text: $imageBase, prompt: TMDBHostSettings.defaultImageBase)
+                } footer: {
+                    Text(proxyFooter)
+                }
+            }
+
+            Section {
+                Toggle("Encrypted DNS", isOn: $secureDNS)
+                    .tint(.secondary)
+                    .onChangeOf(secureDNS) { isOn in
+                        guard isOn else { return }
+                        if dnsServerURL.isEmpty { dnsServerURL = SecureDNSSettings.defaultServerURL }
+                        if dnsServerAddresses.isEmpty { dnsServerAddresses = SecureDNSSettings.defaultServerAddresses }
+                    }
+            } header: {
+                Text("DNS over HTTPS")
+            } footer: {
+                Text("Looks up every server the app talks to over an encrypted DNS server of your choice, for networks that tamper with DNS. Video playback and web views aren't covered: they run in the system's own processes. A DNS profile or VPN set on the device comes first. Takes effect the next time Shirox starts.")
+            }
+            if secureDNS {
+                Section {
+                    urlField("Server URL", text: $dnsServerURL, prompt: SecureDNSSettings.defaultServerURL)
+                    urlField("Server IP Addresses", text: $dnsServerAddresses, prompt: SecureDNSSettings.defaultServerAddresses)
+                } footer: {
+                    Text(dnsFooter)
+                }
+            }
+        }
+        .softScrollEdges()
+        .navigationTitle("Advanced Network")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+    }
+
+    private var proxyFooter: String {
+        let explanation = "Each replaces https://api.themoviedb.org or https://image.tmdb.org; the path and query, TMDB's key included, go to your endpoint. While this is on, TMDB traffic goes only there, and none is sent without a valid https address."
+        let invalid = [("API", apiBase), ("image", imageBase)]
+            .filter { TMDBHostSettings.validBase($0.1) == nil }
+            .map(\.0)
+        guard !invalid.isEmpty else { return explanation }
+        return "No valid \(invalid.joined(separator: " or ")) address yet. " + explanation
+    }
+
+    private var dnsFooter: String {
+        let explanation = "Cloudflare: https://cloudflare-dns.com/dns-query at 1.1.1.1. Google: https://dns.google/dns-query at 8.8.8.8. The addresses reach the server without a lookup of its own. If the server can't be reached, nothing in the app loads; turn this off to recover."
+        let usable = SecureDNSSettings(enabled: true, serverURL: dnsServerURL, serverAddresses: dnsServerAddresses).resolver != nil
+        return usable ? explanation : "Needs an https URL and at least one IP address; until then it stays off. " + explanation
+    }
+
+    private func urlField(_ title: String, text: Binding<String>, prompt: String? = nil) -> some View {
+        TextField(title, text: text, prompt: prompt.map { Text($0) })
+            .autocorrectionDisabled()
+            #if os(iOS)
+            .textInputAutocapitalization(.never)
+            .keyboardType(.URL)
+            #endif
     }
 }

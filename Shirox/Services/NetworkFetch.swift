@@ -107,8 +107,13 @@ extension JSContext {
                     )
                 }
 
+                // A module's TMDB page load goes where the rest of its TMDB traffic does.
+                guard let target = TMDBHosts.shared.rewritten(urlString: urlString) else {
+                    reject.call(withArguments: ["No valid custom TMDB proxy for \(urlString)"])
+                    return
+                }
                 NetworkFetchManager.shared.performNetworkFetch(
-                    urlString: urlString,
+                    urlString: target,
                     options: options,
                     resolve: resolve,
                     reject: reject
@@ -232,8 +237,12 @@ extension JSContext {
                     htmlContent = optionsDict["htmlContent"] as? String
                     headers = optionsDict["headers"] as? [String: String] ?? [:]
                 }
+                guard let target = TMDBHosts.shared.rewritten(urlString: urlString) else {
+                    reject.call(withArguments: ["No valid custom TMDB proxy for \(urlString)"])
+                    return
+                }
                 NetworkFetchSimpleManager.shared.performNetworkFetch(
-                    urlString: urlString,
+                    urlString: target,
                     timeoutSeconds: timeoutSeconds,
                     htmlContent: htmlContent,
                     headers: headers,
