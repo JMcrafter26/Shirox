@@ -97,9 +97,15 @@ final class SkipTimestampsService {
     }
 
     private func fetchTheIntroDB(tvdbID: Int?, tmdbID: Int?, season: Int, episode: Int, isMovie: Bool) async -> TheIntroDBResponse? {
-        // The season/episode come from the AniList→TVDB mapping, so they are in TVDB's default
-        // order: address the show by its TVDB id, and only fall back to TMDB (which v4 resolves
-        // from TMDB's own numbering) without one. The mapping's id is a series, so movies stay on TMDB.
+        guard let url = Self.theIntroDBURL(tvdbID: tvdbID, tmdbID: tmdbID, season: season, episode: episode, isMovie: isMovie),
+              let (data, _) = try? await URLSession.shared.data(from: url) else { return nil }
+        return try? JSONDecoder().decode(TheIntroDBResponse.self, from: data)
+    }
+
+    /// The season/episode come from the AniList→TVDB mapping, so they are in TVDB's default
+    /// order: address the show by its TVDB id, and only fall back to TMDB (which v4 resolves
+    /// from TMDB's own numbering) without one. The mapping's id is a series, so movies stay on TMDB.
+    nonisolated static func theIntroDBURL(tvdbID: Int?, tmdbID: Int?, season: Int, episode: Int, isMovie: Bool) -> URL? {
         var urlString = "https://api.theintrodb.org/v4/media"
         if !isMovie, let tvdbID {
             urlString += "?tvdb_id=\(tvdbID)"
@@ -109,9 +115,7 @@ final class SkipTimestampsService {
             return nil
         }
         if !isMovie { urlString += "&season=\(season)&episode=\(episode)" }
-        guard let url = URL(string: urlString),
-              let (data, _) = try? await URLSession.shared.data(from: url) else { return nil }
-        return try? JSONDecoder().decode(TheIntroDBResponse.self, from: data)
+        return URL(string: urlString)
     }
 
     // MARK: - Merge
