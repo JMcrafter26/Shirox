@@ -17,9 +17,10 @@ final class SkipTimestampsService {
         let key = CacheKey(aniListID: aniListID, episodeNumber: episodeNumber)
         if let cached = cache[key] { return cached }
 
+        let tvdbMapping = await TVDBMappingService.shared.getTVDBId(for: aniListID)
         let tvdbSeason: Int
         let epoffset: Int
-        if let mapping = await TVDBMappingService.shared.getTVDBId(for: aniListID) {
+        if let mapping = tvdbMapping {
             tvdbSeason = mapping.season.flatMap { $0 > 0 ? $0 : nil } ?? 1
             epoffset = TVDBMappingService.shared.cachedEpOffset(for: aniListID) ?? 0
         } else {
@@ -59,7 +60,7 @@ final class SkipTimestampsService {
         let isMovie = tmdb?.isMovie ?? false
 
         async let introDBResult = fetchIntroDB(imdbID: imdbID, season: tvdbSeason, episode: tvdbEpisode, isMovie: isMovie)
-        async let theIntroDBResult = fetchTheIntroDB(tmdbID: tmdb?.id, season: tvdbSeason, episode: tvdbEpisode, isMovie: isMovie)
+        async let theIntroDBResult = fetchTheIntroDB(tvdbID: tvdbMapping?.id, tmdbID: tmdb?.id, season: tvdbSeason, episode: tvdbEpisode, isMovie: isMovie)
 
         var (introDB, theIntroDB) = await (introDBResult, theIntroDBResult)
 
@@ -67,8 +68,8 @@ final class SkipTimestampsService {
         if introDB?.hasSegments != true && tvdbEpisode != episodeNumber {
             introDB = await fetchIntroDB(imdbID: imdbID, season: tvdbSeason, episode: episodeNumber, isMovie: isMovie)
         }
-        if theIntroDB == nil && tvdbEpisode != episodeNumber {
-            theIntroDB = await fetchTheIntroDB(tmdbID: tmdb?.id, season: tvdbSeason, episode: episodeNumber, isMovie: isMovie)
+        if theIntroDB?.hasSegments != true && tvdbEpisode != episodeNumber {
+            theIntroDB = await fetchTheIntroDB(tvdbID: tvdbMapping?.id, tmdbID: tmdb?.id, season: tvdbSeason, episode: episodeNumber, isMovie: isMovie)
         }
         let backup = merge(introdb: introDB, theintrodb: theIntroDB)
         var segments = anira
@@ -95,9 +96,18 @@ final class SkipTimestampsService {
         return try? JSONDecoder().decode(IntroDBResponse.self, from: data)
     }
 
-    private func fetchTheIntroDB(tmdbID: Int?, season: Int, episode: Int, isMovie: Bool) async -> TheIntroDBResponse? {
-        guard let tmdbID else { return nil }
-        var urlString = "https://api.theintrodb.org/v2/media?tmdb_id=\(tmdbID)"
+    private func fetchTheIntroDB(tvdbID: Int?, tmdbID: Int?, season: Int, episode: Int, isMovie: Bool) async -> TheIntroDBResponse? {
+        // The season/episode come from the AniList→TVDB mapping, so they are in TVDB's default
+        // order: address the show by its TVDB id, and only fall back to TMDB (which v4 resolves
+        // from TMDB's own numbering) without one. The mapping's id is a series, so movies stay on TMDB.
+        var urlString = "https://api.theintrodb.org/v4/media"
+        if !isMovie, let tvdbID {
+            urlString += "?tvdb_id=\(tvdbID)"
+        } else if let tmdbID {
+            urlString += "?tmdb_id=\(tmdbID)"
+        } else {
+            return nil
+        }
         if !isMovie { urlString += "&season=\(season)&episode=\(episode)" }
         guard let url = URL(string: urlString),
               let (data, _) = try? await URLSession.shared.data(from: url) else { return nil }
@@ -157,4 +167,6 @@ private struct TheIntroDBResponse: Decodable {
     let recap: [Segment]?
     let credits: [Segment]?
     let preview: [Segment]?
+    // A 404 error body, or v4's versions / episode-list shapes, decode with every array nil.
+    var hasSegments: Bool { intro != nil || recap != nil || credits != nil || preview != nil }
 }
