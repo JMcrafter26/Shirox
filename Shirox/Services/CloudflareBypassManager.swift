@@ -96,6 +96,14 @@ final class CloudflareBypassManager: ObservableObject {
         if hadEntry { persistCache() }
     }
 
+    /// Every solved challenge forgotten (Settings › Advanced Network › Reset Network State).
+    func invalidateAll() {
+        cache.removeAll()
+        bypassWebViews.removeAll()
+        pendingVerificationURL = nil
+        persistCache()
+    }
+
     func store(cookie: String, cookieHeader: String, userAgent: String = "", for host: String) {
         cache[host] = CachedBypass(
             value: cookie,
@@ -349,6 +357,7 @@ final class CloudflareBypassManager: ObservableObject {
         // Isolated store so cookies from other WKWebViews don't contaminate the cf_clearance poll.
         #if !os(tvOS)
         config.websiteDataStore = .nonPersistent()
+        NetworkProxy.apply(to: config.websiteDataStore)
         #endif
 
         // No anti-bot script and no custom UA — Turnstile fingerprints the real browser to

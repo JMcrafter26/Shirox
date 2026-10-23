@@ -27,7 +27,7 @@ final class JSEngine: ObservableObject {
         return config
     }
 
-    private let userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    private var userAgent: String { NetworkUserAgent.current() }
 
     /// The app uses `shared`; tests make their own, with a stubbed session and TMDB settings.
     init(configuration: URLSessionConfiguration = JSEngine.sessionConfiguration(), hosts: TMDBHosts = .shared) {

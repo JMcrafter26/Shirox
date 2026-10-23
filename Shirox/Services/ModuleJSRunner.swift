@@ -38,7 +38,7 @@ final class ModuleJSRunner {
         return config
     }
 
-    private let userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    private var userAgent: String { NetworkUserAgent.current() }
 
     /// Tests hand in a stubbed session and their own TMDB settings.
     init(configuration: URLSessionConfiguration = ModuleJSRunner.sessionConfiguration(), hosts: TMDBHosts = .shared) {

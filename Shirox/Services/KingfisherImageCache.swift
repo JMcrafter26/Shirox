@@ -6,8 +6,7 @@ import Kingfisher
 /// Cloudflare cookie/UA when a host has been bypassed).
 enum KingfisherImageCache {
 
-    static let defaultUserAgent =
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    static var defaultUserAgent: String { NetworkUserAgent.current() }
 
     /// Configure the shared Kingfisher cache. Call once at app launch.
     static func configure() {

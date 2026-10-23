@@ -48,6 +48,8 @@ enum SecureDNS {
     }
 
     private static var applied = false
+    /// The server in use this run, if any.
+    @MainActor private(set) static var active: Resolver?
 
     /// Once, at launch, before any request: connections already open keep the DNS they had, so
     /// a change in Settings counts from the next launch. `apply` is the system call; tests pass
@@ -62,6 +64,7 @@ enum SecureDNS {
             return
         }
         apply(resolver)
+        active = resolver
         Logger.shared.log("[DNS] Encrypted DNS through \(resolver.url.host ?? "?")", type: "Info")
     }
 
@@ -73,5 +76,8 @@ enum SecureDNS {
 
     /// For tests: lets `applyAtLaunch` run again.
     @MainActor
-    static func resetForTesting() { applied = false }
+    static func resetForTesting() {
+        applied = false
+        active = nil
+    }
 }

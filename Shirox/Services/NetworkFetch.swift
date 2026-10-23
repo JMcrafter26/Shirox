@@ -28,6 +28,7 @@ extension Int {
 
 extension URLSession {
     static var randomUserAgent: String {
+        if let custom = NetworkUserAgent.custom() { return custom }
         let agents = [
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",

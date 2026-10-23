@@ -134,6 +134,9 @@ final class TMDBHosts: @unchecked Sendable {
         mirrorWorked = mirror
     }
 
+    /// Back to trying TMDB first (Settings › Advanced Network › Reset Network State).
+    func forgetMirror() { remember(mirror: false) }
+
     private static func replacingHost(of url: URL, with host: String) -> URL? {
         var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
         components?.host = host

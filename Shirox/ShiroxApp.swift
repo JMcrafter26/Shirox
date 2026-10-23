@@ -125,6 +125,7 @@ struct ShiroxApp: App {
         ProfileManager.applyPendingSwitch()
         // Before the first request, and after the switch: the setting is the profile's.
         SecureDNS.applyAtLaunch()
+        NetworkProxy.applyAtLaunch()
         KingfisherImageCache.configure()
         URLCache.shared = URLCache(
             memoryCapacity: 20 * 1024 * 1024,
