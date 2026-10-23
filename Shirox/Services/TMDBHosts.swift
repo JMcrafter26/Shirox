@@ -78,10 +78,12 @@ final class TMDBHosts: @unchecked Sendable {
         candidates(for: url).first
     }
 
-    /// `rewritten` for an address a module passed as text; one that isn't a URL stays as it is.
+    /// `rewritten` for an address a module passed as text. One that isn't TMDB's comes back as
+    /// given, character for character: `URL(string:)` percent-encodes what it has to.
     func rewritten(urlString: String) -> String? {
         guard let url = URL(string: urlString) else { return urlString }
-        return rewritten(url)?.absoluteString
+        guard let target = rewritten(url) else { return nil }
+        return target == url ? urlString : target.absoluteString
     }
 
     /// `request`, through `perform`, at each of its candidates until one answers. Only an error

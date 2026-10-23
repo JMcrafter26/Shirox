@@ -83,6 +83,8 @@ final class TMDBHostsTests: XCTestCase {
         }
         XCTAssertNil(hosts(proxies: true).rewritten(urlString: api.absoluteString))
         XCTAssertEqual(hosts(proxies: true).rewritten(urlString: "not a url"), "not a url")
+        XCTAssertEqual(hosts(proxies: true).rewritten(urlString: "https://example.com/a b?q=x y"), "https://example.com/a b?q=x y",
+                       "Another host's address is passed on as the module wrote it")
     }
 
     // MARK: - Failover
