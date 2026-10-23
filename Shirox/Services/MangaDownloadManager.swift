@@ -296,6 +296,8 @@ final class MangaDownloadManager: ObservableObject {
     /// Off-actor image fetch with the reader's exact header policy (source-origin
     /// Referer + Cloudflare cookie/UA). Rejects non-2xx and empty bodies.
     private static func fetchPage(url: URL, referer: String) async throws -> Data {
+        // A page the source handed over as bytes (a Mana `raw` page) is already here.
+        if let data = KingfisherImageCache.dataURLBytes(url), !data.isEmpty { return data }
         var req = URLRequest(url: url, timeoutInterval: 30)
         let cookie = url.host.flatMap { CloudflareBypassManager.shared.fullCookieHeader(for: $0) }
         let bypassUA = url.host.flatMap { CloudflareBypassManager.shared.bypassUserAgent(for: $0) }

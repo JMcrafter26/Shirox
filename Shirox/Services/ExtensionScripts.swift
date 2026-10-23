@@ -108,6 +108,10 @@ enum ExtensionScripts {
             context.setObject(key, forKeyedSubscript: "TMDB_API_KEY" as NSString)
             context.evaluateScript("globalThis.SCRAPER_SETTINGS = globalThis.SCRAPER_SETTINGS || {};")
         }
+        #if !os(tvOS)
+        // Mana sources may open a page in a web view (WebViewPage).
+        if ext.kind == .mana { ManaWebPages.install(in: context) }
+        #endif
         context.evaluateScript(runtimeSource)
     }
 

@@ -20,6 +20,17 @@ final class MangaPageHeadersTests: XCTestCase {
         XCTAssertEqual(headers["Referer"], "https://mangak.io/")
     }
 
+    func testALowercaseHeaderReplacesTheDefaultRatherThanJoiningIt() {
+        // Mana sources name headers in lowercase; both spellings going out let either one win.
+        MangaPageHeaders.shared.record(["referer": "https://asurascans.com/", "accept": "image/webp"],
+                                       for: "https://cdn.example/lower.webp")
+        let headers = KingfisherImageCache.headers(for: URL(string: "https://cdn.example/lower.webp")!,
+                                                   cookieHeader: nil, bypassUserAgent: nil)
+        XCTAssertEqual(headers.filter { $0.key.lowercased() == "referer" }, ["referer": "https://asurascans.com/"])
+        XCTAssertEqual(headers.filter { $0.key.lowercased() == "accept" }, ["accept": "image/webp"])
+        XCTAssertNotNil(headers["User-Agent"])
+    }
+
     func testAPageWithoutHeadersKeepsTodaysRule() {
         let headers = KingfisherImageCache.headers(for: URL(string: "https://cdn.example/unrecorded.webp")!,
                                                    cookieHeader: nil, bypassUserAgent: nil,

@@ -141,9 +141,9 @@ struct ReaderPageView: View {
             image = cached
             return
         }
-        let resource = Kingfisher.ImageResource(downloadURL: url, cacheKey: urlString)
+        let source = KingfisherImageCache.source(for: url, cacheKey: urlString)
         let result: UIImage? = await withCheckedContinuation { (cont: CheckedContinuation<UIImage?, Never>) in
-            KingfisherManager.shared.retrieveImage(with: resource, options: options) {
+            KingfisherManager.shared.retrieveImage(with: source, options: options) {
                 cont.resume(returning: try? $0.get().image)
             }
         }

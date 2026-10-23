@@ -515,6 +515,7 @@
 		3293B17DF9DEECB014C8C540 /* SimklTitleReadsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7799F7824536E9E54A2D6903 /* SimklTitleReadsTests.swift */; };
 		32F3A54684036F605CB9A10A /* MPVKit in Frameworks */ = {isa = PBXBuildFile; productRef = AD2529EB8362B5776B962BCC /* MPVKit */; };
 		32FA75AAF4A0DCC20AA15D03 /* CopyTitle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 250387834E819E85E4CD966E /* CopyTitle.swift */; };
+		33978F8D0BB123DC707D0413 /* ManaWebPages.swift in Sources */ = {isa = PBXBuildFile; fileRef = D069C5BCA76BEF15809ABF35 /* ManaWebPages.swift */; };
 		33A72004F275D89800ADAF53 /* MangaProgressManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CB5F43A448079ACC600D906 /* MangaProgressManager.swift */; };
 		33EA776012193DAB0570A9A6 /* MangaModuleResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78D8556737F55F2772288018 /* MangaModuleResolver.swift */; };
 		342C29ADAD24D23F9EED64F3 /* AdultModuleCheck.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11EBA9BEE694E9966F4A8FEF /* AdultModuleCheck.swift */; };
@@ -610,6 +611,7 @@
 		4D3B05FDD4C0E26E6FBB9C6B /* ProfileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1B7B5CA1E030CB133AAAB78 /* ProfileManager.swift */; };
 		4DA35F8307404493BF952C55 /* StreamProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09066886375DDA99BCCF5C64 /* StreamProbe.swift */; };
 		4DB641D189C13294005C3837 /* LocalCollection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A013F4638FEFB8E37C2E53A /* LocalCollection.swift */; };
+		4DC87C1BED621B8E56B9B73B /* ManaExtensionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC394382AD78405AC31B9814 /* ManaExtensionTests.swift */; };
 		4DDE1E62511C9512D8074969 /* SplashView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D9D985D9ED34BCD80E74692 /* SplashView.swift */; };
 		4E221463553438851802D93C /* TrackPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E8B657977876178EDFBEA38 /* TrackPreferences.swift */; };
 		4EB62FDB4E0622446849C220 /* MPVEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CEF7675FF198EE0091C6488D /* MPVEngine.swift */; };
@@ -1074,6 +1076,7 @@
 		D70880D5193E64D9924C3998 /* SimklModuleMatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04868E273BE4E7CADEBC05A1 /* SimklModuleMatch.swift */; };
 		D735FE376DC1B979E2E382AA /* SimklBatchingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F8DF1638344A52ED8F86BD4 /* SimklBatchingTests.swift */; };
 		D7AAF802203B3333CF584998 /* PhotoLibrarySaver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6485E655D593CCD035D8737A /* PhotoLibrarySaver.swift */; };
+		D88C108CD906D2539D7416D4 /* ManaWebPages.swift in Sources */ = {isa = PBXBuildFile; fileRef = D069C5BCA76BEF15809ABF35 /* ManaWebPages.swift */; };
 		D8AAF0DCC92A12C4525C1CF6 /* SimklHomeViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFFA5648772AF00F30DCBC7A /* SimklHomeViewModelTests.swift */; };
 		D940DA551F6C3D8AD11F03A6 /* SimklLiveTrackingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 798AB494EC01E0CCE8CFB2D7 /* SimklLiveTrackingTests.swift */; };
 		DA8196F9D5AB407A0E586AA3 /* BackupSummaryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4737DA623BC62737787AD6FB /* BackupSummaryTests.swift */; };
@@ -1098,6 +1101,7 @@
 		E0D28B47BD04E00D1AC9B46D /* ExtensionScripts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36F8982B0EF3F40B124C300F /* ExtensionScripts.swift */; };
 		E107D4BF53B86BFE5626C76D /* SubtitleRouting.swift in Sources */ = {isa = PBXBuildFile; fileRef = 881989087D5AEFEADB010420 /* SubtitleRouting.swift */; };
 		E10C29F791B718172E8CF384 /* SeanimeRuntimeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5F9EFB7A4C41F3449EC80F9A /* SeanimeRuntimeTests.swift */; };
+		E1BE19F6D5535B0F189EDCB1 /* ManaWebPages.swift in Sources */ = {isa = PBXBuildFile; fileRef = D069C5BCA76BEF15809ABF35 /* ManaWebPages.swift */; };
 		E1C5DF794BC10D91A8DB9648 /* SimklLibraryMirrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 480ECDBED1F683F27CA3D75C /* SimklLibraryMirrorTests.swift */; };
 		E1D812CEDF45CB3743A34CD1 /* StoredFile.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B02286E77DB0BD73AD3303E /* StoredFile.swift */; };
 		E1E9074E77CDEAAB8607D3DA /* SimklTitle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F592860D1C8F12E4C54C22CA /* SimklTitle.swift */; };
@@ -1644,6 +1648,7 @@
 		C9C80D0B3C80A6C74E9CB5DE /* BackupEnvelopeTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BackupEnvelopeTests.swift; sourceTree = "<group>"; };
 		C9DF617989E51E2EB07B0134 /* LocalLibraryManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalLibraryManager.swift; sourceTree = "<group>"; };
 		CAE9A37F2AF92184D9A24B5A /* SimklLibraryReadTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklLibraryReadTests.swift; sourceTree = "<group>"; };
+		CC394382AD78405AC31B9814 /* ManaExtensionTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ManaExtensionTests.swift; sourceTree = "<group>"; };
 		CC5CE21A10CD16AA17744D82 /* ModuleFileImport.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ModuleFileImport.swift; sourceTree = "<group>"; };
 		CC8E0AD5E8FE00AF92A4E88E /* ModuleWebLinks.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ModuleWebLinks.swift; sourceTree = "<group>"; };
 		CEF7675FF198EE0091C6488D /* MPVEngine.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MPVEngine.swift; sourceTree = "<group>"; };
@@ -1651,6 +1656,7 @@
 		CF6B7E2E4A3D9F1B8C0E5A44 /* Shirox.local.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Shirox.local.xcconfig; sourceTree = "<group>"; };
 		CF6B7E2E4A3D9F1B8C0E5A55 /* Shirox.local.xcconfig.template */ = {isa = PBXFileReference; lastKnownFileType = text; path = Shirox.local.xcconfig.template; sourceTree = "<group>"; };
 		D014C2144DABC77965030616 /* SimklAuthManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklAuthManager.swift; sourceTree = "<group>"; };
+		D069C5BCA76BEF15809ABF35 /* ManaWebPages.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ManaWebPages.swift; sourceTree = "<group>"; };
 		D15ED802557D51157D23AF53 /* SeanimeProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SeanimeProvider.swift; sourceTree = "<group>"; };
 		D15FDAB330588459FA8A0714 /* JSEngine+Manga.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "JSEngine+Manga.swift"; sourceTree = "<group>"; };
 		D1A2B3C4E5F60718293A4B5D /* SeasonChainMathTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SeasonChainMathTests.swift; sourceTree = "<group>"; };
@@ -2001,6 +2007,7 @@
 				C77A983D219ED5E94C13A128 /* TMDBHosts.swift */,
 				495ACBBB360B0128A9558D05 /* SecureDNS.swift */,
 				226570FE33308748149BEBBC /* AdvancedNetwork.swift */,
+				D069C5BCA76BEF15809ABF35 /* ManaWebPages.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -2422,6 +2429,7 @@
 				A5691D87A74B1B875FC41022 /* SecureDNSTests.swift */,
 				5C82B3E2D2FAEAA0D47DC0C1 /* JSTMDBRewriteTests.swift */,
 				0A30FC88F37974F65C8D08EC /* AdvancedNetworkTests.swift */,
+				CC394382AD78405AC31B9814 /* ManaExtensionTests.swift */,
 			);
 			path = ShiroxTests;
 			sourceTree = SOURCE_ROOT;
@@ -2925,6 +2933,7 @@
 				74FB4EC2B7120F2B35C19B9D /* SecureDNSTests.swift in Sources */,
 				3FD078CDB4F4ADF0CDE4B0E2 /* JSTMDBRewriteTests.swift in Sources */,
 				35DE9D632316EFAC32E8DAA0 /* AdvancedNetworkTests.swift in Sources */,
+				4DC87C1BED621B8E56B9B73B /* ManaExtensionTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3247,6 +3256,7 @@
 				6972B89D3C8AB2EDE05DB3AF /* SecureDNS.swift in Sources */,
 				42960863E01254A6B3F75155 /* AdvancedNetwork.swift in Sources */,
 				F199DBE7A60F602D5F7BA281 /* AdvancedNetworkSettingsView.swift in Sources */,
+				33978F8D0BB123DC707D0413 /* ManaWebPages.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3571,6 +3581,7 @@
 				1AC4EB324629B971DEE5F50F /* SecureDNS.swift in Sources */,
 				91FDCB5FA48BDAD37F141DB9 /* AdvancedNetwork.swift in Sources */,
 				403E5D718A8C7E6A7AC806A3 /* AdvancedNetworkSettingsView.swift in Sources */,
+				D88C108CD906D2539D7416D4 /* ManaWebPages.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3896,6 +3907,7 @@
 				A4EC0CBA438563B584BE7C5A /* SecureDNS.swift in Sources */,
 				21CB4BD3FDAAE862EFFEBD34 /* AdvancedNetwork.swift in Sources */,
 				41E27D3543A74B6992321F6A /* AdvancedNetworkSettingsView.swift in Sources */,
+				E1BE19F6D5535B0F189EDCB1 /* ManaWebPages.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

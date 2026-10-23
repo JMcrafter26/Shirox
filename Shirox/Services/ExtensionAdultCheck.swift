@@ -15,6 +15,14 @@ enum ExtensionAdultCheck {
         return texts.contains(where: AdultModuleCheck.hasAdultName)
     }
 
+    /// A Mana source: its catalog rating (0 safe, 1 mixed, 2 explicit) as the repo or the source
+    /// itself gives it, then the checks every plugin gets. A mixed one is kept; its explicit titles
+    /// are dropped as they come (kinds/mana.js).
+    static func isAdult(mana entry: [String: Any]) -> Bool {
+        if (entry["rating"] as? NSNumber)?.intValue ?? 0 >= 2 { return true }
+        return isAdult(entry: entry)
+    }
+
     static func isAdult(stremio raw: [String: Any]) -> Bool {
         if (raw["behaviorHints"] as? [String: Any])?["adult"] as? Bool == true { return true }
         let texts = ["name", "id", "description"].compactMap { raw[$0] as? String }

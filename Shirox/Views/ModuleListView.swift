@@ -355,7 +355,7 @@ struct ModuleListView: View {
         } header: {
             Text("Add Module")
         } footer: {
-            Text("Paste a module's .json link, a Stremio addon, or a Nuvio, Vega or SkyStream repo, or import a module's .js file (and its .json, if you have it).")
+            Text("Paste a module's .json link, a Stremio addon, or a Nuvio, Vega, SkyStream or Mana repo, or import a module's .js file (and its .json, if you have it).")
         }
     }
 

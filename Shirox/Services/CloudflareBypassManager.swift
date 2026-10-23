@@ -264,6 +264,20 @@ final class CloudflareBypassManager: ObservableObject {
     /// Polls up to 90 s for a `cf_clearance` that a probe request confirms actually works,
     /// then throws `.timeout`. The window has to be long enough for a human to find and tap
     /// the Turnstile checkbox, since CF's cookie no longer tells us when they have.
+    /// Runs `work`, and when it walked into a Cloudflare wall — flagged while it ran, whether
+    /// it then failed or came back with whatever the wall left — solves the wall on the walled
+    /// page and runs it once more. A manga page or chapter behind a wall, as search does it.
+    func pastWall<T>(_ work: () async throws -> T) async throws -> T {
+        pendingVerificationURL = nil
+        let first: Result<T, Error>
+        do { first = .success(try await work()) } catch { first = .failure(error) }
+        guard let walled = pendingVerificationURL, !Task.isCancelled else { return try first.get() }
+        try? await triggerBypass(for: walled)
+        pendingVerificationURL = nil
+        guard !Task.isCancelled else { return try first.get() }
+        return try await work()
+    }
+
     func triggerBypass(for url: URL) async throws {
         guard let host = url.host else { return }
         if HostBlocklist.shared.isBlocked(url) { return }

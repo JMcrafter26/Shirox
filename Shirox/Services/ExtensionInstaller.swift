@@ -18,7 +18,7 @@ enum ExtensionInstallError: LocalizedError, Equatable {
     }
 }
 
-/// A Stremio addon, or one provider of a Nuvio, Vega or SkyStream repo, as a Shirox module.
+/// A Stremio addon, or one provider of a Nuvio, Vega, SkyStream or Mana repo, as a Shirox module.
 @MainActor
 enum ExtensionInstaller {
     typealias Fetch = (URL) async throws -> Data
@@ -84,9 +84,39 @@ enum ExtensionInstaller {
             return try make(kind: .skystream, name: entry.name, version: entry.version, scriptUrl: entry.fileURL.absoluteString,
                             repoUrl: repo.url.absoluteString, key: entry.key, icon: entry.iconUrl, language: entry.language,
                             baseUrl: manifest["baseUrl"] as? String, config: ["manifest": manifest], script: wrapSkyStream(js))
+        case .mana:
+            let source = String(decoding: try await fetch(entry.fileURL), as: UTF8.self)
+            guard isJavaScript(source), let info = manaInfo(source) else { throw ExtensionInstallError.noPlugin }
+            // The source's own rating and name, not only the repo's word for them.
+            if ExtensionAdultCheck.isAdult(mana: info) || (info["rating"] == nil && ExtensionAdultCheck.isAdult(mana: entry.raw)) {
+                throw ExtensionInstallError.adult
+            }
+            let site = info["website"] as? String ?? entry.raw["website"] as? String
+            return try make(kind: .mana, name: entry.name, version: entry.version, scriptUrl: entry.fileURL.absoluteString,
+                            repoUrl: repo.url.absoluteString, key: entry.key, icon: entry.iconUrl, language: entry.language,
+                            baseUrl: site, config: ["id": entry.key], script: source, type: "manga")
         case .stremio:
             throw ExtensionInstallError.noPlugin
         }
+    }
+
+    /// A Mana bundle's `Target.info` — id, name, rating, website — read by running the bundle,
+    /// with the runtime, in a context of its own. Nil when it declares no source.
+    static func manaInfo(_ source: String) -> [String: Any]? {
+        guard let runtime = ExtensionScripts.runtimeSource else { return nil }
+        let context = JSContext.forModule()
+        context.exceptionHandler = { _, _ in }
+        context.setObject(["kind": "mana", "name": "", "key": "", "config": [String: Any](), "adultWords": [String]()],
+                          forKeyedSubscript: "__ext" as NSString)
+        context.evaluateScript(runtime)
+        context.evaluateScript(source)
+        let json = context.evaluateScript("""
+        (function () {
+          try { var T = globalThis.Target; var s = typeof T === "function" ? new T() : T; return s && s.info ? JSON.stringify(s.info) : ""; }
+          catch (e) { return ""; }
+        })()
+        """)?.toString() ?? ""
+        return (try? JSONSerialization.jsonObject(with: Data(json.utf8))) as? [String: Any]
     }
 
     /// An installed extension fetched again from its own link, as at install — for Revert, after
@@ -147,8 +177,8 @@ enum ExtensionInstaller {
 
     private static func make(kind: ExtensionKind, name: String, version: String, scriptUrl: String, repoUrl: String,
                              key: String, icon: String?, language: String?, baseUrl: String?,
-                             config: [String: Any], script: String) throws -> ModuleDefinition {
-        var object: [String: Any] = ["sourceName": name, "version": version, "scriptUrl": scriptUrl, "type": "anime"]
+                             config: [String: Any], script: String, type: String = "anime") throws -> ModuleDefinition {
+        var object: [String: Any] = ["sourceName": name, "version": version, "scriptUrl": scriptUrl, "type": type]
         if let icon, !icon.isEmpty { object["iconUrl"] = icon }
         if let language, !language.isEmpty { object["language"] = language }
         if let baseUrl, !baseUrl.isEmpty { object["baseUrl"] = baseUrl }

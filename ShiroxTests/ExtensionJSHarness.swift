@@ -27,7 +27,8 @@ enum ExtensionJSHarness {
         function clearTimeout() {}
         function fetch(url, opts) {
           opts = opts || {};
-          __requests.push({ url: url, method: opts.method || "GET", headers: opts.headers || {}, body: opts.body || null });
+          __requests.push({ url: url, method: opts.method || "GET", headers: opts.headers || {}, body: opts.body || null,
+                            base64Body: !!opts.base64Body });
           var r = __routes[url];
           if (r === undefined) return Promise.resolve({ status: 404, headers: {}, url: url, text: function () { return Promise.resolve(""); } });
           var status = Array.isArray(r) ? r[0] : 200, body = Array.isArray(r) ? r[1] : r;

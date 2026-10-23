@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// A Nuvio, Vega or SkyStream repo's providers, to install one by one or all at once. Adult ones
+/// A Nuvio, Vega, SkyStream or Mana repo's providers, to install one by one or all at once. Adult ones
 /// were dropped when the repo was read, so they never show here.
 struct ExtensionRepoSheet: View {
     let repo: ExtensionRepo

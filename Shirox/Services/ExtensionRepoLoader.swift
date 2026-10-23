@@ -4,8 +4,14 @@ import Foundation
 enum ExtensionRepoLoader {
     typealias Fetch = (URL) async throws -> Data
 
-    /// `stremio://host/…` is Stremio's install link for `https://host/…`.
+    /// `stremio://host/…` is Stremio's install link for `https://host/…`; `mana://add-repo?url=…`
+    /// is Mana's for the repo at `url`.
     static func normalized(_ url: URL) -> URL {
+        if url.scheme?.lowercased() == "mana",
+           let link = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems?.first(where: { $0.name == "url" })?.value,
+           let repo = URL(string: link), ["http", "https"].contains(repo.scheme?.lowercased() ?? "") {
+            return repo
+        }
         guard url.scheme?.lowercased() == "stremio",
               var parts = URLComponents(url: url, resolvingAgainstBaseURL: false) else { return url }
         parts.scheme = "https"
@@ -39,6 +45,37 @@ enum ExtensionRepoLoader {
         return url
     }
 
+    /// Where a repo given by its folder or its web page (`…/main/`, `…/main/open.html`) keeps its
+    /// index: Vega's `manifest.json`, Mana's `sources.json`. Nil for a link to a file of another kind.
+    static func indexCandidates(for url: URL) -> [URL] {
+        let ext = url.pathExtension.lowercased()
+        guard ext.isEmpty || ext == "html" || ext == "htm" else { return [] }
+        let folder = ext.isEmpty ? url : url.deletingLastPathComponent()
+        return ["manifest.json", "sources.json"].map { folder.appendingPathComponent($0) }
+    }
+
+    /// Mana's `sources.json`: a source's bundle is `sources/<path>.mana`, its icon in `assets/`.
+    private static func mana(_ object: [String: Any], url: URL, base: URL) -> ExtensionLink? {
+        guard let sources = object["sources"] as? [[String: Any]] else { return nil }
+        let adult = Set(sources.filter(ExtensionAdultCheck.isAdult(mana:)).compactMap { $0["id"] as? String })
+        let entries = sources.compactMap { s -> ExtensionRepoEntry? in
+            // Trackers (MangaUpdates, AniList) aren't sources of chapters.
+            guard (s["environment"] as? String ?? "source") == "source", !ExtensionAdultCheck.isAdult(mana: s),
+                  let id = s["id"] as? String, let path = s["path"] as? String ?? s["name"] as? String,
+                  !path.contains("/"), !path.hasPrefix(".") else { return nil }
+            let fileURL = base.appendingPathComponent("sources").appendingPathComponent("\(path).mana")
+            let icon = (s["thumbnail"] as? String).flatMap { t -> URL? in
+                t.contains("://") ? web(t, relativeTo: base) : base.appendingPathComponent("assets").appendingPathComponent(t)
+            }
+            let language = (s["supportedLanguages"] as? [String])?.first?.split(separator: "_").first.map(String.init)
+            return ExtensionRepoEntry(key: id, name: s["name"] as? String ?? id, version: string(s["version"]),
+                                      iconUrl: icon?.absoluteString, language: language,
+                                      description: s["description"] as? String, fileURL: fileURL, raw: s)
+        }
+        return .repo(ExtensionRepo(kind: .mana, name: object["repositoryName"] as? String ?? repoName(url),
+                                   url: url, base: base, entries: entries, adultKeys: adult))
+    }
+
     /// Nuvio scrapers are looked up by TMDB, which has shows and films.
     private static func nuvioPlays(_ s: [String: Any]) -> Bool {
         guard let types = s["supportedTypes"] as? [String] else { return true }
@@ -66,6 +103,9 @@ enum ExtensionRepoLoader {
                                                 version: object["version"] as? String ?? "0.0.0",
                                                 description: object["description"] as? String,
                                                 logo: object["logo"] as? String ?? object["icon"] as? String, raw: object))
+            }
+            if object["repositoryName"] != nil || (object["sources"] as? [[String: Any]])?.first?["environment"] != nil {
+                return mana(object, url: url, base: base)
             }
             if let scrapers = object["scrapers"] as? [[String: Any]] {
                 let adult = Set(scrapers.filter(ExtensionAdultCheck.isAdult(entry:)).compactMap { $0["id"] as? String })

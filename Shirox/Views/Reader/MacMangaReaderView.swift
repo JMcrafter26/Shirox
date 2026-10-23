@@ -548,7 +548,7 @@ struct MacMangaReaderView: View {
             if let local = MangaDownloadManager.shared.localPages(forChapterHref: chapter.href) {
                 result = local
             } else {
-                result = try await JSEngine.shared.mangaImages(url: chapter.href)
+                result = try await CloudflareBypassManager.shared.pastWall { try await JSEngine.shared.mangaImages(url: chapter.href) }
             }
             guard !Task.isCancelled else { return }
             if result.isEmpty {
@@ -677,7 +677,7 @@ private struct MacReaderPage: View {
 
     var body: some View {
         if let url = URL(string: urlString) {
-            KFImage(url)
+            KFImage(source: KingfisherImageCache.source(for: url, cacheKey: urlString))
                 .requestModifier(modifier(for: url))
                 .onFailure { _ in failed = true }
                 .placeholder {

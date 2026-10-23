@@ -120,13 +120,14 @@ final class ModuleManager: ObservableObject {
                 do {
                     module = try JSONDecoder().decode(ModuleDefinition.self, from: data)
                 } catch {
-                    // A Vega repo given by its folder rather than its manifest.json.
-                    if jsonURL.pathExtension.isEmpty,
-                       let (manifestData, _) = try? await URLSession.shared.data(from: jsonURL.appendingPathComponent("manifest.json")),
-                       case .repo(let repo)? = try? await extensionLink(manifestData, url: jsonURL.appendingPathComponent("manifest.json")) {
-                        pendingRepo = repo
-                        isLoading = false
-                        return
+                    // A Vega or Mana repo given by its folder or web page rather than its index.
+                    for index in ExtensionRepoLoader.indexCandidates(for: jsonURL) {
+                        if let (indexData, _) = try? await URLSession.shared.data(from: index),
+                           case .repo(let repo)? = try? await extensionLink(indexData, url: index) {
+                            pendingRepo = repo
+                            isLoading = false
+                            return
+                        }
                     }
                     // Not a module: say what the link is instead.
                     throw ModuleLinkError.diagnose(data, response: response, url: jsonURL)

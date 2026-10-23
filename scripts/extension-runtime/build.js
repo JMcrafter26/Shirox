@@ -1,7 +1,7 @@
 // Builds Shirox/Resources/ExtensionRuntime.js. crypto-js tries `require("crypto")` for random
 // numbers; for the browser target bun would bundle its whole Node crypto polyfill (~380 KB), so
 // that one import resolves to nothing and crypto-js falls back to Math.random, as in a browser.
-const banner = "/* Extension runtime for Shirox (Stremio, Nuvio, Vega, SkyStream). Bundles cheerio, crypto-js, buffer, core-js-pure (URL), fast-text-encoding (all MIT); see scripts/extension-runtime/README.md. */";
+const banner = "/* Extension runtime for Shirox (Stremio, Nuvio, Vega, SkyStream, Mana). Bundles cheerio, crypto-js, buffer, core-js-pure (URL), fast-text-encoding (all MIT); see scripts/extension-runtime/README.md. */";
 
 const noNodeCrypto = {
   name: "no-node-crypto",

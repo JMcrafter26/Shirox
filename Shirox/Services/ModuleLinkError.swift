@@ -24,7 +24,7 @@ enum ModuleLinkError: LocalizedError, Equatable {
         case .seanimeList:
             return "That link is a list of modules. Adding a whole list isn't supported yet — paste one module's .json link."
         case .notAModule:
-            return "That link isn't a module, a Stremio addon, or a Nuvio, Vega or SkyStream repo Shirox can add."
+            return "That link isn't a module, a Stremio addon, or a Nuvio, Vega, SkyStream or Mana repo Shirox can add."
         case .adult:
             return "Shirox doesn't add adult modules."
         }

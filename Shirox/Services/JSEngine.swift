@@ -14,7 +14,7 @@ final class JSEngine: ObservableObject {
     static let shared = JSEngine()
 
     private(set) var context: JSContext
-    /// The loaded module is a Stremio addon or a Nuvio, Vega or SkyStream provider.
+    /// The loaded module is a Stremio addon or a Nuvio, Vega, SkyStream or Mana provider.
     private(set) var loadedModuleIsExtension = false
 
     private let session: URLSession
@@ -152,6 +152,8 @@ final class JSEngine: ObservableObject {
 
             var impersonateTarget: BrowserTarget? = nil
             var useWebView = false
+            // The body as Base64 rather than text: binary (an image, an encrypted page) intact.
+            var base64Body = false
 
             if !extraVal.isUndefined && !extraVal.isNull {
                 if extraVal.isBoolean {
@@ -184,6 +186,7 @@ final class JSEngine: ObservableObject {
                     if let engine = dict?["engine"] as? String, engine.lowercased() == "webview" {
                         useWebView = true
                     }
+                    base64Body = dict?["base64Body"] as? Bool == true
                 }
             }
 
@@ -212,7 +215,7 @@ final class JSEngine: ObservableObject {
                             headers: jsHeaders,
                             body: body
                         )
-                        let responseText = String(data: data, encoding: .utf8) ?? ""
+                        let responseText = base64Body ? data.base64EncodedString() : Self.bodyText(data)
                         let responseObj = ctx.makeFetchResponse(
                             status: status, statusText: nil, url: finalURL, headers: headersDict, body: responseText
                         )
@@ -265,7 +268,7 @@ final class JSEngine: ObservableObject {
                         reject.call(withArguments: ["No response data"])
                         return
                     }
-                    var responseText = String(data: data, encoding: .utf8) ?? ""
+                    var responseText = Self.bodyText(data)
 
                     // CF reactive retry: bypass the final redirect destination, then retry directly
                     // against that URL — avoids cross-domain Cookie stripping on URLSession redirects.
@@ -281,7 +284,7 @@ final class JSEngine: ObservableObject {
                         if let recovered {
                             data = try HTTPBodyDecoding.decoded(recovered.data, response: recovered.response)
                             httpResponse = recovered.response
-                            responseText = String(data: data, encoding: .utf8) ?? ""
+                            responseText = Self.bodyText(data)
                         } else {
                             await CloudflareBypassManager.shared.flagPendingVerification(for: cfResponseURL)
                         }
@@ -299,7 +302,7 @@ final class JSEngine: ObservableObject {
                         statusText: HTTPURLResponse.localizedString(forStatusCode: status),
                         url: httpResponse.url?.absoluteString ?? urlString,
                         headers: headersDict,
-                        body: responseText
+                        body: base64Body ? data.base64EncodedString() : responseText
                     )
 
                     resolve.call(withArguments: [responseObj])
@@ -544,6 +547,12 @@ final class JSEngine: ObservableObject {
         } onCancel: {
             gate.settle(.failure(CancellationError()))
         }
+    }
+
+    /// A response body as text. A page with one bad UTF-8 sequence (ocecomic.com cuts titles off
+    /// mid-character) is the page with a replacement character there, not an empty string.
+    nonisolated static func bodyText(_ data: Data) -> String {
+        String(data: data, encoding: .utf8) ?? String(decoding: data, as: UTF8.self)
     }
 
     static func isTurnstileResponse(status: Int, body: String) -> Bool {

@@ -24,8 +24,9 @@ final class MangaDetailViewModel: ObservableObject {
         isLoading = true
         errorMessage = nil
         do {
-            let info = try await JSEngine.shared.mangaDetails(url: item.href)
-            let chapters = try await JSEngine.shared.mangaChapters(url: item.href)
+            let (info, chapters) = try await CloudflareBypassManager.shared.pastWall {
+                (try await JSEngine.shared.mangaDetails(url: item.href), try await JSEngine.shared.mangaChapters(url: item.href))
+            }
             detail = MangaDetail(
                 title: item.title,
                 image: item.image,

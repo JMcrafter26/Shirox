@@ -26,7 +26,7 @@ struct ModuleDefinition: Codable, Identifiable, Equatable {
     var fromFile: Bool?
     /// Its script was changed in the app. Updates leave it alone until it's reverted.
     var scriptEdited: Bool?
-    /// Set for a Stremio addon, or a Nuvio, Vega or SkyStream provider.
+    /// Set for a Stremio addon, or a Nuvio, Vega, SkyStream or Mana provider.
     var ext: ExtensionInfo?
 
     var isFromFile: Bool { fromFile == true }

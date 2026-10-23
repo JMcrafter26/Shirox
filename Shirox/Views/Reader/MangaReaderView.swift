@@ -716,7 +716,7 @@ struct MangaReaderView: View {
             } else if prefetchedHref == target.href, let cached = prefetchedPages, !cached.isEmpty {
                 result = cached
             } else {
-                result = try await JSEngine.shared.mangaImages(url: target.href)
+                result = try await CloudflareBypassManager.shared.pastWall { try await JSEngine.shared.mangaImages(url: target.href) }
             }
             if result.isEmpty {
                 loadError = "No pages found"
