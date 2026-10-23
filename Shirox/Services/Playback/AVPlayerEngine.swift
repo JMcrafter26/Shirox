@@ -389,4 +389,48 @@ final class AVPlayerEngine: PlaybackEngine {
         guard let group = audioGroup, group.options.indices.contains(id) else { return }
         player.currentItem?.select(group.options[id], in: group)
     }
+
+    func stats() async -> PlaybackStats {
+        var stats = PlaybackStats(player: "AVPlayer")
+        guard let item = player.currentItem else { return stats }
+        let size = item.presentationSize
+        if size.width > 0, size.height > 0 {
+            stats.width = Int(size.width.rounded())
+            stats.height = Int(size.height.rounded())
+        }
+        for track in item.tracks where track.isEnabled {
+            guard let assetTrack = track.assetTrack,
+                  let loaded = try? await assetTrack.load(.formatDescriptions, .nominalFrameRate, .estimatedDataRate)
+            else { continue }
+            let (formats, nominalFrameRate, dataRate) = loaded
+            let format = formats.first
+            let codec = format.map { PlaybackStats.codecName(fourCC: CMFormatDescriptionGetMediaSubType($0)) }
+            switch assetTrack.mediaType {
+            case .video:
+                stats.videoCodec = codec
+                // A stream's tracks have no nominal rate; the rate playing is the one to show anyway.
+                let frameRate = track.currentVideoFrameRate > 0 ? track.currentVideoFrameRate : nominalFrameRate
+                if frameRate > 0 { stats.frameRate = Double(frameRate) }
+                if dataRate > 0 { stats.videoBitrate = Double(dataRate) }
+            case .audio:
+                stats.audioCodec = codec
+                if let format, let description = CMAudioFormatDescriptionGetStreamBasicDescription(format)?.pointee {
+                    stats.audioChannels = Int(description.mChannelsPerFrame)
+                    stats.sampleRate = description.mSampleRate
+                }
+                if dataRate > 0 { stats.audioBitrate = Double(dataRate) }
+            default:
+                break
+            }
+        }
+        // A stream's tracks carry no data rate: its access log has what it played and how fast it came.
+        if let events = item.accessLog()?.events, let event = events.last {
+            if event.averageVideoBitrate > 0 { stats.videoBitrate = event.averageVideoBitrate }
+            if event.averageAudioBitrate > 0 { stats.audioBitrate = event.averageAudioBitrate }
+            if event.indicatedBitrate > 0 { stats.streamBitrate = event.indicatedBitrate }
+            if event.observedBitrate > 0 { stats.throughput = event.observedBitrate }
+            stats.droppedFrames = events.reduce(0) { $0 + max(0, $1.numberOfDroppedVideoFrames) }
+        }
+        return stats
+    }
 }

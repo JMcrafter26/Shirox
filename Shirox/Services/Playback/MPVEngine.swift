@@ -809,6 +809,34 @@ final class MPVEngine: PlaybackEngine {
         }
     }
 
+    func stats() async -> PlaybackStats {
+        var stats = PlaybackStats()
+        let decoder = getString("hwdec-current")
+        stats.player = decoder.map { $0 == "no" || $0.isEmpty ? "mpv, software decoding" : "mpv, \($0)" } ?? "mpv"
+        stats.videoCodec = getString("video-format").map(PlaybackStats.codecName)
+        stats.width = getInt64("video-params/w").map(Int.init)
+        stats.height = getInt64("video-params/h").map(Int.init)
+        stats.frameRate = getDouble("container-fps") ?? getDouble("estimated-vf-fps")
+        stats.videoBitrate = getDouble("video-bitrate")
+        stats.audioCodec = getString("audio-codec-name").map(PlaybackStats.codecName)
+        stats.audioChannels = getInt64("audio-params/channel-count").map(Int.init)
+        stats.sampleRate = getDouble("audio-params/samplerate")
+        stats.audioBitrate = getDouble("audio-bitrate")
+        // The variant playing, on a stream with several.
+        let count = Int(getInt64("track-list/count") ?? 0)
+        for index in 0..<count where getString("track-list/\(index)/selected") == "yes" {
+            if let bitrate = getInt64("track-list/\(index)/hls-bitrate"), bitrate > 0 {
+                stats.streamBitrate = Double(bitrate)
+                break
+            }
+        }
+        // Bytes a second into the cache.
+        if let speed = getDouble("cache-speed"), speed > 0 { stats.throughput = speed * 8 }
+        let dropped = (getInt64("frame-drop-count") ?? 0) + (getInt64("decoder-frame-drop-count") ?? 0)
+        stats.droppedFrames = Int(dropped)
+        return stats
+    }
+
     /// Whether the cap picks another variant than the one playing. A reload opens the whole stream
     /// again — every variant's playlist and first segment — so it's only worth it then: the saved
     /// preference, which arrives as the stream opens, used to double every open.

@@ -27,6 +27,93 @@ struct PlaybackSubtitleOption: Identifiable, Equatable {
     let title: String
 }
 
+/// What is playing, for the player's Video Details panel: what the engine can tell, nil for the rest.
+struct PlaybackStats: Equatable {
+    var videoCodec: String?
+    var width: Int?
+    var height: Int?
+    var frameRate: Double?
+    /// Bits per second, of the video alone.
+    var videoBitrate: Double?
+    /// The stream variant's own bitrate, as its playlist declares it.
+    var streamBitrate: Double?
+    var audioCodec: String?
+    var audioChannels: Int?
+    var sampleRate: Double?
+    var audioBitrate: Double?
+    /// How fast the network is delivering it, in bits per second.
+    var throughput: Double?
+    var droppedFrames: Int?
+    /// The engine, and on mpv the decoder.
+    var player: String?
+
+    /// A codec's name from its four-character code: "avc1" is H.264, "aac " AAC.
+    static func codecName(fourCC: FourCharCode) -> String {
+        let bytes = [24, 16, 8, 0].map { UInt8((fourCC >> $0) & 0xFF) }
+        let code = String(decoding: bytes, as: UTF8.self)
+        return codecName(code.trimmingCharacters(in: .whitespaces))
+    }
+
+    /// A codec's name from a four-character code or an FFmpeg codec name ("h264", "hevc", "aac").
+    static func codecName(_ code: String) -> String {
+        switch code.lowercased() {
+        case "avc1", "avc3", "h264": return "H.264"
+        case "hvc1", "hev1", "hevc", "h265": return "HEVC"
+        case "dvh1", "dvhe": return "HEVC (Dolby Vision)"
+        case "av01", "av1": return "AV1"
+        case "vp09", "vp9": return "VP9"
+        case "aac", "mp4a": return "AAC"
+        case "aach": return "HE-AAC"
+        case "aacp": return "HE-AACv2"
+        case "ac-3", "ac3": return "AC-3"
+        case "ec-3", "eac3": return "E-AC-3"
+        case "opus": return "Opus"
+        case ".mp3", "mp3": return "MP3"
+        case "flac", "flac ": return "FLAC"
+        case "alac": return "ALAC"
+        case "": return "Unknown"
+        default: return code.uppercased()
+        }
+    }
+
+    var resolutionText: String? {
+        guard let width, let height, width > 0, height > 0 else { return nil }
+        return "\(width) × \(height) (\(height)p)"
+    }
+
+    var frameRateText: String? {
+        guard let frameRate, frameRate > 0 else { return nil }
+        // "23.976 fps", "29.97 fps", "24 fps".
+        var digits = String(format: "%.3f", frameRate)
+        while digits.hasSuffix("0") { digits.removeLast() }
+        if digits.hasSuffix(".") { digits.removeLast() }
+        return digits + " fps"
+    }
+
+    var channelsText: String? {
+        switch audioChannels {
+        case nil, 0?: return nil
+        case 1?: return "Mono"
+        case 2?: return "Stereo"
+        case 6?: return "5.1"
+        case 8?: return "7.1"
+        case let count?: return "\(count) channels"
+        }
+    }
+
+    var sampleRateText: String? {
+        guard let sampleRate, sampleRate > 0 else { return nil }
+        return String(format: "%g kHz", (sampleRate / 100).rounded() / 10)
+    }
+
+    /// "4.2 Mbps", "128 kbps".
+    static func bitrateText(_ bitsPerSecond: Double?) -> String? {
+        guard let bitsPerSecond, bitsPerSecond > 0 else { return nil }
+        if bitsPerSecond >= 1_000_000 { return String(format: "%.1f Mbps", bitsPerSecond / 1_000_000) }
+        return String(format: "%.0f kbps", bitsPerSecond / 1000)
+    }
+}
+
 /// What to play.
 struct PlaybackSource: Equatable {
     let url: URL
@@ -97,4 +184,7 @@ protocol PlaybackEngine: AnyObject {
     var audioOptions: [PlaybackAudioOption] { get }
     var selectedAudioOption: PlaybackAudioOption.ID? { get }
     func selectAudioOption(_ id: PlaybackAudioOption.ID)
+
+    /// What is playing now, read fresh on each call.
+    func stats() async -> PlaybackStats
 }

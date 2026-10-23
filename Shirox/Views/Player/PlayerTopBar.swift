@@ -10,6 +10,9 @@ struct PlayerTopBar: View {
     /// The player's own mute, apart from the device's volume.
     @Binding var isMuted: Bool
     var onPiP: (() -> Void)? = nil
+    /// Opens or closes the Video Details panel; nil hides the button.
+    var onInfo: (() -> Void)? = nil
+    var isInfoShown = false
     var topPadding: CGFloat = 24
     var isLandscape: Bool = true
     var showDismiss: Bool = true
@@ -156,7 +159,20 @@ struct PlayerTopBar: View {
     private var rightButtons: some View {
         let iconSize: CGFloat = isPad ? 20 : Self.compact ? 13 : 15
         let frameSize: CGFloat = isPad ? 44 : Self.compact ? 26 : 32
-        
+
+        if let onInfo {
+            Button(action: onInfo) {
+                Image(systemName: isInfoShown ? "info.circle.fill" : "info.circle")
+                    .font(.system(size: iconSize, weight: .medium))
+                    .foregroundStyle(.white)
+                    .frame(width: frameSize, height: frameSize)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Video Details")
+            #if os(macOS)
+            .help("Video Details (I)")
+            #endif
+        }
         #if os(iOS)
         #if !targetEnvironment(macCatalyst)
         CastButton()

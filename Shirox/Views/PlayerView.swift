@@ -219,6 +219,8 @@ struct PlayerView: View {
     @State private var isMuted = false
     private var engineVolume: Float { isMuted ? 0 : volume }
     @State private var showSubtitleSettings = false
+    /// The Video Details panel: codec, resolution, frame rate, bitrates.
+    @State private var showVideoInfo = false
     @State private var showSubtitleImporter = false
     /// True while a bottom-bar pull-down menu is open, so the whole controls overlay is
     /// pinned visible (scheduleHide is gated on this). Set by onMenuOpen (the menu button's
@@ -440,6 +442,11 @@ struct PlayerView: View {
 
             if !isLocked && controlsEnabled && !castManager.isConnected {
                 playPauseButtonView
+            }
+
+            if showVideoInfo, !isLocked, let engine, !castManager.isConnected {
+                videoInfoPanel(engine: engine)
+                    .transition(.opacity)
             }
 
             if isLocked && controlsEnabled {
@@ -789,6 +796,7 @@ struct PlayerView: View {
             case .forward: skip(by: Double(skipShort))
             case .longBack: skip(by: -Double(skipLong))
             case .longForward: skip(by: Double(skipLong))
+            case .videoInfo: toggleVideoInfo(); return
             }
             if key != .playPause { scheduleHide() }
         }
@@ -873,7 +881,8 @@ struct PlayerView: View {
                 #if os(macOS)
                 if let engine { saveCurrentFrame(from: engine) }
                 #endif
-            }
+            },
+            toggleVideoInfo: toggleVideoInfo
         )
         #if os(macOS)
         .onReceive(NotificationCenter.default.publisher(for: MacPlayerCommand.notification)) { note in
@@ -1288,6 +1297,48 @@ struct PlayerView: View {
         #endif
     }
 
+    /// Below the top bar, where it stays while the controls come and go.
+    private func videoInfoPanel(engine: any PlaybackEngine) -> some View {
+        GeometryReader { geo in
+            let layouts = calculateLayouts(geo: geo, isLandscape: geo.size.width > geo.size.height)
+            PlayerVideoInfoPanel(engine: engine, audioTrack: videoInfoAudioTrack(engine),
+                                 subtitle: videoInfoSubtitle,
+                                 onClose: { withAnimation(.easeInOut(duration: 0.2)) { showVideoInfo = false } })
+                .padding(.top, layouts.top + videoInfoTopBarHeight)
+                .padding(.horizontal, layouts.horizontal + 16)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+    }
+
+    private func toggleVideoInfo() {
+        guard engine != nil, !castManager.isConnected else { return }
+        withAnimation(.easeInOut(duration: 0.2)) { showVideoInfo.toggle() }
+    }
+
+    /// The top bar's row and the gap under it.
+    private var videoInfoTopBarHeight: CGFloat {
+        #if os(macOS)
+        48
+        #else
+        UIDevice.current.userInterfaceIdiom == .pad ? 82 : 60
+        #endif
+    }
+
+    private func videoInfoAudioTrack(_ engine: any PlaybackEngine) -> String? {
+        guard engine.audioOptions.count > 1, let id = engine.selectedAudioOption else { return nil }
+        return engine.audioOptions.first { $0.id == id }?.title
+    }
+
+    private var videoInfoSubtitle: (name: String, source: String)? {
+        if let id = shownEmbeddedSubtitle {
+            return (embeddedSubtitles.first { $0.id == id }?.title ?? "Track \(id)", "Embedded")
+        }
+        if let track = shownSubtitleTrack {
+            return (track.title, track.url.isFileURL ? "File" : "Downloaded")
+        }
+        return nil
+    }
+
     @ViewBuilder
     private func topBarView(topPad: CGFloat, isLandscape: Bool) -> some View {
         PlayerTopBar(
@@ -1308,6 +1359,8 @@ struct PlayerView: View {
                 }
                 #endif
             },
+            onInfo: castManager.isConnected ? nil : toggleVideoInfo,
+            isInfoShown: showVideoInfo,
             topPadding: topPad,
             isLandscape: isLandscape
         )
@@ -3870,7 +3923,8 @@ private extension View {
         scheduleHide: @escaping () -> Void,
         skipShort: Int,
         skipLong: Int,
-        saveFrame: @escaping () -> Void = {}
+        saveFrame: @escaping () -> Void = {},
+        toggleVideoInfo: @escaping () -> Void = {}
     ) -> some View {
         #if os(iOS)
         // `PlayerHostingController` takes these as key commands.
@@ -3900,6 +3954,7 @@ private extension View {
                 .onKeyPress(KeyEquivalent("s")) { saveFrame(); return .handled }
                 .onKeyPress(KeyEquivalent("m")) { MacPlayerCommand.send(.toggleMute); return .handled }
                 .onKeyPress(KeyEquivalent("p")) { MacPlayerWindowManager.shared.togglePictureInPicture(); return .handled }
+                .onKeyPress(KeyEquivalent("i")) { toggleVideoInfo(); return .handled }
                 #endif
         } else {
             self
@@ -5061,9 +5116,11 @@ enum PlayerKey: Equatable {
     case back, forward
     /// The Long Skip Duration setting.
     case longBack, longForward
+    /// Opens or closes the Video Details panel.
+    case videoInfo
 
     /// Space isn't one: `PlayerHostingController` takes it as presses, to tell a hold from a tap.
-    static let inputs = ["k", UIKeyCommand.inputLeftArrow, UIKeyCommand.inputRightArrow, "j", "l"]
+    static let inputs = ["k", UIKeyCommand.inputLeftArrow, UIKeyCommand.inputRightArrow, "j", "l", "i"]
 
     init?(input: String) {
         switch input {
@@ -5072,6 +5129,7 @@ enum PlayerKey: Equatable {
         case UIKeyCommand.inputRightArrow: self = .forward
         case "j": self = .longBack
         case "l": self = .longForward
+        case "i": self = .videoInfo
         default: return nil
         }
     }

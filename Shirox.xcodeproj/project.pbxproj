@@ -794,6 +794,7 @@
 		813B8AE1CCAF1A004474A6E1 /* SimklLibraryMirror.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8E1AF23A6560161B35CFCA1 /* SimklLibraryMirror.swift */; };
 		81956D3CC3143A3C1EBD6C0D /* AniListMangaDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 411CE099883B23D8BFF554F8 /* AniListMangaDetailView.swift */; };
 		819E19615C97015436A0D005 /* HLSManifestParserTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A7A8A35299253F63C43AAE9 /* HLSManifestParserTests.swift */; };
+		819F1C4B9A92BE705287E1C9 /* PlayerVideoInfoPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4F322436530D1C8DAD505F3 /* PlayerVideoInfoPanel.swift */; };
 		81E0F3AFC6437B520002967B /* ModuleLinkError.swift in Sources */ = {isa = PBXBuildFile; fileRef = 983C54B88B22E0D2078425A1 /* ModuleLinkError.swift */; };
 		81EBD987209651DE3429B894 /* CopyTitle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 250387834E819E85E4CD966E /* CopyTitle.swift */; };
 		8226A11BD04D6B71D3C17533 /* GooeyRefreshTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0673AE2F132FCD64185E2EED /* GooeyRefreshTests.swift */; };
@@ -946,6 +947,7 @@
 		AD0D3B00BB0506507CBCA03B /* SeanimeRuntime.js in Resources */ = {isa = PBXBuildFile; fileRef = 2E7F10F162A39F3D89AE3150 /* SeanimeRuntime.js */; };
 		AD2F33EC428D7F95DA17C0EC /* ExtensionInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C70B00EDD0234AB98F6938A /* ExtensionInfo.swift */; };
 		AD7A6C00414CC2CEB81155D1 /* JellyfinPlaybackCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 56C921630CAED5B7B10A681B /* JellyfinPlaybackCoordinator.swift */; };
+		AD84943AB15364CD958B2051 /* PlayerVideoInfoPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4F322436530D1C8DAD505F3 /* PlayerVideoInfoPanel.swift */; };
 		AE4E9A812833E5EB2F8823CF /* TestVideo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 444C7BF9F46B4DDF3020C5A1 /* TestVideo.swift */; };
 		AEA55770BB688617D3207161 /* TrackingLinksView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E8F4DB53F4EB28F86CD383A7 /* TrackingLinksView.swift */; };
 		AF16A368F3EF69CDB09A5E4E /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7E87688CB577983F43E550D /* OnboardingView.swift */; };
@@ -1096,6 +1098,7 @@
 		DF0EAFA85275EA20CC6AA64A /* SimklEpisodePlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED7B709D7B1CC0F49AA736E6 /* SimklEpisodePlanner.swift */; };
 		DF36EB655FA0ECCBA31022A8 /* ReaderPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF8A01C923F20C2A10CDDC33 /* ReaderPageView.swift */; };
 		DF7246AC712768A4672BE8C3 /* SimklDiscoverMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF82054A977EBBA7E707802F /* SimklDiscoverMedia.swift */; };
+		DFAB4CCC07529FC1C787CBC4 /* PlayerVideoInfoPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4F322436530D1C8DAD505F3 /* PlayerVideoInfoPanel.swift */; };
 		E059DEAA9C346EE40C387E26 /* AppProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0E6CAD08552A40849DB89CD /* AppProfile.swift */; };
 		E0D096637DEB9518F3EDA707 /* JellyfinLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5844D8774F9B1B6C5A7A3C3E /* JellyfinLibraryView.swift */; };
 		E0D28B47BD04E00D1AC9B46D /* ExtensionScripts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36F8982B0EF3F40B124C300F /* ExtensionScripts.swift */; };
@@ -1586,6 +1589,7 @@
 		A304B304C482A8AAA10DB209 /* DataSaver.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DataSaver.swift; sourceTree = "<group>"; };
 		A30AD37FF3D0361891996A82 /* UpcomingCalendarView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = UpcomingCalendarView.swift; sourceTree = "<group>"; };
 		A4C386255B788C3F8696A643 /* WebKitFetchEngineTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WebKitFetchEngineTests.swift; sourceTree = "<group>"; };
+		A4F322436530D1C8DAD505F3 /* PlayerVideoInfoPanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PlayerVideoInfoPanel.swift; sourceTree = "<group>"; };
 		A5691D87A74B1B875FC41022 /* SecureDNSTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SecureDNSTests.swift; sourceTree = "<group>"; };
 		A58F85F7A144420BF90D4570 /* TrackingLinksTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TrackingLinksTests.swift; sourceTree = "<group>"; };
 		A62D2F08E475CE2C530B479E /* ProfileCacheStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProfileCacheStore.swift; sourceTree = "<group>"; };
@@ -2081,6 +2085,7 @@
 				78A498256CCC09BF0F188F4B /* PlayerSubtitleMenu.swift */,
 				D543E2A2D8BF2A3E8FE21B10 /* MPVVideoView.swift */,
 				0A08E27B4A688BE98644F700 /* PlayerAssOverlay.swift */,
+				A4F322436530D1C8DAD505F3 /* PlayerVideoInfoPanel.swift */,
 			);
 			path = Player;
 			sourceTree = "<group>";
@@ -3257,6 +3262,7 @@
 				42960863E01254A6B3F75155 /* AdvancedNetwork.swift in Sources */,
 				F199DBE7A60F602D5F7BA281 /* AdvancedNetworkSettingsView.swift in Sources */,
 				33978F8D0BB123DC707D0413 /* ManaWebPages.swift in Sources */,
+				AD84943AB15364CD958B2051 /* PlayerVideoInfoPanel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3582,6 +3588,7 @@
 				91FDCB5FA48BDAD37F141DB9 /* AdvancedNetwork.swift in Sources */,
 				403E5D718A8C7E6A7AC806A3 /* AdvancedNetworkSettingsView.swift in Sources */,
 				D88C108CD906D2539D7416D4 /* ManaWebPages.swift in Sources */,
+				DFAB4CCC07529FC1C787CBC4 /* PlayerVideoInfoPanel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3908,6 +3915,7 @@
 				21CB4BD3FDAAE862EFFEBD34 /* AdvancedNetwork.swift in Sources */,
 				41E27D3543A74B6992321F6A /* AdvancedNetworkSettingsView.swift in Sources */,
 				E1BE19F6D5535B0F189EDCB1 /* ManaWebPages.swift in Sources */,
+				819F1C4B9A92BE705287E1C9 /* PlayerVideoInfoPanel.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
