@@ -1394,7 +1394,7 @@ private struct PinchToZoom: ViewModifier {
 }
 
 /// The vertical strip's taps, on its scroll view: a double tap zooms, a single tap scrolls
-/// from the sides or shows and hides the chrome. ``QuickTaps`` tells them apart within a fifth
+/// from the sides or shows and hides the chrome. ``QuickTaps`` tells them apart within a tenth
 /// of a second; SwiftUI's tap gestures made every single tap wait about a third, and paging
 /// through a chapter by tapping lagged on each one.
 final class ReaderTaps: NSObject, UIGestureRecognizerDelegate {
