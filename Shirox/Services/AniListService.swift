@@ -1015,6 +1015,12 @@ enum BrowseCategory: String, CaseIterable, Hashable {
         var fanartPath: String?
         var logoPath: String?
         var textlessPosterPath: String?
+
+        /// TVDB keeps a show's movies and OVAs in its Specials season (0), which has one poster
+        /// for all of them, else the show's: either way not this title's. It keeps its own cover.
+        var hasOwnPoster: Bool { season != 0 }
+        var ownPosterPath: String? { hasOwnPoster ? posterPath : nil }
+        var ownTextlessPosterPath: String? { hasOwnPoster ? textlessPosterPath : nil }
     }
     private var cache: [Int: CachedData] = [:]       // keyed by AniList ID
     private var malCache: [Int: CachedData] = [:]     // keyed by MAL ID
@@ -1361,7 +1367,7 @@ enum BrowseCategory: String, CaseIterable, Hashable {
 
     func getCachedArtwork(for id: Int, provider: ProviderType = .anilist) -> (poster: String?, fanart: String?, logo: String?, textlessPoster: String?) {
         if let c = tvdbCache(for: provider)[id] {
-            return (formatURL(c.posterPath), formatURL(c.fanartPath), formatURL(c.logoPath), formatURL(c.textlessPosterPath))
+            return (formatURL(c.ownPosterPath), formatURL(c.fanartPath), formatURL(c.logoPath), formatURL(c.ownTextlessPosterPath))
         }
         return (nil, nil, nil, nil)
     }
@@ -1490,7 +1496,7 @@ enum BrowseCategory: String, CaseIterable, Hashable {
                     }
                 }
             }
-            return (formatURL(c.posterPath), formatURL(c.fanartPath), formatURL(logo), formatURL(c.textlessPosterPath))
+            return (formatURL(c.ownPosterPath), formatURL(c.fanartPath), formatURL(logo), formatURL(c.ownTextlessPosterPath))
         }
         guard let mapping = await getTVDBId(for: id, provider: provider), mapping.id > 0 else {
             if let parentLogo = await fallbackLogo(for: id, provider: provider) {
@@ -1532,7 +1538,9 @@ enum BrowseCategory: String, CaseIterable, Hashable {
             cache[id] = entry
             saveCache()
         }
-        return (formatURL(artwork.poster), formatURL(artwork.fanart), formatURL(resolvedLogo), formatURL(artwork.textlessPoster))
+        let ownPoster = mapping.season != 0
+        return (ownPoster ? formatURL(artwork.poster) : nil, formatURL(artwork.fanart), formatURL(resolvedLogo),
+                ownPoster ? formatURL(artwork.textlessPoster) : nil)
     }
 
 
