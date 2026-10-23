@@ -15,7 +15,7 @@ import UIKit
 /// singles.
 final class QuickTaps {
     /// Short enough to feel immediate, long enough for a quick double tap.
-    static let window: TimeInterval = 0.1
+    static let window: TimeInterval = 0.15
     /// How long a second press may last before it stops counting as a tap.
     private static let pressLimit: TimeInterval = 0.4
     /// How far apart two taps can land and still make a double tap, in points.
