@@ -1,0 +1,69 @@
+name: Semgrep
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  schedule:
+    # Weekly full scan, so new rules get run against the whole tree.
+    - cron: "23 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: semgrep-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  semgrep:
+    name: Semgrep scan
+    runs-on: ubuntu-latest
+    if: github.actor != 'dependabot[bot]'
+    permissions:
+      contents: read
+      security-events: write
+    container:
+      image: semgrep/semgrep
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 0
+
+      - name: Trust the workspace
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      # With the token, `semgrep ci` uses the rules and Pro engine settings from the Semgrep
+      # AppSec Platform, and on PRs it only reports findings the PR introduces.
+      # Without it (forks, or before the secret is set) it falls back to public rulesets: on PRs
+      # it fails only on findings new since the base commit, elsewhere it just reports.
+      - name: Run Semgrep
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ -n "$SEMGREP_APP_TOKEN" ]; then
+            semgrep ci --sarif-output=semgrep.sarif
+          else
+            echo "SEMGREP_APP_TOKEN not set, scanning with public rulesets."
+            # Tokens are read in the background, so keychain items can't require biometrics.
+            set -- --config p/swift --config p/secrets --config p/github-actions \
+              --exclude-rule swift.biometrics-and-auth.missing-user-auth.keychain-without-user-auth \
+              --metrics=off --sarif-output=semgrep.sarif
+            if [ -n "$BASE_SHA" ]; then
+              semgrep scan "$@" --error --baseline-commit "$BASE_SHA"
+            else
+              semgrep scan "$@"
+            fi
+          fi
+
+      # Fork PRs get a read-only token, so they skip the upload.
+      - name: Upload results to GitHub code scanning
+        if: always() && hashFiles('semgrep.sarif') != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
+        uses: github/codeql-action/upload-sarif@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4.39.1
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep

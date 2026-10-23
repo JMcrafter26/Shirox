@@ -149,6 +149,11 @@ Or use the release scripts directly:
 Issues and pull requests are welcome — bugs, features, modules, docs. Branch off `main`, keep
 [SwiftLint](.swiftlint.yml) happy, and open a PR describing what changed and how you tested it.
 
+Run `scripts/install-hooks.sh` once after cloning. It turns on the hooks in `.githooks`: commit
+messages may not contain em dashes, emoji, hidden Unicode characters or Co-Authored-By trailers,
+and [Semgrep](https://semgrep.dev) (`brew install semgrep`) scans staged files for new findings.
+CI runs the same checks on every PR.
+
 ---
 
 ## Community and support

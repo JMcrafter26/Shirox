@@ -1,0 +1,34 @@
+name: Commit messages
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check commit messages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 0
+
+      # Same rules as .githooks/commit-msg, for commits made without the hook.
+      - name: Check every commit in the PR
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          failed=0
+          for sha in $(git rev-list --no-merges "$BASE_SHA..$HEAD_SHA"); do
+            git log -1 --format=%B "$sha" > msg.txt
+            if ! out=$(scripts/check-commit-msg.sh msg.txt 2>&1); then
+              echo "::error::$(git log -1 --format='%h %s' "$sha")"
+              echo "$out"
+              failed=1
+            fi
+          done
+          exit $failed

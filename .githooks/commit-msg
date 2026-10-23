@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Enforces the commit message rules in scripts/check-commit-msg.sh.
+# Enable once per clone with: scripts/install-hooks.sh
+
+exec "$(git rev-parse --show-toplevel)/scripts/check-commit-msg.sh" "$1"

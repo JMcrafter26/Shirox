@@ -20,7 +20,7 @@ jobs:
      contents: write
    steps:
      - name: Checkout repository
-       uses: actions/checkout@v6
+       uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
      # The tag follows main, so the release's source is the commit its builds came from.
      - name: Move the release tag to this commit
@@ -44,7 +44,7 @@ jobs:
      contents: write
    steps:
      - name: Checkout repository
-       uses: actions/checkout@v6
+       uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
      - name: Make build script executable
        run: chmod +x ./buildipa.sh
@@ -53,7 +53,7 @@ jobs:
        run: ./buildipa.sh
 
      - name: Upload IPA
-       uses: actions/upload-artifact@v7
+       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
        with:
          name: Shirox-Nightly-IPA
          path: build/Shirox.ipa
@@ -85,7 +85,7 @@ jobs:
      contents: write
    steps:
      - name: Checkout repository
-       uses: actions/checkout@v6
+       uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
      - name: Make build script executable
        run: chmod +x ./buildcatalyst.sh
@@ -94,7 +94,7 @@ jobs:
        run: ./buildcatalyst.sh
 
      - name: Upload Catalyst DMG
-       uses: actions/upload-artifact@v7
+       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
        with:
          name: Shirox-Nightly-Catalyst-DMG
          path: build/Shirox-Catalyst.dmg
@@ -112,7 +112,7 @@ jobs:
      contents: write
    steps:
      - name: Checkout repository
-       uses: actions/checkout@v6
+       uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
      - name: Make build script executable
        run: chmod +x ./builddmg.sh
@@ -121,7 +121,7 @@ jobs:
        run: ./builddmg.sh
 
      - name: Upload macOS DMG
-       uses: actions/upload-artifact@v7
+       uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
        with:
          name: Shirox-Nightly-macOS-DMG
          path: build/Shirox-macOS.dmg
@@ -139,7 +139,7 @@ jobs:
      contents: write
    steps:
      - name: Checkout repository
-       uses: actions/checkout@v6
+       uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
      # Named and described from apps.json's newest version, a full release rather than a
      # pre-release, and the one GitHub shows as Latest.
