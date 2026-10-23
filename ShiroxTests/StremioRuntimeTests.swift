@@ -57,7 +57,9 @@ final class StremioRuntimeTests: XCTestCase {
         let s = ExtensionJSHarness.json(try ExtensionJSHarness.call(c, "extractStreamUrl", [eps[0]["href"] as! String]).get()) as! [String: Any]
         let streams = s["streams"] as! [[String: Any]]
         XCTAssertEqual(streams.count, 1)
-        XCTAssertEqual(streams[0]["title"] as? String, "Srv · 1080p")
+        // The addon's name, with its whole description under it, as Stremio lists streams.
+        XCTAssertEqual(streams[0]["title"] as? String, "Srv")
+        XCTAssertEqual(streams[0]["details"] as? String, "1080p\nsize")
         XCTAssertEqual((streams[0]["headers"] as? [String: String])?["Referer"], "https://r.test/")
     }
 

@@ -39,7 +39,10 @@ final class NuvioRuntimeTests: XCTestCase {
         XCTAssertEqual(c.evaluateScript("__args")!.toString(), "7,tv,2,5")
         let streams = s["streams"] as! [[String: Any]]
         XCTAssertEqual(streams.count, 1)
-        XCTAssertEqual(streams[0]["title"] as? String, "Nuv · 1080p")
+        // The name is the title and every line of the scraper's title goes under it; the
+        // quality is already among them, so it isn't added again.
+        XCTAssertEqual(streams[0]["title"] as? String, "Nuv")
+        XCTAssertEqual(streams[0]["details"] as? String, "1080p\nx")
     }
 
     func testMovieStreams() throws {
@@ -116,7 +119,8 @@ final class NuvioRuntimeTests: XCTestCase {
         let s = ExtensionJSHarness.json(try ExtensionJSHarness.call(c, "extractStreamUrl", ["tmdb:tv:7:1:13"]).get()) as! [String: Any]
         let first = (s["streams"] as! [[String: Any]])[0]
         XCTAssertEqual(first["streamUrl"] as? String, "https://cdn.test/52991/1.m3u8")
-        XCTAssertEqual(first["title"] as? String, "P · Sousou no Frieren 1")
+        XCTAssertEqual(first["title"] as? String, "P")
+        XCTAssertEqual(first["details"] as? String, "Sousou no Frieren 1")
     }
 
     func testOtherShowsLookupsGoToTheNetwork() throws {
