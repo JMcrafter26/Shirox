@@ -284,6 +284,9 @@ struct SettingsView: View {
                         title: "App Logs"
                     )
                 }
+
+                // Expert settings for blocked regions, deliberately last.
+                NavigationLink { AdvancedNetworkSettingsView() } label: { SettingsNavRow(icon: "network", title: "Advanced Network") }
             }
 
             Section {

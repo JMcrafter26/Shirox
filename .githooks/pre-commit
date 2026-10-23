@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# 1. Blocks staged lines that add bidi controls or zero-width characters (Trojan Source).
+# 2. Runs Semgrep on the staged files when it's installed (brew install semgrep). It scans the
+#    working tree copies, so unstaged edits in those files are scanned too.
+# Skip once with: git commit --no-verify
+
+set -uo pipefail
+
+root="$(git rev-parse --show-toplevel)"
+cd "$root" || exit 1
+
+hidden=$(git diff --cached --no-color -U0 --diff-filter=ACM \
+  | perl -CSD -ne '
+      if (/^\+\+\+ b\/(.*)$/) { $f = $1; next }
+      next unless /^\+/;
+      print "  $f: U+", sprintf("%04X", ord $1), "\n"
+        if /([\x{200B}-\x{200F}\x{202A}-\x{202E}\x{2060}-\x{2064}\x{2066}-\x{2069}\x{FEFF}])/;
+    ' 2>/dev/null)
+if [ -n "$hidden" ]; then
+  echo "Staged changes add hidden Unicode characters:" >&2
+  echo "$hidden" >&2
+  exit 1
+fi
+
+if ! command -v semgrep >/dev/null 2>&1; then
+  echo "pre-commit: semgrep not installed, skipping scan (brew install semgrep)." >&2
+  exit 0
+fi
+
+files=()
+while IFS= read -r -d '' f; do
+  files+=("$f")
+done < <(git diff --cached --name-only --diff-filter=ACM -z)
+[ ${#files[@]} -eq 0 ] && exit 0
+
+# Only findings new since HEAD block, so touching a file with an old finding still commits.
+baseline=()
+git rev-parse --verify -q HEAD >/dev/null && baseline=(--baseline-commit HEAD)
+
+semgrep scan \
+  --config p/swift \
+  --config p/secrets \
+  --config p/github-actions \
+  --exclude-rule swift.biometrics-and-auth.missing-user-auth.keychain-without-user-auth \
+  --error --quiet --metrics=off \
+  ${baseline[@]+"${baseline[@]}"} \
+  "${files[@]}"
+status=$?
+
+case $status in
+  0) exit 0 ;;
+  1) echo "Semgrep found issues in the staged files. Fix them or commit with --no-verify." >&2; exit 1 ;;
+  *) echo "pre-commit: semgrep failed to run (exit $status), not blocking the commit." >&2; exit 0 ;;
+esac

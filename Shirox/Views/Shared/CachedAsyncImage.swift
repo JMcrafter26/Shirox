@@ -144,7 +144,9 @@ struct CachedAsyncImage: View {
             return
         }
 
-        guard !urlString.isEmpty, let url = URL(string: urlString) else {
+        // A TMDB image goes to the user's image proxy when one is set, and isn't loaded when the
+        // proxy is on without a usable one. The cache stays keyed on the address as given.
+        guard !urlString.isEmpty, let given = URL(string: urlString), let url = TMDBHosts.shared.rewritten(given) else {
             loadFailed = true
             return
         }

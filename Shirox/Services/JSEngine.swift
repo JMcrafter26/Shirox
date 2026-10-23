@@ -17,16 +17,22 @@ final class JSEngine: ObservableObject {
     /// The loaded module is a Stremio addon or a Nuvio, Vega or SkyStream provider.
     private(set) var loadedModuleIsExtension = false
 
-    private let session: URLSession = {
+    private let session: URLSession
+    private let hosts: TMDBHosts
+
+    nonisolated static func sessionConfiguration() -> URLSessionConfiguration {
         let config = URLSessionConfiguration.default
         config.httpCookieAcceptPolicy = .always
         config.httpShouldSetCookies = true
-        return URLSession(configuration: config)
-    }()
+        return config
+    }
 
-    private let userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    private var userAgent: String { NetworkUserAgent.current() }
 
-    private init() {
+    /// The app uses `shared`; tests make their own, with a stubbed session and TMDB settings.
+    init(configuration: URLSessionConfiguration = JSEngine.sessionConfiguration(), hosts: TMDBHosts = .shared) {
+        session = URLSession(configuration: configuration)
+        self.hosts = hosts
         context = JSContext.forModule()
         setupContext()
     }
@@ -199,8 +205,9 @@ final class JSEngine: ObservableObject {
             if useWebView {
                 Task {
                     do {
+                        guard let target = self.hosts.rewritten(url) else { throw URLError(.badURL) }
                         let (data, status, headersDict, finalURL) = try await WebKitFetchEngine.shared.fetch(
-                            url: url,
+                            url: target,
                             method: method,
                             headers: jsHeaders,
                             body: body
@@ -253,7 +260,7 @@ final class JSEngine: ObservableObject {
                     }
 
                     // Decoded before the body is read at all: the Cloudflare wall check below reads it too.
-                    var (data, response) = try await self.session.decodedData(for: request)
+                    var (data, response) = try await self.hosts.send(request) { try await self.session.decodedData(for: $0) }
                     guard var httpResponse = response as? HTTPURLResponse else {
                         reject.call(withArguments: ["No response data"])
                         return

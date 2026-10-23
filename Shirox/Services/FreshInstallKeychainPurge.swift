@@ -33,7 +33,8 @@ enum FreshInstallKeychainPurge {
         "simkl_access_token",
         "simkl_refresh_token",
         "jellyfin_access_token",
-        "jellyfin_user_id"
+        "jellyfin_user_id",
+        NetworkProxySettings.passwordAccount
     ]
 
     private static var hasRun = false

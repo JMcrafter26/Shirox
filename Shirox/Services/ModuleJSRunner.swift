@@ -28,14 +28,23 @@ final class ModuleJSRunner {
     // Ephemeral config gives each runner its own isolated cookie store so bypass
     // cookies from search persist through to fetchEpisodes without bleeding into
     // other runners or being wiped by HTTPCookieStorage.shared clears.
-    private let session: URLSession = {
+    private let session: URLSession
+    private let hosts: TMDBHosts
+
+    nonisolated static func sessionConfiguration() -> URLSessionConfiguration {
         let config = URLSessionConfiguration.ephemeral
         config.httpCookieAcceptPolicy = .always
         config.httpShouldSetCookies = true
-        return URLSession(configuration: config)
-    }()
+        return config
+    }
 
-    private let userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    private var userAgent: String { NetworkUserAgent.current() }
+
+    /// Tests hand in a stubbed session and their own TMDB settings.
+    init(configuration: URLSessionConfiguration = ModuleJSRunner.sessionConfiguration(), hosts: TMDBHosts = .shared) {
+        session = URLSession(configuration: configuration)
+        self.hosts = hosts
+    }
 
     // MARK: - Load module
 
@@ -320,8 +329,9 @@ final class ModuleJSRunner {
             if useWebView {
                 Task {
                     do {
+                        guard let target = self.hosts.rewritten(url) else { throw URLError(.badURL) }
                         let (data, status, headersDict, finalURL) = try await WebKitFetchEngine.shared.fetch(
-                            url: url,
+                            url: target,
                             method: method,
                             headers: jsHeaders,
                             body: body
@@ -371,7 +381,7 @@ final class ModuleJSRunner {
                         }
                     }
 
-                    var (data, response) = try await self.session.data(for: request)
+                    var (data, response) = try await self.hosts.send(request) { try await self.session.data(for: $0) }
                     guard var httpResponse = response as? HTTPURLResponse else {
                         reject.call(withArguments: ["No response data"])
                         return
