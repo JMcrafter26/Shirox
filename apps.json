@@ -29,10 +29,10 @@
         {
           "version": "1.0.6",
           "buildVersion": "123",
-          "date": "2026-10-24",
+          "date": "2026-10-23",
           "localizedDescription": "Reader: tap the left or right side of a page to move on or back: in vertical scroll it scrolls part of a screen, in the paged modes it turns the page (right to left reading swaps the sides). The middle shows and hides the controls, and a quick double tap zooms anywhere. Single taps answer in a fraction of the time they took. Reverse Direction, for vertical scroll, runs the page slider and chapter buttons right to left and swaps the tap sides with them. Both are in the reader's book menu and Settings → Reader. Pages that fail to load now try again by themselves a few times before showing an error. The reader's buttons lost the second, lighter ring around them on iOS 27.\n\nPlayer: a tap shows the controls sooner, and a double tap seeks without showing or hiding them. The title sits between the buttons, cut short with an ellipsis; tap it to read it whole. A new info button opens Video Details: the video's and audio's codec, resolution, frame rate, bitrate and channels, the subtitle on screen, and the stream's own bitrate. It scrolls when there's no room for all of it.\n\nStremio addons: streams are no longer fetched before you pick one. With a debrid service (AIOStreams or Torrentio with TorBox, for example) that fetch added every listed torrent to your account. Each stream also shows the addon's full details under its name, as Stremio and Nuvio do: quality, codec, audio and languages, dub, size.\n\nManga: Mana source repos can be added in Modules, for searching and reading manga from sources such as MangaDex, AsuraScans and MangaFire. As with other extensions, adult sources and titles are left out.\n\nAlso: Seanime providers that send binary data (Miruro) work, and a CloudStream repo now says it isn't supported instead of showing an empty list. The profile in use can be deleted (Shirox switches to another first); the profile picker sits in the middle of the screen on iPad and Mac and is back to several profiles a row on iPhone. Movies and specials found from search keep their own cover instead of the show's.",
           "downloadURL": "https://github.com/xibrox/Shirox/releases/download/latest/Shirox.ipa",
-          "size": 25558965,
+          "size": 25654898,
           "minOSVersion": "15.0"
         },
         {
