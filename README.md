@@ -15,7 +15,7 @@ keep it in sync with AniList and MyAnimeList, and play it from the sources *you*
 </p>
 
 <p align="center">
-  <a href="#features">Features</a> · <a href="#on-ipad-and-mac">iPad & Mac</a> · <a href="#modules">Modules</a> · <a href="#build-from-source">Build from source</a>
+  <a href="#install">Install</a> · <a href="#features">Features</a> · <a href="#on-ipad-and-mac">iPad & Mac</a> · <a href="#modules">Modules</a> · <a href="#build-from-source">Build from source</a>
 </p>
 
 <br />
@@ -40,6 +40,22 @@ playback, reading — happens on your device.
 
 > [!NOTE]
 > Shirox does not host, provide or endorse any content.
+
+---
+
+## Install
+
+<h3 align="center">
+  <a href="https://altdirect.app/?url=https://raw.githubusercontent.com/xibrox/Shirox/main/apps.json"><img src="https://altdirect.app/assets/png/AltSource_Blue.png" width="200" alt="Add the source" /></a>
+  &nbsp;
+  <a href="https://github.com/xibrox/Shirox/releases/download/latest/Shirox.ipa"><img src="https://altdirect.app/assets/png/Download_Blue.png" width="200" alt="Download the IPA" /></a>
+</h3>
+
+- **iPhone and iPad**: tap **Add the source** to open it in AltStore, SideStore, Feather, LiveContainer
+  or another sideloading app, which then installs Shirox and keeps it updated. Or download the IPA
+  and sideload it yourself. The source URL is
+  `https://raw.githubusercontent.com/xibrox/Shirox/main/apps.json`.
+- **Mac**: download `Shirox-macOS.dmg` from the [latest release](https://github.com/xibrox/Shirox/releases/latest).
 
 ---
 
