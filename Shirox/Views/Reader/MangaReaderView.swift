@@ -27,6 +27,33 @@ enum MangaReadingMode: String, CaseIterable, Identifiable {
     }
 }
 
+// MARK: - Tap zones
+
+/// What a tap on the reader does, by where it lands: the outer thirds scroll (vertical) or
+/// turn the page (paged), the middle shows and hides the controls.
+///
+/// Forward is on the right for vertical and left-to-right reading, on the left for right to
+/// left; the reverse setting swaps the sides, and the page slider runs the same way as the taps.
+enum ReaderTapZone: Equatable {
+    case back, forward, middle
+
+    static let enabledKey = "readerTapZones"
+    static let reversedKey = "readerTapZonesReversed"
+    /// How far a tap scrolls the vertical strip, as a share of the screen's height.
+    static let scrollFraction: CGFloat = 0.4
+
+    /// Whether the right side moves on through the chapter.
+    static func rightIsForward(mode: MangaReadingMode, reversed: Bool) -> Bool {
+        (mode != .pagedRTL) != reversed
+    }
+
+    /// `x` runs from 0 at the left edge to 1 at the right.
+    static func zone(atX x: CGFloat, mode: MangaReadingMode, enabled: Bool, reversed: Bool) -> ReaderTapZone {
+        guard enabled, x < 1.0 / 3 || x > 2.0 / 3 else { return .middle }
+        return (x > 2.0 / 3) == rightIsForward(mode: mode, reversed: reversed) ? .forward : .back
+    }
+}
+
 // MARK: - Liquid Glass helper
 
 extension View {
@@ -136,6 +163,8 @@ struct MangaReaderView: View {
     @AppStorage("readerLiquidGlass") private var readerLiquidGlass = true
     /// Apple Books' page curl for the paged modes; off, pages slide.
     @AppStorage("readerPageCurl") private var pageCurl = true
+    @AppStorage(ReaderTapZone.enabledKey) private var tapZones = true
+    @AppStorage(ReaderTapZone.reversedKey) private var tapZonesReversed = false
     // Live speed range (pt/s): top is ~6.7× the old "Turbo" preset (120).
     private static let autoScrollSpeedRange: ClosedRange<Double> = 20...800
 
@@ -187,6 +216,10 @@ struct MangaReaderView: View {
 
     private var mode: MangaReadingMode { MangaReadingMode(rawValue: modeRaw) ?? .vertical }
     private var isRTL: Bool { mode == .pagedRTL }
+    /// The page slider fills from the side the taps move back toward.
+    private var sliderRunsRightToLeft: Bool {
+        !ReaderTapZone.rightIsForward(mode: mode, reversed: tapZones && tapZonesReversed)
+    }
 
     private var displayedChapter: MangaChapter? { context.chapters[safe: displayedChapterIndex] }
     private var hasNextChapter: Bool { displayedChapterIndex + 1 < context.chapters.count }
@@ -384,8 +417,9 @@ struct MangaReaderView: View {
                     currentPage = page   // onChangeOf(currentPage) does the rest
                 }
             }
-            .modifier(DoubleTapToZoom(onDoubleTap: toggleDoubleTapZoom(at:)) {
-                withAnimation(.easeInOut(duration: 0.2)) { chromeVisible.toggle() }
+            .modifier(DoubleTapToZoom(onDoubleTap: toggleDoubleTapZoom(at:)) { location in
+                let width = verticalScrollView?.bounds.width ?? 0
+                handleTap(atX: location.map { width > 0 ? $0.x / width : 0.5 } ?? 0.5)
             })
             .onAppear {
                 verticalProxy = proxy
@@ -433,9 +467,7 @@ struct MangaReaderView: View {
     @ViewBuilder
     private func curlPage(_ id: Int, onZoomChange: @escaping (CGFloat) -> Void) -> some View {
         if let item = strip.first(where: { $0.globalIdx == id }) {
-            ZoomableContainer(onSingleTap: {
-                withAnimation(.easeInOut(duration: 0.2)) { chromeVisible.toggle() }
-            }, onZoomChange: onZoomChange) {
+            ZoomableContainer(onSingleTapAt: handleTap(atX:), onZoomChange: onZoomChange) {
                 ReaderPageView(urlString: item.url, referer: referer, pageNumber: item.pageIdx + 1)
             }
         }
@@ -448,9 +480,7 @@ struct MangaReaderView: View {
         let displayOrder = isRTL ? Array(strip.reversed()) : strip
         return TabView(selection: $currentPage) {
             ForEach(displayOrder) { item in
-                ZoomableContainer(onSingleTap: {
-                    withAnimation(.easeInOut(duration: 0.2)) { chromeVisible.toggle() }
-                }) {
+                ZoomableContainer(onSingleTapAt: handleTap(atX:)) {
                     ReaderPageView(urlString: item.url, referer: referer, pageNumber: item.pageIdx + 1)
                 }
                 .tag(item.globalIdx)
@@ -489,6 +519,9 @@ struct MangaReaderView: View {
                 .transition(.identity)
             }
         }
+        // The glass is the whole button, as in the player. A system-styled button drew its own
+        // platter around it under the iOS 27 SDK: a second, lighter bubble ringing each control.
+        .buttonStyle(.plain)
     }
 
     private var topBar: some View {
@@ -538,6 +571,15 @@ struct MangaReaderView: View {
                     Label("Page Curl", systemImage: "book.pages")
                 }
                 .disabled(mode == .vertical)
+                Section {
+                    Toggle(isOn: $tapZones) {
+                        Label("Tap Sides to \(mode == .vertical ? "Scroll" : "Turn")", systemImage: "hand.tap")
+                    }
+                    Toggle(isOn: $tapZonesReversed) {
+                        Label("Reverse Tap Sides", systemImage: "arrow.left.arrow.right")
+                    }
+                    .disabled(!tapZones)
+                }
             } label: {
                 Image(systemName: "book")
                     .font(.system(size: 18, weight: .semibold))
@@ -603,10 +645,11 @@ struct MangaReaderView: View {
                     )
                     .tint(.white)
                     // In right-to-left mode page 1 is on the right, so a slider that fills
-                    // left-to-right runs backwards against the pages it controls. Scoped to
-                    // the slider: flipping the whole row would also mirror the chapter
-                    // buttons' arrows, which point the way they already should.
-                    .environment(\.layoutDirection, isRTL ? .rightToLeft : .leftToRight)
+                    // left-to-right runs backwards against the pages it controls; reversed tap
+                    // sides flip it again, so it fills the way a tap moves. Scoped to the
+                    // slider: flipping the whole row would also mirror the chapter buttons'
+                    // arrows, which point the way they already should.
+                    .environment(\.layoutDirection, sliderRunsRightToLeft ? .rightToLeft : .leftToRight)
                 } else {
                     Spacer()
                 }
@@ -659,6 +702,7 @@ struct MangaReaderView: View {
                     .padding(.vertical, 12)
                     .readerGlass(Capsule(), enabled: readerLiquidGlass)
             }
+            .buttonStyle(.plain)
             .padding(.bottom, chromeVisible ? 118 : 40)
         }
     }
@@ -887,6 +931,46 @@ struct MangaReaderView: View {
         guard lower <= upper else { return }
         for idx in lower...upper where warmedPages.insert(idx).inserted {
             warmImage(strip[idx].url)
+        }
+    }
+
+    // MARK: - Tap zones
+
+    /// A single tap, `x` across the screen from 0 (left) to 1 (right).
+    private func handleTap(atX x: CGFloat) {
+        switch ReaderTapZone.zone(atX: x, mode: mode, enabled: tapZones, reversed: tapZonesReversed) {
+        case .middle:
+            withAnimation(.easeInOut(duration: 0.2)) { chromeVisible.toggle() }
+        case .forward:
+            mode == .vertical ? tapScroll(down: true) : tapTurn(1)
+        case .back:
+            mode == .vertical ? tapScroll(down: false) : tapTurn(-1)
+        }
+    }
+
+    /// Part of a screen up or down the strip; chapters stitched below carry on as in a scroll.
+    private func tapScroll(down: Bool) {
+        guard !isSettling, let scrollView = verticalScrollView else { return }
+        let step = scrollView.bounds.height * ReaderTapZone.scrollFraction
+        let maxY = max(0, scrollView.contentSize.height - scrollView.bounds.height)
+        let y = min(max(scrollView.contentOffset.y + (down ? step : -step), 0), maxY)
+        // Auto-scroll moves the offset every frame, which would cut an animation short.
+        scrollView.setContentOffset(CGPoint(x: scrollView.contentOffset.x, y: y), animated: !isAutoScrolling)
+    }
+
+    /// A page on or back in reading order. Past the strip's last page is the next chapter, if it
+    /// couldn't be stitched on; before the first stays put, as a swipe does.
+    private func tapTurn(_ delta: Int) {
+        guard !strip.isEmpty else { return }
+        let target = currentPage + delta
+        guard strip.indices.contains(target) else {
+            if delta > 0, nextUnstitchedChapter != nil { goToChapter(displayedChapterIndex + 1) }
+            return
+        }
+        if pageCurl {
+            currentPage = target   // the pager curls to it
+        } else {
+            withAnimation(.easeInOut(duration: 0.25)) { currentPage = target }
         }
     }
 
@@ -1292,25 +1376,25 @@ private struct PinchToZoom: ViewModifier {
     }
 }
 
-/// A double-tap, and the single tap that shows and hides the chrome, which now waits until a
-/// second tap can't come. iOS 16+'s `SpatialTapGesture` says where the double-tap landed;
-/// iOS 15's `TapGesture` doesn't, so it reports nil.
+/// A double-tap, and the single tap that scrolls from the sides or shows and hides the chrome,
+/// which waits until a second tap can't come. iOS 16+'s `SpatialTapGesture` says where a tap
+/// landed; iOS 15's `TapGesture` doesn't, so it reports nil.
 private struct DoubleTapToZoom: ViewModifier {
     let onDoubleTap: (CGPoint?) -> Void
-    let onSingleTap: () -> Void
+    let onSingleTap: (CGPoint?) -> Void
 
     func body(content: Content) -> some View {
         if #available(iOS 16.0, *) {
             content.gesture(
                 SpatialTapGesture(count: 2)
                     .onEnded { onDoubleTap($0.location) }
-                    .exclusively(before: TapGesture().onEnded { onSingleTap() })
+                    .exclusively(before: SpatialTapGesture().onEnded { onSingleTap($0.location) })
             )
         } else {
             content.gesture(
                 TapGesture(count: 2)
                     .onEnded { onDoubleTap(nil) }
-                    .exclusively(before: TapGesture().onEnded { onSingleTap() })
+                    .exclusively(before: TapGesture().onEnded { onSingleTap(nil) })
             )
         }
     }

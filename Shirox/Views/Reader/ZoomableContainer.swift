@@ -5,11 +5,12 @@ import UIKit
 /// UIScrollView-backed pinch-zoom container for one paged-mode page.
 /// Double-tap toggles 1× ↔ 2.5×; pinch zooms 1–3×. Owns the single-tap
 /// recognizer too (it must wait for the double-tap to fail), surfacing it via
-/// onSingleTap so the reader can toggle its chrome. At 1×, horizontal swipes
+/// onSingleTap so the reader can toggle its chrome, or turn the page from a side. At 1×, horizontal swipes
 /// pass through to the surrounding TabView for page turns.
 struct ZoomableContainer<Content: View>: UIViewRepresentable {
     let content: Content
-    let onSingleTap: () -> Void
+    /// Where across the page the tap landed, 0 at the left edge to 1 at the right.
+    let onSingleTap: (CGFloat) -> Void
     /// Fires with the live zoom scale whenever it changes. The poster viewer uses
     /// this to suspend its drag-to-dismiss while zoomed in, so the two pans don't
     /// fight. Defaults to a no-op, leaving the reader's behaviour unchanged.
@@ -18,7 +19,13 @@ struct ZoomableContainer<Content: View>: UIViewRepresentable {
     init(onSingleTap: @escaping () -> Void,
          onZoomChange: @escaping (CGFloat) -> Void = { _ in },
          @ViewBuilder content: () -> Content) {
-        self.onSingleTap = onSingleTap
+        self.init(onSingleTapAt: { _ in onSingleTap() }, onZoomChange: onZoomChange, content: content)
+    }
+
+    init(onSingleTapAt: @escaping (CGFloat) -> Void,
+         onZoomChange: @escaping (CGFloat) -> Void = { _ in },
+         @ViewBuilder content: () -> Content) {
+        self.onSingleTap = onSingleTapAt
         self.onZoomChange = onZoomChange
         self.content = content()
     }
@@ -53,7 +60,7 @@ struct ZoomableContainer<Content: View>: UIViewRepresentable {
         scroll.addGestureRecognizer(doubleTap)
 
         let singleTap = UITapGestureRecognizer(target: context.coordinator,
-                                               action: #selector(Coordinator.handleSingleTap))
+                                               action: #selector(Coordinator.handleSingleTap(_:)))
         singleTap.numberOfTapsRequired = 1
         singleTap.require(toFail: doubleTap)
         scroll.addGestureRecognizer(singleTap)
@@ -73,10 +80,10 @@ struct ZoomableContainer<Content: View>: UIViewRepresentable {
 
     final class Coordinator: NSObject, UIScrollViewDelegate {
         var host: UIHostingController<Content>?
-        var onSingleTap: () -> Void
+        var onSingleTap: (CGFloat) -> Void
         var onZoomChange: (CGFloat) -> Void
 
-        init(onSingleTap: @escaping () -> Void, onZoomChange: @escaping (CGFloat) -> Void) {
+        init(onSingleTap: @escaping (CGFloat) -> Void, onZoomChange: @escaping (CGFloat) -> Void) {
             self.onSingleTap = onSingleTap
             self.onZoomChange = onZoomChange
         }
@@ -87,7 +94,12 @@ struct ZoomableContainer<Content: View>: UIViewRepresentable {
             onZoomChange(scrollView.zoomScale)
         }
 
-        @objc func handleSingleTap() { onSingleTap() }
+        @objc func handleSingleTap(_ gesture: UITapGestureRecognizer) {
+            guard let scroll = gesture.view as? UIScrollView, scroll.bounds.width > 0 else { return }
+            // Against the screen, not the zoomed content: a side is a side at any zoom.
+            let x = gesture.location(in: scroll).x - scroll.contentOffset.x
+            onSingleTap(min(max(x / scroll.bounds.width, 0), 1))
+        }
 
         @objc func handleDoubleTap(_ gesture: UITapGestureRecognizer) {
             guard let scroll = gesture.view as? UIScrollView else { return }

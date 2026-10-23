@@ -98,9 +98,29 @@ struct PageCurlPager<Page: View>: UIViewControllerRepresentable {
         // as does the first page once there is one to show.
         let shown = coordinator.displayed
         guard shown != current, let target = coordinator.host(for: current) else { return }
-        let forward = shown.map { (pageIDs.firstIndex(of: current) ?? 0) > (pageIDs.firstIndex(of: $0) ?? 0) } ?? true
-        controller.setViewControllers([target], direction: forward ? .forward : .reverse, animated: false)
+        let to = pageIDs.firstIndex(of: current) ?? 0
+        let from = shown.flatMap { pageIDs.firstIndex(of: $0) }
+        let forward = from.map { to > $0 } ?? true
+        // One page over (a tap on the side, or the slider nudged a page) curls there; anything
+        // further is a jump. UIKit's "forward" runs the other way when the spine is on the right.
+        let curls = from.map { abs(to - $0) == 1 } ?? false
         coordinator.displayed = current
+        guard curls else {
+            controller.setViewControllers([target], direction: forward ? .forward : .reverse, animated: false)
+            return
+        }
+        coordinator.isTurning = true
+        controller.setViewControllers([target], direction: forward != rightToLeft ? .forward : .reverse,
+                                      animated: true) { [weak controller, weak coordinator] _ in
+            guard let controller, let coordinator else { return }
+            coordinator.isTurning = false
+            // Taps faster than the curl: catch up with wherever the reader got to meanwhile.
+            let latest = coordinator.parent.current
+            if latest != coordinator.displayed, let next = coordinator.host(for: latest) {
+                controller.setViewControllers([next], direction: .forward, animated: false)
+                coordinator.displayed = latest
+            }
+        }
     }
 
     final class Coordinator: NSObject, UIPageViewControllerDataSource, UIPageViewControllerDelegate,
@@ -116,8 +136,9 @@ struct PageCurlPager<Page: View>: UIViewControllerRepresentable {
         /// The page on screen by the pager's own account: the one it put there or last finished
         /// turning to. Not `viewControllers`, which names the incoming page all through a curl.
         var displayed: Int?
-        /// A curl is under way, from UIKit's word that it's starting until its word that it's over.
-        private(set) var isTurning = false
+        /// A curl is under way, from UIKit's word that it's starting until its word that it's over,
+        /// or from a tap's turn until its animation ends.
+        var isTurning = false
 
         init(parent: PageCurlPager) {
             self.parent = parent

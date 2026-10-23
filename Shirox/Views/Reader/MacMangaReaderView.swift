@@ -76,6 +76,8 @@ struct MacMangaReaderView: View {
     @AppStorage("mangaReadingMode") private var modeRaw = MangaReadingMode.vertical.rawValue
     @AppStorage("readerLiquidGlass") private var readerLiquidGlass = true
     @AppStorage("mangaAutoScrollSpeed") private var autoScrollSpeed = 120.0
+    @AppStorage(ReaderTapZone.enabledKey) private var tapZones = true
+    @AppStorage(ReaderTapZone.reversedKey) private var tapZonesReversed = false
     @State private var chromeVisible = true
     /// A page the keyboard or the slider asked for; the strip scrolls to it.
     @State private var keyTarget: Int?
@@ -93,6 +95,10 @@ struct MacMangaReaderView: View {
 
     private var mode: MangaReadingMode { MangaReadingMode(rawValue: modeRaw) ?? .vertical }
     private var isRTL: Bool { mode == .pagedRTL }
+    /// The page slider fills from the side a click moves back toward.
+    private var sliderRunsRightToLeft: Bool {
+        !ReaderTapZone.rightIsForward(mode: mode, reversed: tapZones && tapZonesReversed)
+    }
     private var chapter: MangaChapter? { context.chapters.indices.contains(chapterIndex) ? context.chapters[chapterIndex] : nil }
     private var hasPrevious: Bool { chapterIndex > 0 }
     private var hasNext: Bool { chapterIndex + 1 < context.chapters.count }
@@ -225,6 +231,13 @@ struct MacMangaReaderView: View {
                         .item(PlayerMenuItem(title: option.label, isOn: option == mode) { modeRaw = option.rawValue })
                     }),
                 ]
+                elements.append(.section("Click Zones", [
+                    .item(PlayerMenuItem(title: mode == .vertical ? "Click Sides to Scroll" : "Click Sides to Turn",
+                                         isOn: tapZones) { tapZones.toggle() }),
+                    .item(PlayerMenuItem(title: "Reverse Click Sides", isOn: tapZonesReversed) {
+                        tapZonesReversed.toggle()
+                    }),
+                ]))
                 if mode == .vertical {
                     elements.append(.section("Page Width", [
                         .item(PlayerMenuItem(title: "Wider Pages (⌘+)") { pageWidth = min(1600, pageWidth + 80) }),
@@ -272,8 +285,9 @@ struct MacMangaReaderView: View {
                         in: 0...Double(max(pages.count - 1, 1))
                     )
                     .tint(.white)
-                    // Page 1 is on the right when reading right to left.
-                    .environment(\.layoutDirection, isRTL ? .rightToLeft : .leftToRight)
+                    // Page 1 is on the right when reading right to left; reversed click sides
+                    // flip it again, so it fills the way a click moves.
+                    .environment(\.layoutDirection, sliderRunsRightToLeft ? .rightToLeft : .leftToRight)
                 } else {
                     Spacer()
                 }
@@ -360,7 +374,10 @@ struct MacMangaReaderView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .contentShape(Rectangle())
-                .onTapGesture { toggleChrome() }
+                .onTapGesture(coordinateSpace: .named("readerStrip")) { location in
+                    let width = autoScroller.scrollView?.contentView.bounds.width ?? 0
+                    click(atX: width > 0 ? location.x / width : 0.5)
+                }
                 .background(MacEnclosingScrollView { autoScroller.scrollView = $0 })
             }
             .coordinateSpace(name: "readerStrip")
@@ -401,20 +418,46 @@ struct MacMangaReaderView: View {
             .frame(width: geo.size.width, height: geo.size.height)
             .contentShape(Rectangle())
             .onTapGesture(coordinateSpace: .local) { location in
-                let third = geo.size.width / 3
-                if location.x < third {
-                    turn(isRTL ? 1 : -1)
-                } else if location.x > geo.size.width - third {
-                    turn(isRTL ? -1 : 1)
-                } else {
-                    toggleChrome()
-                }
+                click(atX: geo.size.width > 0 ? location.x / geo.size.width : 0.5)
             }
         }
         .onAppear {
             if let resume = pendingResume {
                 pendingResume = nil
                 topPage = min(max(resume, 0), max(pages.count - 1, 0))
+            }
+        }
+    }
+
+    /// A click, `x` across the window from 0 (left) to 1 (right): the sides scroll the strip or
+    /// turn the page, the middle shows or hides the bars.
+    private func click(atX x: CGFloat) {
+        switch ReaderTapZone.zone(atX: x, mode: mode, enabled: tapZones, reversed: tapZonesReversed) {
+        case .middle: toggleChrome()
+        case .forward: mode == .vertical ? clickScroll(down: true) : turn(1)
+        case .back: mode == .vertical ? clickScroll(down: false) : turn(-1)
+        }
+    }
+
+    /// Part of a window up or down the strip.
+    private func clickScroll(down: Bool) {
+        guard let scrollView = autoScroller.scrollView, let document = scrollView.documentView else { return }
+        let clip = scrollView.contentView
+        let step = clip.bounds.height * ReaderTapZone.scrollFraction
+        let maxY = max(0, document.frame.height - clip.bounds.height)
+        // The document is flipped: y grows down the strip.
+        let y = min(max(clip.bounds.origin.y + (down ? step : -step), 0), maxY)
+        let target = NSPoint(x: clip.bounds.origin.x, y: y)
+        if isAutoScrolling {
+            // It moves the strip every frame, which would cut an animation short.
+            clip.scroll(to: target)
+            scrollView.reflectScrolledClipView(clip)
+        } else {
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = 0.25
+                clip.animator().setBoundsOrigin(target)
+            } completionHandler: {
+                scrollView.reflectScrolledClipView(clip)
             }
         }
     }

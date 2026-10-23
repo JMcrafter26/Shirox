@@ -878,9 +878,24 @@ struct ReaderSettingsView: View {
     @AppStorage("readerLiquidGlass") private var readerLiquidGlass = true
     @AppStorage("readerPageCurl") private var readerPageCurl = true
     @AppStorage("readerPortraitOnly") private var readerPortraitOnly = false
+    @AppStorage(ReaderTapZone.enabledKey) private var tapZones = true
+    @AppStorage(ReaderTapZone.reversedKey) private var tapZonesReversed = false
 
     var body: some View {
         SettingsList {
+            Section {
+                Toggle("Tap Sides to Scroll or Turn", isOn: $tapZones)
+                    .tint(.secondary)
+                Toggle("Reverse Tap Sides", isOn: $tapZonesReversed)
+                    .tint(.secondary)
+                    .disabled(!tapZones)
+            } header: {
+                Text("Tap Zones")
+            } footer: {
+                Text(tapZones
+                     ? "\(Self.tapVerb) the right side to scroll down or turn to the next page, the left to go back; right to left reading swaps them. Reversed swaps the sides again, and the page slider with them. The middle shows and hides the controls."
+                     : "A \(Self.tapVerb.lowercased()) anywhere on a page shows and hides the controls.")
+            }
             // A Mac's reader turns pages with a slide; there's no curl to turn off.
             #if os(iOS)
             Section {
@@ -923,6 +938,14 @@ struct ReaderSettingsView: View {
         .navigationTitle("Reader")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
+    }
+
+    private static var tapVerb: String {
+        #if os(macOS)
+        "Click"
+        #else
+        "Tap"
         #endif
     }
 
