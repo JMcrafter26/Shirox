@@ -130,7 +130,7 @@ private struct FullScreenSeekView: UIViewRepresentable {
         view.backgroundColor = .clear
 
         // One tap recognizer; QuickTaps tells a double tap (seek) from a single (the controls)
-        // within a tenth of a second. A single tap made to wait for a double-tap recognizer to
+        // within 0.15 s. A single tap made to wait for a double-tap recognizer to
         // fail sat for about a third, and showing the controls felt slow. A double tap never
         // shows or hides them.
         let tap = SingleTouchTapGR(

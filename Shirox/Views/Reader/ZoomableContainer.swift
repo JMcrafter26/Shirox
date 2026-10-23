@@ -11,7 +11,7 @@ import UIKit
 /// fires once the window is out.
 final class QuickTaps {
     /// Short enough to feel immediate, long enough for a quick double tap.
-    static let window: TimeInterval = 0.1
+    static let window: TimeInterval = 0.15
     /// How far apart two taps can land and still make a double tap, in points.
     private static let reach: CGFloat = 70
 
