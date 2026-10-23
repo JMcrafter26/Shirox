@@ -59,19 +59,7 @@ private struct DownloadStreamRow: View {
                     .font(.system(size: 32))
                     .foregroundStyle(.primary)
 
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(stream.title)
-                        .font(.subheadline).fontWeight(.semibold)
-                    if stream.subtitle != nil {
-                        Text("Soft subtitles available")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    } else {
-                        Text("No soft subtitles")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                }
+                StreamRowText(stream: stream)
                 Spacer()
             }
             .contentShape(Rectangle())

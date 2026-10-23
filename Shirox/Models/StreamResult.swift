@@ -25,6 +25,9 @@ struct StreamResult: Identifiable, Equatable {
     /// The key the stream's playlists are scrambled with, from the module's `playlistKey`.
     /// See ``HLSPlaylistCipher``.
     let playlistKey: String?
+    /// What the source says about the stream beyond its name, a line per fact: a Stremio
+    /// addon's description (quality, codec, audio, languages and dub, size, provider).
+    var details: String?
 
     var subtitleURL: URL? { subtitle.flatMap { URL(string: $0) } }
 

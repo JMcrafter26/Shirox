@@ -14,8 +14,9 @@ final class JSEngine: ObservableObject {
     static let shared = JSEngine()
 
     private(set) var context: JSContext
-    /// The loaded module is a Stremio addon or a Nuvio, Vega, SkyStream or Mana provider.
-    private(set) var loadedModuleIsExtension = false
+    /// What the loaded module is: a Stremio addon or a Nuvio, Vega, SkyStream or Mana
+    /// provider; nil for Sora modules and Seanime providers.
+    private(set) var loadedExtensionKind: ExtensionKind?
 
     private let session: URLSession
     private let hosts: TMDBHosts
@@ -65,7 +66,7 @@ final class JSEngine: ObservableObject {
         ExtensionScripts.prepare(context, module: module)
         context.evaluateScript(script)
         ExtensionScripts.finish(context, module: module)
-        loadedModuleIsExtension = module.ext != nil
+        loadedExtensionKind = module.ext?.kind
         if let exception = context.exception {
             Logger.shared.log("[JSEngine] Script load error: \(exception)", type: "Error")
         }

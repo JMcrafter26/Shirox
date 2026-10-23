@@ -31,14 +31,7 @@ struct StreamPickerView: View {
                                 Image(systemName: "play.circle.fill")
                                     .font(.system(size: 32))
                                     .foregroundStyle(.primary)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(stream.title)
-                                        .font(.subheadline).fontWeight(.semibold)
-                                        .foregroundStyle(.primary)
-                                    Text(stream.subtitle != nil ? "Soft subtitles available" : "No soft subtitles")
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
-                                }
+                                StreamRowText(stream: stream)
                                 Spacer()
                             }
                             .contentShape(Rectangle())
@@ -311,6 +304,38 @@ struct ModulePickerEpisodeGrid: View {
                     }
                 }
                 .padding(.vertical, 2)
+            }
+        }
+    }
+}
+
+/// A stream's name and what's known about it, for the stream pickers. A Stremio addon's
+/// description runs to several lines (source and codec, audio and languages with dub and flags,
+/// size), shown as the addon wrote them, the way Stremio and Nuvio list streams.
+struct StreamRowText: View {
+    let stream: StreamResult
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(stream.title)
+                .font(.subheadline).fontWeight(.semibold)
+                .foregroundStyle(.primary)
+            if let details = stream.details {
+                Text(details)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            // The details already say what an addon knows; "no soft subtitles" under each one
+            // was noise. A stream that does carry subtitles still says so.
+            if stream.subtitle != nil {
+                Text("Soft subtitles available")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+            } else if stream.details == nil {
+                Text("No soft subtitles")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
             }
         }
     }

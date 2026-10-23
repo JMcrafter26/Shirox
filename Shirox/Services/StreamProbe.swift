@@ -9,6 +9,16 @@ enum StreamProbe {
 
     static let timeout: TimeInterval = 6
 
+    /// Whether a kind's streams are checked before they're listed. Not a Stremio addon's: its
+    /// links are a catalogue, not a scrape, and a debrid one (AIOStreams, Torrentio and the
+    /// rest with TorBox, Real-Debrid…) is a request: fetching it adds the torrent to the
+    /// account. Checking every link filled a TorBox library with each one on the list before
+    /// anything was picked. Those links are fetched only when one is played or downloaded.
+    static func checks(_ kind: ExtensionKind?) -> Bool {
+        guard let kind else { return false }
+        return kind != .stremio
+    }
+
     static func verdict(for stream: StreamResult, session: URLSession = .shared) async -> Verdict {
         var request = URLRequest(url: stream.url, timeoutInterval: timeout)
         for (key, value) in stream.headers { request.setValue(value, forHTTPHeaderField: key) }

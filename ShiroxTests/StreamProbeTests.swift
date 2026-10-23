@@ -117,4 +117,24 @@ final class ExtensionStreamCheckTests: XCTestCase {
         let streams = try await runner.fetchStreams(episodeUrl: "/e/1")
         XCTAssertEqual(streams.map(\.url.absoluteString), ["https://a.test/video.mkv"])
     }
+
+    /// Fetching a debrid addon's link adds the torrent to the account, so a Stremio addon's
+    /// streams are listed unchecked; the scraper kinds' are still checked.
+    func testStremioStreamsAreNotFetchedBeforeOneIsPicked() {
+        XCTAssertFalse(StreamProbe.checks(.stremio))
+        XCTAssertFalse(StreamProbe.checks(nil))
+        for kind in [ExtensionKind.nuvio, .vega, .skystream] {
+            XCTAssertTrue(StreamProbe.checks(kind))
+        }
+    }
+
+    func testStreamDetailsAreParsed() {
+        let streams = parseStreamResults(from: ["streams": [
+            ["title": "FHD • TB ⚡ON", "details": "WEB-DL AVC\nAAC 2.0 🇬🇧 • 🇯🇵 Dubbed\n1.44 GB", "streamUrl": "https://a.example/1"],
+            ["title": "Plain", "streamUrl": "https://a.example/2"],
+        ]])
+        XCTAssertEqual(streams.map(\.title), ["FHD • TB ⚡ON", "Plain"])
+        XCTAssertEqual(streams[0].details, "WEB-DL AVC\nAAC 2.0 🇬🇧 • 🇯🇵 Dubbed\n1.44 GB")
+        XCTAssertNil(streams[1].details)
+    }
 }

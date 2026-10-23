@@ -13,9 +13,16 @@ struct PlayerNextEpisodePicker: View {
                     onSelect(stream)
                     dismiss()
                 } label: {
-                    Text(stream.title)
-                        .foregroundStyle(.primary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(stream.title)
+                            .foregroundStyle(.primary)
+                        if let details = stream.details {
+                            Text(details)
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)

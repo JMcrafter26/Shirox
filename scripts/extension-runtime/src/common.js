@@ -14,7 +14,14 @@ export function isAdultText(text) {
 
 export const isTorrentURL = (url) => /^magnet:/i.test(url || "") || /\.torrent(\?|#|$)/i.test(url || "");
 export const isHTTP = (url) => /^https?:\/\//i.test(url || "");
-export const firstLine = (s) => String(s || "").split("\n")[0].trim();
+
+/** A stream's row: its name, and under it every line of its description, as Stremio and Nuvio
+ *  show them (source, codec, audio and languages, dub, size). Without a name, the first line. */
+export function streamLabel(name, text) {
+  const lines = String(text || "").split("\n").map((l) => l.trim()).filter(Boolean);
+  const title = String(name || "").replace(/\s+/g, " ").trim() || lines.shift() || "Stream";
+  return lines.length ? { title, details: lines.join("\n") } : { title };
+}
 
 export function withTimeout(promise, ms, label) {
   return new Promise((resolve, reject) => {

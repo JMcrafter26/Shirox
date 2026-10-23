@@ -1,4 +1,4 @@
-import { cfg, media, isTorrentURL, isHTTP, firstLine, withTimeout, message, asJSON } from "../common.js";
+import { cfg, media, isTorrentURL, isHTTP, streamLabel, withTimeout, message, asJSON } from "../common.js";
 import { request } from "../http.js";
 
 const TMDB = "https://api.themoviedb.org/3";
@@ -103,8 +103,9 @@ async function streams(href) {
   const out = [];
   for (const s of list || []) {
     if (!s || !isHTTP(s.url) || isTorrentURL(s.url)) continue;
-    const title = [s.name, firstLine(s.title)].filter(Boolean).join(" · ") || "Stream";
-    out.push({ title: s.quality && !title.includes(s.quality) ? `${title} · ${s.quality}` : title, streamUrl: s.url, headers: s.headers || {} });
+    const label = streamLabel(s.name, s.title);
+    if (s.quality && !`${label.title}\n${label.details || ""}`.includes(s.quality)) label.title += ` · ${s.quality}`;
+    out.push({ ...label, streamUrl: s.url, headers: s.headers || {} });
   }
   if (!out.length) throw new Error(`${cfg().name} found no playable streams for this episode.`);
   return { streams: out };

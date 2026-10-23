@@ -1,4 +1,4 @@
-import { cfg, media, isAdultText, isTorrentURL, isHTTP, firstLine, asJSON } from "../common.js";
+import { cfg, media, isAdultText, isTorrentURL, isHTTP, streamLabel, asJSON } from "../common.js";
 import { request } from "../http.js";
 
 const KITSU = "https://anime-kitsu.strem.fun";
@@ -116,9 +116,10 @@ async function streams(href) {
   const answer = await getJSON(`${own()}/stream/${t}/${id}.json`);
   for (const s of answer.streams || []) {
     if (!s || s.infoHash || !isHTTP(s.url) || isTorrentURL(s.url)) continue;
-    const title = [s.name, firstLine(s.title || s.description)].filter(Boolean).join(" · ") || "Stream";
+    // `description` replaced `title` in the addon protocol; older addons still send `title`.
+    const label = streamLabel(s.name, s.description || s.title);
     const hints = s.behaviorHints || {};
-    out.push({ title, streamUrl: s.url, headers: (hints.proxyHeaders && hints.proxyHeaders.request) || {} });
+    out.push({ ...label, streamUrl: s.url, headers: (hints.proxyHeaders && hints.proxyHeaders.request) || {} });
     for (const sub of s.subtitles || []) if (sub && sub.url) subtitles.push({ url: sub.url, title: sub.lang || "Subtitle" });
   }
   if (!out.length) throw new Error("This addon has no playable streams for this episode (torrent links are skipped).");

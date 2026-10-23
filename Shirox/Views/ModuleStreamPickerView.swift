@@ -811,14 +811,7 @@ private struct ModuleStreamSelectionView: View {
                                 Image(systemName: "play.circle.fill")
                                     .font(.system(size: 32))
                                     .foregroundStyle(.primary)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(stream.title)
-                                        .font(.subheadline).fontWeight(.semibold)
-                                        .foregroundStyle(.primary)
-                                    Text(stream.subtitle != nil ? "Soft subtitles available" : "No soft subtitles")
-                                        .font(.caption2)
-                                        .foregroundStyle(.secondary)
-                                }
+                                StreamRowText(stream: stream)
                                 Spacer()
                             }
                             .contentShape(Rectangle())

@@ -18,7 +18,7 @@ extension JSEngine {
 
         let streams = parseStreamResults(from: obj)
         // Extensions' scrapers list dead links and download pages alongside real streams.
-        return loadedModuleIsExtension ? await StreamProbe.playable(streams) : streams
+        return StreamProbe.checks(loadedExtensionKind) ? await StreamProbe.playable(streams) : streams
     }
 }
 
@@ -42,10 +42,12 @@ func parseStreamResults(from obj: [String: Any]) -> [StreamResult] {
             guard seen.insert(urlStr).inserted else { continue }
             let title = stream["title"] as? String ?? "Stream"
             let headers = stream["headers"] as? [String: String] ?? [:]
-            results.append(StreamResult(title: title, url: url, headers: headers,
-                                        subtitle: subtitleUrl, subtitleHeaders: subtitleHeaders,
-                                        allSubtitles: allSubtitles,
-                                        playlistKey: stream["playlistKey"] as? String ?? sharedPlaylistKey))
+            var result = StreamResult(title: title, url: url, headers: headers,
+                                      subtitle: subtitleUrl, subtitleHeaders: subtitleHeaders,
+                                      allSubtitles: allSubtitles,
+                                      playlistKey: stream["playlistKey"] as? String ?? sharedPlaylistKey)
+            result.details = (stream["details"] as? String).flatMap { $0.isEmpty ? nil : $0 }
+            results.append(result)
         }
     } else if let streams = obj["streams"] as? [String] {
         for (i, urlStr) in streams.enumerated() {
