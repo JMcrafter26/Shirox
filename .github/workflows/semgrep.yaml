@@ -5,9 +5,6 @@ on:
   push:
     branches:
       - main
-  schedule:
-    # Weekly full scan, so new rules get run against the whole tree.
-    - cron: "23 4 * * 1"
   workflow_dispatch:
 
 permissions:
