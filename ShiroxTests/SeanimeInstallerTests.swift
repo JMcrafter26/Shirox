@@ -79,6 +79,14 @@ final class SeanimeInstallerTests: XCTestCase {
         XCTAssertEqual(SeanimeScripts.unsupportedHelpers(in: "const myChromeDPish = 1"), [])
     }
 
+    func testAHelperTheScriptChecksForFirstIsNotRequired() {
+        let script = """
+        if (typeof ChromeDP === "undefined" || typeof ChromeDP.newBrowser !== "function") return null;
+        const b = await ChromeDP.newBrowser({}); CryptoJS.AES;
+        """
+        XCTAssertEqual(SeanimeScripts.unsupportedHelpers(in: script), ["CryptoJS"])
+    }
+
     func testAScriptWithoutAProviderIsRefused() async {
         do {
             _ = try await install(manifest(), script: "function nothing() {}")

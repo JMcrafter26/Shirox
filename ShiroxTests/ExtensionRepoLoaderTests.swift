@@ -61,6 +61,18 @@ final class ExtensionRepoLoaderTests: XCTestCase {
         XCTAssertEqual(r.entries.map(\.version), ["3"])
     }
 
+    func testCloudStreamRepoIsNamedNotShownEmpty() async throws {
+        let repo: [String: Any] = ["name": "csext", "manifestVersion": 1, "pluginLists": ["https://raw.test/plugins.json"]]
+        let list: [[String: Any]] = [["internalName": "AnimePaheProvider", "name": "AnimePaheProvider", "version": 78,
+                                      "url": "https://raw.test/AnimePaheProvider.cs3", "tvTypes": ["Anime"]]]
+        do {
+            _ = try await load(repo, url: "https://raw.test/repo.json", extra: ["https://raw.test/plugins.json": list])
+            XCTFail("loaded")
+        } catch {
+            XCTAssertEqual(error as? ModuleLinkError, .cloudStream)
+        }
+    }
+
     func testRepoListHidesAdultEntries() async throws {
         let nuvio: [String: Any] = ["name": "R", "scrapers": [
             ["id": "ok", "name": "AnimeOK", "version": "1", "filename": "a.js"],

@@ -338,7 +338,8 @@ final class ModuleJSRunner {
                         )
                         let responseText = String(data: data, encoding: .utf8) ?? ""
                         let responseObj = ctx.makeFetchResponse(
-                            status: status, statusText: nil, url: finalURL, headers: headersDict, body: responseText
+                            status: status, statusText: nil, url: finalURL, headers: headersDict, body: responseText,
+                            data: data
                         )
 
                         resolve.call(withArguments: [responseObj])
@@ -419,7 +420,8 @@ final class ModuleJSRunner {
                         statusText: HTTPURLResponse.localizedString(forStatusCode: status),
                         url: httpResponse.url?.absoluteString ?? urlString,
                         headers: headersDict,
-                        body: responseText
+                        body: responseText,
+                        data: data
                     )
 
                     resolve.call(withArguments: [responseObj])

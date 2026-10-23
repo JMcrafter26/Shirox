@@ -123,11 +123,14 @@ enum ExtensionRepoLoader {
             if let lists = object["pluginLists"] as? [String] {
                 var entries: [ExtensionRepoEntry] = []
                 var adult: Set<String> = []
+                // CloudStream repos share this layout, with Android `.cs3` plugins in place of `.sky` ones.
+                var cloudStream = 0
                 for list in lists {
                     guard let listURL = web(list, relativeTo: base),
                           let listData = try? await fetch(listURL),
                           let items = try? JSONSerialization.jsonObject(with: listData) as? [[String: Any]] else { continue }
                     for p in items {
+                        if (p["url"] as? String)?.lowercased().hasSuffix(".cs3") == true { cloudStream += 1 }
                         if ExtensionAdultCheck.isAdult(entry: p), let key = p["packageName"] as? String { adult.insert(key) }
                         guard !ExtensionAdultCheck.isAdult(entry: p), skyPlays(p), let key = p["packageName"] as? String,
                               let file = p["url"] as? String, let fileURL = web(file, relativeTo: listURL),
@@ -137,6 +140,7 @@ enum ExtensionRepoLoader {
                                                           description: p["description"] as? String, fileURL: fileURL, raw: p))
                     }
                 }
+                if entries.isEmpty, adult.isEmpty, cloudStream > 0 { throw ModuleLinkError.cloudStream }
                 return .repo(ExtensionRepo(kind: .skystream, name: object["name"] as? String ?? repoName(url),
                                            url: url, base: base, entries: entries, adultKeys: adult))
             }

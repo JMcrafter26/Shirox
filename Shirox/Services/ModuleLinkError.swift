@@ -10,6 +10,7 @@ enum ModuleLinkError: LocalizedError, Equatable {
     case seanimeList
     case notAModule
     case adult
+    case cloudStream
 
     var errorDescription: String? {
         switch self {
@@ -27,6 +28,8 @@ enum ModuleLinkError: LocalizedError, Equatable {
             return "That link isn't a module, a Stremio addon, or a Nuvio, Vega, SkyStream or Mana repo Shirox can add."
         case .adult:
             return "Shirox doesn't add adult modules."
+        case .cloudStream:
+            return "That link is a CloudStream repo. CloudStream plugins are Android code, which Shirox can't run."
         }
     }
 

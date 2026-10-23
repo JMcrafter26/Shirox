@@ -14,6 +14,39 @@ final class FetchResponseTests: XCTestCase {
         return (context, response)
     }
 
+    private func bytes(_ context: JSContext, _ script: String) async -> [Int] {
+        let done = expectation(description: "bytes")
+        var out: [Int] = []
+        let finish: @convention(block) (JSValue) -> Void = { value in
+            out = (value.toArray() as? [NSNumber] ?? []).map(\.intValue)
+            done.fulfill()
+        }
+        context.setObject(finish, forKeyedSubscript: "finish" as NSString)
+        context.evaluateScript("(\(script)).then(function (b) { finish(Array.from(new Uint8Array(b))); });")
+        await fulfillment(of: [done], timeout: 2)
+        return out
+    }
+
+    func testArrayBufferGivesTheBytesOfABinaryBody() async {
+        let data = Data([0x1f, 0x8b, 0x08, 0x00, 0xff, 0x00, 0x80, 0x41])
+        let context = JSContext.forModule()
+        let res = context.makeFetchResponse(status: 200, statusText: nil, url: "https://example.com/a",
+                                            headers: ["content-type": "application/octet-stream"],
+                                            body: JSEngine.bodyText(data), data: data)
+        context.setObject(res, forKeyedSubscript: "res" as NSString)
+        let got = await bytes(context, "res.arrayBuffer()")
+        XCTAssertEqual(got, data.map(Int.init))
+        let again = await bytes(context, "res.bytes()")
+        XCTAssertEqual(again, data.map(Int.init))
+    }
+
+    func testArrayBufferOfATextBodyIsItsUTF8() async {
+        let text = "a é 😀"
+        let (context, _) = response(text)
+        let got = await bytes(context, "res.arrayBuffer()")
+        XCTAssertEqual(got, Array(text.utf8).map(Int.init))
+    }
+
     func testCarriesStatusUrlAndHeaders() {
         let (context, res) = response("{}", status: 404, statusText: "Not Found")
         XCTAssertEqual(res.forProperty("status").toInt32(), 404)

@@ -98,10 +98,15 @@ enum SeanimeScripts {
     /// Seanime helpers Shirox doesn't supply — a provider using one can't run here.
     static let unsupported = ["ChromeDP", "CryptoJS", "$torrentUtils", "$habari", "$database"]
 
+    /// The helpers a script needs. One it checks for first (`typeof ChromeDP === "undefined"`) is a
+    /// fallback it can do without — reG-x1's Animepahe reaches for ChromeDP only when plain fetch is
+    /// challenged — so it doesn't count.
     static func unsupportedHelpers(in script: String) -> [String] {
         unsupported.filter { name in
-            let pattern = "(?<![A-Za-z0-9_$])" + NSRegularExpression.escapedPattern(for: name) + "(?![A-Za-z0-9_$])"
-            return script.range(of: pattern, options: .regularExpression) != nil
+            let escaped = NSRegularExpression.escapedPattern(for: name)
+            let pattern = "(?<![A-Za-z0-9_$])" + escaped + "(?![A-Za-z0-9_$])"
+            guard script.range(of: pattern, options: .regularExpression) != nil else { return false }
+            return script.range(of: "typeof\\s*\\(?\\s*" + escaped + "(?![A-Za-z0-9_$])", options: .regularExpression) == nil
         }
     }
 

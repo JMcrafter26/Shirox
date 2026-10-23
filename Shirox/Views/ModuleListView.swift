@@ -73,7 +73,8 @@ struct ModuleListView: View {
                 #endif
                 }
 
-                if let error = moduleManager.errorMessage {
+                // A failed add copies its message into `addModuleError` too — shown once, above.
+                if let error = moduleManager.errorMessage, error != addModuleError {
                     Section {
                         errorBanner(error)
                     }

@@ -217,7 +217,8 @@ final class JSEngine: ObservableObject {
                         )
                         let responseText = base64Body ? data.base64EncodedString() : Self.bodyText(data)
                         let responseObj = ctx.makeFetchResponse(
-                            status: status, statusText: nil, url: finalURL, headers: headersDict, body: responseText
+                            status: status, statusText: nil, url: finalURL, headers: headersDict, body: responseText,
+                            data: data
                         )
 
                         resolve.call(withArguments: [responseObj])
@@ -302,7 +303,8 @@ final class JSEngine: ObservableObject {
                         statusText: HTTPURLResponse.localizedString(forStatusCode: status),
                         url: httpResponse.url?.absoluteString ?? urlString,
                         headers: headersDict,
-                        body: base64Body ? data.base64EncodedString() : responseText
+                        body: base64Body ? data.base64EncodedString() : responseText,
+                        data: data
                     )
 
                     resolve.call(withArguments: [responseObj])
@@ -594,29 +596,68 @@ extension JSContext {
     /// one JS copy of the body: `text()` and `json()` read that copy rather than calling back into
     /// Swift, which converted the body again on every call and held the context from a block the
     /// context itself owned. A body that isn't JSON makes `json()` return undefined, as before.
-    func makeFetchResponse(status: Int, statusText: String?, url: String, headers: [String: String], body: String) -> JSValue {
+    ///
+    /// `arrayBuffer()` and `bytes()` give the body's bytes: re-encoded from the text when `data` is
+    /// valid UTF-8 (the same bytes), and from a Base64 copy of `data` when it isn't — Miruro's
+    /// catalogue is gzip XOR'd with a key, which as text was lost.
+    func makeFetchResponse(status: Int, statusText: String?, url: String, headers: [String: String], body: String,
+                           data: Data? = nil) -> JSValue {
         var make = objectForKeyedSubscript("__shiroxMakeResponse")
         if make == nil || make?.isUndefined == true {
             evaluateScript("""
-            var __shiroxMakeResponse = function (status, statusText, url, headers, body) {
-                var response = {
-                    status: status,
-                    ok: status >= 200 && status < 300,
-                    url: url,
-                    headers: headers,
-                    text: function () { return body; },
-                    json: function () {
-                        try { return JSON.parse(body); }
-                        catch (e) { console.log('[fetchv2] json(): ' + e); return undefined; }
+            var __shiroxMakeResponse = (function () {
+                var alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+                var lookup = {};
+                for (var i = 0; i < alphabet.length; i++) lookup[alphabet.charAt(i)] = i;
+                function fromBase64(text) {
+                    var clean = text.replace(/=+$/, '');
+                    var out = new Uint8Array(Math.floor(clean.length * 3 / 4));
+                    var bits = 0, value = 0, at = 0;
+                    for (var i = 0; i < clean.length; i++) {
+                        value = (value << 6) | lookup[clean.charAt(i)];
+                        bits += 6;
+                        if (bits >= 8) { bits -= 8; out[at++] = (value >> bits) & 0xff; }
                     }
+                    return out;
+                }
+                function fromText(text) {
+                    var out = [];
+                    for (var i = 0; i < text.length; i++) {
+                        var c = text.charCodeAt(i);
+                        if (c >= 0xd800 && c < 0xdc00 && i + 1 < text.length) {
+                            c = 0x10000 + ((c - 0xd800) << 10) + (text.charCodeAt(++i) - 0xdc00);
+                        }
+                        if (c < 0x80) out.push(c);
+                        else if (c < 0x800) out.push(0xc0 | (c >> 6), 0x80 | (c & 0x3f));
+                        else if (c < 0x10000) out.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 0x3f), 0x80 | (c & 0x3f));
+                        else out.push(0xf0 | (c >> 18), 0x80 | ((c >> 12) & 0x3f), 0x80 | ((c >> 6) & 0x3f), 0x80 | (c & 0x3f));
+                    }
+                    return new Uint8Array(out);
+                }
+                return function (status, statusText, url, headers, body, raw) {
+                    function bytes() { return raw != null ? fromBase64(raw) : fromText(body); }
+                    var response = {
+                        status: status,
+                        ok: status >= 200 && status < 300,
+                        url: url,
+                        headers: headers,
+                        text: function () { return body; },
+                        json: function () {
+                            try { return JSON.parse(body); }
+                            catch (e) { console.log('[fetchv2] json(): ' + e); return undefined; }
+                        },
+                        bytes: function () { return Promise.resolve(bytes()); },
+                        arrayBuffer: function () { return Promise.resolve(bytes().buffer); }
+                    };
+                    if (statusText != null) response.statusText = statusText;
+                    return response;
                 };
-                if (statusText != null) response.statusText = statusText;
-                return response;
-            };
+            })();
             """)
             make = objectForKeyedSubscript("__shiroxMakeResponse")
         }
-        let args: [Any] = [status, statusText ?? NSNull(), url, headers, body]
+        let raw: Any = data.flatMap { String(data: $0, encoding: .utf8) == nil ? $0.base64EncodedString() : nil } ?? NSNull()
+        let args: [Any] = [status, statusText ?? NSNull(), url, headers, body, raw]
         return make?.call(withArguments: args) ?? JSValue(undefinedIn: self)
     }
 }
