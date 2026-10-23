@@ -15,6 +15,9 @@ struct ZoomableContainer<Content: View>: UIViewRepresentable {
     /// this to suspend its drag-to-dismiss while zoomed in, so the two pans don't
     /// fight. Defaults to a no-op, leaving the reader's behaviour unchanged.
     let onZoomChange: (CGFloat) -> Void
+    /// Whether a single tap at that point across the page fires as the finger lifts instead of
+    /// waiting out a double tap; the reader's side zones do. A double tap there doesn't zoom.
+    let tapActsAtOnce: (CGFloat) -> Bool
 
     init(onSingleTap: @escaping () -> Void,
          onZoomChange: @escaping (CGFloat) -> Void = { _ in },
@@ -24,8 +27,10 @@ struct ZoomableContainer<Content: View>: UIViewRepresentable {
 
     init(onSingleTapAt: @escaping (CGFloat) -> Void,
          onZoomChange: @escaping (CGFloat) -> Void = { _ in },
+         tapActsAtOnce: @escaping (CGFloat) -> Bool = { _ in false },
          @ViewBuilder content: () -> Content) {
         self.onSingleTap = onSingleTapAt
+        self.tapActsAtOnce = tapActsAtOnce
         self.onZoomChange = onZoomChange
         self.content = content()
     }
@@ -65,12 +70,19 @@ struct ZoomableContainer<Content: View>: UIViewRepresentable {
         singleTap.require(toFail: doubleTap)
         scroll.addGestureRecognizer(singleTap)
 
+        let immediateTap = UITapGestureRecognizer(target: context.coordinator,
+                                                  action: #selector(Coordinator.handleSingleTap(_:)))
+        scroll.addGestureRecognizer(immediateTap)
+        for recognizer in [doubleTap, singleTap, immediateTap] { recognizer.delegate = context.coordinator }
+        context.coordinator.immediateTap = immediateTap
+
         return scroll
     }
 
     func updateUIView(_ uiView: UIScrollView, context: Context) {
         context.coordinator.onSingleTap = onSingleTap
         context.coordinator.onZoomChange = onZoomChange
+        context.coordinator.tapActsAtOnce = tapActsAtOnce
         context.coordinator.host?.rootView = content
     }
 
@@ -78,8 +90,10 @@ struct ZoomableContainer<Content: View>: UIViewRepresentable {
         Coordinator(onSingleTap: onSingleTap, onZoomChange: onZoomChange)
     }
 
-    final class Coordinator: NSObject, UIScrollViewDelegate {
+    final class Coordinator: NSObject, UIScrollViewDelegate, UIGestureRecognizerDelegate {
         var host: UIHostingController<Content>?
+        weak var immediateTap: UIGestureRecognizer?
+        var tapActsAtOnce: (CGFloat) -> Bool = { _ in false }
         var onSingleTap: (CGFloat) -> Void
         var onZoomChange: (CGFloat) -> Void
 
@@ -95,10 +109,22 @@ struct ZoomableContainer<Content: View>: UIViewRepresentable {
         }
 
         @objc func handleSingleTap(_ gesture: UITapGestureRecognizer) {
-            guard let scroll = gesture.view as? UIScrollView, scroll.bounds.width > 0 else { return }
-            // Against the screen, not the zoomed content: a side is a side at any zoom.
-            let x = gesture.location(in: scroll).x - scroll.contentOffset.x
-            onSingleTap(min(max(x / scroll.bounds.width, 0), 1))
+            guard let scroll = gesture.view as? UIScrollView else { return }
+            onSingleTap(Self.fraction(gesture.location(in: scroll).x, in: scroll))
+        }
+
+        /// Against the screen, not the zoomed content: a side is a side at any zoom.
+        private static func fraction(_ x: CGFloat, in scroll: UIScrollView) -> CGFloat {
+            guard scroll.bounds.width > 0 else { return 0.5 }
+            return min(max((x - scroll.contentOffset.x) / scroll.bounds.width, 0), 1)
+        }
+
+        /// The immediate tap takes touches where taps act at once; the double tap and the
+        /// waiting single tap take the rest.
+        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+            guard let scroll = gestureRecognizer.view as? UIScrollView else { return true }
+            let atOnce = tapActsAtOnce(Self.fraction(touch.location(in: scroll).x, in: scroll))
+            return gestureRecognizer === immediateTap ? atOnce : !atOnce
         }
 
         @objc func handleDoubleTap(_ gesture: UITapGestureRecognizer) {

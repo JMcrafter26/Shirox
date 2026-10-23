@@ -95,9 +95,13 @@ struct MacMangaReaderView: View {
 
     private var mode: MangaReadingMode { MangaReadingMode(rawValue: modeRaw) ?? .vertical }
     private var isRTL: Bool { mode == .pagedRTL }
+    /// Reversed click sides (vertical only) flip the slider and the chapter buttons with them.
+    private var controlsReversed: Bool {
+        ReaderTapZone.reverses(mode: mode, enabled: tapZones, reversed: tapZonesReversed)
+    }
     /// The page slider fills from the side a click moves back toward.
     private var sliderRunsRightToLeft: Bool {
-        !ReaderTapZone.rightIsForward(mode: mode, reversed: tapZones && tapZonesReversed)
+        !ReaderTapZone.rightIsForward(mode: mode, reversed: controlsReversed)
     }
     private var chapter: MangaChapter? { context.chapters.indices.contains(chapterIndex) ? context.chapters[chapterIndex] : nil }
     private var hasPrevious: Bool { chapterIndex > 0 }
@@ -231,13 +235,17 @@ struct MacMangaReaderView: View {
                         .item(PlayerMenuItem(title: option.label, isOn: option == mode) { modeRaw = option.rawValue })
                     }),
                 ]
-                elements.append(.section("Click Zones", [
+                var clicks: [PlayerMenuElement] = [
                     .item(PlayerMenuItem(title: mode == .vertical ? "Click Sides to Scroll" : "Click Sides to Turn",
                                          isOn: tapZones) { tapZones.toggle() }),
-                    .item(PlayerMenuItem(title: "Reverse Click Sides", isOn: tapZonesReversed) {
+                ]
+                // Reversed only in vertical mode: paged, a forward turn read as going back.
+                if mode == .vertical, tapZones {
+                    clicks.append(.item(PlayerMenuItem(title: "Reverse Click Sides", isOn: tapZonesReversed) {
                         tapZonesReversed.toggle()
-                    }),
-                ]))
+                    }))
+                }
+                elements.append(.section("Click Zones", clicks))
                 if mode == .vertical {
                     elements.append(.section("Page Width", [
                         .item(PlayerMenuItem(title: "Wider Pages (⌘+)") { pageWidth = min(1600, pageWidth + 80) }),
@@ -273,7 +281,8 @@ struct MacMangaReaderView: View {
             }
 
             HStack(spacing: 12) {
-                chapterButton(previous: true)
+                // Reversed, the next chapter's button is on the left, where clicks go on.
+                chapterButton(previous: !controlsReversed)
 
                 if pages.count > 1 {
                     Slider(
@@ -292,7 +301,7 @@ struct MacMangaReaderView: View {
                     Spacer()
                 }
 
-                chapterButton(previous: false)
+                chapterButton(previous: controlsReversed)
 
                 if mode == .vertical {
                     autoScrollButton
@@ -320,6 +329,7 @@ struct MacMangaReaderView: View {
         return Button { go(to: chapterIndex + (previous ? -1 : 1)) } label: {
             Image(systemName: previous ? "backward.end.fill" : "forward.end.fill")
                 .font(.system(size: 14, weight: .semibold))
+                .scaleEffect(x: controlsReversed ? -1 : 1, y: 1)
                 .foregroundStyle(.white.opacity(enabled ? 1 : 0.3))
                 .frame(width: 36, height: 36)
                 .readerGlass(Circle(), enabled: readerLiquidGlass)

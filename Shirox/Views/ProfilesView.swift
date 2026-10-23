@@ -342,7 +342,12 @@ struct ProfilePickerView: View {
 
 private struct PickerSizeKey: PreferenceKey {
     static var defaultValue: CGSize = .zero
-    static func reduce(value: inout CGSize, nextValue: () -> CGSize) { value = nextValue() }
+    // Views that don't measure report zero too; taking the last value let one of them wipe
+    // the width out, and an iPhone laid its profiles out one to a row.
+    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
+        let next = nextValue()
+        value = CGSize(width: max(value.width, next.width), height: max(value.height, next.height))
+    }
 }
 
 /// The profile picker's background: a dark gradient into the chosen colour.

@@ -1086,7 +1086,8 @@ struct PlayerView: View {
                 onSeekForward: { skip(by: Double(skipShort)); scheduleHide() },
                 onHover: { handleMouseActivity() },
                 seekAmount: Double(skipShort),
-                isLocked: isLocked
+                isLocked: isLocked,
+                tapActsAtOnce: !showControls || isLocked
             )
             .ignoresSafeArea()
 
