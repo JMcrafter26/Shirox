@@ -131,6 +131,17 @@ final class ProfileManager: ObservableObject {
         save()
     }
 
+    /// Deletes any profile but the last. The active one is switched away from first, to the
+    /// first of the others, and kept if that switch fails.
+    func deleteSwitchingAway(_ id: UUID) async {
+        if id == registry.activeID {
+            guard let other = profiles.first(where: { $0.id != id }) else { return }
+            await switchTo(other.id)
+            guard registry.activeID != id else { return }
+        }
+        delete(id)
+    }
+
     /// Who shares modules with a profile.
     func moduleSharers(of profile: AppProfile) -> [AppProfile] {
         profiles.filter { $0.id != profile.id && $0.moduleGroup == profile.moduleGroup }

@@ -101,7 +101,7 @@ struct ProfilePickerView: View {
     @AppStorage("playerLiquidGlass") private var liquidGlass = true
     @State private var managing = false
     @State private var editing: EditorTarget?
-    @State private var width: CGFloat = 0
+    @State private var scrollSize: CGSize = .zero
     /// The picker's colour, the device's (not a profile's): red unless changed.
     @AppStorage(ProfilePickerTheme.key) private var themeHex = ProfilePickerTheme.defaultHex
 
@@ -118,22 +118,21 @@ struct ProfilePickerView: View {
             background
             VStack(spacing: 0) {
                 topBar
-                Text(managing ? "Manage Profiles" : "Who's going on an adventure?")
-                    .font(.system(size: 30, weight: .semibold, design: .rounded))
-                    .foregroundStyle(.white)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 24)
+                if !centersContent { title }
                 ScrollView {
-                    centeredRows
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 40)
-                        .frame(maxWidth: 720)
-                        .frame(maxWidth: .infinity)
+                    VStack(spacing: 0) {
+                        if centersContent { title }
+                        centeredRows
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 40)
+                            .frame(maxWidth: 720)
+                    }
+                    .frame(maxWidth: .infinity, minHeight: centersContent ? scrollSize.height : 0)
                 }
                 .background(GeometryReader { geo in
-                    Color.clear.preference(key: PickerWidthKey.self, value: geo.size.width)
+                    Color.clear.preference(key: PickerSizeKey.self, value: geo.size)
                 })
-                .onPreferenceChange(PickerWidthKey.self) { width = $0 }
+                .onPreferenceChange(PickerSizeKey.self) { scrollSize = $0 }
                 bottomBar
             }
             if let target = manager.switchingTo {
@@ -151,6 +150,23 @@ struct ProfilePickerView: View {
             .frame(minWidth: 460, minHeight: 600)
             #endif
         }
+    }
+
+    /// iPad and Mac put the title and tiles in the middle of the screen; iPhone keeps them up top.
+    private var centersContent: Bool {
+        #if os(macOS)
+        true
+        #else
+        UIDevice.current.userInterfaceIdiom != .phone
+        #endif
+    }
+
+    private var title: some View {
+        Text(managing ? "Manage Profiles" : "Who's going on an adventure?")
+            .font(.system(size: 30, weight: .semibold, design: .rounded))
+            .foregroundStyle(.white)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 24)
     }
 
     private var background: some View {
@@ -171,7 +187,7 @@ struct ProfilePickerView: View {
         let items = manager.profiles.map(Item.profile) + [.add]
         let spacing: CGFloat = 24
         let tileWidth = avatarSize + 24
-        let available = min(max(width - 48, tileWidth), 720 - 48)
+        let available = min(max(scrollSize.width - 48, tileWidth), 720 - 48)
         let perRow = max(1, Int((available + spacing) / (tileWidth + spacing)))
         let rows = stride(from: 0, to: items.count, by: perRow).map { Array(items[$0..<min($0 + perRow, items.count)]) }
         return VStack(spacing: 30) {
@@ -324,9 +340,9 @@ struct ProfilePickerView: View {
     }
 }
 
-private struct PickerWidthKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
+private struct PickerSizeKey: PreferenceKey {
+    static var defaultValue: CGSize = .zero
+    static func reduce(value: inout CGSize, nextValue: () -> CGSize) { value = nextValue() }
 }
 
 /// The profile picker's background: a dark gradient into the chosen colour.
@@ -434,11 +450,12 @@ struct ProfileEditorView: View {
                 }
             }
 
-            if let editing, !isActive {
+            // Any but the last: the one in use is switched away from first.
+            if let editing, manager.profiles.count > 1 {
                 Section {
                     Button("Delete Profile", role: .destructive) { confirmDelete = true }
                 } footer: {
-                    Text("Deletes \(editing.name)'s library, progress, settings and sign-ins on this device. Accounts themselves aren't touched.")
+                    Text(deleteFooter(editing))
                 }
             }
         }
@@ -467,13 +484,19 @@ struct ProfileEditorView: View {
         .modifier(PhotoPickerModifier(isPresented: $showPhotoPicker) { usePhoto($0) })
         .confirmationDialog("Delete \(editing?.name ?? "")?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete Profile", role: .destructive) {
-                if let id = editing?.id { manager.delete(id) }
+                if let id = editing?.id { Task { await manager.deleteSwitchingAway(id) } }
                 dismiss()
             }
             Button("Cancel", role: .cancel) {}
         } message: {
             Text("Its library, progress, settings and sign-ins on this device are deleted. This can't be undone.")
         }
+    }
+
+    private func deleteFooter(_ profile: AppProfile) -> String {
+        let deletes = "Deletes \(profile.name)'s library, progress, settings and sign-ins on this device. Accounts themselves aren't touched."
+        guard isActive, let next = manager.profiles.first(where: { $0.id != profile.id }) else { return deletes }
+        return deletes + " You're using it now, so Shirox switches to \(next.name) first."
     }
 
     // MARK: Parts
