@@ -727,19 +727,22 @@ private struct MacReaderPage: View {
     let fileName: String
     @State private var failed = false
     @State private var attempt = 0
+    /// Tries since the last success or "Try Again"; ``ReaderPageRetry`` says how many more.
+    @State private var failures = 0
 
     var body: some View {
         if let url = URL(string: urlString) {
             KFImage(source: KingfisherImageCache.source(for: url, cacheKey: urlString))
                 .requestModifier(modifier(for: url))
-                .onFailure { _ in failed = true }
+                .onSuccess { _ in failures = 0 }
+                .onFailure { _ in retryOrFail() }
                 .placeholder {
                     ZStack {
                         Color.white.opacity(0.04)
                         if failed {
                             VStack(spacing: 6) {
                                 Text("Page \(pageNumber) didn't load").foregroundStyle(.secondary)
-                                Button("Try Again") { failed = false; attempt += 1 }
+                                Button("Try Again") { failed = false; failures = 0; attempt += 1 }
                             }
                         } else {
                             ProgressView()
@@ -755,6 +758,19 @@ private struct MacReaderPage: View {
                 }
                 // A String, so it can't collide with the strip's Int page ids the keys scroll to.
                 .id("\(urlString)#\(attempt)")
+        }
+    }
+
+    /// Tries again by itself a few times, waiting longer each time, before showing the error.
+    private func retryOrFail() {
+        failures += 1
+        guard let delay = ReaderPageRetry.delay(afterFailure: failures) else {
+            failed = true
+            return
+        }
+        let tried = attempt
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
+            if attempt == tried { attempt += 1 }
         }
     }
 

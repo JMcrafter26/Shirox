@@ -27,6 +27,20 @@ enum MangaReadingMode: String, CaseIterable, Identifiable {
     }
 }
 
+// MARK: - Page retries
+
+/// How a reader page that fails to load tries again by itself before it shows the error and
+/// its retry button: a CDN's hiccup or a dropped request used to leave a page broken
+/// ("Page 10 failed to load") until it was tapped.
+enum ReaderPageRetry {
+    /// The waits before each further try, in seconds: three more after the first.
+    static let delays: [Double] = [1, 2, 4]
+
+    static func delay(afterFailure failures: Int) -> Double? {
+        delays.indices.contains(failures - 1) ? delays[failures - 1] : nil
+    }
+}
+
 // MARK: - Tap zones
 
 /// What a tap on the reader does, by where it lands: the outer thirds scroll (vertical) or

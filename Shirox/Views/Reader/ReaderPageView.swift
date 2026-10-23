@@ -3,7 +3,8 @@ import SwiftUI
 import Kingfisher
 
 /// A single manga page: Kingfisher-loaded, aspect-fit, with a placeholder
-/// while loading and a tap-to-retry error state. `referer` is the SOURCE
+/// while loading, a few tries of its own (``ReaderPageRetry``), and then a tap-to-retry
+/// error state. `referer` is the SOURCE
 /// SITE's origin (not the image host) — manga CDNs hotlink-protect against it.
 struct ReaderPageView: View {
     let urlString: String
@@ -142,16 +143,24 @@ struct ReaderPageView: View {
             return
         }
         let source = KingfisherImageCache.source(for: url, cacheKey: urlString)
-        let result: UIImage? = await withCheckedContinuation { (cont: CheckedContinuation<UIImage?, Never>) in
-            KingfisherManager.shared.retrieveImage(with: source, options: options) {
-                cont.resume(returning: try? $0.get().image)
+        var failures = 0
+        while true {
+            let result: UIImage? = await withCheckedContinuation { (cont: CheckedContinuation<UIImage?, Never>) in
+                KingfisherManager.shared.retrieveImage(with: source, options: options) {
+                    cont.resume(returning: try? $0.get().image)
+                }
             }
+            if let result {
+                image = result
+                return
+            }
+            failures += 1
+            // Scrolled away (the task is cancelled with the page): stop trying.
+            guard let delay = ReaderPageRetry.delay(afterFailure: failures), !Task.isCancelled else { break }
+            try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+            guard !Task.isCancelled else { return }
         }
-        if let result {
-            image = result
-        } else {
-            failed = true
-        }
+        if !Task.isCancelled { failed = true }
     }
 }
 
