@@ -6,28 +6,56 @@ import UIKit
 
 /// Tells a single tap from a double tap sooner than UIKit does. A single tap made to wait for
 /// a double-tap recognizer to fail sits for about a third of a second, which in the reader and
-/// the player read as lag on every tap. This waits `window` for a second tap instead: one
-/// within it, near the first, is a double tap and the single never fires; otherwise the single
-/// fires once the window is out.
+/// the player read as lag on every tap. This waits `window` for a second finger to land
+/// instead: one within it, near the first, makes a double tap once it lifts, and the single
+/// never fires; otherwise the single fires once the window is out.
+///
+/// The window runs to the second tap's touch-down, not its lift. Counting to the lift took the
+/// second press out of an already short window, and ordinary double taps came out as two
+/// singles.
 final class QuickTaps {
     /// Short enough to feel immediate, long enough for a quick double tap.
     static let window: TimeInterval = 0.15
+    /// How long a second press may last before it stops counting as a tap.
+    private static let pressLimit: TimeInterval = 0.4
     /// How far apart two taps can land and still make a double tap, in points.
     private static let reach: CGFloat = 70
 
     var onSingle: (CGPoint) -> Void = { _ in }
     var onDouble: (CGPoint) -> Void = { _ in }
+    /// A first tap, waiting for the window to run out or a second finger to land.
     private var pending: (point: CGPoint, work: DispatchWorkItem)?
+    /// A second finger is down near the first tap; its lift makes the double.
+    private var secondDown: (point: CGPoint, work: DispatchWorkItem)?
 
+    /// A finger landing, from ``QuickTapRecognizer``.
+    func touchDown(at point: CGPoint) {
+        guard let pending, secondDown == nil,
+              hypot(pending.point.x - point.x, pending.point.y - point.y) <= Self.reach else { return }
+        pending.work.cancel()
+        self.pending = nil
+        // Held, or dragged into a scroll, it isn't a tap; the first one is a single after all.
+        let first = pending.point
+        let work = DispatchWorkItem { [weak self] in
+            self?.secondDown = nil
+            self?.onSingle(first)
+        }
+        secondDown = (first, work)
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.pressLimit, execute: work)
+    }
+
+    /// A finger lifting from a tap.
     func tap(at point: CGPoint) {
+        if let secondDown {
+            secondDown.work.cancel()
+            self.secondDown = nil
+            onDouble(point)
+            return
+        }
         if let pending {
+            // Far from the first: two separate taps, and the first is due now.
             pending.work.cancel()
             self.pending = nil
-            if hypot(pending.point.x - point.x, pending.point.y - point.y) <= Self.reach {
-                onDouble(point)
-                return
-            }
-            // Far from the first: two separate taps, and the first is due now.
             onSingle(pending.point)
         }
         let work = DispatchWorkItem { [weak self] in
@@ -38,10 +66,22 @@ final class QuickTaps {
         DispatchQueue.main.asyncAfter(deadline: .now() + Self.window, execute: work)
     }
 
-    /// Drops a single tap still waiting, as when the view goes away.
+    /// Drops a tap still waiting, as when the view goes away.
     func cancel() {
         pending?.work.cancel()
         pending = nil
+        secondDown?.work.cancel()
+        secondDown = nil
+    }
+}
+
+/// A single-tap recognizer that also reports each finger as it lands, for ``QuickTaps``.
+class QuickTapRecognizer: UITapGestureRecognizer {
+    var onTouchDown: ((UITouch) -> Void)?
+
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
+        super.touchesBegan(touches, with: event)
+        if state != .failed, let touch = touches.first { onTouchDown?(touch) }
     }
 }
 
@@ -100,8 +140,12 @@ struct ZoomableContainer<Content: View>: UIViewRepresentable {
         context.coordinator.host = host
         context.coordinator.scroll = scroll
 
-        let tap = UITapGestureRecognizer(target: context.coordinator,
-                                         action: #selector(Coordinator.handleTap(_:)))
+        let tap = QuickTapRecognizer(target: context.coordinator,
+                                     action: #selector(Coordinator.handleTap(_:)))
+        tap.onTouchDown = { [weak coordinator = context.coordinator, weak scroll] touch in
+            guard let coordinator, let scroll else { return }
+            coordinator.taps.touchDown(at: Coordinator.framePoint(touch.location(in: scroll), in: scroll))
+        }
         scroll.addGestureRecognizer(tap)
 
         return scroll
@@ -148,8 +192,12 @@ struct ZoomableContainer<Content: View>: UIViewRepresentable {
 
         @objc func handleTap(_ gesture: UITapGestureRecognizer) {
             guard let scroll = gesture.view as? UIScrollView else { return }
-            let point = gesture.location(in: scroll)
-            taps.tap(at: CGPoint(x: point.x - scroll.contentOffset.x, y: point.y - scroll.contentOffset.y))
+            taps.tap(at: Self.framePoint(gesture.location(in: scroll), in: scroll))
+        }
+
+        /// A point in the scroll view's content, moved into its frame.
+        static func framePoint(_ point: CGPoint, in scroll: UIScrollView) -> CGPoint {
+            CGPoint(x: point.x - scroll.contentOffset.x, y: point.y - scroll.contentOffset.y)
         }
 
         /// `point` is in the scroll view's frame.

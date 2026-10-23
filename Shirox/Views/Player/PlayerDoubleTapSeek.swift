@@ -137,6 +137,9 @@ private struct FullScreenSeekView: UIViewRepresentable {
             target: context.coordinator,
             action: #selector(Coordinator.handleTap(_:))
         )
+        tap.onTouchDown = { [weak coordinator = context.coordinator, weak view] touch in
+            coordinator?.taps.touchDown(at: touch.location(in: view))
+        }
 
         // On iOS 16 SwiftUI's own recognizers on the hosting view (the centre play button,
         // the controls) won these touches outright, so a tap on the video never showed the
@@ -209,7 +212,7 @@ private struct FullScreenSeekView: UIViewRepresentable {
 /// Tap recognizer that immediately fails when more than one simultaneous touch is detected.
 /// Attaching this to a full-screen view makes two-finger gestures invisible to it,
 /// regardless of which halves the fingers land on.
-private final class SingleTouchTapGR: UITapGestureRecognizer {
+private final class SingleTouchTapGR: QuickTapRecognizer {
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
         guard (event.allTouches?.count ?? 0) == 1 else {
             state = .failed

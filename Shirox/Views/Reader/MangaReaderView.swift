@@ -1418,7 +1418,11 @@ final class ReaderTaps: NSObject, UIGestureRecognizerDelegate {
     func attach(to scrollView: UIScrollView) {
         guard self.scrollView !== scrollView else { return }
         if let recognizer { recognizer.view?.removeGestureRecognizer(recognizer) }
-        let tap = UITapGestureRecognizer(target: self, action: #selector(handle(_:)))
+        let tap = QuickTapRecognizer(target: self, action: #selector(handle(_:)))
+        tap.onTouchDown = { [weak self, weak scrollView] touch in
+            guard let self, let scrollView else { return }
+            self.taps.touchDown(at: Self.framePoint(touch.location(in: scrollView), in: scrollView))
+        }
         tap.delegate = self
         tap.cancelsTouchesInView = false
         scrollView.addGestureRecognizer(tap)
@@ -1430,8 +1434,12 @@ final class ReaderTaps: NSObject, UIGestureRecognizerDelegate {
 
     @objc private func handle(_ tap: UITapGestureRecognizer) {
         guard let scrollView else { return }
-        let point = tap.location(in: scrollView)
-        taps.tap(at: CGPoint(x: point.x - scrollView.contentOffset.x, y: point.y - scrollView.contentOffset.y))
+        taps.tap(at: Self.framePoint(tap.location(in: scrollView), in: scrollView))
+    }
+
+    /// A point in the strip's content, moved into the visible area.
+    private static func framePoint(_ point: CGPoint, in scrollView: UIScrollView) -> CGPoint {
+        CGPoint(x: point.x - scrollView.contentOffset.x, y: point.y - scrollView.contentOffset.y)
     }
 
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
