@@ -1086,8 +1086,7 @@ struct PlayerView: View {
                 onSeekForward: { skip(by: Double(skipShort)); scheduleHide() },
                 onHover: { handleMouseActivity() },
                 seekAmount: Double(skipShort),
-                isLocked: isLocked,
-                tapActsAtOnce: !showControls || isLocked
+                isLocked: isLocked
             )
             .ignoresSafeArea()
 
@@ -1304,7 +1303,8 @@ struct PlayerView: View {
             let layouts = calculateLayouts(geo: geo, isLandscape: geo.size.width > geo.size.height)
             PlayerVideoInfoPanel(engine: engine, audioTrack: videoInfoAudioTrack(engine),
                                  subtitle: videoInfoSubtitle,
-                                 onClose: { withAnimation(.easeInOut(duration: 0.2)) { showVideoInfo = false } })
+                                 onClose: { withAnimation(.easeInOut(duration: 0.2)) { showVideoInfo = false } },
+                                 maxHeight: geo.size.height - layouts.top - videoInfoTopBarHeight - 16)
                 .padding(.top, layouts.top + videoInfoTopBarHeight)
                 .padding(.horizontal, layouts.horizontal + 16)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

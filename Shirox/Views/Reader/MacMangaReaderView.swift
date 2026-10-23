@@ -95,9 +95,9 @@ struct MacMangaReaderView: View {
 
     private var mode: MangaReadingMode { MangaReadingMode(rawValue: modeRaw) ?? .vertical }
     private var isRTL: Bool { mode == .pagedRTL }
-    /// Reversed click sides (vertical only) flip the slider and the chapter buttons with them.
+    /// Reversed (vertical only): the click sides, the slider and the chapter buttons all flip.
     private var controlsReversed: Bool {
-        ReaderTapZone.reverses(mode: mode, enabled: tapZones, reversed: tapZonesReversed)
+        ReaderTapZone.reverses(mode: mode, reversed: tapZonesReversed)
     }
     /// The page slider fills from the side a click moves back toward.
     private var sliderRunsRightToLeft: Bool {
@@ -240,8 +240,8 @@ struct MacMangaReaderView: View {
                                          isOn: tapZones) { tapZones.toggle() }),
                 ]
                 // Reversed only in vertical mode: paged, a forward turn read as going back.
-                if mode == .vertical, tapZones {
-                    clicks.append(.item(PlayerMenuItem(title: "Reverse Click Sides", isOn: tapZonesReversed) {
+                if mode == .vertical {
+                    clicks.append(.item(PlayerMenuItem(title: "Reverse Direction", isOn: tapZonesReversed) {
                         tapZonesReversed.toggle()
                     }))
                 }

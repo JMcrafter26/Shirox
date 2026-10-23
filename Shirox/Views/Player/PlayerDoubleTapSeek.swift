@@ -10,10 +10,6 @@ struct PlayerDoubleTapSeek: View {
     /// still jumped when a pocket or a passing hand caught the screen twice — the one thing
     /// locking is for. The single tap stays live: it's what reveals the unlock button.
     var isLocked: Bool = false
-    /// A single tap acts the moment the finger lifts instead of first waiting out a possible
-    /// double tap. True while the controls are hidden: showing them can't get in a seek's
-    /// way (the first tap of a double shows them, the second seeks), and the wait read as lag.
-    var tapActsAtOnce: Bool = false
 
     @State private var showLeftFeedback = false
     @State private var showRightFeedback = false
@@ -28,7 +24,6 @@ struct PlayerDoubleTapSeek: View {
             // allowing SingleTouchTapGR to correctly fail on any multi-finger touch.
             FullScreenSeekView(
                 onSingleTap: onSingleTap,
-                tapActsAtOnce: tapActsAtOnce,
                 onSeekLeft:  { guard !isLocked else { return }; showFeedback(left: true);  onSeekBackward() },
                 onSeekRight: { guard !isLocked else { return }; showFeedback(left: false); onSeekForward()  },
                 onHover: onHover
@@ -122,7 +117,6 @@ struct PlayerDoubleTapSeek: View {
 #if os(iOS)
 private struct FullScreenSeekView: UIViewRepresentable {
     var onSingleTap: () -> Void
-    var tapActsAtOnce: Bool
     var onSeekLeft: () -> Void
     var onSeekRight: () -> Void
     var onHover: (() -> Void)? = nil
@@ -135,42 +129,20 @@ private struct FullScreenSeekView: UIViewRepresentable {
         let view = UIView()
         view.backgroundColor = .clear
 
-        let doubleTap = SingleTouchTapGR(
+        // One tap recognizer; QuickTaps tells a double tap (seek) from a single (the controls)
+        // within a fifth of a second. A single tap made to wait for a double-tap recognizer to
+        // fail sat for about a third, and showing the controls felt slow. A double tap never
+        // shows or hides them.
+        let tap = SingleTouchTapGR(
             target: context.coordinator,
-            action: #selector(Coordinator.handleDouble(_:))
+            action: #selector(Coordinator.handleTap(_:))
         )
-        doubleTap.numberOfTapsRequired = 2
-
-        let singleTap = SingleTouchTapGR(
-            target: context.coordinator,
-            action: #selector(Coordinator.handleSingle(_:))
-        )
-        singleTap.numberOfTapsRequired = 1
-
-        // Single-tap waits for the double-tap to fail before firing. Without this the
-        // first tap of a double-tap toggles the controls (popping in the full UI) before
-        // the seek lands, and rapid/inconsistent tapping flickers the overlay. The cost
-        // is the standard ~0.3s double-tap-detection delay, so it only takes the taps that
-        // hide the controls; `immediateTap` takes the ones that show them, at once.
-        singleTap.require(toFail: doubleTap)
-
-        let immediateTap = SingleTouchTapGR(
-            target: context.coordinator,
-            action: #selector(Coordinator.handleSingle(_:))
-        )
-        immediateTap.numberOfTapsRequired = 1
-        immediateTap.delegate = context.coordinator
-        context.coordinator.immediateTap = immediateTap
-        context.coordinator.delayedTap = singleTap
-        context.coordinator.doubleTap = doubleTap
 
         // On iOS 16 SwiftUI's own recognizers on the hosting view (the centre play button,
         // the controls) won these touches outright, so a tap on the video never showed the
         // controls; only the middle, a SwiftUI button, did anything. Recognising alongside
         // them lets the video tap through, as it already does on later versions.
-        doubleTap.delegate = context.coordinator
-        singleTap.delegate = context.coordinator
-        context.coordinator.ownRecognizers = [doubleTap, singleTap, immediateTap]
+        tap.delegate = context.coordinator
 
         let hoverGR = UIHoverGestureRecognizer(
             target: context.coordinator,
@@ -178,32 +150,29 @@ private struct FullScreenSeekView: UIViewRepresentable {
         )
         hoverGR.cancelsTouchesInView = false
 
-        view.addGestureRecognizer(doubleTap)
-        view.addGestureRecognizer(singleTap)
-        view.addGestureRecognizer(immediateTap)
+        view.addGestureRecognizer(tap)
         view.addGestureRecognizer(hoverGR)
         return view
     }
 
     func updateUIView(_ uiView: UIView, context: Context) {
         context.coordinator.onSingleTap = onSingleTap
-        context.coordinator.tapActsAtOnce = tapActsAtOnce
         context.coordinator.onSeekLeft  = onSeekLeft
         context.coordinator.onSeekRight = onSeekRight
         context.coordinator.onHover     = onHover
     }
 
+    static func dismantleUIView(_ uiView: UIView, coordinator: Coordinator) {
+        coordinator.taps.cancel()
+    }
+
     final class Coordinator: NSObject, UIGestureRecognizerDelegate {
-        /// The pair this view installs, which must still order themselves by `require(toFail:)`.
-        var ownRecognizers: [UIGestureRecognizer] = []
-        weak var immediateTap: UIGestureRecognizer?
-        weak var delayedTap: UIGestureRecognizer?
-        weak var doubleTap: UIGestureRecognizer?
-        var tapActsAtOnce = false
         var onSingleTap: () -> Void
         var onSeekLeft: () -> Void
         var onSeekRight: () -> Void
         var onHover: (() -> Void)?
+        let taps = QuickTaps()
+        private weak var view: UIView?
 
         init(onSingleTap: @escaping () -> Void,
              onSeekLeft: @escaping () -> Void,
@@ -213,15 +182,17 @@ private struct FullScreenSeekView: UIViewRepresentable {
             self.onSeekLeft  = onSeekLeft
             self.onSeekRight = onSeekRight
             self.onHover     = onHover
+            super.init()
+            taps.onSingle = { [weak self] _ in self?.onSingleTap() }
+            taps.onDouble = { [weak self] point in
+                guard let self else { return }
+                if point.x < (self.view?.bounds.width ?? 0) / 2 { self.onSeekLeft() } else { self.onSeekRight() }
+            }
         }
 
-        @objc func handleSingle(_ gr: UITapGestureRecognizer) {
-            onSingleTap()
-        }
-
-        @objc func handleDouble(_ gr: UITapGestureRecognizer) {
-            let isLeft = gr.location(in: gr.view).x < (gr.view?.bounds.width ?? 0) / 2
-            if isLeft { onSeekLeft() } else { onSeekRight() }
+        @objc func handleTap(_ gr: UITapGestureRecognizer) {
+            view = gr.view
+            taps.tap(at: gr.location(in: gr.view))
         }
 
         @objc func handleHover(_ gr: UIHoverGestureRecognizer) {
@@ -230,22 +201,8 @@ private struct FullScreenSeekView: UIViewRepresentable {
             }
         }
 
-        /// Which single tap takes a touch is settled as the finger lands, by whether the controls
-        /// are hidden then. Settled later, the waiting one would see them shown by the tap it was
-        /// waiting on, and hide them again.
-        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-            if gestureRecognizer === immediateTap { return tapActsAtOnce }
-            if gestureRecognizer === delayedTap { return !tapActsAtOnce }
-            return true
-        }
-
         func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
-                               shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool {
-            // The tap that shows the controls and the double tap that seeks run side by side.
-            let pair: [UIGestureRecognizer?] = [immediateTap, doubleTap]
-            if pair.contains(where: { $0 === gestureRecognizer }), pair.contains(where: { $0 === other }) { return true }
-            return !ownRecognizers.contains { $0 === other }
-        }
+                               shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { true }
     }
 }
 

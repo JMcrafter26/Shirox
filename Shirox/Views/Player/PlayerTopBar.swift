@@ -23,14 +23,11 @@ struct PlayerTopBar: View {
     var isPictureInPicture = false
     #endif
     @AppStorage("playerLiquidGlass") private var playerLiquidGlass = true
-    /// The right-hand capsule's width. In landscape it lays its buttons out in a row (Cast,
-    /// AirPlay, PiP, lock) and is far wider than the dismiss button, so a fixed inset let a
-    /// long title run underneath it.
-    @State private var trailingWidth: CGFloat = 0
+    /// The title is shown whole, over as many lines as it takes, after a tap on it.
+    @State private var showsFullTitle = false
+    @State private var collapseTitle: Task<Void, Never>?
     #if os(macOS)
     @ObservedObject private var cover = MacPlayerWindowManager.shared
-    /// The window's buttons and the close button beside them.
-    @State private var leadingWidth: CGFloat = 0
     #endif
 
     /// A Mac's row is as tall as a window's title bar, level with the window's buttons in it.
@@ -53,80 +50,64 @@ struct PlayerTopBar: View {
     }
 
     var body: some View {
-        ZStack(alignment: .top) {
-            // Title pinned to top to stay level with buttons
-            Text(title)
-                .font(isPad ? .title3.weight(.semibold) : .subheadline.weight(.semibold))
-                .foregroundStyle(.white)
-                .lineLimit(1)
-                .frame(maxWidth: .infinity)
-                // Clears the wider of the two sides on both, so the title stays centred and
-                // never runs under either the dismiss button or the right capsule.
-                .padding(.horizontal, titleInset)
-                .frame(height: rowHeight) // match dismiss button height
-
-            HStack(alignment: .top) {
-                // Dismiss button (left). On a Mac it follows the window's own buttons, which
-                // close the window rather than the player covering it.
-                #if os(macOS)
-                HStack(spacing: 0) {
-                    // Room for the window's buttons, which the small Picture in Picture window hides.
-                    if !cover.isFullScreen && !isPictureInPicture {
-                        Color.clear.frame(width: 70)
-                    }
-                    if showDismiss {
-                        Button(action: onDismiss) {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 11, weight: .bold))
-                                .foregroundStyle(.white)
-                                .frame(width: 26, height: 26)
-                                .mediaGlassChrome(Circle(), enabled: playerLiquidGlass, off: Color.white.opacity(0.25))
-                                .shadow(color: .black.opacity(0.3), radius: 6)
-                                .contentShape(Circle())
-                        }
-                        .buttonStyle(.plain)
-                        .help("Close (Esc)")
-                    }
+        // The title takes the room between the dismiss button and the right capsule and is
+        // centred in it. Centred on the screen instead, it had to clear the wider side on both
+        // sides, and the landscape capsule (info, Cast, AirPlay, PiP, mute, lock) left it little.
+        HStack(alignment: .top, spacing: isPad ? 16 : 10) {
+            // Dismiss button (left). On a Mac it follows the window's own buttons, which
+            // close the window rather than the player covering it.
+            #if os(macOS)
+            HStack(spacing: 0) {
+                // Room for the window's buttons, which the small Picture in Picture window hides.
+                if !cover.isFullScreen && !isPictureInPicture {
+                    Color.clear.frame(width: 70)
                 }
-                .frame(height: rowHeight)
-                .background(GeometryReader { proxy in
-                    Color.clear.preference(key: PlayerTopBarLeadingWidthKey.self, value: proxy.size.width)
-                })
-                #else
                 if showDismiss {
                     Button(action: onDismiss) {
                         Image(systemName: "xmark")
-                            .font(.system(size: isPad ? 24 : 18, weight: .semibold))
+                            .font(.system(size: 11, weight: .bold))
                             .foregroundStyle(.white)
-                            .frame(width: isPad ? 56 : 44, height: isPad ? 56 : 44)
+                            .frame(width: 26, height: 26)
                             .mediaGlassChrome(Circle(), enabled: playerLiquidGlass, off: Color.white.opacity(0.25))
                             .shadow(color: .black.opacity(0.3), radius: 6)
+                            .contentShape(Circle())
                     }
                     .buttonStyle(.plain)
-                } else {
-                    Color.clear.frame(width: isPad ? 56 : 44, height: isPad ? 56 : 44)
+                    .help("Close (Esc)")
                 }
-                #endif
-
-                Spacer()
-
-                // Right capsule group: AirPlay | PiP | Mute | Lock
-                Group {
-                    if isLandscape {
-                        HStack(spacing: isPad ? 14 : 8) { rightButtons }
-                            .padding(.horizontal, isPad ? 12 : Self.compact ? 6 : 8)
-                            .padding(.vertical, isPad ? 6 : Self.compact ? 3 : 4)
-                    } else {
-                        VStack(spacing: isPad ? 14 : 8) { rightButtons }
-                            .padding(.horizontal, isPad ? 6 : 4)
-                            .padding(.vertical, isPad ? 12 : 8)
-                    }
-                }
-                .mediaGlassChrome(Capsule(), enabled: playerLiquidGlass, off: Color.white.opacity(0.2))
-                .background(GeometryReader { proxy in
-                    Color.clear.preference(key: PlayerTopBarTrailingWidthKey.self, value: proxy.size.width)
-                })
             }
+            .frame(height: rowHeight)
+            #else
+            if showDismiss {
+                Button(action: onDismiss) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: isPad ? 24 : 18, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: isPad ? 56 : 44, height: isPad ? 56 : 44)
+                        .mediaGlassChrome(Circle(), enabled: playerLiquidGlass, off: Color.white.opacity(0.25))
+                        .shadow(color: .black.opacity(0.3), radius: 6)
+                }
+                .buttonStyle(.plain)
+            } else {
+                Color.clear.frame(width: isPad ? 56 : 44, height: isPad ? 56 : 44)
+            }
+            #endif
+
+            titleView
+
+            // Right capsule group: AirPlay | PiP | Mute | Lock
+            Group {
+                if isLandscape {
+                    HStack(spacing: isPad ? 14 : 8) { rightButtons }
+                        .padding(.horizontal, isPad ? 12 : Self.compact ? 6 : 8)
+                        .padding(.vertical, isPad ? 6 : Self.compact ? 3 : 4)
+                } else {
+                    VStack(spacing: isPad ? 14 : 8) { rightButtons }
+                        .padding(.horizontal, isPad ? 6 : 4)
+                        .padding(.vertical, isPad ? 12 : 8)
+                }
+            }
+            .mediaGlassChrome(Capsule(), enabled: playerLiquidGlass, off: Color.white.opacity(0.2))
         }
         #if os(macOS)
         // Level with the window's buttons in a window, a little way down in full screen, and
@@ -138,21 +119,35 @@ struct PlayerTopBar: View {
         .padding(.top, isPad ? topPadding + 10 : topPadding)
         #endif
         .padding(.bottom, 16)
-        .onPreferenceChange(PlayerTopBarTrailingWidthKey.self) { trailingWidth = $0 }
-        #if os(macOS)
-        .onPreferenceChange(PlayerTopBarLeadingWidthKey.self) { leadingWidth = $0 }
-        #endif
+        .onDisappear { collapseTitle?.cancel() }
     }
 
-    /// The title's inset from each edge of the bar: past the wider side's button, plus a gap.
-    private var titleInset: CGFloat {
-        #if os(macOS)
-        let dismissWidth = leadingWidth
-        #else
-        let dismissWidth: CGFloat = isPad ? 56 : 44
-        #endif
-        let gap: CGFloat = isPad ? 28 : 20
-        return max(dismissWidth, trailingWidth) + gap
+    /// One line, cut short with an ellipsis; a tap shows the whole name for a few seconds.
+    private var titleView: some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) { showsFullTitle.toggle() }
+            collapseTitle?.cancel()
+            guard showsFullTitle else { return }
+            collapseTitle = Task {
+                try? await Task.sleep(nanoseconds: 5_000_000_000)
+                guard !Task.isCancelled else { return }
+                withAnimation(.easeInOut(duration: 0.2)) { showsFullTitle = false }
+            }
+        } label: {
+            Text(title)
+                .font(isPad ? .title3.weight(.semibold) : .subheadline.weight(.semibold))
+                .foregroundStyle(.white)
+                .multilineTextAlignment(.center)
+                .lineLimit(showsFullTitle ? nil : 1)
+                .truncationMode(.tail)
+                .fixedSize(horizontal: false, vertical: showsFullTitle)
+                .shadow(color: .black.opacity(0.5), radius: 4)
+                .frame(maxWidth: .infinity, minHeight: rowHeight)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(title)
+        .accessibilityHint(showsFullTitle ? "" : "Shows the whole title")
     }
 
     @ViewBuilder
@@ -253,13 +248,6 @@ private struct MacAirPlayButton: NSViewRepresentable {
 }
 #endif
 
-private struct PlayerTopBarTrailingWidthKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
-    }
-}
-
 extension PlayerTopBar {
     /// The Mac's own top-bar buttons: AirPlay for the native engine's player, and Picture in
     /// Picture. Nothing elsewhere.
@@ -273,11 +261,4 @@ extension PlayerTopBar {
     #else
     func macPlayerControls(airPlay: Never?, isPictureInPicture: Bool) -> PlayerTopBar { self }
     #endif
-}
-
-private struct PlayerTopBarLeadingWidthKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        value = max(value, nextValue())
-    }
 }

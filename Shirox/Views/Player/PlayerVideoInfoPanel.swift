@@ -10,7 +10,13 @@ struct PlayerVideoInfoPanel: View {
     /// The subtitle track on screen and where it comes from; nil when none is.
     var subtitle: (name: String, source: String)?
     var onClose: () -> Void
+    /// The most the panel may take up and down. On a phone in landscape it's far taller than
+    /// the screen, and the fields below the first few ran off it; past this they scroll.
+    var maxHeight: CGFloat = .infinity
     @State private var stats = PlaybackStats()
+    /// The fields' own height, so the panel hugs them when they fit and scrolls when they don't.
+    @State private var fieldsHeight: CGFloat = 0
+    @State private var headerHeight: CGFloat = 0
 
     private var isPad: Bool {
         #if os(iOS)
@@ -42,6 +48,41 @@ struct PlayerVideoInfoPanel: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Close Video Details")
             }
+            .background(GeometryReader { geo in
+                Color.clear.preference(key: InfoPanelHeaderHeightKey.self, value: geo.size.height)
+            })
+            ScrollView(showsIndicators: true) {
+                fields
+                    .background(GeometryReader { geo in
+                        Color.clear.preference(key: InfoPanelFieldsHeightKey.self, value: geo.size.height)
+                    })
+            }
+            .frame(height: fieldsFrameHeight)
+        }
+        .onPreferenceChange(InfoPanelFieldsHeightKey.self) { fieldsHeight = $0 }
+        .onPreferenceChange(InfoPanelHeaderHeightKey.self) { headerHeight = $0 }
+        .foregroundStyle(.white)
+        .padding(isPad ? 20 : 14)
+        .frame(maxWidth: isPad ? 620 : 520, alignment: .leading)
+        .background(Color.black.opacity(0.6), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .task {
+            while !Task.isCancelled {
+                stats = await engine.stats()
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+            }
+        }
+    }
+
+    /// The fields' own height, or what's left of `maxHeight` under the header if that's less.
+    private var fieldsFrameHeight: CGFloat {
+        let padding: CGFloat = (isPad ? 20 : 14) * 2
+        let spacing: CGFloat = isPad ? 16 : 12
+        let room = maxHeight - padding - headerHeight - spacing
+        return max(min(fieldsHeight, room), 60)
+    }
+
+    private var fields: some View {
+        VStack(alignment: .leading, spacing: isPad ? 16 : 12) {
             section("Video", [
                 field("Codec", stats.videoCodec),
                 field("Resolution", stats.resolutionText),
@@ -65,16 +106,7 @@ struct PlayerVideoInfoPanel: View {
                 field("Network", PlaybackStats.bitrateText(stats.throughput)),
             ])
         }
-        .foregroundStyle(.white)
-        .padding(isPad ? 20 : 14)
-        .frame(maxWidth: isPad ? 620 : 520, alignment: .leading)
-        .background(Color.black.opacity(0.6), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .task {
-            while !Task.isCancelled {
-                stats = await engine.stats()
-                try? await Task.sleep(nanoseconds: 1_000_000_000)
-            }
-        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func field(_ label: String, _ value: String?) -> Field? {
@@ -113,4 +145,14 @@ struct PlayerVideoInfoPanel: View {
             }
         }
     }
+}
+
+private struct InfoPanelFieldsHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
+}
+
+private struct InfoPanelHeaderHeightKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) { value = max(value, nextValue()) }
 }

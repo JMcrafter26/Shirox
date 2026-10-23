@@ -33,8 +33,9 @@ enum MangaReadingMode: String, CaseIterable, Identifiable {
 /// turn the page (paged), the middle shows and hides the controls.
 ///
 /// Forward is on the right for vertical and left-to-right reading, on the left for right to
-/// left. The reverse setting swaps the sides in vertical mode only, along with the page slider
-/// and the chapter buttons; reversed in a paged mode, a forward turn looked like going back.
+/// left. The reverse setting (vertical mode only) swaps the sides, the page slider and the
+/// chapter buttons, tap zones or not; reversed in a paged mode, a forward turn looked like going
+/// back.
 enum ReaderTapZone: Equatable {
     case back, forward, middle
 
@@ -48,15 +49,15 @@ enum ReaderTapZone: Equatable {
         (mode != .pagedRTL) != reversed
     }
 
-    /// Whether the reverse setting is in force: tap zones on, reversed, in vertical mode.
-    static func reverses(mode: MangaReadingMode, enabled: Bool, reversed: Bool) -> Bool {
-        enabled && reversed && mode == .vertical
+    /// Whether the reverse setting is in force: it's on, in vertical mode.
+    static func reverses(mode: MangaReadingMode, reversed: Bool) -> Bool {
+        reversed && mode == .vertical
     }
 
     /// `x` runs from 0 at the left edge to 1 at the right.
     static func zone(atX x: CGFloat, mode: MangaReadingMode, enabled: Bool, reversed: Bool) -> ReaderTapZone {
         guard enabled, x < 1.0 / 3 || x > 2.0 / 3 else { return .middle }
-        let flipped = reverses(mode: mode, enabled: enabled, reversed: reversed)
+        let flipped = reverses(mode: mode, reversed: reversed)
         return (x > 2.0 / 3) == rightIsForward(mode: mode, reversed: flipped) ? .forward : .back
     }
 }
@@ -203,7 +204,7 @@ struct MangaReaderView: View {
     @State private var isPanning = false
     /// Drives the sideways pan from UIKit, alongside the scroll view's own pan.
     @State private var zoomPan = ReaderZoomPan()
-    /// The strip's taps, from UIKit, so the sides can act without waiting out a double tap.
+    /// The strip's taps, from UIKit, told from double taps sooner than SwiftUI does.
     @State private var readerTaps = ReaderTaps()
     private static let maxZoom: CGFloat = 3
     /// What a double-tap zooms to, the same as the paged modes.
@@ -225,9 +226,9 @@ struct MangaReaderView: View {
 
     private var mode: MangaReadingMode { MangaReadingMode(rawValue: modeRaw) ?? .vertical }
     private var isRTL: Bool { mode == .pagedRTL }
-    /// Reversed tap sides (vertical only) flip the slider and the chapter buttons with them.
+    /// Reversed (vertical only): the tap sides, the slider and the chapter buttons all flip.
     private var controlsReversed: Bool {
-        ReaderTapZone.reverses(mode: mode, enabled: tapZones, reversed: tapZonesReversed)
+        ReaderTapZone.reverses(mode: mode, reversed: tapZonesReversed)
     }
     /// The page slider fills from the side the taps move back toward.
     private var sliderRunsRightToLeft: Bool {
@@ -434,8 +435,8 @@ struct MangaReaderView: View {
             .onAppear {
                 readerTaps.onTap = handleTap(atX:)
                 readerTaps.onDoubleTap = toggleDoubleTapZoom(at:)
-                readerTaps.actsAtOnce = tapActsAtOnce(atX:)
             }
+            .onDisappear { readerTaps.cancel() }
             .onAppear {
                 verticalProxy = proxy
                 startVerticalResume()
@@ -482,8 +483,7 @@ struct MangaReaderView: View {
     @ViewBuilder
     private func curlPage(_ id: Int, onZoomChange: @escaping (CGFloat) -> Void) -> some View {
         if let item = strip.first(where: { $0.globalIdx == id }) {
-            ZoomableContainer(onSingleTapAt: handleTap(atX:), onZoomChange: onZoomChange,
-                              tapActsAtOnce: tapActsAtOnce(atX:)) {
+            ZoomableContainer(onSingleTapAt: handleTap(atX:), onZoomChange: onZoomChange) {
                 ReaderPageView(urlString: item.url, referer: referer, pageNumber: item.pageIdx + 1)
             }
         }
@@ -496,7 +496,7 @@ struct MangaReaderView: View {
         let displayOrder = isRTL ? Array(strip.reversed()) : strip
         return TabView(selection: $currentPage) {
             ForEach(displayOrder) { item in
-                ZoomableContainer(onSingleTapAt: handleTap(atX:), tapActsAtOnce: tapActsAtOnce(atX:)) {
+                ZoomableContainer(onSingleTapAt: handleTap(atX:)) {
                     ReaderPageView(urlString: item.url, referer: referer, pageNumber: item.pageIdx + 1)
                 }
                 .tag(item.globalIdx)
@@ -592,9 +592,9 @@ struct MangaReaderView: View {
                         Label("Tap Sides to \(mode == .vertical ? "Scroll" : "Turn")", systemImage: "hand.tap")
                     }
                     Toggle(isOn: $tapZonesReversed) {
-                        Label("Reverse Tap Sides", systemImage: "arrow.left.arrow.right")
+                        Label("Reverse Direction", systemImage: "arrow.left.arrow.right")
                     }
-                    .disabled(!tapZones || mode != .vertical)
+                    .disabled(mode != .vertical)
                 }
             } label: {
                 Image(systemName: "book")
@@ -953,12 +953,6 @@ struct MangaReaderView: View {
     }
 
     // MARK: - Tap zones
-
-    /// Whether a tap at `x` acts the moment the finger lifts: the sides do, as tap zones. The
-    /// middle waits to see whether a second tap makes it a double tap, which zooms.
-    private func tapActsAtOnce(atX x: CGFloat) -> Bool {
-        ReaderTapZone.zone(atX: x, mode: mode, enabled: tapZones, reversed: tapZonesReversed) != .middle
-    }
 
     /// A single tap, `x` across the screen from 0 (left) to 1 (right).
     private func handleTap(atX x: CGFloat) {
@@ -1400,65 +1394,48 @@ private struct PinchToZoom: ViewModifier {
 }
 
 /// The vertical strip's taps, on its scroll view: a double tap zooms, a single tap scrolls
-/// from the sides or shows and hides the chrome. Single taps on the sides fire as the finger
-/// lifts; in the middle they wait until a second tap can't come, since that one zooms.
-/// SwiftUI's tap gestures made every single tap wait, the sides too, and paging through a
-/// chapter by tapping lagged on each one.
+/// from the sides or shows and hides the chrome. ``QuickTaps`` tells them apart within a fifth
+/// of a second; SwiftUI's tap gestures made every single tap wait about a third, and paging
+/// through a chapter by tapping lagged on each one.
 final class ReaderTaps: NSObject, UIGestureRecognizerDelegate {
     /// Where across the screen the tap landed, 0 at the left edge to 1 at the right.
     var onTap: (CGFloat) -> Void = { _ in }
     /// The point in the strip's visible area.
     var onDoubleTap: (CGPoint) -> Void = { _ in }
-    var actsAtOnce: (CGFloat) -> Bool = { _ in false }
     private weak var scrollView: UIScrollView?
-    private var recognizers: [UIGestureRecognizer] = []
-    private weak var sideTap: UITapGestureRecognizer?
+    private var recognizer: UITapGestureRecognizer?
+    private let taps = QuickTaps()
+
+    override init() {
+        super.init()
+        taps.onSingle = { [weak self] point in
+            guard let self, let width = self.scrollView?.bounds.width, width > 0 else { return }
+            self.onTap(min(max(point.x / width, 0), 1))
+        }
+        taps.onDouble = { [weak self] point in self?.onDoubleTap(point) }
+    }
 
     func attach(to scrollView: UIScrollView) {
         guard self.scrollView !== scrollView else { return }
-        for recognizer in recognizers { recognizer.view?.removeGestureRecognizer(recognizer) }
-        let double = UITapGestureRecognizer(target: self, action: #selector(handleDouble(_:)))
-        double.numberOfTapsRequired = 2
-        let middle = UITapGestureRecognizer(target: self, action: #selector(handleSingle(_:)))
-        middle.require(toFail: double)
-        let side = UITapGestureRecognizer(target: self, action: #selector(handleSingle(_:)))
-        recognizers = [double, middle, side]
-        for recognizer in recognizers {
-            recognizer.delegate = self
-            recognizer.cancelsTouchesInView = false
-            scrollView.addGestureRecognizer(recognizer)
-        }
-        sideTap = side
+        if let recognizer { recognizer.view?.removeGestureRecognizer(recognizer) }
+        let tap = UITapGestureRecognizer(target: self, action: #selector(handle(_:)))
+        tap.delegate = self
+        tap.cancelsTouchesInView = false
+        scrollView.addGestureRecognizer(tap)
+        recognizer = tap
         self.scrollView = scrollView
     }
 
-    /// Across the screen, not the strip: zoomed in, a side is still a side.
-    private func screenX(_ location: CGPoint, in window: UIWindow?) -> CGFloat {
-        guard let width = window?.bounds.width, width > 0 else { return 0.5 }
-        return min(max(location.x / width, 0), 1)
-    }
+    func cancel() { taps.cancel() }
 
-    @objc private func handleSingle(_ tap: UITapGestureRecognizer) {
-        onTap(screenX(tap.location(in: nil), in: tap.view?.window))
-    }
-
-    @objc private func handleDouble(_ tap: UITapGestureRecognizer) {
+    @objc private func handle(_ tap: UITapGestureRecognizer) {
         guard let scrollView else { return }
         let point = tap.location(in: scrollView)
-        onDoubleTap(CGPoint(x: point.x - scrollView.contentOffset.x, y: point.y - scrollView.contentOffset.y))
-    }
-
-    /// The side tap takes touches on the sides; the double tap and the waiting single tap take
-    /// the rest.
-    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
-        let atOnce = actsAtOnce(screenX(touch.location(in: nil), in: touch.window))
-        return gestureRecognizer === sideTap ? atOnce : !atOnce
+        taps.tap(at: CGPoint(x: point.x - scrollView.contentOffset.x, y: point.y - scrollView.contentOffset.y))
     }
 
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
-                           shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool {
-        !recognizers.contains { $0 === other }
-    }
+                           shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer) -> Bool { true }
 }
 
 #endif
