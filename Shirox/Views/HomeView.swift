@@ -29,7 +29,7 @@ struct HomeView: View {
 
     @State private var isRefreshing = false
     @State private var leadingInset: CGFloat = 0
-    @AppStorage(GooeyRefreshGeometry.settingKey) private var gooeyRefresh = true
+    @AppStorage(PullToRefreshStyle.key) private var refreshStyle = PullToRefreshStyle.defaultStyle
     @ObservedObject private var discovery = DiscoverySource.shared
     @StateObject private var simkl = SimklHomeViewModel()
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -205,8 +205,8 @@ struct HomeView: View {
                                     FeaturedCarousel(
                                         items: heroItems,
                                         isRefreshing: isRefreshing,
-                                        // With the drop off, the hero's own circle refreshes.
-                                        onRefresh: gooeyRefresh ? nil : heroRefresh,
+                                        // With the glass style, the hero's own circle refreshes.
+                                        onRefresh: refreshStyle == .glass ? heroRefresh : nil,
                                         leadingInset: leadingInset
                                     )
                                     .id(homePage)

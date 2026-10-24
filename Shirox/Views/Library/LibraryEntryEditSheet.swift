@@ -205,7 +205,7 @@ struct LibraryEntryEditSheet: View {
         Toggle(title, isOn: Binding(
             get: { date.wrappedValue != nil },
             set: { date.wrappedValue = $0 ? Calendar.current.startOfDay(for: .now) : nil }))
-            .tint(.secondary)
+            .switchTint()
         if let day = date.wrappedValue {
             DatePicker("\(title) On", selection: Binding(get: { day }, set: { date.wrappedValue = $0 }),
                        in: ...Date.now, displayedComponents: .date)
@@ -240,7 +240,7 @@ struct LibraryEntryEditSheet: View {
         if showsPrivacyToggle {
             Section {
                 Toggle("Private", isOn: $isPrivate)
-                    .tint(.secondary)
+                    .switchTint()
                 Text("Hides this entry from your public AniList profile and activity feed. You can still see it here.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -323,7 +323,7 @@ struct LibraryEntryEditSheet: View {
                 if progressUnit == "episode", AniListMappingManager.shared.canToggleAutomaticTracking(for: media) {
                     Section("Tracking") {
                         Toggle("Automatically Track", isOn: $automaticTracking)
-                            .tint(.secondary)
+                            .switchTint()
                         Text("Update online progress as you watch. Turn off to update this anime manually.")
                             .font(.caption)
                             .foregroundStyle(.secondary)

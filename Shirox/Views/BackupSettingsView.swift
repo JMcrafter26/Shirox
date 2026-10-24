@@ -70,7 +70,7 @@ struct BackupSettingsView: View {
     private var exportSection: some View {
         Section("Create Backup") {
             Toggle("Include Accounts", isOn: $includeAccounts)
-                .tint(.secondary)
+                .switchTint()
             Text(includeAccounts
                  ? "This backup will contain live login tokens for AniList, MyAnimeList and Jellyfin. Anyone who opens the file can sign in as you — keep it to yourself."
                  : "Progress, library, settings and modules. No login tokens, so the file is safe to share.")

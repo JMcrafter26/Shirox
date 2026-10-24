@@ -21,6 +21,8 @@ struct TabBarMenu: View {
     /// The tab bar's capsule, in global coordinates — where the menu opens from.
     let source: CGRect
     let selectedTab: Int
+    /// The tabs the bar shows, in its order; hidden ones stay out of the menu too.
+    let tabs: [AppTab]
     var onPick: (TabBarMenuDestination) -> Void
     /// Hides the bar's own capsule while the menu stands in for it.
     var onHidesBar: (Bool) -> Void
@@ -97,12 +99,15 @@ struct TabBarMenu: View {
             Divider().padding(.horizontal, 14)
 
             sectionLabel("Browse")
-            row("Home", systemImage: "house", isCurrent: selectedTab == 0) { pick(.tab(0)) }
-            row("Calendar", systemImage: "calendar") { pick(.calendar) }
-            row("Library", systemImage: "books.vertical", isCurrent: selectedTab == 1) { pick(.tab(1)) }
-            row("Downloads", systemImage: "arrow.down.circle", count: completedDownloads,
-                isCurrent: selectedTab == 2) { pick(.tab(2)) }
-            row("Search", systemImage: "magnifyingglass", isCurrent: selectedTab == 4) { pick(.tab(4)) }
+            ForEach(tabs.filter { $0 != .settings }) { tab in
+                row(tab.title, systemImage: menuIcon(tab),
+                    count: tab == .downloads ? completedDownloads : nil,
+                    isCurrent: selectedTab == tab.rawValue) { pick(.tab(tab.rawValue)) }
+                // The calendar lives on Home.
+                if tab == .home {
+                    row("Calendar", systemImage: "calendar") { pick(.calendar) }
+                }
+            }
 
             if !moduleManager.modules.isEmpty {
                 Divider().padding(.horizontal, 14).padding(.top, 8)
@@ -202,6 +207,17 @@ struct TabBarMenu: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(isCurrent ? .isSelected : [])
+    }
+
+    /// The outline symbols the menu uses, where the bar has filled ones.
+    private func menuIcon(_ tab: AppTab) -> String {
+        switch tab {
+        case .home:      return "house"
+        case .library:   return "books.vertical"
+        case .downloads: return "arrow.down.circle"
+        case .settings:  return "gearshape"
+        case .search:    return "magnifyingglass"
+        }
     }
 
     private var completedDownloads: Int {

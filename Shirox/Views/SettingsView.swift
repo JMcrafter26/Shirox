@@ -189,6 +189,15 @@ struct SettingsView: View {
 
             Section {
                 NavigationLink {
+                    GeneralSettingsView()
+                } label: {
+                    SettingsNavRow(
+                        icon: "gearshape",
+                        title: "General"
+                    )
+                }
+
+                NavigationLink {
                     AccountsSettingsView()
                 } label: {
                     SettingsNavRow(
@@ -457,7 +466,6 @@ struct AccountsSettingsView: View {
     @AppStorage("simklTrackingEnabled") private var simklTrackingEnabled = true
     @AppStorage(SyncTargets.key) private var syncTargetsRaw = ""
     @AppStorage("rateOnFinish") private var rateOnFinish = true
-    @AppStorage(ProviderMenuStyle.key) private var providerMenuStyle = ProviderMenuStyle.iconAndName
 
     #if !os(tvOS)
     /// The window Simkl's sign-in sheet is anchored to.
@@ -522,34 +530,24 @@ struct AccountsSettingsView: View {
                 Text("Tracks your anime, shows and movies on Simkl alongside AniList and MyAnimeList. Simkl has no manga.")
             }
 
-            Section {
-                Picker("Home & Search Buttons", selection: $providerMenuStyle) {
-                    ForEach(ProviderMenuStyle.allCases, id: \.self) { style in
-                        Text(style.title).tag(style)
-                    }
-                }
-            } footer: {
-                Text("The buttons at the top of Home and Search: Home's picks the provider, Search's the module. Hidden, both keep the last choice; modules are also in Settings › Modules.")
-            }
-
             if aniListAuth.isLoggedIn || malAuth.isLoggedIn || simklAuth.isLoggedIn {
                 Section("Tracking") {
                     if aniListAuth.isLoggedIn {
                         Toggle("Track on AniList", isOn: $aniListTrackingEnabled)
-                            .tint(.secondary)
+                            .switchTint()
                     }
                     if malAuth.isLoggedIn {
                         Toggle("Track on MyAnimeList", isOn: $malTrackingEnabled)
-                            .tint(.secondary)
+                            .switchTint()
                     }
                     if simklAuth.isLoggedIn {
                         Toggle("Track on Simkl", isOn: $simklTrackingEnabled)
-                            .tint(.secondary)
+                            .switchTint()
                     }
                     Toggle("Never reduce progress", isOn: $skipReWatchTracking)
-                        .tint(.secondary)
+                        .switchTint()
                     Toggle("Prompt to rate after finishing", isOn: $rateOnFinish)
-                        .tint(.secondary)
+                        .switchTint()
                     Text("Automatically update your watch progress as you watch.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -560,7 +558,7 @@ struct AccountsSettingsView: View {
                 Section {
                     ForEach(signedInSides, id: \.self) { side in
                         Toggle(side.name, isOn: mirrorBinding(for: side))
-                            .tint(.secondary)
+                            .switchTint()
                     }
                 } header: {
                     Text("Mirror Edits")
@@ -718,7 +716,7 @@ struct PlayerSettingsView: View {
                 // A phone's: a Mac's player is a window.
                 #if !os(macOS)
                 Toggle("Force Landscape Mode", isOn: $forceLandscape)
-                    .tint(.secondary)
+                    .switchTint()
                     #if os(iOS)
                     .onChangeOf(forceLandscape) {
                         PlayerPresenter.shared.resetToAppOrientation(shouldRotate: true)
@@ -728,7 +726,7 @@ struct PlayerSettingsView: View {
 
                 if forceLandscape, !Self.isMac {
                     Toggle("Auto-Rotate in Landscape", isOn: $autoRotateForcedLandscape)
-                        .tint(.secondary)
+                        .switchTint()
                     Text("Turns the player to the other landscape side even with Rotation Lock on in Control Center.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -736,7 +734,7 @@ struct PlayerSettingsView: View {
 
                 if #available(iOS 26.0, macOS 26.0, *) {
                     Toggle("Liquid Glass Controls", isOn: $playerLiquidGlass)
-                        .tint(.secondary)
+                        .switchTint()
                     Text("Frosted glass buttons in the video player. Turn off for solid controls.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -745,19 +743,19 @@ struct PlayerSettingsView: View {
                 #if os(iOS)
                 if !Self.isMac {
                     Toggle("Play in Background", isOn: $playInBackground)
-                        .tint(.secondary)
+                        .switchTint()
                     Text("Keeps a video playing when you leave the app. Off, it pauses, unless it's in Picture in Picture, on AirPlay or cast to a TV.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Toggle("Spatial Audio", isOn: $spatialAudio)
-                        .tint(.secondary)
+                        .switchTint()
                         .onChangeOf(spatialAudio) { _ in AppAudioSession.applySpatialAudioSetting() }
                     Text("Lets iOS play videos in Spatial Audio, with its movie sound processing, on AirPods and other headphones. Turn off for plain stereo, or if headphones play quieter here than in other apps. Takes effect from the next video.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
                 Toggle("Ambient Mode", isOn: $ambientMode)
-                    .tint(.secondary)
+                    .switchTint()
                 Text("Fills the bars around the video with a soft glow of its colours. Native engine only.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -806,7 +804,7 @@ struct PlayerSettingsView: View {
 
                 #if os(iOS)
                 Toggle("Pause for Control Center", isOn: $pauseWhenInactive)
-                    .tint(.secondary)
+                    .switchTint()
                 Text("Pauses while Control Center or Notification Center is open and picks up again when you close it. Leaving the app or locking the phone still plays in the background.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -825,7 +823,7 @@ struct PlayerSettingsView: View {
                     }
                 }
                 Toggle("Auto-Skip Segments", isOn: $autoSkipSegments)
-                    .tint(.secondary)
+                    .switchTint()
                 Text("Automatically skip intros, recaps, credits, and previews")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -833,10 +831,10 @@ struct PlayerSettingsView: View {
 
             Section("Episodes & Progress") {
                 Toggle("Auto Next Episode", isOn: $autoNextEpisode)
-                    .tint(.secondary)
+                    .switchTint()
 
                 Toggle("Reverse Episode List by Default", isOn: EpisodeSortManager.shared.$defaultReverseSort)
-                    .tint(.secondary)
+                    .switchTint()
 
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
@@ -879,7 +877,7 @@ struct SubtitleSettingsPage: View {
 
             Section {
                 Toggle("Show Subtitles", isOn: $settings.enabled)
-                    .tint(.secondary)
+                    .switchTint()
             } footer: {
                 Text("Turns subtitles on or off in every video. The player's subtitles button changes it too.")
             }
@@ -912,7 +910,7 @@ struct SubtitleSettingsPage: View {
 
             Section("Background") {
                 Toggle("Show Background", isOn: $settings.backgroundEnabled)
-                    .tint(.secondary)
+                    .switchTint()
                 #if !os(tvOS)
                 if settings.backgroundEnabled {
                     ColorPicker("Color", selection: $settings.backgroundColor, supportsOpacity: false)
@@ -1036,7 +1034,7 @@ struct ReaderSettingsView: View {
         SettingsList {
             Section {
                 Toggle("Tap Sides to Scroll or Turn", isOn: $tapZones)
-                    .tint(.secondary)
+                    .switchTint()
             } header: {
                 Text("Tap Zones")
             } footer: {
@@ -1046,7 +1044,7 @@ struct ReaderSettingsView: View {
             }
             Section {
                 Toggle("Reverse Direction", isOn: $tapZonesReversed)
-                    .tint(.secondary)
+                    .switchTint()
             } header: {
                 Text("Vertical Scroll")
             } footer: {
@@ -1056,7 +1054,7 @@ struct ReaderSettingsView: View {
             #if os(iOS)
             Section {
                 Toggle("Page Curl", isOn: $readerPageCurl)
-                    .tint(.secondary)
+                    .switchTint()
             } header: {
                 Text("Turning Pages")
             } footer: {
@@ -1066,7 +1064,7 @@ struct ReaderSettingsView: View {
             if UIDevice.current.userInterfaceIdiom == .phone {
                 Section {
                     Toggle("Portrait Only", isOn: $readerPortraitOnly)
-                        .tint(.secondary)
+                        .switchTint()
                 } header: {
                     Text("Orientation")
                 } footer: {
@@ -1077,7 +1075,7 @@ struct ReaderSettingsView: View {
             if #available(iOS 26.0, macOS 26.0, *) {
                 Section {
                     Toggle("Liquid Glass Controls", isOn: $readerLiquidGlass)
-                        .tint(.secondary)
+                        .switchTint()
                 } header: {
                     Text("Style")
                 } footer: {
@@ -1164,12 +1162,12 @@ struct ModulesSettingsView: View {
 
             Section {
                 Toggle("Use Default Extension", isOn: $useDefaultExtension)
-                    .tint(.secondary)
+                    .switchTint()
                     .disabled(moduleManager.activeModule == nil)
                 Toggle("Auto-pick Last Search Result", isOn: $autoPickLastSearchResult)
-                    .tint(.secondary)
+                    .switchTint()
                 Toggle("Auto-pick Last Stream", isOn: $autoPickLastStream)
-                    .tint(.secondary)
+                    .switchTint()
             } header: {
                 Text("Automation")
             } footer: {
@@ -1190,11 +1188,7 @@ struct LibrarySettingsView: View {
     @AppStorage("titleLanguagePriority") private var titlePriority = "english,romaji,native"
     @AppStorage("localAutoTrackEnabled") private var localAutoTrackEnabled = true
     @AppStorage("localScoreFormat") private var localScoreFormatRaw: String = ScoreFormat.point10Decimal.rawValue
-    @AppStorage(GooeyRefreshGeometry.settingKey) private var gooeyRefresh = true
     @AppStorage(NewEpisodeTracker.badgesKey) private var newEpisodeBadges = true
-    @AppStorage(CardTitleSetting.hiddenKey) private var hideCardTitles = false
-    @AppStorage(DetailLayoutSetting.cinematicKey) private var cinematicDetailLayout = true
-    @AppStorage(DetailLayoutSetting.cinematicHomeKey) private var cinematicHomeLayout = true
     @State private var showClearLocalLibrary = false
 
     private var orderedLanguages: [String] {
@@ -1213,40 +1207,13 @@ struct LibrarySettingsView: View {
 
             Section {
                 Toggle("New Episode Badges", isOn: $newEpisodeBadges)
-                    .tint(.secondary)
+                    .switchTint()
                 Text("Marks shows you're watching that have aired episodes you haven't seen, with a dot for ones that came out since you last opened the show. Sort by New Episodes First from the Library's sort menu.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                Toggle("Hide Titles on Cards", isOn: $hideCardTitles)
-                    .tint(.secondary)
-                Text("Posters from TVDB carry the show's name, so the title over them says it twice. Hold a card for its full title.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } header: {
                 Text("Cards")
             }
-
-            if DetailLayoutSetting.isOffered {
-                Section {
-                    Toggle("Cinematic Home", isOn: $cinematicHomeLayout)
-                        .tint(.secondary)
-                    Toggle("Cinematic Detail Pages", isOn: $cinematicDetailLayout)
-                        .tint(.secondary)
-                } header: {
-                    Text("Layout")
-                } footer: {
-                    Text("The featured show's artwork fills the window, with the rows scrolling up over it. Turn off for Home's banner with the rows under it, and for a show's poster with its episode list.")
-                }
-            }
-
-            #if os(iOS)
-            Section {
-                Toggle("Gooey Pull to Refresh", isOn: $gooeyRefresh)
-                    .tint(.secondary)
-            } footer: {
-                Text("Pulling to refresh stretches a drop out of the Dynamic Island that holds the spinner. Turn off for a frosted circle instead, as sheets always use.")
-            }
-            #endif
 
             Section("Matching") {
                 ForEach(orderedLanguages, id: \.self) { lang in
@@ -1272,7 +1239,7 @@ struct LibrarySettingsView: View {
 
             Section {
                 Toggle("Auto-track what you watch", isOn: $localAutoTrackEnabled)
-                    .tint(.secondary)
+                    .switchTint()
                 Picker("Score Format", selection: $localScoreFormatRaw) {
                     Text("100 Point").tag(ScoreFormat.point100.rawValue)
                     Text("10 Point (Decimal)").tag(ScoreFormat.point10Decimal.rawValue)
@@ -1398,12 +1365,12 @@ struct DownloadsSettingsView: View {
                 // A Mac app keeps running in the background; only iOS has to ask to.
                 #if os(iOS)
                 Toggle("Background Downloads", isOn: $backgroundDownloadsEnabled)
-                    .tint(.secondary)
+                    .switchTint()
                 #endif
                 Toggle("Auto-Resume Interrupted", isOn: $autoResumeDownloads)
-                    .tint(.secondary)
+                    .switchTint()
                 Toggle("Delete After Watching", isOn: $autoDeleteWatched)
-                    .tint(.secondary)
+                    .switchTint()
                 Text("Download Quality picks the rendition for streams that offer several, falling back to the closest below. A downloaded episode keeps the one it was saved in. Delete After Watching removes a downloaded episode once you finish it and close the player. Retry downloads that were interrupted or failed when the app next opens — off by default so reopening the app never starts a large transfer on cellular without you asking.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -1473,7 +1440,7 @@ struct StorageSettingsView: View {
         SettingsList {
             Section("Data") {
                 Toggle("Data Saver", isOn: $dataSaverEnabled)
-                    .tint(.secondary)
+                    .switchTint()
                 Text("Loads smaller artwork and skips the large banner images on Home. Posters look softer; everything still works, and downloads and playback are unaffected.")
                     .font(.caption)
                     .foregroundStyle(.secondary)

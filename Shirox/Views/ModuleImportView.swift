@@ -132,9 +132,9 @@ struct ModuleImportView: View {
                 TextField("Stream type (e.g. HLS)", text: $streamType)
                 TextField("Quality (e.g. 1080p)", text: $quality)
                 Toggle("Soft Subtitles", isOn: $softsub)
-                    .tint(.secondary)
+                    .switchTint()
                 Toggle("Async Script", isOn: $asyncJS)
-                    .tint(.secondary)
+                    .switchTint()
             }
         }
         #if os(macOS)

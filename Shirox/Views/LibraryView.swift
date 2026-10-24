@@ -1574,7 +1574,7 @@ private struct LibraryRowView: View {
 
                 if entry.showsProgressBar, let total = entry.media.episodes, total > 0 {
                     ProgressView(value: min(Double(entry.progress), Double(total)), total: Double(total))
-                        .tint(.primary)
+                        .appTint()
                         .scaleEffect(x: 1, y: 0.8, anchor: .center)
                         .frame(maxWidth: 180)
                 }

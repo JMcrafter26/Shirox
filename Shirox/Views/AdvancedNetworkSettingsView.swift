@@ -54,7 +54,7 @@ private struct TMDBProxySections: View {
     var body: some View {
         Section {
             Toggle("Use Custom TMDB Proxies", isOn: $useProxies)
-                .tint(.secondary)
+                .switchTint()
                 .onChangeOf(useProxies) { isOn in
                     guard isOn else { return }
                     if apiBase.isEmpty { apiBase = TMDBHostSettings.defaultAPIBase }
@@ -94,7 +94,7 @@ private struct SecureDNSSections: View {
     var body: some View {
         Section {
             Toggle("Encrypted DNS", isOn: $secureDNS)
-                .tint(.secondary)
+                .switchTint()
                 .onChangeOf(secureDNS) { isOn in
                     guard isOn else { return }
                     if serverURL.isEmpty { serverURL = SecureDNSSettings.defaultServerURL }
@@ -137,7 +137,7 @@ private struct ProxySections: View {
     var body: some View {
         Section {
             Toggle("Proxy All Traffic", isOn: $enabled)
-                .tint(.secondary)
+                .switchTint()
                 .onChangeOf(enabled) { isOn in
                     if isOn, port.isEmpty { port = kind.defaultPort }
                 }
@@ -193,7 +193,7 @@ private struct UserAgentSections: View {
     var body: some View {
         Section {
             Toggle("Custom User-Agent", isOn: $enabled)
-                .tint(.secondary)
+                .switchTint()
                 .onChangeOf(enabled) { isOn in
                     if isOn, userAgent.isEmpty { userAgent = NetworkUserAgent.standard }
                 }

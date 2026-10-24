@@ -56,7 +56,7 @@ struct StreamPickerView: View {
                     Button("Cancel") { vm.cancelStreamLoading() }
                 }
             }
-            .tint(.primary)
+            .appTint()
         }
         #if os(macOS)
         .macSheetFrame()

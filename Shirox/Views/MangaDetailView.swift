@@ -118,7 +118,7 @@ struct MangaDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackgroundHidden()
         .scrollAwareNavTitle(vm.detail?.title ?? item.title)
-        .tint(.primary)
+        .appTint()
         .fullScreenCover(item: $readerContext) { ctx in
             MangaReaderView(context: ctx)
         }
@@ -729,7 +729,7 @@ struct MangaDetailView: View {
                             Label("Download \(toDownload)", systemImage: "arrow.down.circle.fill")
                                 .font(.subheadline.weight(.bold)).foregroundStyle(platformBackground)
                         }
-                        .buttonStyle(.borderedProminent).tint(.primary).controlSize(.small).clipShape(Capsule())
+                        .buttonStyle(.borderedProminent).appTint().controlSize(.small).clipShape(Capsule())
                     }
                 }
                 .padding(.horizontal, 16).padding(.top, 4)

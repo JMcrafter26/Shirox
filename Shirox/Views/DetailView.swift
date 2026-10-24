@@ -380,7 +380,7 @@ struct DetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackgroundHidden()
         .scrollAwareNavTitle(item.title)
-        .tint(.primary)
+        .appTint()
         .toolbarZoomSource("edit", in: sheetZoom, placement: .topBarTrailing) { detailToolbarButton }
         .adaptiveSheet(item: $simklEdit) { target in
             SimklAnimeEditSheet(target: target)
@@ -489,7 +489,7 @@ struct DetailView: View {
         .onChangeOf(vm.aniListID) { _ in
             Task { await reloadLinkedIDs() }
         }
-        .tint(.primary)
+        .appTint()
         .adaptiveSheet(isPresented: $vm.showStreamPicker, onDismiss: {
             if let stream = vm.pendingStream {
                 vm.pendingStream = nil
@@ -1823,7 +1823,7 @@ struct DetailView: View {
                                     .foregroundStyle(platformBackground)
                             }
                             .buttonStyle(.borderedProminent)
-                            .tint(.primary)
+                            .appTint()
                             .controlSize(.small)
                             .clipShape(Capsule())
                             .zoomSource("batchDownload", in: sheetZoom, cornerRadius: 16)

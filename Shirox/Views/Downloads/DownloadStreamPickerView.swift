@@ -33,7 +33,7 @@ struct DownloadStreamPickerView: View {
                     Button("Cancel") { dismiss() }
                 }
             }
-            .tint(.primary)
+            .appTint()
         }
         #if os(iOS)
         .adaptivePresentationDetents([.medium, .large])

@@ -205,7 +205,7 @@ struct AniListDetailView: View {
             EpisodeSortManager.shared.setReversed(newValue, for: "anilist_\(mediaId)")
         }
         .frame(maxWidth: .infinity)
-        .tint(.primary))
+        .appTint())
     }
 
     private var navTitled: AnyView {
@@ -1535,7 +1535,7 @@ struct AniListDetailView: View {
                         .foregroundStyle(platformBackground)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(.primary)
+                .appTint()
                 .controlSize(.small)
                 .clipShape(Capsule())
                 .zoomSource("batchDownload", in: sheetZoom, cornerRadius: 16)
@@ -2053,7 +2053,7 @@ struct AniListStreamResultSheet: View {
                     Button("Cancel") { onDismiss() }
                 }
             }
-            .tint(.primary)
+            .appTint()
         }
     }
 }

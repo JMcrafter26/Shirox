@@ -73,7 +73,7 @@ struct ModuleStreamPickerView: View {
                     Button("Cancel") { onDismiss() }
                 }
             }
-            .tint(.primary)
+            .appTint()
         }
         #if os(iOS)
         .adaptivePresentationDetents([.medium, .large])

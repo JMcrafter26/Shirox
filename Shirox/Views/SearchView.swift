@@ -105,7 +105,7 @@ struct SearchView: View {
                 ModuleListView(showsDone: true)
             }
             .environmentObject(moduleManager)
-            .tint(.primary)
+            .appTint()
             // A List in a Mac sheet has no size of its own: the sheet showed only its toolbar.
             .macSheetFrame()
             .zoomingOut(of: "moduleList", in: moduleListZoom, fromToolbar: true)
@@ -226,7 +226,7 @@ struct SearchView: View {
             }
             Toggle("Add subtitle file", isOn: $addSubtitleUpFront)
                 .toggleStyle(.switch)
-                .tint(.secondary)
+                .switchTint()
                 .fixedSize()
                 .disabled(!needsVideoStep)   // locked once a video is staged; clear it to change
                 .onChangeOf(addSubtitleUpFront) { _ in clearStagedVideo() }

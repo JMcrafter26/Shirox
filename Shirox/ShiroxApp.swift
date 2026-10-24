@@ -166,7 +166,7 @@ struct ShiroxApp: App {
         WindowGroup {
             ProfileHost { RootTabView() }
                 .environmentObject(moduleManager)
-                .tint(.primary)
+                .appAppearance()
                 #if os(macOS)
                 // The player and the manga reader cover the window, as on iOS.
                 .macWindowCover()
@@ -298,6 +298,15 @@ enum SidebarTab: Int, CaseIterable, Hashable {
         }
     }
 
+    init(_ launch: LaunchTab) {
+        switch launch {
+        case .home:      self = .home
+        case .library:   self = .library
+        case .downloads: self = .downloads
+        case .search:    self = .search
+        }
+    }
+
     /// ⌘1, ⌘2… in the order the sidebar lists them.
     var shortcut: KeyEquivalent? {
         guard let index = Self.available.firstIndex(of: self), index < 9 else { return nil }
@@ -379,7 +388,11 @@ private struct RootTabView: View {
     #if os(iOS)
     @ObservedObject private var quickActions = QuickActionManager.shared
     #endif
-    @State private var selectedTab = 0
+    @State private var selectedTab = LaunchTab.initialTab.rawValue
+    @AppStorage(AppTab.orderKey) private var tabOrder = ""
+    @AppStorage(AppTab.hiddenKey) private var hiddenTabs = ""
+    @AppStorage(AppTab.hideLabelsKey) private var hidesTabLabels = false
+    @AppStorage(AppTab.minimizeKey) private var minimizesTabBar = false
     #if os(iOS)
     /// Where the menu raised by holding the tab bar opens from, while it's up (iPhone).
     @State private var tabBarMenuSource: CGRect?
@@ -387,7 +400,7 @@ private struct RootTabView: View {
     @State private var showsModuleList = false
     #endif
     #if targetEnvironment(macCatalyst) || os(macOS)
-    @State private var sidebarTab: SidebarTab = .home
+    @State private var sidebarTab = SidebarTab(LaunchTab.current)
     #endif
     #if os(macOS)
     /// Bumped when the tab already showing is clicked again, which rebuilds it at its first page,
@@ -401,15 +414,50 @@ private struct RootTabView: View {
     }
     #endif
 
+    /// The tabs the bar shows, in the user's order.
+    private var visibleTabs: [AppTab] {
+        AppTab.visible(order: tabOrder, hidden: hiddenTabs)
+    }
+
     #if os(iOS)
     private func routePendingQuickAction() {
         guard let action = quickActions.pending else { return }
+        let tab: AppTab
         switch action {
-        case .library:   selectedTab = 1
-        case .downloads: selectedTab = 2
-        case .search:    selectedTab = 4
+        case .library:   tab = .library
+        case .downloads: tab = .downloads
+        case .search:    tab = .search
         }
+        // A hidden tab isn't there to go to.
+        if visibleTabs.contains(tab) { selectedTab = tab.rawValue }
         quickActions.pending = nil
+    }
+    #endif
+
+    #if !targetEnvironment(macCatalyst) && !os(macOS)
+    @ViewBuilder
+    private func page(_ tab: AppTab) -> some View {
+        switch tab {
+        case .home:      HomeView()
+        case .library:   LibraryView()
+        #if os(iOS)
+        case .downloads: DownloadsView()
+        #else
+        case .downloads: EmptyView()
+        #endif
+        case .settings:  SettingsView()
+        case .search:    SearchView()
+        }
+    }
+
+    /// Icon only when labels are hidden; VoiceOver still reads the name.
+    @ViewBuilder
+    private func tabLabel(_ tab: AppTab) -> some View {
+        if hidesTabLabels {
+            Image(systemName: tab.icon).accessibilityLabel(tab.title)
+        } else {
+            Label(tab.title, systemImage: tab.icon)
+        }
     }
     #endif
 
@@ -464,30 +512,30 @@ private struct RootTabView: View {
                 .tabViewStyle(.tabBarOnly)
                 #else
                 TabView(selection: $selectedTab) {
-                    Tab("Home", systemImage: "house.fill", value: 0) {
-                        HomeView()
-                    }
-                    Tab("Library", systemImage: "books.vertical.fill", value: 1) {
-                        LibraryView()
-                    }
-                    #if os(iOS)
-                    Tab("Downloads", systemImage: "arrow.down.circle.fill", value: 2) {
-                        DownloadsView()
-                    }
-                    #endif
-                    Tab("Settings", systemImage: "gearshape.fill", value: 3) {
-                        SettingsView()
-                    }
-                    Tab(value: 4, role: .search) {
-                        SearchView()
+                    ForEach(visibleTabs) { tab in
+                        if tab == .search {
+                            Tab(value: tab.rawValue, role: .search) {
+                                page(tab)
+                            } label: {
+                                tabLabel(tab)
+                            }
+                        } else {
+                            Tab(value: tab.rawValue) {
+                                page(tab)
+                            } label: {
+                                tabLabel(tab)
+                            }
+                        }
                     }
                 }
                 .tabViewStyle(.sidebarAdaptable)
+                .tabBarMinimizes(minimizesTabBar)
                 .searchTabOpensWithoutKeyboard(selectedTab: selectedTab)
                 .toolbarBackgroundHidden()
-                .tint(.primary)
+                .appTint()
                 #endif
             } else {
+                #if targetEnvironment(macCatalyst) || os(macOS)
                 TabView(selection: $selectedTab) {
                     HomeView()
                         .tabItem { Label("Home", systemImage: "house.fill") }
@@ -507,7 +555,17 @@ private struct RootTabView: View {
                         .tabItem { Label("Search", systemImage: "magnifyingglass") }
                         .tag(4)
                 }
-                .tint(.primary)
+                .appTint()
+                #else
+                TabView(selection: $selectedTab) {
+                    ForEach(visibleTabs) { tab in
+                        page(tab)
+                            .tabItem { tabLabel(tab) }
+                            .tag(tab.rawValue)
+                    }
+                }
+                .appTint()
+                #endif
             }
         }
         .onOpenURL { url in
@@ -541,6 +599,12 @@ private struct RootTabView: View {
             if let tab = note.object as? SidebarTab { sidebarTab = tab }
         }
         #endif
+        #if !targetEnvironment(macCatalyst) && !os(macOS)
+        // The tab showing was just hidden: on to the first one left.
+        .onChangeOf(visibleTabs.map(\.rawValue)) { visible in
+            if !visible.contains(selectedTab), let first = visible.first { selectedTab = first }
+        }
+        #endif
         .onReceive(NotificationCenter.default.publisher(for: .openSettingsTab)) { _ in
             #if targetEnvironment(macCatalyst) || os(macOS)
             sidebarTab = .settings
@@ -557,7 +621,7 @@ private struct RootTabView: View {
         }
         .overlay {
             if let source = tabBarMenuSource {
-                TabBarMenu(source: source, selectedTab: selectedTab, onPick: openFromTabBarMenu,
+                TabBarMenu(source: source, selectedTab: selectedTab, tabs: visibleTabs, onPick: openFromTabBarMenu,
                            onHidesBar: { hidesTabBar = $0 }) {
                     tabBarMenuSource = nil
                 }
@@ -568,7 +632,7 @@ private struct RootTabView: View {
                 ModuleListView()
             }
             .environmentObject(moduleManager)
-            .tint(.primary)
+            .appTint()
         }
         #endif
         #if os(iOS)
@@ -640,6 +704,20 @@ extension Notification.Name {
 }
 
 extension View {
+    /// The tab bar shrinks to its selected tab while a page scrolls down (iOS 26).
+    @ViewBuilder
+    func tabBarMinimizes(_ enabled: Bool) -> some View {
+        #if os(iOS)
+        if #available(iOS 26, *) {
+            tabBarMinimizeBehavior(enabled ? .onScrollDown : .automatic)
+        } else {
+            self
+        }
+        #else
+        self
+        #endif
+    }
+
     /// Search keeps its own circle in the tab bar and opens with its field at the bottom,
     /// but without raising the keyboard.
     ///

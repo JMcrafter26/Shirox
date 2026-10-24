@@ -72,7 +72,7 @@ struct BatchDownloadStreamPickerView: View {
                     Button("Cancel") { onDismiss() }
                 }
             }
-            .tint(.primary)
+            .appTint()
         }
         #if os(iOS)
         .adaptivePresentationDetents([.medium, .large])

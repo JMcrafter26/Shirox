@@ -28,7 +28,7 @@ struct PlayerSubtitleSettingsView: View {
             Form {
                 Section {
                     Toggle("Show Subtitles", isOn: $settings.enabled)
-                        .tint(.secondary)
+                        .switchTint()
                 }
 
                 if let tracks = availableTracks, !tracks.isEmpty {
@@ -90,7 +90,7 @@ struct PlayerSubtitleSettingsView: View {
                     #endif
 
                     Toggle("Background", isOn: $settings.backgroundEnabled)
-                        .tint(.secondary)
+                        .switchTint()
                 } header: {
                     Text("Appearance")
                 } footer: {

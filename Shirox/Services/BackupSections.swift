@@ -150,7 +150,7 @@ struct SettingsBackupSection: BackupSection {
         "autoRotateForcedLandscape",
         "librarySortAscending", "playerLiquidGlass", "rateOnFinish", "playerSpatialAudio", "playerPlayInBackground",
         "readerLiquidGlass", "readerPageCurl", "readerPortraitOnly", "readerTapZones", "readerTapZonesReversed", "skipReWatchTracking", "useDefaultExtension",
-        "dataSaverEnabled", "gooeyRefresh"
+        "dataSaverEnabled", "gooeyRefresh", AppTab.hideLabelsKey, AppTab.minimizeKey
     ]
 
     static let intKeys = [
@@ -162,7 +162,9 @@ struct SettingsBackupSection: BackupSection {
     static let stringKeys = [
         "librarySortOrder", "libraryStatusOrder", "mangaReadingMode",
         "preferredQuality", "titleLanguagePriority", SyncTargets.key,
-        DiscoverySource.choiceKey, DiscoverySource.kindKey, "playerHoldAction"
+        DiscoverySource.choiceKey, DiscoverySource.kindKey, "playerHoldAction",
+        AppTint.key, AppColorScheme.key, AppTab.orderKey, AppTab.hiddenKey, AppTab.launchKey,
+        PullToRefreshStyle.key
     ]
 
     static let stringListKeys = [AniListMappingManager.manualTrackingKey]
