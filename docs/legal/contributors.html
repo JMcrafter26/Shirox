@@ -88,6 +88,19 @@
       .row:active { background: rgba(255, 255, 255, 0.08); }
     }
 
+    .avatar-wrap .logo {
+      width: 26px;
+      height: 26px;
+      background: var(--text);
+      -webkit-mask: url("data:image/png;base64,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") center / contain no-repeat;
+      mask: url("data:image/png;base64,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") center / contain no-repeat;
+    }
+
+    .avatar-wrap .icon.claude { fill: #d97757; }
+
+    .row.static { cursor: default; }
+    .row.static:active { background: none; }
+
     .avatar-wrap {
       flex: 0 0 auto;
       width: 44px;
@@ -202,7 +215,20 @@
         </div>
         <div class="info">
           <h2>xibrox</h2>
-          <p>Owner & Developer</p>
+          <p>Owner &amp; App Developer</p>
+        </div>
+        <svg class="chevron" viewBox="0 0 7 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+
+      <a class="row" href="https://github.com/50n50" target="_blank" rel="noopener" role="listitem">
+        <div class="avatar-wrap">
+          <img src="https://github.com/50n50.png" alt="50n50">
+        </div>
+        <div class="info">
+          <h2>50n50</h2>
+          <p>App Developer</p>
         </div>
         <svg class="chevron" viewBox="0 0 7 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -221,9 +247,35 @@
           <path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </a>
+
+      <a class="row" href="https://github.com/0xGoldstar" target="_blank" rel="noopener" role="listitem">
+        <div class="avatar-wrap">
+          <img src="https://github.com/0xGoldstar.png" alt="0xGoldstar">
+        </div>
+        <div class="info">
+          <h2>0xGoldstar</h2>
+          <p>App Developer</p>
+        </div>
+        <svg class="chevron" viewBox="0 0 7 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+
+      <a class="row" href="https://github.com/JMcrafter26" target="_blank" rel="noopener" role="listitem">
+        <div class="avatar-wrap">
+          <img src="https://github.com/JMcrafter26.png" alt="JMcrafter26">
+        </div>
+        <div class="info">
+          <h2>JMcrafter26</h2>
+          <p>CI/CD Developer</p>
+        </div>
+        <svg class="chevron" viewBox="0 0 7 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
     </div>
 
-    <p class="section-label">Inspirations</p>
+    <p class="section-label">VIP</p>
     <div class="group" role="list">
       <a class="row" href="https://github.com/cranci1" target="_blank" rel="noopener" role="listitem">
         <div class="avatar-wrap">
@@ -231,12 +283,32 @@
         </div>
         <div class="info">
           <h2>cranci1</h2>
-          <p>Sora &amp; Luna</p>
+          <p>Discord Staff · Sora &amp; Luna</p>
         </div>
         <svg class="chevron" viewBox="0 0 7 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </a>
+
+      <div class="row static" role="listitem">
+        <div class="avatar-wrap">
+          <img src="https://cdn.discordapp.com/avatars/606801871189049344/00b5698c0583d7ad893c9d6742895abe.webp?size=128" alt="cuify">
+        </div>
+        <div class="info">
+          <h2>cuify</h2>
+          <p>Discord Staff</p>
+        </div>
+      </div>
+
+      <div class="row static" role="listitem">
+        <div class="avatar-wrap">
+          <img src="https://cdn.discordapp.com/avatars/520279853199523840/c505e95ce36418422b55544200e61a5e.webp?size=128" alt="jay">
+        </div>
+        <div class="info">
+          <h2>jay</h2>
+          <p>Discord Staff</p>
+        </div>
+      </div>
     </div>
 
     <p class="section-label">Community</p>
@@ -274,7 +346,52 @@
       </a>
     </div>
 
-    <p class="stamp">Last updated: May 30, 2026</p>
+    <p class="section-label">AI &amp; Automation</p>
+    <div class="group" role="list">
+      <div class="row static" role="listitem">
+        <div class="avatar-wrap">
+          <div class="logo" role="img" aria-label="Shirox"></div>
+        </div>
+        <div class="info">
+          <h2>ShiroxBot</h2>
+          <p>Discord automation &amp; moderation bot</p>
+        </div>
+      </div>
+
+      <a class="row" href="https://claude.com/claude-code" target="_blank" rel="noopener" role="listitem">
+        <div class="avatar-wrap">
+          <svg class="icon claude" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-label="Claude Code">
+            <title>Claude Code</title>
+            <path d="m4.7144 15.9555 4.7174-2.6471.079-.2307-.079-.1275h-.2307l-.7893-.0486-2.6956-.0729-2.3375-.0971-2.2646-.1214-.5707-.1215-.5343-.7042.0546-.3522.4797-.3218.686.0608 1.5179.1032 2.2767.1578 1.6514.0972 2.4468.255h.3886l.0546-.1579-.1336-.0971-.1032-.0972L6.973 9.8356l-2.55-1.6879-1.3356-.9714-.7225-.4918-.3643-.4614-.1578-1.0078.6557-.7225.8803.0607.2246.0607.8925.686 1.9064 1.4754 2.4893 1.8336.3643.3035.1457-.1032.0182-.0728-.164-.2733-1.3539-2.4467-1.445-2.4893-.6435-1.032-.17-.6194c-.0607-.255-.1032-.4674-.1032-.7285L6.287.1335 6.6997 0l.9957.1336.419.3642.6192 1.4147 1.0018 2.2282 1.5543 3.0296.4553.8985.2429.8318.091.255h.1579v-.1457l.1275-1.706.2368-2.0947.2307-2.6957.0789-.7589.3764-.9107.7468-.4918.5828.2793.4797.686-.0668.4433-.2853 1.8517-.5586 2.9021-.3643 1.9429h.2125l.2429-.2429.9835-1.3053 1.6514-2.0643.7286-.8196.85-.9046.5464-.4311h1.0321l.759 1.1293-.34 1.1657-1.0625 1.3478-.8804 1.1414-1.2628 1.7-.7893 1.36.0729.1093.1882-.0183 2.8535-.607 1.5421-.2794 1.8396-.3157.8318.3886.091.3946-.3278.8075-1.967.4857-2.3072.4614-3.4364.8136-.0425.0304.0486.0607 1.5482.1457.6618.0364h1.621l3.0175.2247.7892.522.4736.6376-.079.4857-1.2142.6193-1.6393-.3886-3.825-.9107-1.3113-.3279h-.1822v.1093l1.0929 1.0686 2.0035 1.8092 2.5075 2.3314.1275.5768-.3218.4554-.34-.0486-2.2039-1.6575-.85-.7468-1.9246-1.621h-.1275v.17l.4432.6496 2.3436 3.5214.1214 1.0807-.17.3521-.6071.2125-.6679-.1214-1.3721-1.9246L14.38 17.959l-1.1414-1.9428-.1397.079-.674 7.2552-.3156.3703-.7286.2793-.6071-.4614-.3218-.7468.3218-1.4753.3886-1.9246.3157-1.53.2853-1.9004.17-.6314-.0121-.0425-.1397.0182-1.4328 1.9672-2.1796 2.9446-1.7243 1.8456-.4128.164-.7164-.3704.0667-.6618.4008-.5889 2.386-3.0357 1.4389-1.882.929-1.0868-.0062-.1579h-.0546l-6.3385 4.1164-1.1293.1457-.4857-.4554.0608-.7467.2307-.2429 1.9064-1.3114Z"/>
+          </svg>
+        </div>
+        <div class="info">
+          <h2>Claude Code</h2>
+          <p>AI helper used as a tool during app development</p>
+        </div>
+        <svg class="chevron" viewBox="0 0 7 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+
+      <a class="row" href="https://github.com/xibrox/Shirox/actions" target="_blank" rel="noopener" role="listitem">
+        <div class="avatar-wrap">
+          <svg class="icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-label="GitHub Actions">
+            <title>GitHub Actions</title>
+            <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
+          </svg>
+        </div>
+        <div class="info">
+          <h2>GitHub Actions</h2>
+          <p>AI security scans, app CI builds &amp; dependency warnings</p>
+        </div>
+        <svg class="chevron" viewBox="0 0 7 12" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M1 1l5 5-5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </a>
+    </div>
+
+    <p class="stamp">Last updated: October 24, 2026</p>
   </main>
 
   <script>
@@ -299,7 +416,7 @@
       const wraps = Array.from(document.querySelectorAll('.avatar-wrap'));
       const target = wraps[Math.floor(Math.random() * wraps.length)];
       const anim   = animations[Math.floor(Math.random() * animations.length)];
-      const img    = target.querySelector('img, svg');
+      const img    = target.querySelector('img, svg, .logo');
       if (!img) { scheduleNext(); return; }
 
       img.style.animation = `${anim.name} ${anim.duration}ms ${anim.easing} 1 forwards`;
