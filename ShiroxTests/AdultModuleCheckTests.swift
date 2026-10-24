@@ -15,7 +15,7 @@ final class AdultModuleCheckTests: XCTestCase {
         return try! JSONDecoder().decode(ModuleDefinition.self, from: JSONSerialization.data(withJSONObject: object))
     }
 
-    private let adultHosts: Set<String> = ["hentaiworld.me", "badsite.com"]
+    private let adultHosts: HostSet = ["hentaiworld.me", "badsite.com"]
     private func blocked(_ host: String) -> Bool { HostBlocklist.isHostBlocked(host, in: adultHosts) }
 
     func testTheMarketplacesAdultProvidersHaveAdultNames() {
