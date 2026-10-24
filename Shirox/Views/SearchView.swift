@@ -11,6 +11,7 @@ struct SearchView: View {
     @State private var showModuleList = false
     /// The module button the module list grows out of.
     @Namespace private var moduleListZoom
+    @AppStorage(ProviderMenuStyle.key) private var buttonStyle = ProviderMenuStyle.iconAndName
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var isLandscape = false
     // A SINGLE file importer drives both phases. Two `.fileImporter` modifiers in one view
@@ -62,12 +63,11 @@ struct SearchView: View {
 
     var body: some View {
         NavigationStack {
-            mainContent
-                .background(SearchActivationObserver { vm.clearResults() })
-                .navigationTitle("Search")
-                .toolbarZoomSource("moduleList", in: moduleListZoom, placement: .automatic) {
-                    moduleButton
-                }
+            withModuleButton(
+                mainContent
+                    .background(SearchActivationObserver { vm.clearResults() })
+                    .navigationTitle("Search")
+            )
                 .modifier(ConditionalSearchable(enabled: !isLocalModule && !isJellyfinModule, text: $vm.query))
                 // The module button stays up while searching, keyboard and all, rather than
                 // going with the navigation bar.
@@ -480,6 +480,20 @@ struct SearchView: View {
     }
 
     // MARK: - Module Button
+
+    /// The module button in the toolbar, left out when Settings hides it. Left out, not left
+    /// empty: from iOS 26 an empty item still draws its glass.
+    @ViewBuilder
+    private func withModuleButton(_ content: some View) -> some View {
+        if buttonStyle == .hidden {
+            content
+        } else {
+            content.toolbarZoomSource("moduleList", in: moduleListZoom, placement: .automatic) {
+                moduleButton
+            }
+        }
+    }
+
     @ViewBuilder
     private var moduleButton: some View {
         Button {
@@ -508,14 +522,16 @@ struct SearchView: View {
                 )
 
                 // Text label
-                Text(usingModule ? (moduleManager.activeModule?.sourceName ?? "Module") : shownProvider.displayName)
-                    .font(.callout)
-                    .fontWeight(.medium)
-                    // A toolbar item takes whatever width it asks for, so a long module name
-                    // would run the button off the leading edge of the screen.
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .frame(maxWidth: 160, alignment: .leading)
+                if buttonStyle != .iconOnly {
+                    Text(usingModule ? (moduleManager.activeModule?.sourceName ?? "Module") : shownProvider.displayName)
+                        .font(.callout)
+                        .fontWeight(.medium)
+                        // A toolbar item takes whatever width it asks for, so a long module name
+                        // would run the button off the leading edge of the screen.
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .frame(maxWidth: 160, alignment: .leading)
+                }
             }
             .foregroundStyle(.primary)
         }

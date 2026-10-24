@@ -523,13 +523,13 @@ struct AccountsSettingsView: View {
             }
 
             Section {
-                Picker("Home Provider Menu", selection: $providerMenuStyle) {
+                Picker("Home & Search Buttons", selection: $providerMenuStyle) {
                     ForEach(ProviderMenuStyle.allCases, id: \.self) { style in
                         Text(style.title).tag(style)
                     }
                 }
             } footer: {
-                Text("The menu at the top of Home that picks where Home and Search come from. Hidden, they keep the last choice.")
+                Text("The buttons at the top of Home and Search: Home's picks the provider, Search's the module. Hidden, both keep the last choice; modules are also in Settings › Modules.")
             }
 
             if aniListAuth.isLoggedIn || malAuth.isLoggedIn || simklAuth.isLoggedIn {
@@ -2221,17 +2221,24 @@ private struct ProvidersSettingsSection: View {
                         .frame(width: 28, height: 28)
                         .clipShape(RoundedRectangle(cornerRadius: 6))
                     VStack(alignment: .leading, spacing: 2) {
+                        // "MyAnimeList" next to two pills is wider than an iPhone row: the name
+                        // shrinks and the pills keep to one line.
                         Text(provider.providerType.displayName)
                             .font(.headline)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
                         Text(providerStatus(provider))
                             .font(.caption)
                             .foregroundStyle(.secondary)
+                            .lineLimit(1)
                     }
                     Spacer()
                     HStack(spacing: 8) {
                         if manager.orderedProviders.first?.providerType == provider.providerType {
                             Text("Primary")
                                 .font(.caption.weight(.semibold))
+                                .lineLimit(1)
+                                .fixedSize()
                                 .foregroundStyle(Color.accentColor)
                                 .padding(.horizontal, 8).padding(.vertical, 3)
                                 .background(.primary.opacity(0.1), in: Capsule())
@@ -2240,6 +2247,8 @@ private struct ProvidersSettingsSection: View {
                                 manager.selectProvider(provider.providerType)
                             }
                             .font(.caption.weight(.semibold))
+                            .lineLimit(1)
+                            .fixedSize()
                             .foregroundStyle(Color.accentColor)
                             .padding(.horizontal, 8).padding(.vertical, 3)
                             .background(Color.accentColor.opacity(0.1), in: Capsule())
@@ -2293,6 +2302,8 @@ private struct ProvidersSettingsSection: View {
             }
         }
         .font(.caption.weight(.semibold))
+        .lineLimit(1)
+        .fixedSize()
         .foregroundStyle(isLoggedIn ? .red : Color.accentColor)
         .padding(.horizontal, 8).padding(.vertical, 3)
         .background((isLoggedIn ? Color.red : Color.accentColor).opacity(0.1), in: Capsule())

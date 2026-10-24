@@ -89,7 +89,8 @@ struct ProviderSwitcher: View {
     }
 }
 
-/// How Home's provider menu appears, set in Settings > Providers.
+/// How the source buttons at the top of Home and Search appear: Home's provider menu and
+/// Search's module button. Set in Settings > Providers.
 enum ProviderMenuStyle: String, CaseIterable {
     case iconAndName, iconOnly, hidden
 
