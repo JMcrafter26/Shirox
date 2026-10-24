@@ -356,8 +356,14 @@ struct AniListDetailView: View {
                 BookmarkButton(media: vm.media)
                 #endif
             }
+            #if os(iOS)
+            // Placed like Home's calendar button: centred over the tab bar's search button.
+            .padding(.trailing, 26)
+            .padding(.bottom, 12)
+            #else
             .padding(.trailing, 16)
             .padding(.bottom, 24)
+            #endif
             #if !os(tvOS)
             .animation(.spring(response: 0.35, dampingFraction: 0.8), value: isSelectionMode)
             #endif
@@ -1197,6 +1203,7 @@ struct AniListDetailView: View {
                 TVDBPosterImage(media: media)
                     .frame(width: 110, height: 165)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .glassChrome(RoundedRectangle(cornerRadius: 12), enabled: true, off: Color.clear)
                     .shadow(color: .black.opacity(0.5), radius: 14, y: 6)
                     .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.white.opacity(0.08), lineWidth: 0.5))
                     .expandablePoster {

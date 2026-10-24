@@ -385,6 +385,7 @@ struct MangaDetailView: View {
                 CachedAsyncImage(urlString: detail.image)
                     .frame(width: 110, height: 165)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .glassChrome(RoundedRectangle(cornerRadius: 12), enabled: true, off: Color.clear)
                     .shadow(color: .black.opacity(0.5), radius: 14, y: 6)
                     .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.white.opacity(0.08), lineWidth: 0.5))
                     .expandablePoster {
