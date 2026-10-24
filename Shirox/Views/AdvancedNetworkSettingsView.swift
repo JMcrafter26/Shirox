@@ -25,6 +25,15 @@ struct AdvancedNetworkSettingsView: View {
     }
 }
 
+/// A toggle's explanation as a row under it, the way Player settings lays them out. Each
+/// section here shows its explanation as the footer while its toggle is off; once it's on,
+/// the explanation moves up into a row so the toggle and the settings it reveals stay one group.
+private func noteRow(_ text: String) -> some View {
+    Text(text)
+        .font(.caption)
+        .foregroundStyle(.secondary)
+}
+
 /// A text field for an address: no autocorrection or capitals, the URL keyboard.
 private func addressField(_ title: String, text: Binding<String>, prompt: String? = nil) -> some View {
     TextField(title, text: text, prompt: prompt.map { Text($0) })
@@ -51,23 +60,22 @@ private struct TMDBProxySections: View {
                     if apiBase.isEmpty { apiBase = TMDBHostSettings.defaultAPIBase }
                     if imageBase.isEmpty { imageBase = TMDBHostSettings.defaultImageBase }
                 }
+            if useProxies {
+                noteRow(Self.note)
+                addressField("Custom API Base URL", text: $apiBase, prompt: TMDBHostSettings.defaultAPIBase)
+                addressField("Custom Image Base URL", text: $imageBase, prompt: TMDBHostSettings.defaultImageBase)
+            }
         } header: {
             Text("TMDB")
         } footer: {
-            Text("Bypasses regional access blocks and restrictions in regions like Russia, India, and China by routing TMDB traffic through your own endpoints.")
-        }
-        if useProxies {
-            Section {
-                addressField("Custom API Base URL", text: $apiBase, prompt: TMDBHostSettings.defaultAPIBase)
-                addressField("Custom Image Base URL", text: $imageBase, prompt: TMDBHostSettings.defaultImageBase)
-            } footer: {
-                Text(footer)
-            }
+            Text(useProxies ? footer : Self.note)
         }
     }
 
+    private static let note = "Routes TMDB traffic through your own endpoints, for regions that block it."
+
     private var footer: String {
-        let explanation = "Each replaces https://api.themoviedb.org or https://image.tmdb.org; the path and query, TMDB's key included, go to your endpoint. While this is on, TMDB traffic goes only there, and none is sent without a valid https address."
+        let explanation = "Replaces https://api.themoviedb.org and https://image.tmdb.org; the path, query and key go along. TMDB traffic then goes only there, and only to a valid https address."
         let invalid = [("API", apiBase), ("image", imageBase)]
             .filter { TMDBHostSettings.validBase($0.1) == nil }
             .map(\.0)
@@ -92,25 +100,24 @@ private struct SecureDNSSections: View {
                     if serverURL.isEmpty { serverURL = SecureDNSSettings.defaultServerURL }
                     if serverAddresses.isEmpty { serverAddresses = SecureDNSSettings.defaultServerAddresses }
                 }
+            if secureDNS {
+                noteRow(Self.note)
+                addressField("Server URL", text: $serverURL, prompt: SecureDNSSettings.defaultServerURL)
+                addressField("Server IP Addresses", text: $serverAddresses, prompt: SecureDNSSettings.defaultServerAddresses)
+            }
         } header: {
             Text("DNS over HTTPS")
         } footer: {
-            Text("Looks up every server the app talks to over an encrypted DNS server of your choice, for networks that tamper with DNS. Video playback and web views aren't covered: they run in the system's own processes. A DNS profile or VPN set on the device comes first. Takes effect the next time Shirox starts.")
-        }
-        if secureDNS {
-            Section {
-                addressField("Server URL", text: $serverURL, prompt: SecureDNSSettings.defaultServerURL)
-                addressField("Server IP Addresses", text: $serverAddresses, prompt: SecureDNSSettings.defaultServerAddresses)
-            } footer: {
-                Text(footer)
-            }
+            Text(secureDNS ? footer : Self.note)
         }
     }
 
+    private static let note = "Looks up servers over encrypted DNS, for networks that tamper with it. Not for video or web views; a device DNS profile or VPN comes first. Applies after a restart."
+
     private var footer: String {
-        let explanation = "Cloudflare: https://cloudflare-dns.com/dns-query at 1.1.1.1. Google: https://dns.google/dns-query at 8.8.8.8. The addresses reach the server without a lookup of its own. If the server can't be reached, nothing in the app loads; turn this off to recover."
+        let explanation = "Cloudflare: https://cloudflare-dns.com/dns-query at 1.1.1.1. Google: https://dns.google/dns-query at 8.8.8.8. If the server can't be reached, nothing loads; turn this off to recover."
         let usable = SecureDNSSettings(enabled: true, serverURL: serverURL, serverAddresses: serverAddresses).resolver != nil
-        return usable ? explanation : "Needs an https URL and at least one IP address; until then it stays off. " + explanation
+        return usable ? explanation : "Needs an https URL and an IP address; off until then. " + explanation
     }
 }
 
@@ -134,15 +141,8 @@ private struct ProxySections: View {
                 .onChangeOf(enabled) { isOn in
                     if isOn, port.isEmpty { port = kind.defaultPort }
                 }
-        } header: {
-            Text("Proxy")
-        } footer: {
-            Text(NetworkProxy.isSupported
-                 ? "Sends the app's requests, modules' and web views' included, through your HTTP CONNECT or SOCKS5 proxy. Video playback isn't covered: the players open their own connections. Nothing goes out directly while the proxy is down. Takes effect the next time Shirox starts."
-                 : "A proxy for all traffic needs iOS 17, macOS 14 or tvOS 17.")
-        }
-        if enabled {
-            Section {
+            if enabled {
+                noteRow(Self.note)
                 Picker("Type", selection: $kindValue) {
                     ForEach(NetworkProxySettings.Kind.allCases, id: \.rawValue) { kind in
                         Text(kind.title).tag(kind.rawValue)
@@ -160,10 +160,18 @@ private struct ProxySections: View {
                 addressField("Username", text: $username, prompt: "Optional")
                 SecureField("Password", text: $password, prompt: Text("Optional"))
                     .onChangeOf(password) { ProxyKeychain.save($0, account: NetworkProxySettings.passwordAccount) }
-            } footer: {
-                Text(footer)
             }
+        } header: {
+            Text("Proxy")
+        } footer: {
+            Text(enabled ? footer : Self.note)
         }
+    }
+
+    private static var note: String {
+        NetworkProxy.isSupported
+            ? "Sends app, module and web view requests through an HTTP CONNECT or SOCKS5 proxy. Not for video. Nothing goes out directly while it's down. Applies after a restart."
+            : "A proxy for all traffic needs iOS 17, macOS 14 or tvOS 17."
     }
 
     private var footer: String {
@@ -171,7 +179,7 @@ private struct ProxySections: View {
                                             username: username, password: password)
         let explanation = "The password is kept in the Keychain."
         return settings.server == nil
-            ? "Needs a host name or IP address and a port, and a password with a username; until then it stays off. " + explanation
+            ? "Needs a host and port, and a password with a username; off until then. " + explanation
             : explanation
     }
 }
@@ -189,21 +197,20 @@ private struct UserAgentSections: View {
                 .onChangeOf(enabled) { isOn in
                     if isOn, userAgent.isEmpty { userAgent = NetworkUserAgent.standard }
                 }
-        } header: {
-            Text("User-Agent")
-        } footer: {
-            Text("The browser Shirox says it is to websites: on module requests, images and web views. A module that picks a browser of its own, and a solved Cloudflare check, keep theirs. Some sites turn away an old or unusual one.")
-        }
-        if enabled {
-            Section {
+            if enabled {
+                noteRow(Self.note)
                 addressField("User-Agent", text: $userAgent, prompt: NetworkUserAgent.standard)
                 Button("Use Shirox's Own") { userAgent = NetworkUserAgent.standard }
                     .disabled(userAgent == NetworkUserAgent.standard)
-            } footer: {
-                Text("Shirox's own: \(NetworkUserAgent.standard)")
             }
+        } header: {
+            Text("User-Agent")
+        } footer: {
+            Text(enabled ? "Shirox's own: \(NetworkUserAgent.standard)" : Self.note)
         }
     }
+
+    private static let note = "The browser Shirox claims to be for modules, images and web views. Modules with their own, and solved Cloudflare checks, keep theirs."
 }
 
 // MARK: - Test
@@ -235,7 +242,7 @@ private struct ConnectionTestSection: View {
                 }
             }
         } footer: {
-            Text("Checks TMDB's API and images the way Shirox reaches them now, then the encrypted DNS server and the proxy, if they're on. For the proxy it asks Cloudflare which address it sees requests come from. DNS and proxy changes are only in use after the next start.")
+            Text("Checks TMDB's API and images, then encrypted DNS and the proxy if they're on, asking Cloudflare which address it sees. DNS and proxy changes apply after a restart.")
         }
     }
 
@@ -293,7 +300,7 @@ private struct NetworkResetSection: View {
                 Text("Signs Shirox out of websites and forgets solved Cloudflare checks; modules may ask you to verify again.")
             }
         } footer: {
-            Text("Forgets cookies and website data, the web cache, solved Cloudflare checks and which TMDB host answered. Your settings here stay as they are.")
+            Text("Clears cookies, website data, the web cache, solved Cloudflare checks and the remembered TMDB host. Settings here stay.")
         }
     }
 
