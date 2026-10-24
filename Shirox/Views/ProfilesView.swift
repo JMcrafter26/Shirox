@@ -23,11 +23,25 @@ extension Color {
 struct ProfileAvatarView: View {
     let profile: AppProfile
     var size: CGFloat = 44
+    /// Liquid Glass tinted with the profile's colour in place of the flat fill, for the
+    /// Settings row. Falls back to the flat fill where there's no glass.
+    var glass = false
     @ObservedObject private var manager = ProfileManager.shared
 
+    private var color: Color { Color(profileHex: profile.colorHex) }
+
     var body: some View {
+        if glass {
+            picture
+                .glassChrome(Circle(), enabled: true, tint: color, off: color)
+        } else {
+            picture
+        }
+    }
+
+    private var picture: some View {
         ZStack {
-            Circle().fill(Color(profileHex: profile.colorHex))
+            if !glass { Circle().fill(color) }
             if profile.hasPhoto, let image = ProfilePhotoCache.image(at: manager.photoURL(for: profile.id),
                                                                      version: manager.photoVersion) {
                 Image(decorative: image, scale: 1)

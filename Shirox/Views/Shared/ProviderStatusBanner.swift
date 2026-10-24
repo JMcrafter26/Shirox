@@ -89,6 +89,21 @@ struct ProviderSwitcher: View {
     }
 }
 
+/// How Home's provider menu appears, set in Settings > Providers.
+enum ProviderMenuStyle: String, CaseIterable {
+    case iconAndName, iconOnly, hidden
+
+    static let key = "providerMenuStyle"
+
+    var title: String {
+        switch self {
+        case .iconAndName: return "Icon & Name"
+        case .iconOnly:    return "Icon Only"
+        case .hidden:      return "Hidden"
+        }
+    }
+}
+
 /// Toolbar menu button that switches the global primary provider (used on Home).
 /// Shows the active provider; tap to pick the other.
 ///
@@ -97,6 +112,7 @@ struct ProviderSwitcher: View {
 /// those work signed out on both AniList and MyAnimeList. Being signed into the one you pick
 /// only matters once you touch your library — this button never does.
 struct ProviderMenuButton: View {
+    @AppStorage(ProviderMenuStyle.key) private var style = ProviderMenuStyle.iconAndName
     @ObservedObject private var manager = ProviderManager.shared
     @ObservedObject private var discovery = DiscoverySource.shared
     @ObservedObject private var simklAuth = SimklAuthManager.shared
@@ -129,8 +145,9 @@ struct ProviderMenuButton: View {
         #else
         guard let img = UIImage(data: data) else { return nil }
         // Simkl's icon is a dark tile with a see-through "S", invisible on a dark menu; it sits
-        // on white, as it does in the Library.
-        return Image(uiImage: type == .simkl ? img.onWhite() : img)
+        // on white, as it does in the Library. A menu ignores clip shapes, so the corners are
+        // rounded into the image, as the button's are.
+        return Image(uiImage: img.menuIcon(onWhite: type == .simkl))
         #endif
     }
 
@@ -166,18 +183,24 @@ struct ProviderMenuButton: View {
             }
         } label: {
             #if os(macOS)
-            Label { Text(shown.displayName) } icon: {
+            let providerLabel = Label { Text(shown.displayName) } icon: {
                 cachedIcon(shown) ?? Image(systemName: "sparkles.tv")
             }
-            .labelStyle(.titleAndIcon)
+            if style == .iconOnly {
+                providerLabel.labelStyle(.iconOnly)
+            } else {
+                providerLabel.labelStyle(.titleAndIcon)
+            }
             #else
             HStack(spacing: 6) {
                 CachedAsyncImage(urlString: shown.iconURL)
                     .frame(width: 20, height: 20)
                     .background(shown == .simkl ? Color.white : Color.clear)
                     .clipShape(RoundedRectangle(cornerRadius: 5))
-                Text(shown.displayName)
-                    .font(.subheadline.weight(.semibold))
+                if style != .iconOnly {
+                    Text(shown.displayName)
+                        .font(.subheadline.weight(.semibold))
+                }
                 Image(systemName: "chevron.down").font(.caption2)
             }
             .foregroundStyle(.primary)
@@ -192,14 +215,19 @@ struct ProviderMenuButton: View {
 
 #if canImport(UIKit)
 private extension UIImage {
-    /// The image drawn on white.
-    func onWhite() -> UIImage {
+    /// The image with the menu button's rounded corners (5pt on its 20pt icon), drawn on
+    /// white when asked.
+    func menuIcon(onWhite: Bool) -> UIImage {
         let format = UIGraphicsImageRendererFormat()
         format.scale = scale
-        return UIGraphicsImageRenderer(size: size, format: format).image { context in
-            UIColor.white.setFill()
-            context.fill(CGRect(origin: .zero, size: size))
-            draw(at: .zero)
+        let rect = CGRect(origin: .zero, size: size)
+        return UIGraphicsImageRenderer(size: size, format: format).image { _ in
+            UIBezierPath(roundedRect: rect, cornerRadius: min(size.width, size.height) / 4).addClip()
+            if onWhite {
+                UIColor.white.setFill()
+                UIRectFill(rect)
+            }
+            draw(in: rect)
         }
     }
 }

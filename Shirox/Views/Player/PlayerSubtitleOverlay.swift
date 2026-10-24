@@ -63,14 +63,15 @@ struct PlayerSubtitleOverlay: View {
                     .shadow(color: outlineColor, radius: 0, x:  1, y:  0)
                     .shadow(color: outlineColor, radius: 0, x:  0, y: -1)
                     .shadow(color: outlineColor, radius: 0, x:  0, y:  1)
-                    // drop shadow on top
-                    .shadow(radius: settings.shadowRadius)
+                    // Drop shadow on top. Strong enough to see: SwiftUI's default, a third
+                    // black, barely showed past the outline.
+                    .shadow(color: .black.opacity(0.8), radius: settings.shadowRadius)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 16)
                     .padding(.vertical, settings.backgroundEnabled ? 6 : 0)
                     .background(
                         settings.backgroundEnabled
-                            ? RoundedRectangle(cornerRadius: 6).fill(Color.black.opacity(0.6))
+                            ? RoundedRectangle(cornerRadius: settings.backgroundCornerRadius).fill(settings.backgroundFill)
                             : nil
                     )
                     // Hidden floor: 8pt minimum above safe-area edge so the subtitle

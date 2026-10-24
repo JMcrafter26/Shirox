@@ -111,6 +111,10 @@ struct SubtitleBackupPayload: Codable {
     var fontSize: Double
     var shadowRadius: Double
     var backgroundEnabled: Bool
+    /// Nil in backups from before the background could be styled.
+    var backgroundRGB: [Double]?
+    var backgroundOpacity: Double?
+    var backgroundCornerRadius: Double?
     var bottomPadding: Double
     var delaySeconds: Double
     /// r, g, b, a. Nil when the user never picked a colour.
@@ -190,6 +194,7 @@ struct SettingsBackupSection: BackupSection {
         }
 
         let subtitles = SubtitleSettingsManager.shared
+        let background = SubtitleSettingsManager.rgb(subtitles.backgroundColor)
         let color: [Double]? = d.object(forKey: SubtitleKeys.colorR) == nil ? nil : [
             d.double(forKey: SubtitleKeys.colorR), d.double(forKey: SubtitleKeys.colorG),
             d.double(forKey: SubtitleKeys.colorB), d.double(forKey: SubtitleKeys.colorA)
@@ -205,6 +210,9 @@ struct SettingsBackupSection: BackupSection {
                 fontSize: subtitles.fontSize,
                 shadowRadius: subtitles.shadowRadius,
                 backgroundEnabled: subtitles.backgroundEnabled,
+                backgroundRGB: [background.0, background.1, background.2],
+                backgroundOpacity: subtitles.backgroundOpacity,
+                backgroundCornerRadius: subtitles.backgroundCornerRadius,
                 bottomPadding: subtitles.bottomPadding,
                 delaySeconds: subtitles.delaySeconds,
                 colorRGBA: color),
@@ -236,6 +244,11 @@ struct SettingsBackupSection: BackupSection {
             manager.fontSize = s.fontSize
             manager.shadowRadius = s.shadowRadius
             manager.backgroundEnabled = s.backgroundEnabled
+            if let c = s.backgroundRGB, c.count == 3 {
+                manager.backgroundColor = Color(red: c[0], green: c[1], blue: c[2])
+            }
+            if let opacity = s.backgroundOpacity { manager.backgroundOpacity = opacity }
+            if let radius = s.backgroundCornerRadius { manager.backgroundCornerRadius = radius }
             manager.bottomPadding = s.bottomPadding
             manager.delaySeconds = s.delaySeconds
             if let c = s.colorRGBA, c.count == 4 {

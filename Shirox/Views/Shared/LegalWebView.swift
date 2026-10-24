@@ -18,6 +18,16 @@ enum LegalPage {
         }
     }
 
+    /// The SF Symbol beside the page's row in Settings.
+    var icon: String {
+        switch self {
+        case .imprint:      return "building.columns"
+        case .privacy:      return "hand.raised"
+        case .contributors: return "heart"
+        case .licenses:     return "doc.text"
+        }
+    }
+
     private var filename: String {
         switch self {
         case .imprint:      return "imprint.html"

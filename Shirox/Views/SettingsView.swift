@@ -83,12 +83,12 @@ private struct ProfileSettingsRow: View {
     var body: some View {
         HStack(spacing: 14) {
             if let active = profiles.active {
-                ProfileAvatarView(profile: active, size: 52)
+                ProfileAvatarView(profile: active, size: 52, glass: true)
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(profiles.active?.name ?? "Profile")
                     .font(.headline.weight(.semibold))
-                Text(profiles.profiles.count > 1 ? "Switch or Manage Profiles" : "Add a Profile")
+                Text(subtitle)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -99,6 +99,14 @@ private struct ProfileSettingsRow: View {
         }
         .contentShape(Rectangle())
         .padding(.vertical, 4)
+    }
+
+    /// "Add a Profile" only while the one profile is still as Shirox made it: named
+    /// "Profile 1", with no picture of its own.
+    private var subtitle: String {
+        if profiles.profiles.count > 1 { return "Switch or Manage Profiles" }
+        guard let only = profiles.active else { return "Add a Profile" }
+        return only.name == "Profile 1" && !only.hasPhoto ? "Add a Profile" : "Manage Profiles"
     }
 }
 #endif
@@ -294,7 +302,7 @@ struct SettingsView: View {
                     NavigationLink {
                         LegalWebView(page: page)
                     } label: {
-                        Text(page.title)
+                        SettingsNavRow(icon: page.icon, title: page.title)
                     }
                 }
 
@@ -310,14 +318,18 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                 }
                 .padding(.vertical, 4)
-
-                LabeledContent("Version") {
-                    let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
-                    let build   = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "—"
-                    Text("\(version) (\(build))")
-                        .foregroundStyle(.secondary)
-                }
             }
+
+            Section {
+                SettingsNavRow(icon: Platform.icon, title: "Platform", subtitle: Platform.summary)
+                SettingsNavRow(icon: "info.circle", title: "Version", subtitle: Self.appVersion)
+            }
+    }
+
+    private static var appVersion: String {
+        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—"
+        let build   = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "—"
+        return "\(version) (\(build))"
     }
 
     static func formattedBytes(_ bytes: Int) -> String {
@@ -328,6 +340,104 @@ struct SettingsView: View {
             return String(format: "%.0f KB", Double(bytes) / 1_000)
         }
     }
+}
+
+// MARK: - Platform
+
+/// The device and system Shirox runs on, for the Platform row: "iPhone 14 Pro · iOS 27.0".
+private enum Platform {
+    static var summary: String { "\(deviceName) · \(systemName)" }
+
+    static var icon: String {
+        #if os(macOS)
+        return "desktopcomputer"
+        #elseif os(tvOS)
+        return "appletv"
+        #else
+        if runsOnMac { return "desktopcomputer" }
+        return UIDevice.current.userInterfaceIdiom == .pad ? "ipad" : "iphone"
+        #endif
+    }
+
+    #if !os(macOS)
+    /// Catalyst, or the iPad app on Apple silicon.
+    private static var runsOnMac: Bool {
+        ProcessInfo.processInfo.isMacCatalystApp || ProcessInfo.processInfo.isiOSAppOnMac
+    }
+    #endif
+
+    private static var systemName: String {
+        #if os(macOS)
+        let onMac = true
+        #else
+        let onMac = runsOnMac
+        #endif
+        if onMac {
+            let v = ProcessInfo.processInfo.operatingSystemVersion
+            return "macOS \(v.majorVersion).\(v.minorVersion)"
+        }
+        #if os(macOS)
+        return ""
+        #else
+        return "\(UIDevice.current.systemName) \(UIDevice.current.systemVersion)"
+        #endif
+    }
+
+    /// The marketing name where it's known, else the model identifier ("iPad15,3"). The system
+    /// only hands out the identifier, and since iOS 16 the device name is just "iPhone".
+    private static var deviceName: String {
+        let id = modelIdentifier
+        if let name = marketingNames[id] { return name }
+        #if os(macOS)
+        return id.isEmpty ? "Mac" : id
+        #else
+        if runsOnMac { return id.isEmpty ? "Mac" : id }
+        return id.isEmpty ? UIDevice.current.model : id
+        #endif
+    }
+
+    private static var modelIdentifier: String {
+        #if targetEnvironment(simulator)
+        return ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] ?? ""
+        #else
+        #if os(macOS)
+        return sysctlString("hw.model")
+        #else
+        if runsOnMac { return sysctlString("hw.model") }
+        var info = utsname()
+        uname(&info)
+        return withUnsafeBytes(of: &info.machine) { String(decoding: $0.prefix { $0 != 0 }, as: UTF8.self) }
+        #endif
+        #endif
+    }
+
+    private static func sysctlString(_ name: String) -> String {
+        var size = 0
+        guard sysctlbyname(name, nil, &size, nil, 0) == 0, size > 0 else { return "" }
+        var bytes = [CChar](repeating: 0, count: size)
+        guard sysctlbyname(name, &bytes, &size, nil, 0) == 0 else { return "" }
+        return String(cString: bytes)
+    }
+
+    /// iPhones Shirox runs on (iOS 15 and later). iPads, Macs and Apple TVs show their identifier.
+    private static let marketingNames: [String: String] = [
+        "iPhone8,1": "iPhone 6s", "iPhone8,2": "iPhone 6s Plus", "iPhone8,4": "iPhone SE",
+        "iPhone9,1": "iPhone 7", "iPhone9,3": "iPhone 7", "iPhone9,2": "iPhone 7 Plus", "iPhone9,4": "iPhone 7 Plus",
+        "iPhone10,1": "iPhone 8", "iPhone10,4": "iPhone 8", "iPhone10,2": "iPhone 8 Plus", "iPhone10,5": "iPhone 8 Plus",
+        "iPhone10,3": "iPhone X", "iPhone10,6": "iPhone X",
+        "iPhone11,2": "iPhone XS", "iPhone11,4": "iPhone XS Max", "iPhone11,6": "iPhone XS Max", "iPhone11,8": "iPhone XR",
+        "iPhone12,1": "iPhone 11", "iPhone12,3": "iPhone 11 Pro", "iPhone12,5": "iPhone 11 Pro Max",
+        "iPhone12,8": "iPhone SE (2nd generation)",
+        "iPhone13,1": "iPhone 12 mini", "iPhone13,2": "iPhone 12", "iPhone13,3": "iPhone 12 Pro", "iPhone13,4": "iPhone 12 Pro Max",
+        "iPhone14,4": "iPhone 13 mini", "iPhone14,5": "iPhone 13", "iPhone14,2": "iPhone 13 Pro", "iPhone14,3": "iPhone 13 Pro Max",
+        "iPhone14,6": "iPhone SE (3rd generation)",
+        "iPhone14,7": "iPhone 14", "iPhone14,8": "iPhone 14 Plus", "iPhone15,2": "iPhone 14 Pro", "iPhone15,3": "iPhone 14 Pro Max",
+        "iPhone15,4": "iPhone 15", "iPhone15,5": "iPhone 15 Plus", "iPhone16,1": "iPhone 15 Pro", "iPhone16,2": "iPhone 15 Pro Max",
+        "iPhone17,3": "iPhone 16", "iPhone17,4": "iPhone 16 Plus", "iPhone17,1": "iPhone 16 Pro", "iPhone17,2": "iPhone 16 Pro Max",
+        "iPhone17,5": "iPhone 16e",
+        "iPhone18,3": "iPhone 17", "iPhone18,4": "iPhone Air", "iPhone18,1": "iPhone 17 Pro", "iPhone18,2": "iPhone 17 Pro Max",
+        "iPhone19,4": "iPhone Duo",
+    ]
 }
 
 // MARK: - Accounts & Tracking Settings
@@ -347,6 +457,7 @@ struct AccountsSettingsView: View {
     @AppStorage("simklTrackingEnabled") private var simklTrackingEnabled = true
     @AppStorage(SyncTargets.key) private var syncTargetsRaw = ""
     @AppStorage("rateOnFinish") private var rateOnFinish = true
+    @AppStorage(ProviderMenuStyle.key) private var providerMenuStyle = ProviderMenuStyle.iconAndName
 
     #if !os(tvOS)
     /// The window Simkl's sign-in sheet is anchored to.
@@ -411,6 +522,15 @@ struct AccountsSettingsView: View {
                 Text("Tracks your anime, shows and movies on Simkl alongside AniList and MyAnimeList. Simkl has no manga.")
             }
 
+            Section {
+                Picker("Home Provider Menu", selection: $providerMenuStyle) {
+                    ForEach(ProviderMenuStyle.allCases, id: \.self) { style in
+                        Text(style.title).tag(style)
+                    }
+                }
+            } footer: {
+                Text("The menu at the top of Home that picks where Home and Search come from. Hidden, they keep the last choice.")
+            }
 
             if aniListAuth.isLoggedIn || malAuth.isLoggedIn || simklAuth.isLoggedIn {
                 Section("Tracking") {
@@ -752,7 +872,7 @@ struct SubtitleSettingsPage: View {
 
     var body: some View {
         SettingsList {
-            Section {
+            Section("Preview") {
                 preview
                     .listRowInsets(EdgeInsets())
             }
@@ -764,7 +884,7 @@ struct SubtitleSettingsPage: View {
                 Text("Turns subtitles on or off in every video. The player's subtitles button changes it too.")
             }
 
-            Section("Appearance") {
+            Section {
                 #if !os(tvOS)
                 ColorPicker("Text Color", selection: $settings.foregroundColor, supportsOpacity: false)
                 #endif
@@ -782,8 +902,26 @@ struct SubtitleSettingsPage: View {
                 sliderRow("Shadow", value: $settings.shadowRadius, in: 0...8, step: 0.5,
                           text: String(format: "%.1f", settings.shadowRadius))
                 #endif
-                Toggle("Background", isOn: $settings.backgroundEnabled)
+            } header: {
+                Text("Appearance")
+            } footer: {
+                #if !os(tvOS)
+                Text("Shadow is a soft dark glow around the text, for bright scenes.")
+                #endif
+            }
+
+            Section("Background") {
+                Toggle("Show Background", isOn: $settings.backgroundEnabled)
                     .tint(.secondary)
+                #if !os(tvOS)
+                if settings.backgroundEnabled {
+                    ColorPicker("Color", selection: $settings.backgroundColor, supportsOpacity: false)
+                    sliderRow("Opacity", value: $settings.backgroundOpacity, in: 0.1...1, step: 0.05,
+                              text: "\(Int((settings.backgroundOpacity * 100).rounded()))%")
+                    sliderRow("Rounding", value: $settings.backgroundCornerRadius, in: 0...20, step: 1,
+                              text: "\(Int(settings.backgroundCornerRadius))pt")
+                }
+                #endif
             }
 
             #if !os(tvOS)
@@ -829,29 +967,42 @@ struct SubtitleSettingsPage: View {
         Binding(get: { settings.fontSize }, set: { settings.fontSize = $0 })
     }
 
-    /// A line of subtitle over a dark frame, drawn as the player draws it.
+    /// A line of subtitle over a frame, drawn as the player draws it. The frame is bright, the
+    /// case the outline and shadow are there for. Nothing over it while subtitles are off.
     private var preview: some View {
         ZStack(alignment: .bottom) {
-            LinearGradient(colors: [Color(white: 0.28), Color(white: 0.08)], startPoint: .top, endPoint: .bottom)
-            Text("Did he give you any clues,\nany coordinates, anything?")
-                .font(.system(size: min(settings.fontSize, 32)))
-                .foregroundStyle(settings.foregroundColor)
-                .shadow(color: .black, radius: 0, x: -1, y: 0)
-                .shadow(color: .black, radius: 0, x: 1, y: 0)
-                .shadow(color: .black, radius: 0, x: 0, y: -1)
-                .shadow(color: .black, radius: 0, x: 0, y: 1)
-                .shadow(radius: settings.shadowRadius)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 12)
-                .padding(.vertical, settings.backgroundEnabled ? 6 : 0)
-                .background(settings.backgroundEnabled ? RoundedRectangle(cornerRadius: 6).fill(Color.black.opacity(0.6)) : nil)
-                .opacity(settings.enabled ? 1 : 0.3)
-                .padding(.bottom, 18)
+            Image("SubtitlePreview")
+                .resizable()
+                .scaledToFill()
+                .frame(height: 170)
+                .frame(maxWidth: .infinity)
+                .clipped()
+            if settings.enabled {
+                subtitleLine
+            }
         }
         .frame(height: 170)
         .frame(maxWidth: .infinity)
         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .accessibilityHidden(true)
+    }
+
+    private var subtitleLine: some View {
+        Text("Did he give you any clues,\nany coordinates, anything?")
+            .font(.system(size: min(settings.fontSize, 32)))
+            .foregroundStyle(settings.foregroundColor)
+            .shadow(color: .black, radius: 0, x: -1, y: 0)
+            .shadow(color: .black, radius: 0, x: 1, y: 0)
+            .shadow(color: .black, radius: 0, x: 0, y: -1)
+            .shadow(color: .black, radius: 0, x: 0, y: 1)
+            .shadow(color: .black.opacity(0.8), radius: settings.shadowRadius)
+            .multilineTextAlignment(.center)
+            .padding(.horizontal, 12)
+            .padding(.vertical, settings.backgroundEnabled ? 6 : 0)
+            .background(settings.backgroundEnabled
+                        ? RoundedRectangle(cornerRadius: settings.backgroundCornerRadius).fill(settings.backgroundFill)
+                        : nil)
+            .padding(.bottom, 18)
     }
 
     #if !os(tvOS)

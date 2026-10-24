@@ -328,6 +328,9 @@ private struct HomeToolbar: ViewModifier {
     @Binding var kind: MediaKind
     let openCalendar: () -> Void
 
+    @AppStorage(ProviderMenuStyle.key) private var providerMenuStyle = ProviderMenuStyle.iconAndName
+    private var showsProviderMenu: Bool { providerMenuStyle != .hidden }
+
     /// The leading edge of the navigation bar, named differently per platform.
     private static var leadingPlacement: ToolbarItemPlacement {
         #if os(iOS)
@@ -350,7 +353,9 @@ private struct HomeToolbar: ViewModifier {
             if discovery.usesSimkl {
                 ToolbarItem(placement: .navigation) { SimklKindMenu(kind: $kind) }
             }
-            ToolbarItem(placement: .primaryAction) { ProviderMenuButton() }
+            if showsProviderMenu {
+                ToolbarItem(placement: .primaryAction) { ProviderMenuButton() }
+            }
         }
         #else
         if #available(iOS 16, macOS 13, tvOS 16, *) {
@@ -362,7 +367,9 @@ private struct HomeToolbar: ViewModifier {
                 if discovery.usesSimkl {
                     ToolbarItem(placement: Self.leadingPlacement) { kindMenu }
                 }
-                providerItem
+                if showsProviderMenu {
+                    providerItem
+                }
             }
         } else {
             // A bare `if` in a toolbar builder needs iOS 16; before it, the condition lives
@@ -374,7 +381,9 @@ private struct HomeToolbar: ViewModifier {
                 ToolbarItem(placement: Self.leadingPlacement) {
                     if discovery.usesSimkl { kindMenu }
                 }
-                providerItem
+                ToolbarItem(placement: .primaryAction) {
+                    if showsProviderMenu { ProviderMenuButton().toolbarItemBackdrop() }
+                }
             }
         }
         #endif
