@@ -1177,6 +1177,10 @@ struct LibraryView: View {
         .navigationTitle("common.library")
         .navigationBarTitleDisplayMode(.large)
         .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: String(localized: "library.search_library"))
+        #elseif os(macOS)
+        .navigationTitle("common.library")
+        // The window toolbar's field filters the library (see `MacToolbarSearch`).
+        .modifier(MacToolbarFilter(text: $searchText))
         #else
         .navigationTitle("common.library")
         .searchable(text: $searchText, prompt: String(localized: "library.search_library"))
@@ -1658,3 +1662,20 @@ private struct LibraryRowView: View {
     }
 }
 
+
+#if os(macOS)
+/// The library's filter from the window toolbar's search field, on macOS 15 and later where
+/// that field replaced the page's own.
+private struct MacToolbarFilter: ViewModifier {
+    @Binding var text: String
+    @ObservedObject private var toolbarSearch = MacToolbarSearch.shared
+
+    func body(content: Content) -> some View {
+        if #available(macOS 15, *) {
+            content.onChangeOf(toolbarSearch.text) { text = $0 }
+        } else {
+            content.searchable(text: $text, prompt: String(localized: "library.search_library"))
+        }
+    }
+}
+#endif

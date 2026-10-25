@@ -272,7 +272,11 @@ enum AppTab: Int, CaseIterable, Identifiable {
     static var available: [AppTab] {
         #if os(tvOS)
         return [.home, .library, .settings, .search]
-        #elseif os(macOS) || targetEnvironment(macCatalyst)
+        #elseif os(macOS)
+        // Search is the toolbar's field there, not a tab (macOS 15 and later).
+        if #available(macOS 15, *) { return [.home, .library, .downloads, .settings] }
+        return [.home, .search, .library, .downloads, .settings]
+        #elseif targetEnvironment(macCatalyst)
         return [.home, .search, .library, .downloads, .settings]
         #else
         return [.home, .library, .downloads, .settings, .search]

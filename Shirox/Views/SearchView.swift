@@ -3,6 +3,10 @@ import Combine
 import UniformTypeIdentifiers
 
 struct SearchView: View {
+    #if os(macOS)
+    /// The window toolbar's field, when the page is brought up by it rather than having its own.
+    var toolbarSearch: MacToolbarSearch? = nil
+    #endif
     @StateObject private var vm = SearchViewModel()
     @StateObject private var history = SearchHistoryManager()
     @EnvironmentObject private var moduleManager: ModuleManager
@@ -27,6 +31,14 @@ struct SearchView: View {
     @State private var pendingVideoTitle: String?
 
     private var isLocalModule: Bool { moduleManager.activeModule?.isLocalPlayback == true }
+
+    private var usesToolbarSearch: Bool {
+        #if os(macOS)
+        toolbarSearch != nil
+        #else
+        false
+        #endif
+    }
     private var isJellyfinModule: Bool { moduleManager.activeModule?.isJellyfin == true }
 
     private var platformBackground: Color {
@@ -68,7 +80,21 @@ struct SearchView: View {
                     .background(SearchActivationObserver { vm.clearResults() })
                     .navigationTitle("common.search")
             )
-                .modifier(ConditionalSearchable(enabled: !isLocalModule && !isJellyfinModule, text: $vm.query))
+                .modifier(ConditionalSearchable(enabled: !isLocalModule && !isJellyfinModule && !usesToolbarSearch,
+                                                text: $vm.query))
+                #if os(macOS)
+                .onReceive(toolbarSearch?.$text.eraseToAnyPublisher() ?? Empty().eraseToAnyPublisher()) { text in
+                    if vm.query != text { vm.query = text }
+                }
+                .onReceive(toolbarSearch?.$submissions.dropFirst().eraseToAnyPublisher() ?? Empty().eraseToAnyPublisher()) { _ in
+                    history.add(vm.query)
+                    vm.search(usingModule: usingModule)
+                }
+                // A history entry or suggestion picked on the page goes into the field.
+                .onChangeOf(vm.query) { query in
+                    if let toolbarSearch, toolbarSearch.text != query { toolbarSearch.text = query }
+                }
+                #endif
                 // The module button stays up while searching, keyboard and all, rather than
                 // going with the navigation bar.
                 .keepsToolbarWhileSearching()

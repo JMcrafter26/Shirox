@@ -347,6 +347,24 @@ private struct MacSidebarView: View {
     }
 }
 
+#if os(macOS)
+/// The search field at the end of a Mac window's toolbar: what's typed, whether it's in use,
+/// and a count of Returns, which the Search page runs a search on.
+@MainActor
+final class MacToolbarSearch: ObservableObject {
+    static let shared = MacToolbarSearch()
+    @Published var text = ""
+    @Published var isPresented = false
+    @Published var submissions = 0
+
+    /// Cleared on a switch of tab: Library's filter and a search don't carry over.
+    func reset() {
+        text = ""
+        isPresented = false
+    }
+}
+#endif
+
 extension Notification.Name {
     /// A sidebar section picked from the menu bar; `object` is its `SidebarTab`.
     static let selectSidebarTab = Notification.Name("SelectSidebarTab")
@@ -422,6 +440,14 @@ private struct RootTabView: View {
         })
     }
 
+    @ObservedObject private var toolbarSearch = MacToolbarSearch.shared
+
+    /// The Search page is up while the toolbar's field is in use anywhere but the Library,
+    /// which filters itself with it instead.
+    private var showsMacSearch: Bool {
+        sidebarTab != .library && (toolbarSearch.isPresented || !toolbarSearch.text.isEmpty)
+    }
+
     /// The toolbar's tabs, in the order and with the ones hidden in Settings › General.
     private var macTabs: [SidebarTab] {
         AppTab.visible(order: tabOrder, hidden: hiddenTabs).map(SidebarTab.init)
@@ -475,10 +501,10 @@ private struct RootTabView: View {
         }
     }
 
-    /// Icon only when labels are hidden; VoiceOver still reads the name.
+    /// Icon only when labels are hidden (iPhone); VoiceOver still reads the name.
     @ViewBuilder
     private func tabLabel(_ tab: AppTab) -> some View {
-        if hidesTabLabels {
+        if hidesTabLabels, UIDevice.current.userInterfaceIdiom == .phone {
             Image(systemName: tab.icon).accessibilityLabel(tab.title)
         } else {
             Label(tab.title, systemImage: tab.icon)
@@ -517,6 +543,9 @@ private struct RootTabView: View {
                 #elseif os(macOS)
                 // Tabs in the window's toolbar, as iOS has them in its tab bar, rather than a
                 // sidebar taking a column of the window for five rows.
+                //
+                // Search isn't one of them: its field sits at the toolbar's trailing end, filters
+                // the Library on that tab, and brings up the Search page over any other.
                 TabView(selection: macTabSelection) {
                     ForEach(macTabs, id: \.self) { tab in
                         Tab(tab.label, systemImage: tab.icon, value: tab) {
@@ -525,6 +554,17 @@ private struct RootTabView: View {
                     }
                 }
                 .tabViewStyle(.tabBarOnly)
+                .overlay {
+                    if showsMacSearch {
+                        SearchView(toolbarSearch: toolbarSearch)
+                            .background(Color(nsColor: .windowBackgroundColor))
+                    }
+                }
+                .searchable(text: $toolbarSearch.text, isPresented: $toolbarSearch.isPresented, placement: .toolbar,
+                            prompt: sidebarTab == .library ? String(localized: "library.search_library")
+                                                           : String(localized: "search.search_anime"))
+                .onSubmit(of: .search) { toolbarSearch.submissions += 1 }
+                .onChangeOf(sidebarTab) { _ in toolbarSearch.reset() }
                 #else
                 TabView(selection: $selectedTab) {
                     ForEach(visibleTabs) { tab in
@@ -544,7 +584,7 @@ private struct RootTabView: View {
                     }
                 }
                 .tabViewStyle(.sidebarAdaptable)
-                .tabBarMinimizes(minimizesTabBar)
+                .tabBarMinimizes(minimizesTabBar && UIDevice.current.userInterfaceIdiom == .phone)
                 .searchTabOpensWithoutKeyboard(selectedTab: selectedTab)
                 .toolbarBackgroundHidden()
                 .appTint()
@@ -583,6 +623,9 @@ private struct RootTabView: View {
                 #endif
             }
         }
+        // Soft edges for every scroll view under a bar: an iPad's and a Mac's bars defaulted to
+        // the hard line with a solid backing. Pages that hide it still do (`hideScrollEdgeEffect`).
+        .softScrollEdges()
         .onOpenURL { url in
             #if os(macOS)
             // A video opened with Shirox from Finder, or dropped on its Dock icon.
@@ -611,7 +654,15 @@ private struct RootTabView: View {
         #endif
         #if targetEnvironment(macCatalyst) || os(macOS)
         .onReceive(NotificationCenter.default.publisher(for: .selectSidebarTab)) { note in
-            if let tab = note.object as? SidebarTab { sidebarTab = tab }
+            guard let tab = note.object as? SidebarTab else { return }
+            #if os(macOS)
+            // Search is the toolbar's field, not a tab, where the tabs are in the toolbar.
+            if tab == .search, #available(macOS 15, *) {
+                MacToolbarSearch.shared.isPresented = true
+                return
+            }
+            #endif
+            sidebarTab = tab
         }
         #endif
         // The tab showing was just hidden: on to the first one left.

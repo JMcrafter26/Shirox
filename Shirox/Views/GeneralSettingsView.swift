@@ -20,6 +20,15 @@ struct GeneralSettingsView: View {
     @State private var appIconError: String?
     #endif
 
+    /// The bottom tab bar's: label and minimize switches apply only there.
+    private static var isPhone: Bool {
+        #if os(iOS) && !targetEnvironment(macCatalyst)
+        return UIDevice.current.userInterfaceIdiom == .phone
+        #else
+        return false
+        #endif
+    }
+
     /// Where the tab bar settings apply: the iPhone and iPad tab bar. A Mac lists its sections
     /// in a sidebar or the toolbar.
     private static var hasTabBar: Bool {
@@ -61,7 +70,7 @@ struct GeneralSettingsView: View {
                 NavigationLink {
                     TabBarCustomizationView()
                 } label: {
-                    LabeledContent(Self.hasTabBar ? "settings.customize_bottom_tabs" : "settings.customize_tabs") {
+                    LabeledContent(Self.isPhone ? "settings.customize_bottom_tabs" : "settings.customize_tabs") {
                         Text(tabsSubtitle)
                             .foregroundStyle(.secondary)
                     }
@@ -76,15 +85,18 @@ struct GeneralSettingsView: View {
                 .pickerStyle(.menu)
                 .retinted(tint)
 
-                #if os(iOS) && !targetEnvironment(macCatalyst)
-                Toggle("settings.hide_tab_labels", isOn: $hideTabLabels)
-                    .switchTint()
-
-                if #available(iOS 26, *) {
-                    Toggle("settings.minimize_on_scroll", isOn: $minimizeTabBar)
+                // An iPad's and a Mac's tabs are the system's own, always labelled and never minimized.
+                if Self.isPhone {
+                    #if os(iOS)
+                    Toggle("settings.hide_tab_labels", isOn: $hideTabLabels)
                         .switchTint()
+
+                    if #available(iOS 26, *) {
+                        Toggle("settings.minimize_on_scroll", isOn: $minimizeTabBar)
+                            .switchTint()
+                    }
+                    #endif
                 }
-                #endif
             } header: {
                 Text(Self.hasTabBar ? String(localized: "settings.tab_bar") : String(localized: "settings.tabs"))
             }
