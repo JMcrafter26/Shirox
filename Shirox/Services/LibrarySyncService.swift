@@ -673,20 +673,13 @@ struct SyncRun: Identifiable, Equatable {
     var confirmationMessage: String {
         switch kind {
         case .merge:
-            return String(localized: "shared.brings_every_signed_in_account")
-                 + "whichever account is further along wins — nothing is ever moved backwards."
+            return String(localized: "shared.sync_merge_explanation")
         case .copyForward:
-            return String(localized: "shared.adds_anything_missing_from_and \(targetName)")
-                 + "to match \(sourceName). Titles already further along on \(targetName) "
-                 + "are left untouched."
+            return String(localized: "shared.sync_copy_explanation \(targetName) \(sourceName)")
         case .overwrite:
-            return String(localized: "shared.overwrites_with_progress_status_score \(targetName) \(sourceName)")
-                 + "rewatch count — including where \(targetName) is further along. Titles "
-                 + "only \(targetName) has are left alone. This can't be undone."
+            return String(localized: "shared.sync_overwrite_explanation \(targetName) \(sourceName)")
         case .mirror:
-            return String(localized: "shared.makes_an_exact_copy_of \(targetName) \(sourceName)")
-                 + "deleting entries \(sourceName) doesn't have. Entries whose match can't be "
-                 + "confirmed are kept. This can't be undone."
+            return String(localized: "shared.sync_mirror_explanation \(targetName) \(sourceName)")
         }
     }
 }

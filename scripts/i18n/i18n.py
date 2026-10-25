@@ -404,7 +404,9 @@ def cmd_loose(args):
                         continue
                     before = line[:match.start()]
                     # `"key": value` and `["key"]` are lookups; ` : ` after a literal is a ternary's.
-                    if NOT_UI_CONTEXT.search(before) or line[match.end():].startswith((":", "]")):
+                    after = line[match.end():]
+                    if NOT_UI_CONTEXT.search(before) or after.startswith(":") \
+                            or (after.startswith("]") and before.rstrip().endswith("[")):
                         continue
                     if is_ui_text(text, "returned"):
                         print(f"{rel}:{number}: \"{text}\"")
