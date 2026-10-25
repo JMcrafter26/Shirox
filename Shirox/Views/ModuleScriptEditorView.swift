@@ -96,13 +96,13 @@ struct ModuleScriptEditorView: View {
             Button("modules.delete_all_and_paste", role: .destructive, action: pasteClipboard)
             Button("common.cancel", role: .cancel) {}
         } message: {
-            Text("modules.everything_in_the_editor_is_2")
+            Text("modules.paste_replaces_editor_detail")
         }
         .confirmationDialog("modules.replace_the_whole_script", isPresented: $confirmImport, titleVisibility: .visible) {
             Button("modules.choose_a_js_file", role: .destructive) { showImporter = true }
             Button("common.cancel", role: .cancel) {}
         } message: {
-            Text("modules.everything_in_the_editor_is_3")
+            Text("modules.file_replaces_editor")
         }
         .confirmationDialog("modules.discard_your_changes", isPresented: $confirmDiscard, titleVisibility: .visible) {
             Button("modules.discard_changes", role: .destructive) { dismiss() }

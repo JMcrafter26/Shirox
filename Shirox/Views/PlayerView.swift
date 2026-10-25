@@ -2969,7 +2969,7 @@ struct PlayerView: View {
         let epTitle = tvdbEpisodeTitle ?? currentContext?.episodeTitle
         let subtitleString: String
         if let n = epNumber {
-            if let t = epTitle { subtitleString = String(localized: "player.episode_2 \(n) \(t)") }
+            if let t = epTitle { subtitleString = String(localized: "player.episode_titled \(n) \(t)") }
             else { subtitleString = String(localized: "player.episode \(n)") }
         } else {
             subtitleString = epTitle ?? ""
@@ -4255,9 +4255,19 @@ final class MacPlayerWindowManager: NSObject, ObservableObject {
         NSApp.windows.first { $0.isVisible && $0.canBecomeMain && !($0 is NSPanel) }
     }
 
+    /// File ▸ New Window, found by its ⌘N rather than its title, which is in the app's language.
     private static func openAppWindow() {
-        if let item = NSApp.mainMenu?.item(withTitle: "File")?.submenu?.item(withTitle: "New Window") {
-            item.menu?.performActionForItem(at: item.menu?.index(of: item) ?? 0)
+        func newWindowItem(in menu: NSMenu?) -> NSMenuItem? {
+            for item in menu?.items ?? [] {
+                if item.keyEquivalent == "n", item.keyEquivalentModifierMask == .command, item.action != nil {
+                    return item
+                }
+                if let found = newWindowItem(in: item.submenu) { return found }
+            }
+            return nil
+        }
+        if let item = newWindowItem(in: NSApp.mainMenu), let menu = item.menu {
+            menu.performActionForItem(at: menu.index(of: item))
         }
     }
 

@@ -169,7 +169,7 @@ struct SearchView: View {
             } else {
                 emptyStateView(
                     icon: usingModule ? "puzzlepiece.extension" : "magnifyingglass",
-                    title: usingModule ? String(localized: "search.search_via_module") : (discovery.usesSimkl ? String(localized: "search.search_simkl") : String(localized: "search.search_anime_2")),
+                    title: usingModule ? String(localized: "search.search_via_module") : (discovery.usesSimkl ? String(localized: "search.search_simkl") : String(localized: "search.search_anime_title")),
                     subtitle: usingModule
                         ? String(localized: "search.searching_module \(moduleManager.activeModule?.sourceName ?? String())")
                         : discovery.usesSimkl

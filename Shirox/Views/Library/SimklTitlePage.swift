@@ -342,7 +342,7 @@ struct SimklTitlePage: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ForEach(seasons, id: \.self) { number in
-                            seasonPill(String(localized: "library.season_2 \(number)"), selected: !showsSpecials && season == number) {
+                            seasonPill(String(localized: "library.season_number \(number)"), selected: !showsSpecials && season == number) {
                                 showsSpecials = false
                                 season = number
                             }
@@ -402,7 +402,7 @@ struct SimklTitlePage: View {
 
     private func seasonHeader(_ number: Int) -> some View {
         HStack {
-            Text("library.season_2 \(number)").font(.title3.weight(.bold))
+            Text("library.season_number \(number)").font(.title3.weight(.bold))
             Spacer()
             Menu {
                 Button("library.mark_season_watched") { Task { await changeSeason(number, marking: true) } }

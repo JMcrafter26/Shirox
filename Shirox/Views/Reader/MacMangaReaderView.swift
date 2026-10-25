@@ -196,7 +196,7 @@ struct MacMangaReaderView: View {
                     .lineLimit(1)
                 // NSMenus, as the player's: a SwiftUI menu on a Mac flattens its label, glass and all.
                 PlayerMenuButton(
-                    menuTitle: String(localized: "detail.chapters_2"),
+                    menuTitle: String(localized: "detail.chapters_menu"),
                     label: .text((chapter?.displayName ?? String(localized: "reader.chapter")) + " ▾", size: 11, weight: .medium),
                     items: {
                         context.chapters.indices.reversed().map { index in
@@ -207,7 +207,7 @@ struct MacMangaReaderView: View {
                 )
                 .fixedSize()
                 .opacity(0.8)
-                .help("detail.chapters_2")
+                .help("detail.chapters_menu")
             }
 
             Spacer(minLength: 12)
@@ -337,7 +337,7 @@ struct MacMangaReaderView: View {
         }
         .buttonStyle(.plain)
         .disabled(!enabled)
-        .help(previous ? String(localized: "reader.previous_chapter") : String(localized: "reader.next_chapter_2"))
+        .help(previous ? String(localized: "reader.previous_chapter") : String(localized: "reader.next_chapter"))
     }
 
     private var autoScrollButton: some View {
@@ -555,7 +555,7 @@ struct MacMangaReaderView: View {
                 .font(.headline)
                 .foregroundStyle(.secondary)
             if hasNext {
-                Button("reader.next_chapter \(context.chapters[chapterIndex + 1].displayName)") { go(to: chapterIndex + 1) }
+                Button("reader.next_chapter_named \(context.chapters[chapterIndex + 1].displayName)") { go(to: chapterIndex + 1) }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
             }

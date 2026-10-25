@@ -11,7 +11,7 @@ actor HLSDownloader {
         var errorDescription: String? {
             switch self {
             case .invalidManifest: return String(localized: "shared.invalid_hls_manifest")
-            case .downloadFailed(let m): return String(localized: "shared.download_failed_2 \(m)")
+            case .downloadFailed(let m): return String(localized: "shared.download_failed_reason \(m)")
             }
         }
     }

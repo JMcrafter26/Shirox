@@ -40,7 +40,7 @@ func parseStreamResults(from obj: [String: Any]) -> [StreamResult] {
             guard let urlStr = stream["streamUrl"] as? String ?? stream["url"] as? String,
                   let url = URL(string: urlStr) else { continue }
             guard seen.insert(urlStr).inserted else { continue }
-            let title = stream["title"] as? String ?? String(localized: "shared.stream_2")
+            let title = stream["title"] as? String ?? String(localized: "shared.stream")
             let headers = stream["headers"] as? [String: String] ?? [:]
             var result = StreamResult(title: title, url: url, headers: headers,
                                       subtitle: subtitleUrl, subtitleHeaders: subtitleHeaders,
@@ -53,19 +53,19 @@ func parseStreamResults(from obj: [String: Any]) -> [StreamResult] {
         for (i, urlStr) in streams.enumerated() {
             guard let url = URL(string: urlStr) else { continue }
             guard seen.insert(urlStr).inserted else { continue }
-            results.append(StreamResult(title: String(localized: "shared.stream \(i + 1)"), url: url, headers: [:],
+            results.append(StreamResult(title: String(localized: "shared.stream_number \(i + 1)"), url: url, headers: [:],
                                         subtitle: subtitleUrl, subtitleHeaders: subtitleHeaders,
                                         allSubtitles: allSubtitles, playlistKey: sharedPlaylistKey))
         }
     } else if let stream = obj["stream"] as? String, let url = URL(string: stream) {
-        results.append(StreamResult(title: String(localized: "shared.stream_2"), url: url, headers: [:],
+        results.append(StreamResult(title: String(localized: "shared.stream"), url: url, headers: [:],
                                     subtitle: subtitleUrl, subtitleHeaders: subtitleHeaders,
                                     allSubtitles: allSubtitles, playlistKey: sharedPlaylistKey))
     } else if let stream = obj["stream"] as? [String: Any],
               let urlStr = stream["url"] as? String,
               let url = URL(string: urlStr) {
         let headers = stream["headers"] as? [String: String] ?? [:]
-        results.append(StreamResult(title: String(localized: "shared.stream_2"), url: url, headers: headers,
+        results.append(StreamResult(title: String(localized: "shared.stream"), url: url, headers: headers,
                                     subtitle: subtitleUrl, subtitleHeaders: subtitleHeaders,
                                     allSubtitles: allSubtitles,
                                     playlistKey: stream["playlistKey"] as? String ?? sharedPlaylistKey))

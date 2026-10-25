@@ -91,7 +91,7 @@ enum DiscoverSort: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .popular:  return String(localized: "shared.popular")
-        case .trending: return String(localized: "shared.trending_2")
+        case .trending: return String(localized: "shared.trending")
         case .topRated: return String(localized: "shared.top_rated")
         case .newest:   return String(localized: "shared.newest")
         }

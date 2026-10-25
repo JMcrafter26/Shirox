@@ -568,7 +568,7 @@ struct MangaDetailView: View {
             }
             if malAuth.isLoggedIn, mangaMALID != nil {
                 listButton(
-                    title: existingMALEntry.map { String(localized: "detail.mal_2 \($0.status.displayName(for: .manga)) \($0.progress)") } ?? String(localized: "detail.add_to_mal"),
+                    title: existingMALEntry.map { String(localized: "detail.mal_status_progress \($0.status.displayName(for: .manga)) \($0.progress)") } ?? String(localized: "detail.add_to_mal"),
                     systemImage: "list.bullet.rectangle", zoomID: "malEdit") { showMALEdit = true }
             }
         }
@@ -617,7 +617,7 @@ struct MangaDetailView: View {
         return VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .center) {
                 HStack(spacing: 8) {
-                    Text("detail.chapters_2")
+                    Text("detail.chapters_menu")
                         .font(.title3.weight(.bold))
                     Text("\(visibleChapters.count)")
                         .font(.caption.weight(.bold))

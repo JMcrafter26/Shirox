@@ -400,7 +400,7 @@ private struct ScriptDraftView: View {
             Button("modules.delete_all_and_paste", role: .destructive, action: paste)
             Button("common.cancel", role: .cancel) {}
         } message: {
-            Text("modules.everything_in_the_editor_is")
+            Text("modules.paste_replaces_editor")
         }
     }
 

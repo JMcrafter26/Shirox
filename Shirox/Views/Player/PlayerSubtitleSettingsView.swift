@@ -139,7 +139,7 @@ struct PlayerSubtitleSettingsView: View {
                     .controlSize(.small)
 
                     HStack {
-                        TextField("settings.exact_value_e_g_83", text: $exactDelay)
+                        TextField("settings.exact_value_placeholder", text: $exactDelay)
                             .numbersAndPunctuationKeyboard()
                             .onSubmit(applyExactDelay)
                         Button("settings.set", action: applyExactDelay)

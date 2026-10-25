@@ -122,7 +122,7 @@ struct PlayerBottomBar: View {
     private var titleBlock: some View {
         VStack(alignment: .leading, spacing: 3) {
             if let ep = episodeNumber {
-                let epLine = tvdbEpisodeTitle.flatMap { $0.isEmpty ? nil : String(localized: "player.ep \(ep) \($0)") } ?? String(localized: "player.ep_2 \(ep)")
+                let epLine = tvdbEpisodeTitle.flatMap { $0.isEmpty ? nil : String(localized: "player.ep \(ep) \($0)") } ?? String(localized: "player.ep_short \(ep)")
                 Text(epLine)
                     .font(.system(size: isPad ? 16 : 14, weight: .semibold))
                     .foregroundStyle(.white.opacity(0.6))
@@ -274,7 +274,7 @@ struct PlayerBottomBar: View {
 
     /// Full label for a speed menu row (e.g. "Normal (1×)", "1.25×").
     private func speedMenuLabel(_ speed: Float) -> String {
-        speed == 1.0 ? String(localized: "player.normal_1") : Self.speedText(speed) + "×"
+        speed == 1.0 ? String(localized: "player.normal_speed") : Self.speedText(speed) + "×"
     }
 
     /// "1", "0.75", "1.25": every digit the speed has. "%.2g" made 1.25 read "1.2".

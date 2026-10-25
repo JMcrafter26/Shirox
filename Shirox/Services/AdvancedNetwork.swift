@@ -344,7 +344,7 @@ struct NetworkDiagnostics {
         let title = String(localized: "settings.proxy")
         guard proxy.enabled else { return NetworkCheck(title: title, outcome: .skipped, detail: String(localized: "settings.off")) }
         guard proxySupported else {
-            return NetworkCheck(title: title, outcome: .failed, detail: String(localized: "settings.needs_ios_17_macos_14"))
+            return NetworkCheck(title: title, outcome: .failed, detail: String(localized: "settings.proxy_needs_ios_17"))
         }
         guard let server = proxy.server else {
             return NetworkCheck(title: title, outcome: .failed, detail: String(localized: "settings.needs_a_host_and_a"))

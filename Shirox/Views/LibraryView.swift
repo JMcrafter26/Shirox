@@ -986,7 +986,7 @@ struct LibraryView: View {
                         .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("library.edit \(entry.media.title.displayTitle)")
+                .accessibilityLabel("library.edit_name \(entry.media.title.displayTitle)")
                 // Bottom-right of the 2:3 poster, above the progress bar on its edge.
                 .position(x: geo.size.width - 20, y: geo.size.width * 1.5 - 30)
             }
@@ -996,7 +996,7 @@ struct LibraryView: View {
         .contextMenu {
             FullTitleMenuItems(entry.media.title.displayTitle)
             Button { openFromGrid(entry) } label: { Label("library.open", systemImage: "arrow.up.right") }
-            Button { editEntry(entry) } label: { Label("library.edit_2", systemImage: "pencil") }
+            Button { editEntry(entry) } label: { Label("library.edit", systemImage: "pencil") }
             if let quick = quickProgress(entry) {
                 Button { Task { await quick.run() } } label: { Label(quick.title, systemImage: quick.icon) }
             }
@@ -1021,7 +1021,7 @@ struct LibraryView: View {
                         .contextMenu {
                             FullTitleMenuItems(entry.media.title.displayTitle)
                             Button { openFromGrid(entry) } label: { Label("library.open", systemImage: "arrow.up.right") }
-                            Button { editEntry(entry) } label: { Label("library.edit_2", systemImage: "pencil") }
+                            Button { editEntry(entry) } label: { Label("library.edit", systemImage: "pencil") }
                             if let quick = quickProgress(entry) {
                                 Button { Task { await quick.run() } } label: { Label(quick.title, systemImage: quick.icon) }
                             }

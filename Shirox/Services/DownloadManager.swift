@@ -222,7 +222,7 @@ final class DownloadManager: NSObject, ObservableObject {
         // Prevent duplicates
         if let existing = items.first(where: { $0.episodeNumber == context.episodeNumber && $0.episodeHref == episodeHref && $0.streamTitle == context.streamTitle }) {
             let status = existing.state == .completed ? "already downloaded" : "already in queue"
-            ToastManager.shared.show(message: String(localized: "shared.is \(context.mediaTitle) \(context.episodeNumber) \(status)"), type: .warning)
+            ToastManager.shared.show(message: String(localized: "shared.episode_is_status \(context.mediaTitle) \(context.episodeNumber) \(status)"), type: .warning)
             return
         }
         
@@ -1697,7 +1697,7 @@ extension DownloadManager {
             #if os(iOS)
             ToastManager.shared.show(
                 message: restored.count == 1 ? String(localized: "shared.added_the_missing_audio_to \(restored[0])")
-                    : String(localized: "shared.added_the_missing_audio_to_2 \(restored.count)"),
+                    : String(localized: "shared.added_missing_audio_count \(restored.count)"),
                 type: .info, duration: 4)
             #endif
         }

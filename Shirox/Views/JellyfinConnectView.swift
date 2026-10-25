@@ -28,7 +28,7 @@ struct JellyfinConnectView: View {
                 .font(.headline)
 
             VStack(spacing: 10) {
-                field(String(localized: "jellyfin.server_e_g_http_192"), text: $server)
+                field(String(localized: "jellyfin.server_placeholder"), text: $server)
                 field(String(localized: "settings.username"), text: $username)
                 secureField(String(localized: "settings.password"), text: $password)
             }

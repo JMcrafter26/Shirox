@@ -120,7 +120,7 @@ private struct SecureDNSSections: View {
     private var footer: String {
         let explanation = String(localized: "settings.cloudflare_https_cloudflare_dns_com")
         let usable = SecureDNSSettings(enabled: true, serverURL: serverURL, serverAddresses: serverAddresses).resolver != nil
-        return usable ? explanation : String(localized: "settings.needs_an_https_url_and_2") + explanation
+        return usable ? explanation : String(localized: "settings.needs_https_url_footer") + explanation
     }
 }
 
@@ -289,14 +289,14 @@ private struct NetworkResetSection: View {
                 confirm = true
             } label: {
                 HStack {
-                    Text(didReset ? String(localized: "settings.network_state_reset") : String(localized: "settings.reset_network_state_2"))
+                    Text(didReset ? String(localized: "settings.network_state_reset") : String(localized: "settings.reset_network_state"))
                     Spacer()
                     if isResetting { ProgressView() }
                 }
             }
             .foregroundStyle(.red)
             .disabled(isResetting)
-            .confirmationDialog("settings.reset_network_state", isPresented: $confirm, titleVisibility: .visible) {
+            .confirmationDialog("settings.reset_network_state_confirm", isPresented: $confirm, titleVisibility: .visible) {
                 Button("common.reset", role: .destructive, action: reset)
                 Button("common.cancel", role: .cancel) {}
             } message: {

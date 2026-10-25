@@ -727,7 +727,7 @@ struct MangaReaderView: View {
         VStack {
             Spacer()
             Button { goToChapter(displayedChapterIndex + 1) } label: {
-                Label("reader.next_chapter_2", systemImage: "arrow.right")
+                Label("reader.next_chapter", systemImage: "arrow.right")
                     .font(.subheadline.weight(.bold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 20)

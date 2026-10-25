@@ -13,9 +13,9 @@ enum ZstdDecoder {
 
         var errorDescription: String? {
             switch self {
-            case .corrupt(let reason): return String(localized: "shared.could_not_decode_zstd_response \(reason)")
-            case .truncated:           return String(localized: "shared.could_not_decode_zstd_response_2")
-            case .tooLarge(let limit): return String(localized: "shared.could_not_decode_zstd_response_3 \(limit >> 20)")
+            case .corrupt(let reason): return String(localized: "shared.zstd_could_not_decode \(reason)")
+            case .truncated:           return String(localized: "shared.zstd_ends_mid_frame")
+            case .tooLarge(let limit): return String(localized: "shared.zstd_too_large \(limit >> 20)")
             }
         }
     }

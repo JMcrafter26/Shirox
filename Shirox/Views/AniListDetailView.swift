@@ -1727,7 +1727,7 @@ extension AniListDetailView {
                     }
                 }
                 if continueWatching.hasProgress(aniListID: media.id, moduleId: nil, mediaTitle: "") {
-                    CinematicCircleButton(systemImage: "arrow.counterclockwise", help: String(localized: "detail.reset_progress_2")) {
+                    CinematicCircleButton(systemImage: "arrow.counterclockwise", help: String(localized: "detail.reset_progress_label")) {
                         showResetConfirmation = true
                     }
                 }

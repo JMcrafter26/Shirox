@@ -352,7 +352,7 @@ class NetworkFetchSimpleMonitor: NSObject, ObservableObject {
                     "originalUrl": urlString,
                     "requests": [],
                     "success": false,
-                    "error": String(localized: "shared.blocked_host_2")
+                    "error": String(localized: "shared.blocked_host")
                 ])
                 return
             }
@@ -791,7 +791,7 @@ class NetworkFetchMonitor: NSObject, ObservableObject {
                     "html": NSNull(),
                     "cookies": NSNull(),
                     "success": false,
-                    "error": String(localized: "shared.blocked_host_2"),
+                    "error": String(localized: "shared.blocked_host"),
                     "cutoffTriggered": false,
                     "cutoffUrl": NSNull(),
                     "htmlCaptured": false,

@@ -735,7 +735,7 @@ struct PlayerSettingsView: View {
                 if #available(iOS 26.0, macOS 26.0, *) {
                     Toggle("settings.liquid_glass_controls", isOn: $playerLiquidGlass)
                         .switchTint()
-                    Text("settings.frosted_glass_buttons_in_the")
+                    Text("settings.player_glass_note")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -891,7 +891,7 @@ struct SubtitleSettingsPage: View {
                         Text(size.name).tag(size.points)
                     }
                     if !PlayerSubtitleMenu.sizes.contains(where: { $0.points == settings.fontSize }) {
-                        Text("settings.pt_2 \(Int(settings.fontSize.rounded()))").tag(settings.fontSize)
+                        Text("settings.pt_spaced \(Int(settings.fontSize.rounded()))").tag(settings.fontSize)
                     }
                 }
                 #if !os(tvOS)
@@ -1077,7 +1077,7 @@ struct ReaderSettingsView: View {
                 } header: {
                     Text("settings.style")
                 } footer: {
-                    Text("settings.frosted_glass_buttons_in_the_2")
+                    Text("settings.reader_glass_note")
                 }
             } else {
                 Section {
@@ -1413,7 +1413,7 @@ struct DownloadsSettingsView: View {
         .navigationBarTitleDisplayMode(.inline)
         #endif
         #if !os(tvOS)
-        .alert("settings.delete_all_downloads_2", isPresented: $showDeleteDownloadsConfirmation) {
+        .alert("settings.delete_all_downloads_confirm", isPresented: $showDeleteDownloadsConfirmation) {
             Button("common.delete", role: .destructive) {
                 DownloadManager.shared.removeAll(DownloadManager.shared.items)
                 MangaDownloadManager.shared.removeAll(MangaDownloadManager.shared.items)
@@ -1615,7 +1615,7 @@ struct StorageSettingsView: View {
                 Text("settings.downloaded_episodes_and_chapters_arent")
             }
         }
-        .alert("settings.delete_all_downloads_2", isPresented: $showDeleteDownloadsConfirmation) {
+        .alert("settings.delete_all_downloads_confirm", isPresented: $showDeleteDownloadsConfirmation) {
             Button("common.delete", role: .destructive) {
                 DownloadManager.shared.removeAll(DownloadManager.shared.items)
                 MangaDownloadManager.shared.removeAll(MangaDownloadManager.shared.items)
@@ -1630,7 +1630,7 @@ struct StorageSettingsView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
-        .alert("settings.reset_watch_progress_2", isPresented: $showResetCWConfirmation) {
+        .alert("settings.reset_watch_progress_confirm", isPresented: $showResetCWConfirmation) {
             Button("common.reset", role: .destructive) {
                 CacheManager.shared.clearContinueWatching()
                 updateCacheSizes()

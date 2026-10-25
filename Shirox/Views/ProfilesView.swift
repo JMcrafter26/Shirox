@@ -268,7 +268,7 @@ struct ProfilePickerView: View {
             Button {
                 managing.toggle()
             } label: {
-                Text(managing ? "DONE" : String(localized: "profile.manage_profiles_2"))
+                Text(managing ? "DONE" : String(localized: "profile.manage_profiles_caps"))
                     .font(.system(size: 16, weight: .bold))
                     .tracking(0.8)
                     .foregroundStyle(.white)

@@ -100,7 +100,7 @@ struct PlayerVideoInfoPanel: View {
             if let subtitle {
                 section(String(localized: "shared.subtitle"), [field(String(localized: "common.name"), subtitle.name), field(String(localized: "modules.source"), subtitle.source)])
             }
-            section(String(localized: "shared.stream_2"), [
+            section(String(localized: "shared.stream"), [
                 field(String(localized: "settings.player"), stats.player),
                 field(String(localized: "player.stream_bitrate"), PlaybackStats.bitrateText(stats.streamBitrate)),
                 field(String(localized: "player.network"), PlaybackStats.bitrateText(stats.throughput)),

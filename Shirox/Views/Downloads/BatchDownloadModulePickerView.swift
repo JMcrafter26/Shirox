@@ -378,7 +378,7 @@ private struct BatchDownloadModuleRow: View {
                 }
             }
         case .downloading(let current, let total):
-            ModulePickerMessage(icon: "arrow.down.circle", title: String(localized: "downloads.fetching_of_2 \(current) \(total)")) {
+            ModulePickerMessage(icon: "arrow.down.circle", title: String(localized: "downloads.fetching_of_short \(current) \(total)")) {
                 ProgressView(value: Double(current), total: Double(max(total, 1)))
                     .frame(maxWidth: 200)
             }

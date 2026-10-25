@@ -220,7 +220,7 @@ struct TrackingLinksView: View {
                                                           set: { setSeason($0 == 0 ? nil : $0) })) {
                     Text("shared.all_seasons").tag(0)
                     ForEach(Array(Set(seasons + [link.season].compactMap { $0 })).sorted(), id: \.self) {
-                        Text("shared.season_2 \($0)").tag($0)
+                        Text("shared.season_number \($0)").tag($0)
                     }
                 }
             }

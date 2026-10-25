@@ -112,7 +112,7 @@ struct ActivityDetailView: View {
         } message: {
             Text("profile.this_cannot_be_undone")
         }
-        .alert("profile.delete_reply", isPresented: Binding(
+        .alert("profile.delete_reply_confirm", isPresented: Binding(
             get: { replyToDelete != nil },
             set: { if !$0 { replyToDelete = nil } }
         )) {
@@ -366,7 +366,7 @@ struct ActivityDetailView: View {
                 Button(role: .destructive) {
                     replyToDelete = reply
                 } label: {
-                    Label("profile.delete_reply_2", systemImage: "trash")
+                    Label("profile.delete_reply", systemImage: "trash")
                 }
             }
         }

@@ -656,8 +656,8 @@ struct SyncRun: Identifiable, Equatable {
         switch kind {
         case .merge:       return String(localized: "shared.sync_all_ways")
         case .copyForward: return String(localized: "shared.copy_to \(targetName)")
-        case .overwrite:   return String(localized: "shared.overwrite \(targetName)")
-        case .mirror:      return String(localized: "shared.erase_and_replace \(targetName)")
+        case .overwrite:   return String(localized: "shared.overwrite_confirm \(targetName)")
+        case .mirror:      return String(localized: "shared.erase_and_replace_confirm \(targetName)")
         }
     }
 
@@ -665,8 +665,8 @@ struct SyncRun: Identifiable, Equatable {
         switch kind {
         case .merge:       return String(localized: "shared.sync")
         case .copyForward: return String(localized: "shared.copy")
-        case .overwrite:   return String(localized: "shared.overwrite_2 \(targetName)")
-        case .mirror:      return String(localized: "shared.erase_and_replace_2")
+        case .overwrite:   return String(localized: "shared.overwrite_target \(targetName)")
+        case .mirror:      return String(localized: "shared.erase_and_replace")
         }
     }
 

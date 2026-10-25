@@ -356,7 +356,7 @@ import UniformTypeIdentifiers
 enum MacOpenVideo {
     static func choose() {
         let panel = NSOpenPanel()
-        panel.title = String(localized: "app.open_video_2")
+        panel.title = String(localized: "app.open_video_title")
         panel.prompt = String(localized: "shared.play")
         panel.allowedContentTypes = [.movie, .video, .mpeg4Movie, .quickTimeMovie]
             + ["mkv", "webm", "avi", "flv", "ts"].compactMap { UTType(filenameExtension: $0) }

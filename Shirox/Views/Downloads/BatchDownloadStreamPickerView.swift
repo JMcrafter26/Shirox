@@ -92,7 +92,7 @@ struct BatchDownloadStreamPickerView: View {
         CloudflareBypassManager.shared.pendingVerificationURL = nil
         guard let firstEpNum = episodeNumbers.first,
               let episode = episodes.first(where: { Int($0.number) == firstEpNum }) else {
-            error = String(localized: "downloads.could_not_find_episode_2")
+            error = String(localized: "downloads.could_not_find_the_episode")
             isLoading = false
             return
         }

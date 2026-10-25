@@ -156,7 +156,7 @@ struct ContinueWatchingCardDisplay: View {
         } else if let total {
             epPart = String(localized: "shared.ep \(min(item.episodeNumber, total)) \(total)")
         } else {
-            epPart = String(localized: "shared.ep_3 \(item.episodeNumber)")
+            epPart = String(localized: "shared.ep_number \(item.episodeNumber)")
         }
 
         if let prefix {
