@@ -59,7 +59,7 @@ struct PlayerSubtitleSettingsView: View {
                         Button {
                             showImporter = true
                         } label: {
-                            Label("settings.import_subtitle_file", systemImage: "square.and.arrow.down")
+                            Label("common.import_subtitle_file", systemImage: "square.and.arrow.down")
                         }
                     }
                 }
@@ -105,7 +105,7 @@ struct PlayerSubtitleSettingsView: View {
                         HStack {
                             Text("settings.bottom_padding")
                             Spacer()
-                            Text("settings.pt \(Int(settings.bottomPadding))")
+                            Text("settings.points \(Int(settings.bottomPadding))")
                                 .foregroundStyle(.secondary)
                         }
                         Slider(value: $settings.bottomPadding, in: 20...200, step: 5)

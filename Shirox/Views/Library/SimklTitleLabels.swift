@@ -13,7 +13,7 @@ enum SimklTitleLabels {
     /// "1994 · 2h 34m".
     static func movieLine(_ media: Media) -> String {
         let parts = [media.seasonYear.map(String.init), media.runtime.map { Self.runtime($0) }].compactMap { $0 }
-        return parts.isEmpty ? String(localized: "jellyfin.movie") : parts.joined(separator: " · ")
+        return parts.isEmpty ? String(localized: "common.movie") : parts.joined(separator: " · ")
     }
 
     /// "2h 28m", "2h", "58m".

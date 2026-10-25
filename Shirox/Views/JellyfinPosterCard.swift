@@ -66,7 +66,7 @@ struct JellyfinContinueCard: View {
     private var progress: Double { min(pct / 100.0, 1.0) }
     private var title: String { item.seriesName ?? item.name }
     private var episodeLabel: String {
-        let ep = item.indexNumber.map { String(localized: "jellyfin.ep \($0)") } ?? (item.type == String(localized: "jellyfin.movie") ? String(localized: "jellyfin.movie") : "")
+        let ep = item.indexNumber.map { String(localized: "common.ep \($0)") } ?? (item.type == "Movie" ? String(localized: "common.movie") : "")
         if isInProgress { return ep }
         return ep.isEmpty ? String(localized: "shared.up_next") : String(localized: "jellyfin.up_next \(ep)")
     }

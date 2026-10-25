@@ -668,7 +668,7 @@ struct MarkdownMediaEmbed: View {
 
     private var caption: String {
         if isYouTube { return String(localized: "shared.watch_on_youtube") }
-        return destination?.host.map { String(localized: "shared.video_on \($0)") } ?? String(localized: "shared.open_video")
+        return destination?.host.map { String(localized: "shared.video_on \($0)") } ?? String(localized: "common.open_video")
     }
 
     var body: some View {

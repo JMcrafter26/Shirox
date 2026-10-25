@@ -113,7 +113,7 @@ struct ThumbnailEpisodeRow: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
-                        Text("detail.episode \(number)")
+                        Text("common.episode \(number)")
                             .font(.callout.weight(.semibold))
                             .foregroundStyle(.primary)
                             .lineLimit(1)
@@ -331,7 +331,7 @@ struct ThumbnailEpisodeRow: View {
                 .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(title.flatMap { $0.isEmpty ? nil : $0 } ?? String(localized: "detail.episode \(number)"))
+                Text(title.flatMap { $0.isEmpty ? nil : $0 } ?? String(localized: "common.episode \(number)"))
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
@@ -356,7 +356,7 @@ struct ThumbnailEpisodeRow: View {
     private var cardSubtitle: String {
         let hasTitle = !(title ?? "").isEmpty
         let date = Self.formattedAirdate(airdate)
-        let parts = [hasTitle ? String(localized: "detail.episode \(number)") : nil, date].compactMap { $0 }
+        let parts = [hasTitle ? String(localized: "common.episode \(number)") : nil, date].compactMap { $0 }
         return parts.isEmpty ? " " : parts.joined(separator: " · ")
     }
 

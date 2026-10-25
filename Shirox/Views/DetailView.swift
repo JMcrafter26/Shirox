@@ -1725,7 +1725,7 @@ struct DetailView: View {
                                         selectedRangeIndex = 0
                                     }
                                 } label: {
-                                    Text("detail.season \(i + 1)")
+                                    Text("common.season \(i + 1)")
                                     if selectedSeason == i {
                                         Image(systemName: "checkmark")
                                     }
@@ -1735,7 +1735,7 @@ struct DetailView: View {
                             HStack(spacing: 6) {
                                 Image(systemName: "tv")
                                     .font(.subheadline)
-                                Text("detail.season \(selectedSeason + 1)")
+                                Text("common.season \(selectedSeason + 1)")
                                     .font(.subheadline.weight(.medium))
                                 Image(systemName: "chevron.down")
                                     .font(.caption)

@@ -71,7 +71,7 @@ enum PlayerSubtitleMenu {
 
         var last: [PlayerMenuElement] = []
         if let importFile = actions.importFile {
-            last.append(.item(PlayerMenuItem(title: String(localized: "player.import_subtitle_file"), action: importFile)))
+            last.append(.item(PlayerMenuItem(title: String(localized: "common.import_subtitle_file"), action: importFile)))
         }
         last.append(.item(PlayerMenuItem(title: String(localized: "player.more_settings"), action: actions.moreSettings)))
         elements.append(.section(nil, last))

@@ -891,7 +891,7 @@ struct SubtitleSettingsPage: View {
                         Text(size.name).tag(size.points)
                     }
                     if !PlayerSubtitleMenu.sizes.contains(where: { $0.points == settings.fontSize }) {
-                        Text("settings.pt_spaced \(Int(settings.fontSize.rounded()))").tag(settings.fontSize)
+                        Text("settings.points \(Int(settings.fontSize.rounded()))").tag(settings.fontSize)
                     }
                 }
                 #if !os(tvOS)
@@ -1844,7 +1844,7 @@ struct SettingsViewLogger: View {
                 ProgressView(String(localized: "settings.loading_logs"))
             } else if filteredEntries.isEmpty {
                 ContentUnavailableView(
-                    entries.isEmpty ? "settings.no_logs" : "detail.no_results",
+                    entries.isEmpty ? "settings.no_logs" : "common.no_results",
                     systemImage: entries.isEmpty ? "doc.text" : "magnifyingglass",
                     description: Text(entries.isEmpty ? String(localized: "settings.nothing_has_been_logged_yet") : String(localized: "settings.no_logs_match_your_search"))
                 )

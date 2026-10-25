@@ -264,7 +264,7 @@ struct CinematicMetaLine: View {
     private var parts: [String] {
         var parts: [String] = []
         if media.format == "MOVIE" {
-            parts.append(String(localized: "jellyfin.movie"))
+            parts.append(String(localized: "common.movie"))
         } else if let eps = media.episodes ?? media.airedOrAnnouncedEpisodes, eps > 0 {
             parts.append(eps == 1 ? "1 Episode" : String(localized: "detail.episodes \(eps)"))
         }

@@ -45,7 +45,7 @@ struct SimklSearchSheet: View {
         case .loaded:
             if results.isEmpty {
                 ContentUnavailableView(
-                    "detail.no_results", systemImage: "magnifyingglass",
+                    "common.no_results", systemImage: "magnifyingglass",
                     description: kind == .movie ? Text("library.simkl_has_no_movie_matching \(query)")
                                  : kind == .anime ? Text("library.simkl_has_no_anime_matching \(query)")
                                  : Text("library.simkl_has_no_show_matching \(query)"))

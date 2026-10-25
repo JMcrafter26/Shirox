@@ -594,8 +594,8 @@ private struct ModuleStreamRow: View {
         case .loadingStreams: return String(localized: "common.fetching_streams")
         case .searchResults(let items): return items.count == 1 ? "1 result" : "\(items.count) results"
         case .selectingEpisode: return String(localized: "downloads.episode_wasnt_matched_pick_it \(episodeNumber)")
-        case .notFound: return rowVm.cloudflareURL != nil ? String(localized: "downloads.blocked_by_cloudflare") : String(localized: "downloads.no_results")
-        case .error: return rowVm.cloudflareURL != nil ? String(localized: "downloads.blocked_by_cloudflare") : String(localized: "downloads.couldnt_load")
+        case .notFound: return rowVm.cloudflareURL != nil ? String(localized: "downloads.blocked_by_cloudflare") : String(localized: "common.no_results")
+        case .error: return rowVm.cloudflareURL != nil ? String(localized: "downloads.blocked_by_cloudflare") : String(localized: "common.couldnt_load")
         }
     }
 
@@ -661,7 +661,7 @@ private struct ModuleStreamRow: View {
                     CloudflareVerifyInlineButton { rowVm.verifyAndRetry() }
                 }
             } else {
-                ModulePickerMessage(icon: "exclamationmark.triangle", title: String(localized: "downloads.couldnt_load"),
+                ModulePickerMessage(icon: "exclamationmark.triangle", title: String(localized: "common.couldnt_load"),
                                     detail: msg, tint: .orange)
             }
         }
@@ -798,7 +798,7 @@ private struct ModuleStreamSelectionView: View {
             Group {
                 if streams.isEmpty {
                     ContentUnavailableView(
-                        "detail.no_streams_found",
+                        "common.no_streams_found",
                         systemImage: "antenna.radiowaves.left.and.right.slash",
                         description: Text("modules.could_not_find_any_playable")
                     )

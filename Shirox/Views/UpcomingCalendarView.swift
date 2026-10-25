@@ -40,7 +40,7 @@ struct AiringEpisode: Identifiable {
     var caption: String {
         if isRelease { return String(localized: "home.release") }
         guard let episode else { return String(localized: "home.next_episode") }
-        let episodes = lastEpisode.map { String(localized: "home.episodes \(episode) \($0)") } ?? String(localized: "home.episode \(episode)")
+        let episodes = lastEpisode.map { String(localized: "home.episodes \(episode) \($0)") } ?? String(localized: "common.episode \(episode)")
         return season.map { String(localized: "home.season \($0) \(episodes)") } ?? episodes
     }
 }
@@ -317,7 +317,7 @@ struct UpcomingCalendarView: View {
                     Button {
                         vm.libraryOnly.toggle()
                     } label: {
-                        Label("home.my_library", systemImage: vm.libraryOnly ? "bookmark.fill" : "bookmark")
+                        Label("common.my_library", systemImage: vm.libraryOnly ? "bookmark.fill" : "bookmark")
                     }
                 }
             }

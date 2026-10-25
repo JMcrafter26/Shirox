@@ -344,8 +344,8 @@ private struct BatchDownloadModuleRow: View {
         case .searchResults(let items): return items.count == 1 ? "1 result" : "\(items.count) results"
         case .downloading(let current, let total): return String(localized: "downloads.fetching_of \(current) \(total)")
         case .done: return String(localized: "downloads.queued")
-        case .notFound: return rowVm.cloudflareURL != nil ? String(localized: "downloads.blocked_by_cloudflare") : String(localized: "downloads.no_results")
-        case .error: return String(localized: "downloads.couldnt_load")
+        case .notFound: return rowVm.cloudflareURL != nil ? String(localized: "downloads.blocked_by_cloudflare") : String(localized: "common.no_results")
+        case .error: return String(localized: "common.couldnt_load")
         }
     }
 
@@ -396,7 +396,7 @@ private struct BatchDownloadModuleRow: View {
                                     detail: String(localized: "downloads.try_another_title_in_the"))
             }
         case .error(let msg):
-            ModulePickerMessage(icon: "exclamationmark.triangle", title: String(localized: "downloads.couldnt_load"), detail: msg, tint: .orange) {
+            ModulePickerMessage(icon: "exclamationmark.triangle", title: String(localized: "common.couldnt_load"), detail: msg, tint: .orange) {
                 if rowVm.cloudflareURL != nil {
                     CloudflareVerifyInlineButton { rowVm.verifyAndRetry() }
                 }

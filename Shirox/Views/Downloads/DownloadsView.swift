@@ -33,7 +33,7 @@ struct DownloadsView: View {
         /// The raw value is what's stored; this is what the menu shows.
         var title: String {
             switch self {
-            case .title:  return String(localized: "downloads.title")
+            case .title:  return String(localized: "common.title")
             case .recent: return String(localized: "downloads.recently_downloaded")
             }
         }
@@ -343,7 +343,7 @@ struct DownloadsView: View {
                 storage = await StorageUsage.measure()
             }
             .alert(
-                pendingGroupDelete.map { String(localized: "downloads.delete \($0.title)") } ?? String(localized: "common.delete"),
+                pendingGroupDelete.map { String(localized: "common.delete_name_confirm \($0.title)") } ?? String(localized: "common.delete"),
                 isPresented: Binding(
                     get: { pendingGroupDelete != nil },
                     set: { if !$0 { pendingGroupDelete = nil } }
@@ -1037,7 +1037,7 @@ private struct SortToolbar: ViewModifier {
 
     private var menu: some View {
         Menu {
-            Picker("downloads.sort_by", selection: $sortOrder) {
+            Picker("common.sort_by", selection: $sortOrder) {
                 ForEach(DownloadsView.SortOrder.allCases) { Text($0.title).tag($0) }
             }
         } label: {

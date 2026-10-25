@@ -35,23 +35,6 @@
         }
       }
     },
-    "app.open_video_title" : {
-      "comment" : "ShiroxApp",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Video öffnen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Video"
-          }
-        }
-      }
-    },
     "app.picture_in_picture" : {
       "comment" : "ShiroxApp",
       "localizations" : {
@@ -307,6 +290,23 @@
         }
       }
     },
+    "common.delete_name_confirm %@" : {
+      "comment" : "DownloadsView",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ löschen?"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete %@?"
+          }
+        }
+      }
+    },
     "common.done" : {
       "comment" : "ActivityDetailView, BatchDownloadModulePickerView, BookmarkButton, ExtensionRepoSheet, JellyfinConnectView, LikesSheetView, ManageCollectionsView, MediaDetailsSheet, ModuleImportView, ModuleListView, PlayerSubtitleSettingsView, ProfileView, SimklSearchSheet, TrackingLinksView",
       "localizations" : {
@@ -337,6 +337,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Downloads"
+          }
+        }
+      }
+    },
+    "common.edit_name %@" : {
+      "comment" : "LibraryView",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@ bearbeiten"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit %@"
+          }
+        }
+      }
+    },
+    "common.ep %lld" : {
+      "comment" : "JellyfinPosterCard",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "F. %lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ep %lld"
+          }
+        }
+      }
+    },
+    "common.episode %@" : {
+      "comment" : "EpisodeRowView",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folge %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episode %@"
           }
         }
       }
@@ -426,6 +477,23 @@
         }
       }
     },
+    "common.import_subtitle_file" : {
+      "comment" : "PlayerSubtitleMenu",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Untertiteldatei importieren …"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Import Subtitle File…"
+          }
+        }
+      }
+    },
     "common.library" : {
       "comment" : "AppAppearance, JellyfinLibraryView, LibraryView, QuickActions, SettingsView",
       "localizations" : {
@@ -494,6 +562,40 @@
         }
       }
     },
+    "common.movie" : {
+      "comment" : "CinematicDetail, JellyfinPosterCard",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Film"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Movie"
+          }
+        }
+      }
+    },
+    "common.my_library" : {
+      "comment" : "UpcomingCalendarView",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Meine Mediathek"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "My Library"
+          }
+        }
+      }
+    },
     "common.name" : {
       "comment" : "BookmarkButton, LibraryEntryEditSheet, ManageCollectionsView, ModuleImportView, ProfilesView",
       "localizations" : {
@@ -511,6 +613,23 @@
         }
       }
     },
+    "common.no_results" : {
+      "comment" : "AniListDetailView",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Ergebnisse"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No Results"
+          }
+        }
+      }
+    },
     "common.no_streams_found" : {
       "comment" : "BatchDownloadModulePickerView, DownloadManager, DownloadModulePickerView, ModuleStreamPickerView",
       "localizations" : {
@@ -523,7 +642,24 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "No streams found"
+            "value" : "No Streams Found"
+          }
+        }
+      }
+    },
+    "common.open_video" : {
+      "comment" : "ShiroxApp",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Video öffnen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Video"
           }
         }
       }
@@ -541,6 +677,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Profile"
+          }
+        }
+      }
+    },
+    "common.progress" : {
+      "comment" : "LibraryView",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fortschritt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Progress"
           }
         }
       }
@@ -626,6 +779,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Search"
+          }
+        }
+      }
+    },
+    "common.season %lld" : {
+      "comment" : "DetailView",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Staffel %lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Season %lld"
+          }
+        }
+      }
+    },
+    "common.sort_by" : {
+      "comment" : "DownloadsView",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sortieren nach"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sort By"
+          }
+        }
+      }
+    },
+    "common.title" : {
+      "comment" : "DownloadsView",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Titel"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Title"
           }
         }
       }
@@ -803,6 +1007,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Continue Ep %lld"
+          }
+        }
+      }
+    },
+    "detail.continue_movie" : {
+      "comment" : "AniListDetailView",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Film fortsetzen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Continue Movie"
           }
         }
       }
@@ -1147,40 +1368,6 @@
         }
       }
     },
-    "detail.episode %@" : {
-      "comment" : "EpisodeRowView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Folge %@"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Episode %@"
-          }
-        }
-      }
-    },
-    "detail.episode %lld" : {
-      "comment" : "AniListDetailView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Folge %lld"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Episode %lld"
-          }
-        }
-      }
-    },
     "detail.episode_count_not_available" : {
       "comment" : "AniListDetailView",
       "localizations" : {
@@ -1453,23 +1640,6 @@
         }
       }
     },
-    "detail.movie" : {
-      "comment" : "AniListDetailView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : " Film"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : " Movie"
-          }
-        }
-      }
-    },
     "detail.n_a" : {
       "comment" : "JSEngine+Details",
       "localizations" : {
@@ -1708,23 +1878,6 @@
         }
       }
     },
-    "detail.no_results" : {
-      "comment" : "AniListDetailView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keine Ergebnisse"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No Results"
-          }
-        }
-      }
-    },
     "detail.no_soft_subtitles" : {
       "comment" : "StreamPickerView",
       "localizations" : {
@@ -1738,23 +1891,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No soft subtitles"
-          }
-        }
-      }
-    },
-    "detail.no_streams_found" : {
-      "comment" : "AniListDetailView, ModuleStreamPickerView, StreamPickerView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keine Streams gefunden"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No Streams Found"
           }
         }
       }
@@ -1878,23 +2014,6 @@
         }
       }
     },
-    "detail.reset_progress_label" : {
-      "comment" : "AniListDetailView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fortschritt zurücksetzen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Reset progress"
-          }
-        }
-      }
-    },
     "detail.search_anilist" : {
       "comment" : "AniListDetailView",
       "localizations" : {
@@ -1925,23 +2044,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Searching AniList..."
-          }
-        }
-      }
-    },
-    "detail.season %lld" : {
-      "comment" : "DetailView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Staffel %lld"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Season %lld"
           }
         }
       }
@@ -2354,6 +2456,23 @@
         }
       }
     },
+    "detail.watch_movie" : {
+      "comment" : "AniListDetailView",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Film ansehen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch Movie"
+          }
+        }
+      }
+    },
     "detail.watch_the_trailer" : {
       "comment" : "MediaDetailsSheet",
       "localizations" : {
@@ -2616,23 +2735,6 @@
         }
       }
     },
-    "downloads.couldnt_load" : {
-      "comment" : "BatchDownloadModulePickerView, DownloadModulePickerView, ModuleStreamPickerView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Laden fehlgeschlagen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn't load"
-          }
-        }
-      }
-    },
     "downloads.couldnt_match_episode %@" : {
       "comment" : "DownloadManager",
       "localizations" : {
@@ -2697,23 +2799,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld/%2$lld watched"
-          }
-        }
-      }
-    },
-    "downloads.delete %@" : {
-      "comment" : "DownloadsView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ löschen?"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete %@?"
           }
         }
       }
@@ -3314,23 +3399,6 @@
         }
       }
     },
-    "downloads.no_results" : {
-      "comment" : "BatchDownloadModulePickerView, DownloadModulePickerView, ModuleStreamPickerView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keine Ergebnisse"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No results"
-          }
-        }
-      }
-    },
     "downloads.no_streams_found_for_episode %lld" : {
       "comment" : "DownloadModulePickerView, ModuleStreamPickerView",
       "localizations" : {
@@ -3886,23 +3954,6 @@
         }
       }
     },
-    "downloads.sort_by" : {
-      "comment" : "DownloadsView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sortieren nach"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sort By"
-          }
-        }
-      }
-    },
     "downloads.tap_find_to_search_this" : {
       "comment" : "BatchDownloadModulePickerView, DownloadModulePickerView, ModuleStreamPickerView",
       "localizations" : {
@@ -3933,23 +3984,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "They're downloading now."
-          }
-        }
-      }
-    },
-    "downloads.title" : {
-      "comment" : "DownloadsView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Titel"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Title"
           }
         }
       }
@@ -4022,23 +4056,6 @@
         }
       }
     },
-    "home.episode %lld" : {
-      "comment" : "UpcomingCalendarView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Folge %lld"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Episode %lld"
-          }
-        }
-      }
-    },
     "home.episodes %lld %lld" : {
       "comment" : "UpcomingCalendarView",
       "localizations" : {
@@ -4052,23 +4069,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Episodes %1$lld–%2$lld"
-          }
-        }
-      }
-    },
-    "home.my_library" : {
-      "comment" : "UpcomingCalendarView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Meine Mediathek"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "My library"
           }
         }
       }
@@ -4566,23 +4566,6 @@
         }
       }
     },
-    "jellyfin.ep %lld" : {
-      "comment" : "JellyfinPosterCard",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "F. %lld"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ep %lld"
-          }
-        }
-      }
-    },
     "jellyfin.find_address_detail_mac" : {
       "comment" : "JellyfinConnectView",
       "localizations" : {
@@ -4766,23 +4749,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Make sure the server is running and your computer's firewall allows port 8096."
-          }
-        }
-      }
-    },
-    "jellyfin.movie" : {
-      "comment" : "CinematicDetail, JellyfinPosterCard",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Film"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Movie"
           }
         }
       }
@@ -5467,23 +5433,6 @@
         }
       }
     },
-    "library.edit_name %@" : {
-      "comment" : "LibraryView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ bearbeiten"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Edit %@"
-          }
-        }
-      }
-    },
     "library.edit_on_which_service" : {
       "comment" : "LibraryView",
       "localizations" : {
@@ -5514,23 +5463,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Episode"
-          }
-        }
-      }
-    },
-    "library.episode_number %lld" : {
-      "comment" : "SimklTitleEditSheet",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Folge %lld"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Episode %lld"
           }
         }
       }
@@ -5786,23 +5718,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Movies"
-          }
-        }
-      }
-    },
-    "library.my_library" : {
-      "comment" : "LibrarySourceSwitcher",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Meine Mediathek"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "My Library"
           }
         }
       }
@@ -6096,23 +6011,6 @@
         }
       }
     },
-    "library.progress" : {
-      "comment" : "LibraryView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fortschritt"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Progress"
-          }
-        }
-      }
-    },
     "library.remove_from_library" : {
       "comment" : "BookmarkButton, LibraryEntryEditSheet",
       "localizations" : {
@@ -6334,23 +6232,6 @@
         }
       }
     },
-    "library.season_number %lld" : {
-      "comment" : "SimklTitleEditSheet, SimklTitlePage",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Staffel %lld"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Season %lld"
-          }
-        }
-      }
-    },
     "library.shows" : {
       "comment" : "LibraryView, SimklKindPicker",
       "localizations" : {
@@ -6500,23 +6381,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Simkl has no show matching “%@”."
-          }
-        }
-      }
-    },
-    "library.sort_by" : {
-      "comment" : "LibraryView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sortieren nach"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sort by"
           }
         }
       }
@@ -6677,23 +6541,6 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "library.title" : {
-      "comment" : "LibraryView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Titel"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Title"
           }
         }
       }
@@ -9636,40 +9483,6 @@
         }
       }
     },
-    "player.ep_short %lld" : {
-      "comment" : "PlayerBottomBar",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "F. %lld"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "EP%lld"
-          }
-        }
-      }
-    },
-    "player.episode %lld" : {
-      "comment" : "CastOverlayView, PlayerView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Folge %lld"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Episode %lld"
-          }
-        }
-      }
-    },
     "player.episode_titled %lld %@" : {
       "comment" : "PlayerView",
       "localizations" : {
@@ -9768,23 +9581,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Frame saved to the Shirox album in Photos."
-          }
-        }
-      }
-    },
-    "player.import_subtitle_file" : {
-      "comment" : "PlayerSubtitleMenu",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Untertiteldatei importieren …"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Import Subtitle File…"
           }
         }
       }
@@ -10724,23 +10520,6 @@
         }
       }
     },
-    "profile.delete_name %@" : {
-      "comment" : "ProfilesView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ löschen?"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Delete %@?"
-          }
-        }
-      }
-    },
     "profile.delete_profile" : {
       "comment" : "ProfilesView",
       "localizations" : {
@@ -10805,23 +10584,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Deletes %@'s library, progress, settings and sign-ins on this device. Accounts themselves aren't touched."
-          }
-        }
-      }
-    },
-    "profile.edit %@" : {
-      "comment" : "ProfilesView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%@ bearbeiten"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Edit %@"
           }
         }
       }
@@ -11111,23 +10873,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Manage Profiles"
-          }
-        }
-      }
-    },
-    "profile.manage_profiles_caps" : {
-      "comment" : "ProfilesView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "PROFILE VERWALTEN"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "MANAGE PROFILES"
           }
         }
       }
@@ -15110,23 +14855,6 @@
         }
       }
     },
-    "settings.import_subtitle_file" : {
-      "comment" : "PlayerSubtitleSettingsView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Untertiteldatei importieren …"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Import subtitle file…"
-          }
-        }
-      }
-    },
     "settings.in_this_video" : {
       "comment" : "PlayerSubtitleSettingsView",
       "localizations" : {
@@ -16572,6 +16300,23 @@
         }
       }
     },
+    "settings.points %lld" : {
+      "comment" : "SettingsView",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld pt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld pt"
+          }
+        }
+      }
+    },
     "settings.port" : {
       "comment" : "AdvancedNetworkSettingsView",
       "localizations" : {
@@ -16691,23 +16436,6 @@
         }
       }
     },
-    "settings.progress" : {
-      "comment" : "BackupSettingsView, LibraryEntryEditSheet",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Fortschritt"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Progress"
-          }
-        }
-      }
-    },
     "settings.progress_data_from_an_incompatible %lld %lld" : {
       "comment" : "BackupManager",
       "localizations" : {
@@ -16823,40 +16551,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Needs iOS 17, macOS 14 or tvOS 17"
-          }
-        }
-      }
-    },
-    "settings.pt %lld" : {
-      "comment" : "PlayerSubtitleSettingsView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lldpt"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lldpt"
-          }
-        }
-      }
-    },
-    "settings.pt_spaced %lld" : {
-      "comment" : "SettingsView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld pt"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "%lld pt"
           }
         }
       }
@@ -20175,23 +19869,6 @@
         }
       }
     },
-    "shared.ep_number %lld" : {
-      "comment" : "ContinueWatchingCard",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "F. %lld"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ep %lld"
-          }
-        }
-      }
-    },
     "shared.ep_ongoing %lld %lld" : {
       "comment" : "ContinueWatchingCard",
       "localizations" : {
@@ -21365,23 +21042,6 @@
         }
       }
     },
-    "shared.open_video" : {
-      "comment" : "MarkdownText",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Video öffnen"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open video"
-          }
-        }
-      }
-    },
     "shared.or_enter_an_id" : {
       "comment" : "TrackingLinksView",
       "localizations" : {
@@ -21837,23 +21497,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ Season %2$lld"
-          }
-        }
-      }
-    },
-    "shared.season_number %lld" : {
-      "comment" : "TrackingLinksView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Staffel %lld"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Season %lld"
           }
         }
       }
@@ -22670,23 +22313,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "This Week"
-          }
-        }
-      }
-    },
-    "shared.title" : {
-      "comment" : "TrackingLinksView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Titel"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Title"
           }
         }
       }

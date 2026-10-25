@@ -288,7 +288,7 @@ struct LibraryEntryEditSheet: View {
                 }
 
                 if status != .completed {
-                    Section("settings.progress") {
+                    Section("common.progress") {
                         #if !os(tvOS)
                         HStack {
                             // Typed as well as stepped: stepping through 200 episodes was 200 taps.
@@ -306,7 +306,7 @@ struct LibraryEntryEditSheet: View {
                                 ? Text(LocalizedStringKey(progress == 1 ? "library.chapter_read" : "library.chapters_read"))
                                 : Text(LocalizedStringKey(progress == 1 ? "library.episode_watched" : "library.episodes_watched"))
                             Spacer()
-                            Stepper("settings.progress", value: $progress, in: 0...maxProgress)
+                            Stepper("common.progress", value: $progress, in: 0...maxProgress)
                                 .labelsHidden()
                         }
                         #endif

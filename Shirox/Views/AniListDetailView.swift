@@ -1011,7 +1011,9 @@ struct AniListDetailView: View {
         let nextEp = rawNext > total && total > 0 ? 1 : rawNext
         let continuing = item != nil && !item!.streamUrl.isEmpty
         let label = isSingleEpisode(media)
-            ? (continuing ? String(localized: "shared.continue") : String(localized: "home.watch")) + (media.format == "MOVIE" ? String(localized: "detail.movie") : "")
+            ? (media.format == "MOVIE"
+                ? (continuing ? String(localized: "detail.continue_movie") : String(localized: "detail.watch_movie"))
+                : (continuing ? String(localized: "shared.continue") : String(localized: "home.watch")))
             : continuing ? String(localized: "detail.continue_ep \(nextEp)") : String(localized: "detail.watch_ep \(nextEp)")
         let hasProgress = continueWatching.items.contains { $0.aniListID == media.id && $0.episodeNumber == nextEp }
 
@@ -1727,7 +1729,7 @@ extension AniListDetailView {
                     }
                 }
                 if continueWatching.hasProgress(aniListID: media.id, moduleId: nil, mediaTitle: "") {
-                    CinematicCircleButton(systemImage: "arrow.counterclockwise", help: String(localized: "detail.reset_progress_label")) {
+                    CinematicCircleButton(systemImage: "arrow.counterclockwise", help: String(localized: "detail.reset_progress")) {
                         showResetConfirmation = true
                     }
                 }
@@ -2020,7 +2022,7 @@ struct AniListStreamResultSheet: View {
             Group {
                 if streams.isEmpty {
                     ContentUnavailableView(
-                        "detail.no_streams_found",
+                        "common.no_streams_found",
                         systemImage: "antenna.radiowaves.left.and.right.slash",
                         description: Text("detail.no_playable_streams_were_found")
                     )
@@ -2044,7 +2046,7 @@ struct AniListStreamResultSheet: View {
                     .softScrollEdges()
                 }
             }
-            .navigationTitle("detail.episode \(episodeNumber)")
+            .navigationTitle("common.episode \(episodeNumber)")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -2197,7 +2199,7 @@ struct AniListMatchingSearchView: View {
                     Spacer()
                 } else if results.isEmpty && !searchText.isEmpty {
                     Spacer()
-                    ContentUnavailableView("detail.no_results", systemImage: "magnifyingglass", description: Text("detail.try_a_different_title_or"))
+                    ContentUnavailableView("common.no_results", systemImage: "magnifyingglass", description: Text("detail.try_a_different_title_or"))
                     Spacer()
                 } else {
                     List(results) { media in

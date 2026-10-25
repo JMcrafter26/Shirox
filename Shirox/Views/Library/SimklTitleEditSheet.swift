@@ -101,7 +101,7 @@ struct SimklTitleEditSheet: View {
                 Picker("library.season", selection: $season) {
                     Text("library.nothing_yet").tag(Int?.none)
                     ForEach(SimklEpisodePlanner.regularSeasons(in: episodes), id: \.self) { number in
-                        Text("library.season_number \(number)").tag(Int?.some(number))
+                        Text("common.season \(number)").tag(Int?.some(number))
                     }
                 }
                 if let season {
@@ -129,7 +129,7 @@ struct SimklTitleEditSheet: View {
     }
 
     private func label(_ episode: SimklEpisode) -> String {
-        let number = String(localized: "library.episode_number \(episode.episode ?? 0)")
+        let number = String(localized: "common.episode \(episode.episode ?? 0)")
         guard let title = episode.title, !title.isEmpty else { return number }
         return "\(number) · \(title)"
     }

@@ -14,8 +14,8 @@ enum LibrarySortOrder: String, CaseIterable, Identifiable {
         switch self {
         case .score:    return String(localized: "library.my_rating")
         case .updated:  return String(localized: "library.last_updated")
-        case .progress: return String(localized: "library.progress")
-        case .title:    return String(localized: "library.title")
+        case .progress: return String(localized: "common.progress")
+        case .title:    return String(localized: "common.title")
         }
     }
 }
@@ -233,7 +233,7 @@ struct LibraryView: View {
 
     private var sortMenu: some View {
         Menu {
-            Section("library.sort_by") {
+            Section("common.sort_by") {
                 ForEach(LibrarySortOrder.allCases) { order in
                     Button {
                         if sortOrder == order { sortAscending.toggle() }
@@ -659,7 +659,7 @@ struct LibraryView: View {
     // MARK: - Empty state
 
     private var emptyStateTitle: LocalizedStringKey {
-        searchText.isEmpty ? "library.nothing_here_yet" : "detail.no_results"
+        searchText.isEmpty ? "library.nothing_here_yet" : "common.no_results"
     }
 
     private var emptyStateIcon: String {
@@ -986,7 +986,7 @@ struct LibraryView: View {
                         .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("library.edit_name \(entry.media.title.displayTitle)")
+                .accessibilityLabel("common.edit_name \(entry.media.title.displayTitle)")
                 // Bottom-right of the 2:3 poster, above the progress bar on its edge.
                 .position(x: geo.size.width - 20, y: geo.size.width * 1.5 - 30)
             }

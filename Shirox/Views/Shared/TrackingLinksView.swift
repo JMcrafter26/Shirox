@@ -118,7 +118,7 @@ struct TrackingLinksView: View {
 
                 if page.fixedSide != side {
                     Section("shared.search \(side.name)") {
-                        TextField("shared.title", text: $query)
+                        TextField("common.title", text: $query)
                             .onChangeOf(query) { performSearch() }
                         if isSearching { ProgressView() }
                         ForEach(results) { candidate in
@@ -220,7 +220,7 @@ struct TrackingLinksView: View {
                                                           set: { setSeason($0 == 0 ? nil : $0) })) {
                     Text("shared.all_seasons").tag(0)
                     ForEach(Array(Set(seasons + [link.season].compactMap { $0 })).sorted(), id: \.self) {
-                        Text("shared.season_number \($0)").tag($0)
+                        Text("common.season \($0)").tag($0)
                     }
                 }
             }

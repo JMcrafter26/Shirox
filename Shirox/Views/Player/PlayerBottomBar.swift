@@ -122,7 +122,7 @@ struct PlayerBottomBar: View {
     private var titleBlock: some View {
         VStack(alignment: .leading, spacing: 3) {
             if let ep = episodeNumber {
-                let epLine = tvdbEpisodeTitle.flatMap { $0.isEmpty ? nil : String(localized: "player.ep \(ep) \($0)") } ?? String(localized: "player.ep_short \(ep)")
+                let epLine = tvdbEpisodeTitle.flatMap { $0.isEmpty ? nil : String(localized: "player.ep \(ep) \($0)") } ?? String(localized: "common.ep \(ep)").uppercased()
                 Text(epLine)
                     .font(.system(size: isPad ? 16 : 14, weight: .semibold))
                     .foregroundStyle(.white.opacity(0.6))

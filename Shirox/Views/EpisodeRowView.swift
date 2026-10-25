@@ -69,7 +69,7 @@ struct EpisodeRowView: View {
                                 radius: 4, y: 2)
                     }
 
-                    Text("detail.episode \(episode.displayNumber)")
+                    Text("common.episode \(episode.displayNumber)")
                         .font(.callout.weight(.medium))
                         .foregroundStyle(.primary)
 

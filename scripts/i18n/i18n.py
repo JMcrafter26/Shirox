@@ -523,7 +523,8 @@ def rewrite(rows):
 
 def cmd_rename(args):
     """Renames keys in code, catalog and texts.json at once, from a file of `old new` lines.
-    One pass, so two keys can swap names."""
+    One pass, so two keys can swap names; several onto one merges them, keeping the
+    entry already there or else the first."""
     if not args:
         sys.exit("rename: name a file of `old new` lines")
     with open(args[0], encoding="utf-8") as f:
@@ -542,10 +543,12 @@ def cmd_rename(args):
             with open(path, "w", encoding="utf-8") as f:
                 f.write(new)
     catalog = load_json(CATALOG, {"strings": {}})
+    # Keys that stay come first, so a key renamed onto one that exists merges into it.
     strings = {}
-    for key, entry in catalog["strings"].items():
+    items = sorted(catalog["strings"].items(), key=lambda kv: kv[0].partition(" ")[0] in renames)
+    for key, entry in items:
         base, _, specifiers = key.partition(" ")
-        strings[renames.get(base, base) + (" " + specifiers if specifiers else "")] = entry
+        strings.setdefault(renames.get(base, base) + (" " + specifiers if specifiers else ""), entry)
     catalog["strings"] = strings
     write_json(CATALOG, catalog)
     texts = load_json(TEXTS, {})

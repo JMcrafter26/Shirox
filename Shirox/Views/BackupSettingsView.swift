@@ -223,7 +223,7 @@ struct BackupSettingsView: View {
 
     private static func label(_ sectionID: String) -> String {
         switch sectionID {
-        case BackupSectionID.progress: return String(localized: "settings.progress")
+        case BackupSectionID.progress: return String(localized: "common.progress")
         case BackupSectionID.localLibrary: return String(localized: "settings.local_library")
         case BackupSectionID.settings: return String(localized: "settings.settings")
         case BackupSectionID.modules: return String(localized: "common.modules")

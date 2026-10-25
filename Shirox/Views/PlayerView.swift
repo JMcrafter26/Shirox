@@ -988,7 +988,7 @@ struct PlayerView: View {
                     .font(.title3.weight(.semibold)).foregroundStyle(.white)
                     .multilineTextAlignment(.center).lineLimit(2)
                 if let ep = currentContext?.episodeNumber {
-                    Text("player.episode \(ep)").font(.subheadline).foregroundStyle(.white.opacity(0.65))
+                    Text("common.episode \(ep)").font(.subheadline).foregroundStyle(.white.opacity(0.65))
                 }
 
                 ClockReader(clock: clock) { clock in
@@ -2970,7 +2970,7 @@ struct PlayerView: View {
         let subtitleString: String
         if let n = epNumber {
             if let t = epTitle { subtitleString = String(localized: "player.episode_titled \(n) \(t)") }
-            else { subtitleString = String(localized: "player.episode \(n)") }
+            else { subtitleString = String(localized: "common.episode \(n)") }
         } else {
             subtitleString = epTitle ?? ""
         }

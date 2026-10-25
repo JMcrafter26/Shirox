@@ -18,7 +18,7 @@ struct StreamPickerView: View {
                     CloudflareVerifyView { vm.verifyCloudflare() }
                 } else if vm.streamOptions.isEmpty {
                     ContentUnavailableView(
-                        "detail.no_streams_found",
+                        "common.no_streams_found",
                         systemImage: "antenna.radiowaves.left.and.right.slash",
                         description: Text("modules.could_not_find_any_playable")
                     )
@@ -68,7 +68,7 @@ struct StreamPickerView: View {
     private var episodeTitle: String {
         // A film is a one-item list; "Episode 1" over its streams read oddly.
         if let detail = vm.detail, detail.episodes.count == 1, !detail.title.isEmpty { return detail.title }
-        return vm.selectedEpisode.map { String(localized: "detail.episode \($0.displayNumber)") } ?? String(localized: "modules.select_stream")
+        return vm.selectedEpisode.map { String(localized: "common.episode \($0.displayNumber)") } ?? String(localized: "modules.select_stream")
     }
 }
 

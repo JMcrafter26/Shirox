@@ -268,9 +268,10 @@ struct ProfilePickerView: View {
             Button {
                 managing.toggle()
             } label: {
-                Text(managing ? "DONE" : String(localized: "profile.manage_profiles_caps"))
+                Text(LocalizedStringKey(managing ? "common.done" : "profile.manage_profiles"))
                     .font(.system(size: 16, weight: .bold))
                     .tracking(0.8)
+                    .textCase(.uppercase)
                     .foregroundStyle(.white)
                     .padding(.horizontal, 22)
                     .padding(.vertical, 12)
@@ -316,7 +317,7 @@ struct ProfilePickerView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(PressScaleStyle())
-        .accessibilityLabel(managing ? String(localized: "profile.edit \(profile.name)") : isActive ? "\(profile.name), current" : String(localized: "profile.switch_to \(profile.name)"))
+        .accessibilityLabel(managing ? String(localized: "common.edit_name \(profile.name)") : isActive ? "\(profile.name), current" : String(localized: "profile.switch_to \(profile.name)"))
     }
 
     private var addTile: some View {
@@ -501,7 +502,7 @@ struct ProfileEditorView: View {
             if let data = try? Data(contentsOf: url) { usePhoto(data) }
         }
         .modifier(PhotoPickerModifier(isPresented: $showPhotoPicker) { usePhoto($0) })
-        .confirmationDialog(String(localized: "profile.delete_name \(editing?.name ?? String())"), isPresented: $confirmDelete, titleVisibility: .visible) {
+        .confirmationDialog(String(localized: "common.delete_name_confirm \(editing?.name ?? String())"), isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("profile.delete_profile", role: .destructive) {
                 if let id = editing?.id { Task { await manager.deleteSwitchingAway(id) } }
                 dismiss()
