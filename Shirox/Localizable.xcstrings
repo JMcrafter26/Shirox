@@ -70094,6 +70094,230 @@
         }
       }
     },
+    "settings.discord" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discord"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discord"
+          }
+        }
+      }
+    },
+    "settings.discord_account" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discord-Konto"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discord Account"
+          }
+        }
+      }
+    },
+    "settings.discord_application_id" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anwendungs-ID"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Application ID"
+          }
+        }
+      }
+    },
+    "settings.discord_application_id_note" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Discord-Anwendung von Shirox. Ändere sie nur für eine eigene Anwendung mit aktiviertem Social SDK, als öffentlicher Client mit der Weiterleitung shirox://discord."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shirox's Discord application. Change it only for an application of your own with the Social SDK turned on, as a public client with the redirect shirox://discord."
+          }
+        }
+      }
+    },
+    "settings.discord_on" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ein"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On"
+          }
+        }
+      }
+    },
+    "settings.discord_rich_presence" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discord Rich Presence"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discord Rich Presence"
+          }
+        }
+      }
+    },
+    "settings.discord_rich_presence_note" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Während ein Video läuft oder ein Manga geöffnet ist, zeigt dein Discord-Status den Titel, die Folge oder das Kapitel und das Cover. Aus wird nichts an Discord gesendet."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "While a video plays or a manga is open, your Discord status shows its title, the episode or chapter and the cover. Off, nothing is sent to Discord."
+          }
+        }
+      }
+    },
+    "settings.discord_row_note" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeige, was du schaust und liest, als deinen Discord-Status."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show what you watch and read as your Discord status."
+          }
+        }
+      }
+    },
+    "settings.discord_show_cover" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cover"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cover Art"
+          }
+        }
+      }
+    },
+    "settings.discord_show_details" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Folge und Kapitel"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episode and Chapter"
+          }
+        }
+      }
+    },
+    "settings.discord_shown" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Angezeigt"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shown"
+          }
+        }
+      }
+    },
+    "settings.discord_shown_note" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Titel wird immer angezeigt. Schalte diese aus, um weniger zu teilen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The title is always shown. Turn these off to share less."
+          }
+        }
+      }
+    },
+    "settings.discord_sign_in" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit Discord anmelden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign In with Discord"
+          }
+        }
+      }
+    },
+    "settings.discord_sign_in_note" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Anmeldung läuft über Discords eigene Seite; Shirox sieht dein Passwort nie. Discords Einstellung „Meine Aktivität teilen“ entscheidet weiterhin, wer es sieht."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in on Discord's own page; Shirox never sees your password. Discord's \"Share my activity\" setting still decides who sees it."
+          }
+        }
+      }
+    },
     "settings.display_and_style" : {
       "comment" : "SettingsView",
       "localizations" : {
@@ -97208,6 +97432,70 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "已拷贝描述"
+          }
+        }
+      }
+    },
+    "shared.discord_paused" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausiert"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paused"
+          }
+        }
+      }
+    },
+    "shared.discord_reading %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Liest %@"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading %@"
+          }
+        }
+      }
+    },
+    "shared.discord_season_episode %lld %lld" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Staffel %1$lld, Folge %2$lld"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Season %1$lld, Episode %2$lld"
+          }
+        }
+      }
+    },
+    "shared.discord_signed_out" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Melde dich erneut bei Discord an."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in with Discord again."
           }
         }
       }

@@ -555,6 +555,23 @@ struct AccountsSettingsView: View {
                 Text("settings.tracks_your_anime_shows_and")
             }
 
+            #if !os(tvOS)
+            Section {
+                NavigationLink {
+                    DiscordSettingsView()
+                } label: {
+                    LabeledContent("settings.discord") {
+                        Text(UserDefaults.standard.bool(forKey: DiscordPresence.enabledKey)
+                             ? (DiscordPresence.shared.username ?? String(localized: "settings.discord_on"))
+                             : String(localized: "settings.off"))
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            } footer: {
+                Text("settings.discord_row_note")
+            }
+            #endif
+
             if aniListAuth.isLoggedIn || malAuth.isLoggedIn || simklAuth.isLoggedIn {
                 Section("library.tracking") {
                     if aniListAuth.isLoggedIn {

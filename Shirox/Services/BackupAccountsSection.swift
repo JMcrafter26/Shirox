@@ -7,6 +7,10 @@ import Foundation
 /// gets those accounts. The envelope's `includesAccounts` flag lets the import screen warn
 /// before any of this is decoded.
 ///
+/// Discord's sign-in is absent for the same reason as Simkl's: its refresh tokens are rotated, so
+/// two devices sharing one would sign each other out. The Discord settings are in the settings
+/// section; signing in again on the new device brings the account back.
+///
 /// Simkl is deliberately absent. Its AUTH V2 grant is per sign-in: restored onto a second device,
 /// the two would share one refresh token, and each device's refresh would cancel the access
 /// token the other holds. Signing in again on the new device gives it its own grant.

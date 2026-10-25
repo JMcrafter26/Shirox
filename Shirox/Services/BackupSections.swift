@@ -150,7 +150,8 @@ struct SettingsBackupSection: BackupSection {
         "autoRotateForcedLandscape",
         "librarySortAscending", "playerLiquidGlass", "rateOnFinish", "playerSpatialAudio", "playerPlayInBackground",
         "readerLiquidGlass", "readerPageCurl", "readerPortraitOnly", "readerTapZones", "readerTapZonesReversed", "skipReWatchTracking", "useDefaultExtension",
-        "dataSaverEnabled", "gooeyRefresh", AppTab.hideLabelsKey, AppTab.minimizeKey
+        "dataSaverEnabled", "gooeyRefresh", AppTab.hideLabelsKey, AppTab.minimizeKey,
+        "discordPresenceEnabled", "discordShowsCover", "discordShowsDetails"
     ]
 
     static let intKeys = [
@@ -164,7 +165,7 @@ struct SettingsBackupSection: BackupSection {
         "preferredQuality", "titleLanguagePriority", SyncTargets.key,
         DiscoverySource.choiceKey, DiscoverySource.kindKey, "playerHoldAction",
         AppTint.key, AppColorScheme.key, AppTab.orderKey, AppTab.hiddenKey, AppTab.launchKey,
-        PullToRefreshStyle.key
+        PullToRefreshStyle.key, "discordApplicationID"
     ]
 
     static let stringListKeys = [AniListMappingManager.manualTrackingKey]

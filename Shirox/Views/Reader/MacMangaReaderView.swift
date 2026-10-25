@@ -104,6 +104,12 @@ struct MacMangaReaderView: View {
         !ReaderTapZone.rightIsForward(mode: mode, reversed: controlsReversed)
     }
     private var chapter: MangaChapter? { context.chapters.indices.contains(chapterIndex) ? context.chapters[chapterIndex] : nil }
+
+    /// The manga and chapter open, as the Discord status.
+    private func showOnDiscord() {
+        DiscordPresence.shared.updateManga(title: context.mangaTitle, chapter: chapter?.displayName,
+                                           volume: nil, coverURL: context.coverImage)
+    }
     private var hasPrevious: Bool { chapterIndex > 0 }
     private var hasNext: Bool { chapterIndex + 1 < context.chapters.count }
 
@@ -138,7 +144,10 @@ struct MacMangaReaderView: View {
         }
         .onChangeOf(chromeVisible) { cover.setWindowButtonsVisible($0) }
         .onChangeOf(autoScrollSpeed) { autoScroller.speed = $0 }
+        .onAppear { showOnDiscord() }
+        .onChangeOf(chapterIndex) { showOnDiscord() }
         .onDisappear {
+            DiscordPresence.shared.clear()
             stopAutoScroll()
             cover.setWindowButtonsVisible(true)
             save()

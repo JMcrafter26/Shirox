@@ -250,6 +250,12 @@ struct MangaReaderView: View {
     }
 
     private var displayedChapter: MangaChapter? { context.chapters[safe: displayedChapterIndex] }
+
+    /// The manga and chapter open, as the Discord status.
+    private func showOnDiscord() {
+        DiscordPresence.shared.updateManga(title: context.mangaTitle, chapter: displayedChapter?.displayName,
+                                           volume: nil, coverURL: context.coverImage)
+    }
     private var hasNextChapter: Bool { displayedChapterIndex + 1 < context.chapters.count }
     private var hasPrevChapter: Bool { displayedChapterIndex > 0 }
 
@@ -336,6 +342,7 @@ struct MangaReaderView: View {
             performSave()
         }
         .onAppear {
+            showOnDiscord()
             // Reading session: keep the screen awake until the reader closes.
             UIApplication.shared.isIdleTimerDisabled = true
             // The reader turns with the phone, as the player does, unless Settings → Reader →
@@ -344,7 +351,9 @@ struct MangaReaderView: View {
                 PlayerPresenter.shared.updateOrientationLock(.allButUpsideDown)
             }
         }
+        .onChangeOf(displayedChapterIndex) { showOnDiscord() }
         .onDisappear {
+            DiscordPresence.shared.clear()
             UIApplication.shared.isIdleTimerDisabled = false
             PlayerPresenter.shared.resetToAppOrientation(shouldRotate: true)
             saveTask?.cancel()

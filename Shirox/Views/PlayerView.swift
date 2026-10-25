@@ -3004,6 +3004,13 @@ struct PlayerView: View {
             info[MPMediaItemPropertyArtwork] = artwork
         }
 
+        #if !os(tvOS)
+        // The same place feeds Discord, for every player: AVPlayer, MPV and casting alike.
+        DiscordPresence.shared.updateMedia(title: mediaTitle, subtitle: epTitle, season: nil,
+                                           episode: epNumber, coverURL: currentContext?.imageUrl,
+                                           isPlaying: isPlaying, elapsed: elapsed)
+        #endif
+
         let snapshot = NowPlayingSnapshot(
             details: NowPlayingDetails(title: mediaTitle, subtitle: subtitleString,
                                        duration: duration, artworkKey: artwork == nil ? nil : artworkUrl),
@@ -3034,6 +3041,9 @@ struct PlayerView: View {
     }
 
     private func tearDownNowPlaying() {
+        #if !os(tvOS)
+        DiscordPresence.shared.clear()
+        #endif
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
         nowPlaying.sent = nil
         #if os(macOS)
