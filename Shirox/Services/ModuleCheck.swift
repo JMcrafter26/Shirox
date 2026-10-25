@@ -40,7 +40,7 @@ enum ModuleCheck {
     static let queries = ["frieren", "one piece", "naruto", "a"]
     /// Search results tried before giving up on finding a playable episode.
     static let resultsTried = 3
-    static let timeout: TimeInterval = 90
+    nonisolated static let timeout: TimeInterval = 90
 
     static func check(_ module: ModuleDefinition) async -> ModuleCheckResult {
         if module.isManga { return .skipped(String(localized: "modules.manga_modules_arent_checked_yet")) }

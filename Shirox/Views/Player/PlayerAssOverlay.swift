@@ -52,7 +52,7 @@ final class AssOverlayDriver {
             // A script with embedded fonts can be megabytes: read it off the main thread.
             work.async { [weak self] in
                 let renderer = AssRenderer(script: script)
-                DispatchQueue.main.async {
+                DispatchQueue.main.async { [weak self] in
                     MainActor.assumeIsolated {
                         guard let self, self.script == script else { return }
                         self.renderer = renderer
@@ -86,7 +86,7 @@ final class AssOverlayDriver {
         work.async { [weak self] in
             let rendered = renderer.render(at: time, frameSize: pixels, storageSize: storage,
                                            fontScale: fontScale, force: force)
-            DispatchQueue.main.async {
+            DispatchQueue.main.async { [weak self] in
                 MainActor.assumeIsolated {
                     guard let self else { return }
                     self.rendering = false

@@ -357,20 +357,11 @@ private struct HomeToolbar: ViewModifier {
                 ToolbarItem(placement: .primaryAction) { ProviderMenuButton() }
             }
         }
+        #elseif os(tvOS)
+        currentToolbar(content)
         #else
-        if #available(iOS 16, macOS 13, tvOS 16, *) {
-            // Left out, not left empty: from iOS 26 an empty item still draws its glass.
-            content.toolbar {
-                #if !os(iOS)
-                calendarItem
-                #endif
-                if discovery.usesSimkl {
-                    ToolbarItem(placement: Self.leadingPlacement) { kindMenu }
-                }
-                if showsProviderMenu {
-                    providerItem
-                }
-            }
+        if #available(iOS 16, *) {
+            currentToolbar(content)
         } else {
             // A bare `if` in a toolbar builder needs iOS 16; before it, the condition lives
             // inside the item.
@@ -387,6 +378,23 @@ private struct HomeToolbar: ViewModifier {
             }
         }
         #endif
+    }
+
+    /// Items that are there or not, which a toolbar builder can do from iOS 16.
+    @available(iOS 16, tvOS 16, *)
+    private func currentToolbar(_ content: Content) -> some View {
+        // Left out, not left empty: from iOS 26 an empty item still draws its glass.
+        content.toolbar {
+            #if !os(iOS)
+            calendarItem
+            #endif
+            if discovery.usesSimkl {
+                ToolbarItem(placement: Self.leadingPlacement) { kindMenu }
+            }
+            if showsProviderMenu {
+                providerItem
+            }
+        }
     }
 
     private var calendarItem: some ToolbarContent {
@@ -929,7 +937,7 @@ private struct MacHeroHeight: ViewModifier {
 private struct CinematicHome<Rows: View>: View {
     let items: [Media]
     var leadingInset: CGFloat = 0
-    var onRefresh: (@Sendable () async -> Void)? = nil
+    nonisolated var onRefresh: (@Sendable () async -> Void)? = nil
     @ViewBuilder let rows: () -> Rows
 
     @State private var currentIndex = 0

@@ -1138,8 +1138,8 @@ final class DownloadManager: NSObject, ObservableObject {
                     headers: Self.requestHeaders(for: streamURL, streamHeaders: item.headers),
                     playlistKey: item.playlistKey,
                     downloadDir: downloadDir,
-                    onProgress: { [weak self] p in
-                        Task { @MainActor in self?.updateProgress(id, p) }
+                    onProgress: { p in
+                        Task { @MainActor in self.updateProgress(id, p) }
                     }
                 )
                 // One video file in place of the folder of segments; the folder if that fails.
@@ -1770,7 +1770,7 @@ extension DownloadManager: URLSessionDownloadDelegate {
             let taskIdentifier = downloadTask.taskIdentifier
             Task { @MainActor in
                 if let idx = self.items.firstIndex(where: { $0.taskIdentifier == taskIdentifier }) {
-                    self.updateError(self.items[idx].id, NSError(domain: "DownloadManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "Download task lost context"]))
+                    self.updateError(self.items[idx].id, NSError(domain: "DownloadManager", code: -1, userInfo: [NSLocalizedDescriptionKey: String(localized: "shared.download_task_lost_context")]))
                 }
             }
             return
@@ -1782,7 +1782,7 @@ extension DownloadManager: URLSessionDownloadDelegate {
             let err = NSError(
                 domain: "DownloadManager",
                 code: http.statusCode,
-                userInfo: [NSLocalizedDescriptionKey: "Server returned HTTP \(http.statusCode)"]
+                userInfo: [NSLocalizedDescriptionKey: String(localized: "shared.server_returned_http \(http.statusCode)")]
             )
             Task { @MainActor in self.updateError(id, err) }
             return

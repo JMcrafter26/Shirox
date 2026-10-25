@@ -398,18 +398,11 @@ private enum Platform {
     #endif
 
     private static var systemName: String {
+        let v = ProcessInfo.processInfo.operatingSystemVersion
         #if os(macOS)
-        let onMac = true
+        return "macOS \(v.majorVersion).\(v.minorVersion)"
         #else
-        let onMac = runsOnMac
-        #endif
-        if onMac {
-            let v = ProcessInfo.processInfo.operatingSystemVersion
-            return "macOS \(v.majorVersion).\(v.minorVersion)"
-        }
-        #if os(macOS)
-        return ""
-        #else
+        if runsOnMac { return "macOS \(v.majorVersion).\(v.minorVersion)" }
         return "\(UIDevice.current.systemName) \(UIDevice.current.systemVersion)"
         #endif
     }

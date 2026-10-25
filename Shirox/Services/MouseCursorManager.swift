@@ -58,7 +58,7 @@ enum MouseCursorManager {
         isHidden = false
         #else
         if let nsCursor = nsCursorClass {
-            nsCursor.perform(Selector(("unhide")))
+            _ = nsCursor.perform(Selector(("unhide")))
             isHidden = false
         }
         #endif

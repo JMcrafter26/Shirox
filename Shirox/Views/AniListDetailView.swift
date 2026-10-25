@@ -1496,8 +1496,6 @@ struct AniListDetailView: View {
     private func selectionBar(totalEpisodes: Int) -> some View {
         HStack {
             if let window = clampedRange(totalEpisodes: totalEpisodes) {
-                let currentRangeStart = window.lowerBound
-                let currentRangeEnd = window.upperBound
                 let rangeEpisodes = Array(window)
                 let selectableEpisodes = rangeEpisodes.filter { ep in
                     let state = DownloadManager.shared.items.first { 

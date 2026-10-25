@@ -948,7 +948,7 @@ struct MangaReaderView: View {
     private func warmImage(_ urlString: String) {
         guard let url = URL(string: urlString) else { return }
         KingfisherManager.shared.retrieveImage(
-            with: Kingfisher.ImageResource(downloadURL: url, cacheKey: urlString),
+            with: KF.ImageResource(downloadURL: url, cacheKey: urlString),
             options: ReaderPageView.imageOptions(referer: referer, for: url)) { _ in }
     }
 

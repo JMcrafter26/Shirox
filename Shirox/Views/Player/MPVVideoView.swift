@@ -315,6 +315,12 @@ final class MPVPictureInPicture: NSObject {
         }
     }
 
+    /// A frame on its way from MPV's render thread to the main thread.
+    private struct Frame: @unchecked Sendable {
+        let layer: AVSampleBufferDisplayLayer
+        let sample: CMSampleBuffer
+    }
+
     nonisolated static func enqueue(_ buffer: CVPixelBuffer, on layer: AVSampleBufferDisplayLayer, timebase: CMTimebase?) {
         var format: CMVideoFormatDescription?
         CMVideoFormatDescriptionCreateForImageBuffer(allocator: kCFAllocatorDefault, imageBuffer: buffer,
@@ -335,13 +341,21 @@ final class MPVPictureInPicture: NSObject {
                                  Unmanaged.passUnretained(kCMSampleAttachmentKey_DisplayImmediately).toOpaque(),
                                  Unmanaged.passUnretained(kCFBooleanTrue).toOpaque())
         }
-        if #available(iOS 17.0, *) {
-            let renderer = layer.sampleBufferRenderer
-            if renderer.status == .failed { renderer.flush() }
-            renderer.enqueue(sample)
-        } else {
-            if layer.status == .failed { layer.flush() }
-            layer.enqueue(sample)
+        // The buffer is built on MPV's render thread; the layer takes it on the main thread,
+        // where the SDK has it. Neither type is marked Sendable, but each is only handed over.
+        let frame = Frame(layer: layer, sample: sample)
+        DispatchQueue.main.async {
+            MainActor.assumeIsolated {
+                let layer = frame.layer, sample = frame.sample
+                if #available(iOS 17.0, *) {
+                    let renderer = layer.sampleBufferRenderer
+                    if renderer.status == .failed { renderer.flush() }
+                    renderer.enqueue(sample)
+                } else {
+                    if layer.status == .failed { layer.flush() }
+                    layer.enqueue(sample)
+                }
+            }
         }
     }
 }

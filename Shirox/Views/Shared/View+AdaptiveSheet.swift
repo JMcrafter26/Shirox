@@ -106,7 +106,7 @@ extension View {
                     Color.clear
                         .preference(key: SafeAreaLeadingKey.self, value: proxy.safeAreaInsets.leading)
                         .onAppear { leadingInset.wrappedValue = proxy.safeAreaInsets.leading }
-                        .onChange(of: proxy.safeAreaInsets.leading) { newInset in leadingInset.wrappedValue = newInset }
+                        .onChangeOf(proxy.safeAreaInsets.leading) { newInset in leadingInset.wrappedValue = newInset }
                 }
             }
             .onPreferenceChange(SafeAreaLeadingKey.self) { newInset in

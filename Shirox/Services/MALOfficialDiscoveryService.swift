@@ -77,7 +77,7 @@ final class MALOfficialDiscoveryService {
         var request = URLRequest(url: components.url!)
         // The public client id is enough for discovery; a user token is only needed for a
         // library. Sending it unconditionally keeps these rows working signed out.
-        request.setValue(MALAuthManager.shared.clientId, forHTTPHeaderField: "X-MAL-CLIENT-ID")
+        request.setValue(MALAuthManager.clientId, forHTTPHeaderField: "X-MAL-CLIENT-ID")
 
         let (data, response) = try await URLSession.shared.data(for: request)
         if let http = response as? HTTPURLResponse, http.statusCode != 200 {

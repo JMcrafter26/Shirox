@@ -926,7 +926,6 @@ fileprivate final class ProxyExchangeRegistry: NSObject, URLSessionDataDelegate,
         var manifestBuffer = Data()
         var headerSent = false
         var failed = false
-        var finish: ((Void) -> Void)?
 
         init(connection: ProxyConnection, wantsBody: Bool, manifestBase: URL, playlistKey: String?,
              finish: ((String, String) -> String)?, prepare: ((String) -> Void)?,
@@ -970,12 +969,23 @@ fileprivate final class ProxyExchangeRegistry: NSObject, URLSessionDataDelegate,
         let exchange = Exchange(connection: connection, wantsBody: wantsBody, manifestBase: base,
                                 playlistKey: playlistKey, finish: finish, prepare: prepare,
                                 segmentRepair: segmentRepair, unwrapsDisguise: unwrapsDisguise, proxy: proxy)
-        lock.lock(); active[task.taskIdentifier] = exchange; lock.unlock()
+        register(exchange, for: task)
 
         await withCheckedContinuation { continuation in
-            lock.lock(); continuations[task.taskIdentifier] = continuation; lock.unlock()
+            register(continuation, for: task)
             task.resume()
         }
+    }
+
+    // The lock is taken in these synchronous steps: an `async` function can't hold an NSLock.
+    private func register(_ exchange: Exchange, for task: URLSessionTask) {
+        lock.lock(); defer { lock.unlock() }
+        active[task.taskIdentifier] = exchange
+    }
+
+    private func register(_ continuation: CheckedContinuation<Void, Never>, for task: URLSessionTask) {
+        lock.lock(); defer { lock.unlock() }
+        continuations[task.taskIdentifier] = continuation
     }
 
     private func exchange(for task: URLSessionTask) -> Exchange? {

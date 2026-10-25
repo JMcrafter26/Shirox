@@ -693,7 +693,7 @@ private struct PhotoPickerModifier: ViewModifier {
         func body(content: Content) -> some View {
             content
                 .photosPicker(isPresented: $isPresented, selection: $item, matching: .images)
-                .onChange(of: item) { newItem in
+                .onChangeOf(item) { newItem in
                     guard let newItem else { return }
                     Task {
                         if let data = try? await newItem.loadTransferable(type: Data.self) {

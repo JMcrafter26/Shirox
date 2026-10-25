@@ -85,7 +85,7 @@ enum NetworkProxy {
     /// Once, at launch, before any request, as `SecureDNS` is. `apply` is the system call;
     /// tests pass their own.
     @MainActor
-    static func applyAtLaunch(_ settings: NetworkProxySettings = .current(), apply: (Server) -> Void = useProxy) {
+    static func applyAtLaunch(_ settings: NetworkProxySettings = .current(), apply: @MainActor (Server) -> Void = useProxy) {
         guard !applied else { return }
         applied = true
         guard let server = settings.server else {
@@ -124,7 +124,7 @@ enum NetworkProxy {
     private static func configuration(for server: Server) -> ProxyConfiguration {
         let endpoint = NWEndpoint.hostPort(host: NWEndpoint.Host(server.host),
                                            port: NWEndpoint.Port(rawValue: server.port) ?? 1_080)
-        var configuration = server.kind == .http
+        let configuration = server.kind == .http
             ? ProxyConfiguration(httpCONNECTProxy: endpoint, tlsOptions: nil)
             : ProxyConfiguration(socksv5Proxy: endpoint)
         if let username = server.username, let password = server.password {

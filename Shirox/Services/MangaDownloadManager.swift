@@ -231,11 +231,11 @@ final class MangaDownloadManager: ObservableObject {
             do {
                 let urls = try await JSEngine.shared.mangaImages(url: chapterHref)
                 guard !urls.isEmpty else { throw NSError(domain: "MangaDownloadManager", code: -2,
-                    userInfo: [NSLocalizedDescriptionKey: "No pages found"]) }
+                    userInfo: [NSLocalizedDescriptionKey: String(localized: "reader.no_pages_found")]) }
                 let pageFiles = try await self.downloadPages(id: id, urls: urls, referer: referer, folder: folder)
-                await self.finishChapter(id: id, pageFiles: pageFiles)
+                self.finishChapter(id: id, pageFiles: pageFiles)
             } catch {
-                await self.failChapter(id: id, error: error)
+                self.failChapter(id: id, error: error)
             }
             self.chapterTasks.removeValue(forKey: id)
             self.processQueue()
@@ -307,7 +307,7 @@ final class MangaDownloadManager: ObservableObject {
         let status = (response as? HTTPURLResponse)?.statusCode ?? -1
         guard (200..<300).contains(status), !data.isEmpty else {
             throw NSError(domain: "MangaDownloadManager", code: status,
-                          userInfo: [NSLocalizedDescriptionKey: "Page fetch failed (HTTP \(status))"])
+                          userInfo: [NSLocalizedDescriptionKey: String(localized: "shared.page_fetch_failed_http \(status)")])
         }
         return data
     }

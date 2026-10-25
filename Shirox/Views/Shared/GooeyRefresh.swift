@@ -118,7 +118,7 @@ enum GooeyRefreshGeometry {
 
 struct GooeyRefreshModifier: ViewModifier {
     let fallback: GooeyRefreshFallback
-    let action: @Sendable () async -> Void
+    nonisolated let action: @Sendable () async -> Void
     @AppStorage(PullToRefreshStyle.key) private var style = PullToRefreshStyle.defaultStyle
 
     func body(content: Content) -> some View {
@@ -147,7 +147,7 @@ import UIKit
 
 /// Finds the scroll view the modifier sits on and drives the drop from its pull.
 private struct GooeyScrollHook: UIViewRepresentable {
-    let action: @Sendable () async -> Void
+    nonisolated let action: @Sendable () async -> Void
     /// False for the None style: the pull and release refresh, but no drop comes out.
     let showsDrop: Bool
 

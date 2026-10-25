@@ -48,7 +48,7 @@ struct CinematicPage<Backdrop: View, Hero: View, Rows: View>: View {
     /// How dark the artwork gets once the rows have scrolled over it: 1 is black.
     var maxDim: CGFloat = 0.6
     /// Pull to refresh, where the page has one.
-    var onRefresh: (@Sendable () async -> Void)? = nil
+    nonisolated var onRefresh: (@Sendable () async -> Void)? = nil
     @ViewBuilder let backdrop: () -> Backdrop
     @ViewBuilder let hero: () -> Hero
     @ViewBuilder let rows: () -> Rows
@@ -161,7 +161,7 @@ extension CinematicPage {
 }
 
 private struct OptionalRefresh: ViewModifier {
-    let action: (@Sendable () async -> Void)?
+    nonisolated let action: (@Sendable () async -> Void)?
 
     @ViewBuilder
     func body(content: Content) -> some View {

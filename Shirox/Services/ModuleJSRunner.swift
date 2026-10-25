@@ -405,7 +405,7 @@ final class ModuleJSRunner {
                             responseText = String(data: recovered.data, encoding: .utf8) ?? ""
                         } else {
                             self.lastTurnstileURL = cfResponseURL
-                            await CloudflareBypassManager.shared.flagPendingVerification(for: cfResponseURL)
+                            CloudflareBypassManager.shared.flagPendingVerification(for: cfResponseURL)
                         }
                     }
 

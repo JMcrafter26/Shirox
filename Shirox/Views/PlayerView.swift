@@ -2296,7 +2296,7 @@ struct PlayerView: View {
             scheduleHide()
             return
         }
-        guard let engine, duration > 0 else { return }
+        guard engine != nil, duration > 0 else { return }
         let newTime = min(max(currentTime + seconds, 0), duration)
         currentTime = newTime
         isScrubbing = true
@@ -4300,7 +4300,7 @@ final class MacPlayerWindowManager: NSObject, ObservableObject {
         // SwiftUI shows its toolbar again, or puts up a new one, now and then while the cover is
         // up (when a sheet that opened the player goes away, for one). It goes again.
         toolbarObservations = [window.observe(\.toolbar, options: [.new]) { [weak self] window, _ in
-            DispatchQueue.main.async { self?.hideToolbar(of: window) }
+            DispatchQueue.main.async { [self] in self?.hideToolbar(of: window) }
         }]
         hideToolbar(of: window)
         // SwiftUI puts its toolbar back now and then without a word: on a resize, and when
@@ -4349,7 +4349,7 @@ final class MacPlayerWindowManager: NSObject, ObservableObject {
             if hiddenToolbar !== toolbar {
                 hiddenToolbar = toolbar
                 toolbarObservations.append(toolbar.observe(\.isVisible, options: [.new]) { [weak self, weak window] toolbar, _ in
-                    DispatchQueue.main.async {
+                    DispatchQueue.main.async { [self, window] in
                         guard let self, let window, self.isCovering, toolbar.isVisible else { return }
                         self.hideToolbar(of: window)
                     }
@@ -4363,7 +4363,7 @@ final class MacPlayerWindowManager: NSObject, ObservableObject {
             hiddenAccessories.append(accessory)
             // SwiftUI shows it again when the page under the cover redraws its search field.
             toolbarObservations.append(accessory.observe(\.isHidden, options: [.new]) { [weak self, weak window] accessory, _ in
-                DispatchQueue.main.async {
+                DispatchQueue.main.async { [self, window] in
                     guard let self, let window, self.isCovering, !accessory.isHidden else { return }
                     self.hideToolbar(of: window)
                 }

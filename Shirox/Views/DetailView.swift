@@ -2236,7 +2236,7 @@ struct DetailView: View {
     /// next download past episodes that weren't downloaded but could stream.
     static func nextDownloadLoader(after item: DownloadItem, online: WatchNextLoader? = nil) -> WatchNextLoader {
         { currentNumber in
-            func downloaded(_ wanted: (Int) -> Bool) async -> (streams: [StreamResult], episodeNumber: Int, episodeHref: String?)? {
+            func downloaded(_ wanted: @escaping @Sendable (Int) -> Bool) async -> (streams: [StreamResult], episodeNumber: Int, episodeHref: String?)? {
                 let next = await MainActor.run { () -> DownloadItem? in
                     DownloadManager.shared.items
                         .filter {

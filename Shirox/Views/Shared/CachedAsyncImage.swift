@@ -181,7 +181,7 @@ struct CachedAsyncImage: View {
         }
         // Key on `urlString` so `cachedImageData(for:)` and the snapshot store
         // find the same entry the display path wrote.
-        let resource = Kingfisher.ImageResource(downloadURL: url, cacheKey: urlString)
+        let resource = KF.ImageResource(downloadURL: url, cacheKey: urlString)
 
         let kfImage: PlatformImage? = await withCheckedContinuation { (continuation: CheckedContinuation<PlatformImage?, Never>) in
             KingfisherManager.shared.retrieveImage(

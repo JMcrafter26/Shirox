@@ -200,7 +200,7 @@ struct ShiroxApp: App {
                     showOnboarding = !hasCompletedOnboarding
                     if hasCompletedOnboarding { ProfileManager.shared.presentAtLaunchIfNeeded() }
                 }
-                .onChange(of: scenePhase) { phase in
+                .onChangeOf(scenePhase) { phase in
                     switch phase {
                     case .active:
                         Task { await PendingWriteQueue.shared.flush() }
@@ -797,7 +797,7 @@ private struct RootTabView: View {
                 .allowsHitTesting(false)
         }
 
-        .onChange(of: cfManager.activeBypassWebView != nil) { presented in
+        .onChangeOf(cfManager.activeBypassWebView != nil) { presented in
             if presented {
                 CloudflareBypassWindowController.shared.show()
             } else {

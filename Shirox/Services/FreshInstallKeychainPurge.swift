@@ -26,7 +26,7 @@ enum FreshInstallKeychainPurge {
     /// Every account this app stores under `kSecClassGenericPassword`. A credential missing
     /// from this list would survive a reinstall and go on impersonating a signed-in account,
     /// so anything added to the Keychain elsewhere belongs here too.
-    static let accounts = [
+    nonisolated static let accounts = [
         "anilist_access_token",
         "mal_access_token",
         "mal_refresh_token",

@@ -18,11 +18,12 @@ final class PendingWriteQueue {
 
     init(directory: URL = AppDirectories.applicationSupport,
          sink: PendingWriteSink? = nil,
-         cacheStore: LibraryCacheStore = .shared,
+         cacheStore: LibraryCacheStore? = nil,
          maxAttempts: Int = 50) {
         self.directory = directory
         self.sink = sink
-        self.cacheStore = cacheStore
+        // Defaulted here, on the main actor, rather than in the signature, which isn't.
+        self.cacheStore = cacheStore ?? .shared
         self.maxAttempts = maxAttempts
         load()
     }

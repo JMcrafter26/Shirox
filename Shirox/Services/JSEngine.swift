@@ -288,7 +288,7 @@ final class JSEngine: ObservableObject {
                             httpResponse = recovered.response
                             responseText = Self.bodyText(data)
                         } else {
-                            await CloudflareBypassManager.shared.flagPendingVerification(for: cfResponseURL)
+                            CloudflareBypassManager.shared.flagPendingVerification(for: cfResponseURL)
                         }
                     }
 

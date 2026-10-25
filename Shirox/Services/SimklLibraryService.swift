@@ -360,7 +360,7 @@ final class SimklLibraryService {
     ///
     /// The last clause is the reason this exists. Activity checks are charged to the user's own
     /// request budget, so a check on every activation is spending something that belongs to them.
-    static let minimumAwayInterval: TimeInterval = 30 * 60
+    nonisolated static let minimumAwayInterval: TimeInterval = 30 * 60
 
     /// Whether returning to the foreground should check for changes.
     ///
