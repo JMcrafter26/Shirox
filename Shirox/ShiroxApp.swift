@@ -348,19 +348,71 @@ private struct MacSidebarView: View {
 }
 
 #if os(macOS)
-/// The search field at the end of a Mac window's toolbar: what's typed, whether it's in use,
-/// and a count of Returns, which the Search page runs a search on.
+/// The search field at the end of a Mac window's toolbar, on the pages that search: what's
+/// typed, a count of Returns (the Search page searches on each), and of requests to focus it.
 @MainActor
 final class MacToolbarSearch: ObservableObject {
     static let shared = MacToolbarSearch()
     @Published var text = ""
-    @Published var isPresented = false
     @Published var submissions = 0
+    @Published var focusRequests = 0
 
     /// Cleared on a switch of tab: Library's filter and a search don't carry over.
     func reset() {
         text = ""
-        isPresented = false
+    }
+}
+
+/// The toolbar's search field, at a fixed width: SwiftUI's `searchable` takes whatever room
+/// the toolbar has left.
+struct MacToolbarSearchField: NSViewRepresentable {
+    @ObservedObject var search: MacToolbarSearch
+    let prompt: String
+    static let width: CGFloat = 200
+
+    func makeCoordinator() -> Coordinator { Coordinator(search: search, focusRequests: search.focusRequests) }
+
+    func makeNSView(context: Context) -> NSSearchField {
+        let field = NSSearchField()
+        field.delegate = context.coordinator
+        field.target = context.coordinator
+        field.action = #selector(Coordinator.submitted(_:))
+        // The action is Return (and the clear button), not every keystroke.
+        field.sendsWholeSearchString = true
+        field.translatesAutoresizingMaskIntoConstraints = false
+        field.widthAnchor.constraint(equalToConstant: Self.width).isActive = true
+        return field
+    }
+
+    func updateNSView(_ field: NSSearchField, context: Context) {
+        if field.stringValue != search.text { field.stringValue = search.text }
+        field.placeholderString = prompt
+        if context.coordinator.focusRequests != search.focusRequests {
+            context.coordinator.focusRequests = search.focusRequests
+            DispatchQueue.main.async { field.window?.makeFirstResponder(field) }
+        }
+    }
+
+    final class Coordinator: NSObject, NSSearchFieldDelegate {
+        let search: MacToolbarSearch
+        var focusRequests: Int
+
+        init(search: MacToolbarSearch, focusRequests: Int) {
+            self.search = search
+            self.focusRequests = focusRequests
+        }
+
+        func controlTextDidChange(_ note: Notification) {
+            guard let field = note.object as? NSSearchField else { return }
+            MainActor.assumeIsolated { search.text = field.stringValue }
+        }
+
+        @objc func submitted(_ field: NSSearchField) {
+            MainActor.assumeIsolated {
+                search.text = field.stringValue
+                if !field.stringValue.isEmpty { search.submissions += 1 }
+            }
+        }
     }
 }
 #endif
@@ -442,11 +494,8 @@ private struct RootTabView: View {
 
     @ObservedObject private var toolbarSearch = MacToolbarSearch.shared
 
-    /// The Search page is up while the toolbar's field is in use anywhere but the Library,
-    /// which filters itself with it instead.
-    private var showsMacSearch: Bool {
-        sidebarTab != .library && (toolbarSearch.isPresented || !toolbarSearch.text.isEmpty)
-    }
+    /// The pages that had a search field of their own; it's in the toolbar on them now.
+    private var macTabSearches: Bool { sidebarTab == .search || sidebarTab == .library }
 
     /// The toolbar's tabs, in the order and with the ones hidden in Settings › General.
     private var macTabs: [SidebarTab] {
@@ -460,7 +509,8 @@ private struct RootTabView: View {
         case .library:   LibraryView()
         case .downloads: DownloadsView()
         case .settings:  SettingsView()
-        case .search:    SearchView()
+        case .search:
+            if #available(macOS 15, *) { SearchView(toolbarSearch: toolbarSearch) } else { SearchView() }
         }
     }
     #endif
@@ -544,8 +594,8 @@ private struct RootTabView: View {
                 // Tabs in the window's toolbar, as iOS has them in its tab bar, rather than a
                 // sidebar taking a column of the window for five rows.
                 //
-                // Search isn't one of them: its field sits at the toolbar's trailing end, filters
-                // the Library on that tab, and brings up the Search page over any other.
+                // Search and Library's field is in the toolbar's trailing end, at a fixed width,
+                // instead of a second bar under it.
                 TabView(selection: macTabSelection) {
                     ForEach(macTabs, id: \.self) { tab in
                         Tab(tab.label, systemImage: tab.icon, value: tab) {
@@ -554,16 +604,15 @@ private struct RootTabView: View {
                     }
                 }
                 .tabViewStyle(.tabBarOnly)
-                .overlay {
-                    if showsMacSearch {
-                        SearchView(toolbarSearch: toolbarSearch)
-                            .background(Color(nsColor: .windowBackgroundColor))
+                .toolbar {
+                    if macTabSearches {
+                        ToolbarItem(placement: .primaryAction) {
+                            MacToolbarSearchField(search: toolbarSearch,
+                                                  prompt: sidebarTab == .library ? String(localized: "library.search_library")
+                                                                                 : String(localized: "search.search_anime"))
+                        }
                     }
                 }
-                .searchable(text: $toolbarSearch.text, isPresented: $toolbarSearch.isPresented, placement: .toolbar,
-                            prompt: sidebarTab == .library ? String(localized: "library.search_library")
-                                                           : String(localized: "search.search_anime"))
-                .onSubmit(of: .search) { toolbarSearch.submissions += 1 }
                 .onChangeOf(sidebarTab) { _ in toolbarSearch.reset() }
                 #else
                 TabView(selection: $selectedTab) {
@@ -655,14 +704,11 @@ private struct RootTabView: View {
         #if targetEnvironment(macCatalyst) || os(macOS)
         .onReceive(NotificationCenter.default.publisher(for: .selectSidebarTab)) { note in
             guard let tab = note.object as? SidebarTab else { return }
-            #if os(macOS)
-            // Search is the toolbar's field, not a tab, where the tabs are in the toolbar.
-            if tab == .search, #available(macOS 15, *) {
-                MacToolbarSearch.shared.isPresented = true
-                return
-            }
-            #endif
             sidebarTab = tab
+            #if os(macOS)
+            // ⌘F: the Search tab, with its toolbar field ready to type in.
+            if tab == .search { MacToolbarSearch.shared.focusRequests += 1 }
+            #endif
         }
         #endif
         // The tab showing was just hidden: on to the first one left.
