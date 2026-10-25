@@ -21,7 +21,7 @@ struct JellyfinConnectView: View {
 
     var body: some View {
         VStack(spacing: 18) {
-            Image(systemName: "server.rack")
+            IconView("server.rack")
                 .font(.system(size: 48))
                 .foregroundStyle(.secondary)
             Text("jellyfin.connect_to_jellyfin")
@@ -58,7 +58,7 @@ struct JellyfinConnectView: View {
             Button {
                 showGuide = true
             } label: {
-                Label("jellyfin.how_do_i_set_this", systemImage: "questionmark.circle")
+                Label("jellyfin.how_do_i_set_this", icon: "questionmark.circle")
                     .font(.subheadline)
             }
             .buttonStyle(.plain)
@@ -159,18 +159,18 @@ private struct JellyfinSetupGuide: View {
                 }
 
                 Section("jellyfin.if_it_wont_connect") {
-                    Label("jellyfin.include_http_and_the_port", systemImage: "link")
+                    Label("jellyfin.include_http_and_the_port", icon: "link")
                     #if os(iOS)
-                    Label("jellyfin.allow_shirox_under_settings_privacy", systemImage: "wifi")
+                    Label("jellyfin.allow_shirox_under_settings_privacy", icon: "wifi")
                     #endif
-                    Label("jellyfin.make_sure_the_server_is", systemImage: "shield")
-                    Label(Self.openInSafari, systemImage: "safari")
+                    Label("jellyfin.make_sure_the_server_is", icon: "shield")
+                    Label(Self.openInSafari, icon: "safari")
                 }
                 .font(.subheadline)
 
                 Section {
                     Link(destination: URL(string: "https://jellyfin.org/docs/general/quick-start")!) {
-                        Label("jellyfin.jellyfins_quick_start_guide", systemImage: "arrow.up.right.square")
+                        Label("jellyfin.jellyfins_quick_start_guide", icon: "arrow.up.right.square")
                     }
                 }
             }

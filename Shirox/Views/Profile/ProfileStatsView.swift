@@ -106,7 +106,7 @@ struct ProfileStatsView: View {
 
     private func statBox(title: String, value: Text, icon: String) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: icon)
+            IconView(icon)
                 .font(.title3)
                 .foregroundStyle(.accent)
             VStack(alignment: .leading, spacing: 2) {

@@ -62,7 +62,7 @@ struct ThumbnailEpisodeRow: View {
                             Circle()
                                 .fill(Color.primary)
                                 .frame(width: 40, height: 40)
-                            Image(systemName: "checkmark")
+                            IconView("checkmark")
                                 .font(.caption2.weight(.bold))
                                 .foregroundStyle(adaptiveBackground)
                         }
@@ -76,7 +76,7 @@ struct ThumbnailEpisodeRow: View {
                                 ZStack {
                                     if isComplete {
                                         Color.black.opacity(0.55)
-                                        Image(systemName: "checkmark")
+                                        IconView("checkmark")
                                             .font(.caption.weight(.bold))
                                             .foregroundStyle(.white)
                                     }
@@ -94,7 +94,7 @@ struct ThumbnailEpisodeRow: View {
                                 .frame(width: 40, height: 40)
                             
                             if isComplete {
-                                Image(systemName: "checkmark")
+                                IconView("checkmark")
                                     .font(.caption2.weight(.bold))
                                     .foregroundStyle(.white)
                             } else {
@@ -133,7 +133,7 @@ struct ThumbnailEpisodeRow: View {
                         // matters which ones were already watched.
                         if isSelectionMode {
                             if isComplete {
-                                Label("detail.watched", systemImage: "checkmark")
+                                Label("detail.watched", icon: "checkmark")
                                     .labelStyle(.titleAndIcon)
                                     .font(.system(size: 10, weight: .bold))
                                     .foregroundStyle(.green)
@@ -175,18 +175,18 @@ struct ThumbnailEpisodeRow: View {
                         Group {
                             switch state {
                             case .completed:
-                                Image(systemName: "arrow.down.circle.fill")
+                                IconView("arrow.down.circle.fill")
                                     .foregroundStyle(.blue)
                             case .downloading:
                                 ProgressView().controlSize(.small)
                             case .pending:
-                                Image(systemName: "hourglass")
+                                IconView("hourglass")
                                     .foregroundStyle(.secondary)
                             case .paused:
-                                Image(systemName: "pause.circle.fill")
+                                IconView("pause.circle.fill")
                                     .foregroundStyle(.secondary)
                             case .failed:
-                                Image(systemName: "exclamationmark.circle.fill")
+                                IconView("exclamationmark.circle.fill")
                                     .foregroundStyle(.red)
                             }
                         }
@@ -197,7 +197,7 @@ struct ThumbnailEpisodeRow: View {
                         Button {
                             withAnimation(.easeInOut(duration: 0.2)) { isDescriptionExpanded.toggle() }
                         } label: {
-                            Image(systemName: isDescriptionExpanded ? "chevron.up" : "chevron.down")
+                            IconView(isDescriptionExpanded ? "chevron.up" : "chevron.down")
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(.secondary)
                                 .padding(8)
@@ -207,7 +207,7 @@ struct ThumbnailEpisodeRow: View {
                     }
 
                     if !isSelectionMode {
-                        Image(systemName: "play.fill")
+                        IconView("play.fill")
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(.primary)
                             .padding(8)
@@ -274,7 +274,7 @@ struct ThumbnailEpisodeRow: View {
                     if isComplete && !isSelectionMode {
                         ZStack {
                             Color.black.opacity(0.5)
-                            Image(systemName: "checkmark")
+                            IconView("checkmark")
                                 .font(.title3.weight(.bold))
                                 .foregroundStyle(.white)
                         }
@@ -310,7 +310,7 @@ struct ThumbnailEpisodeRow: View {
                                 Circle()
                                     .strokeBorder(Color.white, lineWidth: 2)
                                 if isSelected {
-                                    Image(systemName: "checkmark")
+                                    IconView("checkmark")
                                         .font(.caption.weight(.bold))
                                         .foregroundStyle(.black)
                                 }
@@ -364,11 +364,11 @@ struct ThumbnailEpisodeRow: View {
     private func cardDownloadBadge(_ state: DownloadState) -> some View {
         Group {
             switch state {
-            case .completed: Image(systemName: "arrow.down.circle.fill")
+            case .completed: IconView("arrow.down.circle.fill")
             case .downloading: ProgressView().controlSize(.small).tint(.white)
-            case .pending: Image(systemName: "hourglass")
-            case .paused: Image(systemName: "pause.circle.fill")
-            case .failed: Image(systemName: "exclamationmark.circle.fill").foregroundStyle(.red)
+            case .pending: IconView("hourglass")
+            case .paused: IconView("pause.circle.fill")
+            case .failed: IconView("exclamationmark.circle.fill").foregroundStyle(.red)
             }
         }
         .font(.system(size: 14, weight: .semibold))
@@ -382,29 +382,29 @@ struct ThumbnailEpisodeRow: View {
         if !isSelectionMode {
             if isComplete {
                 Button { onMarkUnwatched?() } label: {
-                    Label("detail.mark_as_unwatched", systemImage: "xmark.circle")
+                    Label("detail.mark_as_unwatched", icon: "xmark.circle")
                 }
             } else {
                 Button { onMarkWatched?() } label: {
-                    Label("detail.mark_as_watched", systemImage: "checkmark.circle")
+                    Label("detail.mark_as_watched", icon: "checkmark.circle")
                 }
             }
             if let onTryOtherStream {
                 Divider()
                 Button { onTryOtherStream() } label: {
-                    Label("detail.change_stream", systemImage: "arrow.triangle.2.circlepath")
+                    Label("detail.change_stream", icon: "arrow.triangle.2.circlepath")
                 }
             }
             if let onResetProgress, progress != nil {
                 Divider()
                 Button(role: .destructive) { onResetProgress() } label: {
-                    Label("detail.reset_progress", systemImage: "arrow.counterclockwise")
+                    Label("detail.reset_progress", icon: "arrow.counterclockwise")
                 }
             }
             if let onDownload {
                 Divider()
                 Button { onDownload() } label: {
-                    Label("detail.download_episode", systemImage: "arrow.down.circle")
+                    Label("detail.download_episode", icon: "arrow.down.circle")
                 }
                 .disabled(downloadState == .completed || downloadState == .downloading || downloadState == .pending)
             }
@@ -417,7 +417,7 @@ struct ThumbnailEpisodeRow: View {
             if let onDeleteDownload {
                 Divider()
                 Button(role: .destructive) { onDeleteDownload() } label: {
-                    Label("detail.delete_download", systemImage: "trash")
+                    Label("detail.delete_download", icon: "trash")
                 }
             }
         }

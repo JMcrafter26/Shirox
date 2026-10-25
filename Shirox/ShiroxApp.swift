@@ -113,6 +113,7 @@ struct ShiroxApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
 #endif
     @StateObject private var moduleManager = ModuleManager.shared
+    @ObservedObject private var iconPacks = IconPackStore.shared
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
     #if targetEnvironment(macCatalyst) || os(macOS)
     // Read so View ▸ Home, Search… and their ⌘1, ⌘2… follow the tab order.
@@ -132,6 +133,8 @@ struct ShiroxApp: App {
         SecureDNS.applyAtLaunch()
         NetworkProxy.applyAtLaunch()
         KingfisherImageCache.configure()
+        // Before the first view is drawn, so it already has the chosen pack's icons.
+        _ = IconPackStore.shared
         URLCache.shared = URLCache(
             memoryCapacity: 20 * 1024 * 1024,
             diskCapacity: 150 * 1024 * 1024,
@@ -169,7 +172,8 @@ struct ShiroxApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ProfileHost { RootTabView() }
+            // Rebuilt when the icon pack changes: views look their icons up as they're made.
+            ProfileHost { RootTabView().id(iconPacks.revision) }
                 .environmentObject(moduleManager)
                 .appAppearance()
                 #if os(macOS)
@@ -331,11 +335,11 @@ private struct MacSidebarView: View {
         List(selection: Binding<SidebarTab?>(get: { selection }, set: { if let tab = $0 { selection = tab } })) {
             Section {
                 ForEach(SidebarTab.available.filter { $0 != .settings }, id: \.self) { tab in
-                    Label(tab.label, systemImage: tab.icon).tag(tab)
+                    Label(tab.label, icon: tab.icon).tag(tab)
                 }
             }
             Section {
-                Label(SidebarTab.settings.label, systemImage: SidebarTab.settings.icon).tag(SidebarTab.settings)
+                Label(SidebarTab.settings.label, icon: SidebarTab.settings.icon).tag(SidebarTab.settings)
             }
         }
         .listStyle(.sidebar)
@@ -555,9 +559,9 @@ private struct RootTabView: View {
     @ViewBuilder
     private func tabLabel(_ tab: AppTab) -> some View {
         if hidesTabLabels, UIDevice.current.userInterfaceIdiom == .phone {
-            Image(systemName: tab.icon).accessibilityLabel(tab.title)
+            Image(icon: tab.icon, pointSize: 24).accessibilityLabel(tab.title)
         } else {
-            Label(tab.title, systemImage: tab.icon)
+            Label(tab.title, icon: tab.icon)
         }
     }
     #endif
@@ -642,21 +646,21 @@ private struct RootTabView: View {
                 #if targetEnvironment(macCatalyst) || os(macOS)
                 TabView(selection: $selectedTab) {
                     HomeView()
-                        .tabItem { Label("settings.home", systemImage: "house.fill") }
+                        .tabItem { Label("settings.home", icon: "house.fill") }
                         .tag(0)
                     LibraryView()
-                        .tabItem { Label("common.library", systemImage: "books.vertical.fill") }
+                        .tabItem { Label("common.library", icon: "books.vertical.fill") }
                         .tag(1)
                     #if os(iOS)
                     DownloadsView()
-                        .tabItem { Label("common.downloads", systemImage: "arrow.down.circle.fill") }
+                        .tabItem { Label("common.downloads", icon: "arrow.down.circle.fill") }
                         .tag(2)
                     #endif
                     SettingsView()
-                        .tabItem { Label("settings.settings", systemImage: "gearshape.fill") }
+                        .tabItem { Label("settings.settings", icon: "gearshape.fill") }
                         .tag(3)
                     SearchView()
-                        .tabItem { Label("common.search", systemImage: "magnifyingglass") }
+                        .tabItem { Label("common.search", icon: "magnifyingglass") }
                         .tag(4)
                 }
                 .appTint()

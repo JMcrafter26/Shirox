@@ -317,7 +317,7 @@ struct UpcomingCalendarView: View {
                     Button {
                         vm.libraryOnly.toggle()
                     } label: {
-                        Label("common.my_library", systemImage: vm.libraryOnly ? "bookmark.fill" : "bookmark")
+                        Label("common.my_library", icon: vm.libraryOnly ? "bookmark.fill" : "bookmark")
                     }
                 }
             }

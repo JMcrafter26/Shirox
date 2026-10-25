@@ -169,7 +169,7 @@ struct SimklTitlePage: View {
                         if let rating = details?.rating {
                             chip {
                                 HStack(spacing: 4) {
-                                    Image(systemName: "star.fill").font(.caption2.weight(.bold))
+                                    IconView("star.fill").font(.caption2.weight(.bold))
                                     Text(String(format: "%.1f", rating)).font(.caption2.weight(.bold))
                                 }
                             }
@@ -258,7 +258,7 @@ struct SimklTitlePage: View {
             }
         } label: {
             HStack(spacing: 10) {
-                Image(systemName: "play.fill").font(.system(size: 13, weight: .bold))
+                IconView("play.fill").font(.system(size: 13, weight: .bold))
                 Text(SimklWatchTarget.label(kind: kind, episode: target, resuming: resuming))
                     .font(.system(size: 15, weight: .bold))
             }
@@ -273,24 +273,24 @@ struct SimklTitlePage: View {
         .contextMenu {
             if kind == .movie || target != nil {
                 Button { play(target) } label: {
-                    Label("detail.change_stream", systemImage: "arrow.triangle.2.circlepath")
+                    Label("detail.change_stream", icon: "arrow.triangle.2.circlepath")
                 }
             }
             if let target {
                 if watched.contains(target) {
                     Button { Task { await mark(target, watched: false) } } label: {
-                        Label("detail.mark_as_unwatched", systemImage: "xmark.circle")
+                        Label("detail.mark_as_unwatched", icon: "xmark.circle")
                     }
                 } else {
                     Button { Task { await mark(target, watched: true) } } label: {
-                        Label("detail.mark_as_watched", systemImage: "checkmark.circle")
+                        Label("detail.mark_as_watched", icon: "checkmark.circle")
                     }
                 }
             }
             if resuming, let item = resumeItem {
                 Divider()
                 Button(role: .destructive) { ContinueWatchingManager.shared.remove(item) } label: {
-                    Label("detail.reset_progress", systemImage: "arrow.counterclockwise")
+                    Label("detail.reset_progress", icon: "arrow.counterclockwise")
                 }
             }
         }
@@ -302,7 +302,7 @@ struct SimklTitlePage: View {
     }
 
     private func circleLabel(systemImage: String) -> some View {
-        Image(systemName: systemImage)
+        IconView(systemImage)
             .font(.system(size: 16, weight: .semibold))
             .foregroundStyle(.primary)
             .frame(width: 46, height: 46)
@@ -324,7 +324,7 @@ struct SimklTitlePage: View {
                 Text(message).font(.footnote).foregroundStyle(.secondary)
             }
             Link(destination: simklURL) {
-                Label("library.open_on_simkl", systemImage: "safari")
+                Label("library.open_on_simkl", icon: "safari")
             }
             .font(.subheadline)
         }
@@ -408,7 +408,7 @@ struct SimklTitlePage: View {
                 Button("library.mark_season_watched") { Task { await changeSeason(number, marking: true) } }
                 Button("library.un_mark_season", role: .destructive) { Task { await changeSeason(number, marking: false) } }
             } label: {
-                Image(systemName: "ellipsis.circle").font(.title3)
+                IconView("ellipsis.circle").font(.title3)
             }
             .disabled(busy)
         }

@@ -429,7 +429,7 @@ struct MacShelf<Item: Identifiable, Card: View>: View {
 
     private func arrow(_ symbol: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: symbol)
+            IconView(symbol)
                 .font(.system(size: 15, weight: .bold))
                 .foregroundStyle(.primary)
                 .frame(width: 36, height: 36)

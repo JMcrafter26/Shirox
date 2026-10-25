@@ -131,7 +131,7 @@ struct AniListDetailView: View {
 
     @ViewBuilder private var simklEditButton: some View {
         if simklAuth.isLoggedIn, let target = simklEditTarget {
-            Button { simklEdit = target } label: { Label("detail.edit_on_simkl", systemImage: "pencil") }
+            Button { simklEdit = target } label: { Label("detail.edit_on_simkl", icon: "pencil") }
         }
     }
     #endif
@@ -229,7 +229,7 @@ struct AniListDetailView: View {
                         isLoadingEntry = false
                         showLibraryEdit = true
                     }
-                } label: { Label("detail.edit_on_myanimelist", systemImage: "pencil") }
+                } label: { Label("detail.edit_on_myanimelist", icon: "pencil") }
                 Button {
                     Task {
                         isLoadingEntry = true
@@ -239,16 +239,16 @@ struct AniListDetailView: View {
                         isLoadingEntry = false
                         showAniListEdit = true
                     }
-                } label: { Label("detail.edit_on_anilist", systemImage: "pencil") }
+                } label: { Label("detail.edit_on_anilist", icon: "pencil") }
                 simklEditButton
                 Button { showTrackingLinks = true } label: {
-                    Label("detail.tracking_links", systemImage: "link")
+                    Label("detail.tracking_links", icon: "link")
                 }
             } label: {
                 if isLoadingEntry {
                     ProgressView().scaleEffect(0.8)
                 } else {
-                    Image(systemName: "pencil.circle")
+                    IconView("pencil.circle")
                         .font(.system(size: 17, weight: .medium))
                         .foregroundStyle(.primary)
                 }
@@ -263,7 +263,7 @@ struct AniListDetailView: View {
                         isLoadingEntry = false
                         showLibraryEdit = true
                     }
-                } label: { Label("detail.edit_on_anilist", systemImage: "pencil") }
+                } label: { Label("detail.edit_on_anilist", icon: "pencil") }
                 Button {
                     Task {
                         isLoadingEntry = true
@@ -273,16 +273,16 @@ struct AniListDetailView: View {
                         isLoadingEntry = false
                         showMALEdit = true
                     }
-                } label: { Label("detail.edit_on_myanimelist", systemImage: "pencil") }
+                } label: { Label("detail.edit_on_myanimelist", icon: "pencil") }
                 simklEditButton
                 Button { showTrackingLinks = true } label: {
-                    Label("detail.tracking_links", systemImage: "link")
+                    Label("detail.tracking_links", icon: "link")
                 }
             } label: {
                 if isLoadingEntry {
                     ProgressView().scaleEffect(0.8)
                 } else {
-                    Image(systemName: "pencil.circle")
+                    IconView("pencil.circle")
                         .font(.system(size: 17, weight: .medium))
                         .foregroundStyle(.primary)
                 }
@@ -300,16 +300,16 @@ struct AniListDetailView: View {
                         isLoadingEntry = false
                         showLibraryEdit = true
                     }
-                } label: { Label("detail.edit_library_entry", systemImage: "pencil") }
+                } label: { Label("detail.edit_library_entry", icon: "pencil") }
                 simklEditButton
                 Button { showTrackingLinks = true } label: {
-                    Label("detail.tracking_links", systemImage: "link")
+                    Label("detail.tracking_links", icon: "link")
                 }
             } label: {
                 if isLoadingEntry {
                     ProgressView().scaleEffect(0.8)
                 } else {
-                    Image(systemName: "pencil.circle")
+                    IconView("pencil.circle")
                         .font(.system(size: 17, weight: .medium))
                         .foregroundStyle(.primary)
                 }
@@ -319,10 +319,10 @@ struct AniListDetailView: View {
             Menu {
                 simklEditButton
                 Button { showTrackingLinks = true } label: {
-                    Label("detail.tracking_links", systemImage: "link")
+                    Label("detail.tracking_links", icon: "link")
                 }
             } label: {
-                Image(systemName: "pencil.circle")
+                IconView("pencil.circle")
                     .font(.system(size: 17, weight: .medium))
                     .foregroundStyle(.primary)
             }
@@ -877,7 +877,7 @@ struct AniListDetailView: View {
                                 selectedTab = selectedTab == 0 ? 1 : 0
                             }
                         } label: {
-                            Image(systemName: selectedTab == 0 ? "person.3.fill" : "list.bullet")
+                            IconView(selectedTab == 0 ? "person.3.fill" : "list.bullet")
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundStyle(selectedTab == 1 ? platformBackground : .primary)
                                 .frame(width: 46, height: 46)
@@ -905,7 +905,7 @@ struct AniListDetailView: View {
                                     if !isSelectionMode { selectedEpisodeNumbers.removeAll() }
                                 }
                             } label: {
-                                Image(systemName: isSelectionMode ? "arrow.down.circle.fill" : "arrow.down.circle")
+                                IconView(isSelectionMode ? "arrow.down.circle.fill" : "arrow.down.circle")
                                     .font(.system(size: 20, weight: .semibold))
                                     .foregroundStyle(isSelectionMode ? platformBackground : .primary)
                                     .frame(width: 46, height: 46)
@@ -952,7 +952,7 @@ struct AniListDetailView: View {
                                     .frame(maxWidth: .infinity)
                             } else if watchOrder.isEmpty {
                                 VStack(spacing: 20) {
-                                    Image(systemName: "link.badge.plus")
+                                    IconView("link.badge.plus")
                                         .font(.system(size: 48))
                                         .foregroundStyle(.secondary.opacity(0.5))
                                     Text("detail.no_relations_found")
@@ -1025,7 +1025,7 @@ struct AniListDetailView: View {
             }
         } label: {
             HStack(spacing: 10) {
-                Image(systemName: "play.fill")
+                IconView("play.fill")
                     .font(.system(size: 13, weight: .bold))
                 Text(label)
                     .font(.system(size: 15, weight: .bold))
@@ -1046,11 +1046,11 @@ struct AniListDetailView: View {
         .contextMenu {
             if total > 0 {
                 Button { vm.watchEpisode(nextEp) } label: {
-                    Label("detail.change_stream", systemImage: "arrow.triangle.2.circlepath")
+                    Label("detail.change_stream", icon: "arrow.triangle.2.circlepath")
                 }
                 #if !os(tvOS)
                 Button { pendingDownloadEpisodeNumber = DownloadEpisodeItem(episodeNumber: nextEp) } label: {
-                    Label("detail.download_episode", systemImage: "arrow.down.circle")
+                    Label("detail.download_episode", icon: "arrow.down.circle")
                 }
                 #endif
                 if hasProgress {
@@ -1060,7 +1060,7 @@ struct AniListDetailView: View {
                             aniListID: media.id, moduleId: nil, mediaTitle: media.title.searchTitle,
                             episodeNumber: nextEp)
                     } label: {
-                        Label("detail.reset_progress", systemImage: "arrow.counterclockwise")
+                        Label("detail.reset_progress", icon: "arrow.counterclockwise")
                     }
                 }
             }
@@ -1222,7 +1222,7 @@ struct AniListDetailView: View {
                     HStack(spacing: 8) {
                         if let score = media.averageScore {
                             HStack(spacing: 4) {
-                                Image(systemName: "star.fill")
+                                IconView("star.fill")
                                     .font(.caption2.weight(.bold))
                                     .foregroundStyle(.primary)
                                 Text("\(score)%")
@@ -1321,7 +1321,7 @@ struct AniListDetailView: View {
                 Button {
                     isReversed.toggle()
                 } label: {
-                    Image(systemName: isReversed ? "arrow.down" : "arrow.up")
+                    IconView(isReversed ? "arrow.down" : "arrow.up")
                         .font(.system(size: 16, weight: .bold))
                         .foregroundStyle(.primary)
                         .frame(width: 42, height: 42)
@@ -1339,7 +1339,7 @@ struct AniListDetailView: View {
                         Button {
                             showResetConfirmation = true
                         } label: {
-                            Image(systemName: "arrow.counterclockwise")
+                            IconView("arrow.counterclockwise")
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundStyle(.primary)
                                 .frame(width: 42, height: 42)
@@ -1354,7 +1354,7 @@ struct AniListDetailView: View {
                     Button {
                         showResetConfirmation = true
                     } label: {
-                        Image(systemName: "arrow.counterclockwise")
+                        IconView("arrow.counterclockwise")
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(.primary)
                             .frame(width: 42, height: 42)
@@ -1390,7 +1390,7 @@ struct AniListDetailView: View {
 
             if moduleManager.modules.isEmpty {
                 HStack(spacing: 10) {
-                    Image(systemName: "puzzlepiece.extension")
+                    IconView("puzzlepiece.extension")
                         .foregroundStyle(.secondary)
                     Text("detail.install_a_module_in_the")
                         .font(.subheadline)
@@ -1462,20 +1462,20 @@ struct AniListDetailView: View {
                 } label: {
                     Text("\(start)-\(end)")
                     if selectedRangeIndex == index {
-                        Image(systemName: "checkmark")
+                        IconView("checkmark")
                     }
                 }
             }
         } label: {
             HStack(spacing: 6) {
-                Image(systemName: "list.number")
+                IconView("list.number")
                     .font(.subheadline)
                 // Same clamp as the list, so the button never advertises a range
                 // different from the episodes actually shown.
                 let window = clampedRange(totalEpisodes: totalEpisodes)
                 Text("\(window?.lowerBound ?? 1)-\(window?.upperBound ?? totalEpisodes)")
                     .font(.subheadline.weight(.medium))
-                Image(systemName: "chevron.down")
+                IconView("chevron.down")
                     .font(.caption)
             }
             .padding(.horizontal, 16)
@@ -1530,7 +1530,7 @@ struct AniListDetailView: View {
                     batchDownloadZoomID = "batchDownload"
                     showBatchDownloadPicker = true
                 } label: {
-                    Label("detail.download \(selectedEpisodeNumbers.count)", systemImage: "arrow.down.circle.fill")
+                    Label("detail.download \(selectedEpisodeNumbers.count)", icon: "arrow.down.circle.fill")
                         .font(.subheadline.weight(.bold))
                         .foregroundStyle(platformBackground)
                 }
@@ -1625,7 +1625,7 @@ struct AniListDetailView: View {
         let animeRelations = relations.filter { $0.node.type != "MANGA" }
         if animeRelations.isEmpty {
             VStack(spacing: 20) {
-                Image(systemName: "film")
+                IconView("film")
                     .font(.system(size: 48))
                     .foregroundStyle(.secondary.opacity(0.5))
                 Text("detail.no_anime_relations")
@@ -1785,7 +1785,7 @@ extension AniListDetailView {
             }
 
             if moduleManager.modules.isEmpty {
-                Label("detail.install_a_module_in_the", systemImage: "puzzlepiece.extension")
+                Label("detail.install_a_module_in_the", icon: "puzzlepiece.extension")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, CinematicMetrics.margin)
@@ -2030,7 +2030,7 @@ struct AniListStreamResultSheet: View {
                             onSelect(stream)
                         } label: {
                             HStack(spacing: 12) {
-                                Image(systemName: "play.circle.fill")
+                                IconView("play.circle.fill")
                                     .font(.system(size: 32))
                                     .foregroundStyle(.primary)
                                 StreamRowText(stream: stream)
@@ -2153,7 +2153,7 @@ struct AniListMatchingSearchView: View {
             VStack(spacing: 0) {
                 // Search Bar
                 HStack {
-                    Image(systemName: "magnifyingglass")
+                    IconView("magnifyingglass")
                         .foregroundStyle(.secondary)
                     TextField("detail.search_anilist", text: $searchText)
                         .textFieldStyle(.plain)
@@ -2161,7 +2161,7 @@ struct AniListMatchingSearchView: View {
                     
                     if !searchText.isEmpty {
                         Button { searchText = "" } label: {
-                            Image(systemName: "xmark.circle.fill")
+                            IconView("xmark.circle.fill")
                                 .foregroundStyle(.secondary)
                         }
                         .buttonStyle(.plain)
@@ -2178,7 +2178,7 @@ struct AniListMatchingSearchView: View {
                         dismiss()
                     } label: {
                         HStack {
-                            Image(systemName: "minus.circle")
+                            IconView("minus.circle")
                             Text("detail.unlink_current_series")
                             Spacer()
                         }
@@ -2221,7 +2221,7 @@ struct AniListMatchingSearchView: View {
                                         .font(.subheadline.weight(.bold))
                                     
                                     if let score = media.averageScore {
-                                        Label("\(score)%", systemImage: "star.fill")
+                                        Label("\(score)%", icon: "star.fill")
                                             .font(.caption)
                                             .foregroundStyle(.yellow)
                                     }
@@ -2233,7 +2233,7 @@ struct AniListMatchingSearchView: View {
                                     }
                                 }
                                 Spacer()
-                                Image(systemName: "link")
+                                IconView("link")
                                     .font(.caption)
                                     .foregroundStyle(.primary)
                             }

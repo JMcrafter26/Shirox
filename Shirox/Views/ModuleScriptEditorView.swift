@@ -55,22 +55,22 @@ struct ModuleScriptEditorView: View {
                     Button(role: .destructive) {
                         confirmPaste = true
                     } label: {
-                        Label("modules.replace_all_with_clipboard", systemImage: "doc.on.clipboard")
+                        Label("modules.replace_all_with_clipboard", icon: "doc.on.clipboard")
                     }
                     Button {
                         confirmImport = true
                     } label: {
-                        Label("modules.replace_with_a_js_file", systemImage: "doc.badge.arrow.up")
+                        Label("modules.replace_with_a_js_file", icon: "doc.badge.arrow.up")
                     }
                     Divider()
                     Button {
                         Clipboard.copy(text)
                     } label: {
-                        Label("modules.copy_all", systemImage: "doc.on.doc")
+                        Label("modules.copy_all", icon: "doc.on.doc")
                     }
                     if #available(iOS 16.0, macOS 13.0, *) {
                         ShareLink(item: text) {
-                            Label("modules.share_script", systemImage: "square.and.arrow.up")
+                            Label("modules.share_script", icon: "square.and.arrow.up")
                         }
                     }
                     if let module, module.isScriptEdited {
@@ -78,11 +78,11 @@ struct ModuleScriptEditorView: View {
                         Button(role: .destructive) {
                             confirmRevert = true
                         } label: {
-                            Label("modules.revert_to_original", systemImage: "arrow.uturn.backward")
+                            Label("modules.revert_to_original", icon: "arrow.uturn.backward")
                         }
                     }
                 } label: {
-                    Image(systemName: "ellipsis.circle")
+                    IconView("ellipsis.circle")
                 }
             }
         }
@@ -125,7 +125,7 @@ struct ModuleScriptEditorView: View {
         .alert("modules.couldnt_do_that", isPresented: Binding(
             get: { problem != nil }, set: { if !$0 { problem = nil } }
         )) {
-            Button("OK", role: .cancel) {}
+            Button("common.ok", role: .cancel) {}
         } message: {
             Text(problem ?? "")
         }
@@ -139,7 +139,7 @@ struct ModuleScriptEditorView: View {
 
     private var editedBanner: some View {
         HStack(spacing: 8) {
-            Image(systemName: "pencil.circle.fill")
+            IconView("pencil.circle.fill")
             Text("modules.edited_in_shirox_updates_skip")
                 .font(.caption)
             Spacer(minLength: 0)

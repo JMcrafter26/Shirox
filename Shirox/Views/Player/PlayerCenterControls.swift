@@ -56,7 +56,7 @@ struct PlayerCenterControls: View {
         let size: CGFloat = isPad ? 80 : compact ? 40 : 60
         let iconSize: CGFloat = isPad ? 44 : compact ? 21 : 32
         return circleButton(size: size, iconSize: iconSize) {
-            Image(systemName: Self.backwardSymbol(skipAmount))
+            IconView(Self.backwardSymbol(skipAmount))
                 .font(.system(size: iconSize))
         } action: { onBackward() }
     }
@@ -65,7 +65,7 @@ struct PlayerCenterControls: View {
         let size: CGFloat = isPad ? 100 : compact ? 50 : 72
         let iconSize: CGFloat = isPad ? 56 : compact ? 26 : 40
         return circleButton(size: size, iconSize: iconSize) {
-            Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+            IconView(isPlaying ? "pause.fill" : "play.fill")
                 .font(.system(size: iconSize))
                 .animation(nil, value: isPlaying)
         } action: { onPlayPause() }
@@ -75,7 +75,7 @@ struct PlayerCenterControls: View {
         let size: CGFloat = isPad ? 80 : compact ? 40 : 60
         let iconSize: CGFloat = isPad ? 44 : compact ? 21 : 32
         return circleButton(size: size, iconSize: iconSize) {
-            Image(systemName: Self.forwardSymbol(skipAmount))
+            IconView(Self.forwardSymbol(skipAmount))
                 .font(.system(size: iconSize))
         } action: { onForward() }
     }

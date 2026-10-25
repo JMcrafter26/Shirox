@@ -242,7 +242,7 @@ struct LibraryView: View {
                         HStack {
                             Text(order.title)
                             if sortOrder == order {
-                                Image(systemName: sortAscending ? "chevron.up" : "chevron.down")
+                                IconView(sortAscending ? "chevron.up" : "chevron.down")
                             }
                         }
                     }
@@ -250,21 +250,21 @@ struct LibraryView: View {
             }
             Section {
                 Toggle(isOn: $newEpisodesFirst) {
-                    Label("library.new_episodes_first", systemImage: "sparkles.tv")
+                    Label("library.new_episodes_first", icon: "sparkles.tv")
                 }
             }
             Section("settings.layout") {
                 Picker("settings.layout", selection: $gridLayout) {
-                    Label("library.list", systemImage: "list.bullet").tag(false)
-                    Label("library.grid", systemImage: "square.grid.3x2").tag(true)
+                    Label("library.list", icon: "list.bullet").tag(false)
+                    Label("library.grid", icon: "square.grid.3x2").tag(true)
                 }
                 .pickerStyle(.inline)
             }
         } label: {
             HStack(spacing: 3) {
-                Image(systemName: "arrow.up.arrow.down")
+                IconView("arrow.up.arrow.down")
                     .font(.subheadline)
-                Image(systemName: sortAscending ? "chevron.up" : "chevron.down")
+                IconView(sortAscending ? "chevron.up" : "chevron.down")
                     .font(.caption)
             }
         }
@@ -280,7 +280,7 @@ struct LibraryView: View {
     /// have no branch for the case at all, so it opened completely empty and looked broken.
     private var profileUnavailable: some View {
         VStack(spacing: 16) {
-            Image(systemName: "person.crop.circle.badge.exclamationmark")
+            IconView("person.crop.circle.badge.exclamationmark")
                 .font(.system(size: 48))
                 .foregroundStyle(.secondary)
             Text("library.profile_unavailable")
@@ -315,7 +315,7 @@ struct LibraryView: View {
                 // An account that's already connected stays listed, so the menu always shows
                 // both — but says so, rather than offering a sign-in that would do nothing.
                 if isSignedIn(type) {
-                    Label("library.signed_in \(type.displayName)", systemImage: "checkmark")
+                    Label("library.signed_in \(type.displayName)", icon: "checkmark")
                 } else {
                     Text(type.displayName)
                 }
@@ -369,7 +369,7 @@ struct LibraryView: View {
     private var loginPrompt: some View {
         VStack(spacing: 24) {
             Spacer()
-            Image(systemName: "books.vertical.fill")
+            IconView("books.vertical.fill")
                 .font(.system(size: 64))
                 .foregroundStyle(.primary)
             // Neutral wording now that the button below offers both: naming one service here
@@ -387,7 +387,7 @@ struct LibraryView: View {
             } label: {
                 HStack(spacing: 6) {
                     Text("library.sign_in")
-                    Image(systemName: "chevron.down").font(.subheadline)
+                    IconView("chevron.down").font(.subheadline)
                 }
                 .font(.headline)
                 #if os(iOS)
@@ -433,7 +433,7 @@ struct LibraryView: View {
                     HStack {
                         Text(status.displayName(for: vm.mediaType))
                         if vm.selectedCustomList == nil && vm.selectedStatus == status {
-                            Image(systemName: "checkmark")
+                            IconView("checkmark")
                         }
                     }
                 }
@@ -446,9 +446,9 @@ struct LibraryView: View {
                         vm.selectCustomList(vm.selectedCustomList == name ? nil : name)
                     } label: {
                         HStack {
-                            Label(name, systemImage: "list.star")
+                            Label(name, icon: "list.star")
                             if vm.selectedCustomList == name {
-                                Image(systemName: "checkmark")
+                                IconView("checkmark")
                             }
                         }
                     }
@@ -457,7 +457,7 @@ struct LibraryView: View {
                     Button {
                         showManageCollections = true
                     } label: {
-                        Label("library.manage_collections", systemImage: "folder.badge.gearshape")
+                        Label("library.manage_collections", icon: "folder.badge.gearshape")
                     }
                 }
             }
@@ -472,7 +472,7 @@ struct LibraryView: View {
                 Button(role: .destructive) {
                     selectedGenres.removeAll()
                 } label: {
-                    Label("library.clear_all_filters", systemImage: "xmark.circle")
+                    Label("library.clear_all_filters", icon: "xmark.circle")
                 }
             }
             ForEach(availableGenres, id: \.self) { genre in
@@ -486,7 +486,7 @@ struct LibraryView: View {
                     HStack {
                         Text(genre)
                         if selectedGenres.contains(genre) {
-                            Image(systemName: "checkmark")
+                            IconView("checkmark")
                         }
                     }
                 }
@@ -554,7 +554,7 @@ struct LibraryView: View {
         let selected = vm.mediaType == kind
         Button { vm.selectMediaType(kind) } label: {
             HStack(spacing: 6) {
-                Image(systemName: systemImage)
+                IconView(systemImage)
                     .font(.system(size: 13, weight: .semibold))
                     .frame(width: 16, height: 16)
                 Text(title)
@@ -620,7 +620,7 @@ struct LibraryView: View {
                         anilistAuth.unreadNotificationCount = 0
                         showNotifications = true
                     } label: {
-                        Image(systemName: "bell")
+                        IconView("bell")
                             .font(.system(size: 17, weight: .medium))
                             .notificationBadge(count: anilistAuth.unreadNotificationCount)
                     }
@@ -704,7 +704,7 @@ struct LibraryView: View {
         .swipeActions(edge: .leading, allowsFullSwipe: true) {
             if let quick = quickProgress(entry) {
                 Button { Task { await quick.run() } } label: {
-                    Label(quick.title, systemImage: quick.icon)
+                    Label(quick.title, icon: quick.icon)
                 }
                 .tint(.green)
             }
@@ -866,7 +866,7 @@ struct LibraryView: View {
                 Button {
                     simklSearch = request
                 } label: {
-                    Label("library.search_simkl_for \(request.query)", systemImage: "magnifyingglass")
+                    Label("library.search_simkl_for \(request.query)", icon: "magnifyingglass")
                 }
                 #if !os(tvOS)
                 .listRowSeparator(.hidden)
@@ -878,7 +878,7 @@ struct LibraryView: View {
                 Button {
                     simklSearch = request
                 } label: {
-                    Label("library.search_simkl_for \(request.query)", systemImage: "magnifyingglass")
+                    Label("library.search_simkl_for \(request.query)", icon: "magnifyingglass")
                 }
                 #if !os(tvOS)
                 .listRowSeparator(.hidden)
@@ -956,7 +956,7 @@ struct LibraryView: View {
                     Button {
                         simklSearch = request
                     } label: {
-                        Label("library.search_simkl_for \(request.query)", systemImage: "magnifyingglass")
+                        Label("library.search_simkl_for \(request.query)", icon: "magnifyingglass")
                     }
                     .padding(.top, 16)
                 }
@@ -977,7 +977,7 @@ struct LibraryView: View {
             // Over the poster's corner, outside the card's own button so it isn't swallowed.
             GeometryReader { geo in
                 Button { editEntry(entry) } label: {
-                    Image(systemName: "pencil")
+                    IconView("pencil")
                         .font(.system(size: 12, weight: .bold))
                         .foregroundStyle(.white)
                         .frame(width: 28, height: 28)
@@ -995,10 +995,10 @@ struct LibraryView: View {
         .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 12))
         .contextMenu {
             FullTitleMenuItems(entry.media.title.displayTitle)
-            Button { openFromGrid(entry) } label: { Label("library.open", systemImage: "arrow.up.right") }
-            Button { editEntry(entry) } label: { Label("library.edit", systemImage: "pencil") }
+            Button { openFromGrid(entry) } label: { Label("library.open", icon: "arrow.up.right") }
+            Button { editEntry(entry) } label: { Label("library.edit", icon: "pencil") }
             if let quick = quickProgress(entry) {
-                Button { Task { await quick.run() } } label: { Label(quick.title, systemImage: quick.icon) }
+                Button { Task { await quick.run() } } label: { Label(quick.title, icon: quick.icon) }
             }
         }
     }
@@ -1020,10 +1020,10 @@ struct LibraryView: View {
                         .onTapGesture { openFromGrid(entry) }
                         .contextMenu {
                             FullTitleMenuItems(entry.media.title.displayTitle)
-                            Button { openFromGrid(entry) } label: { Label("library.open", systemImage: "arrow.up.right") }
-                            Button { editEntry(entry) } label: { Label("library.edit", systemImage: "pencil") }
+                            Button { openFromGrid(entry) } label: { Label("library.open", icon: "arrow.up.right") }
+                            Button { editEntry(entry) } label: { Label("library.edit", icon: "pencil") }
                             if let quick = quickProgress(entry) {
-                                Button { Task { await quick.run() } } label: { Label(quick.title, systemImage: quick.icon) }
+                                Button { Task { await quick.run() } } label: { Label(quick.title, icon: quick.icon) }
                             }
                         }
                 }
@@ -1068,7 +1068,7 @@ struct LibraryView: View {
             ProgressView()
         } else if let error = vm.error {
             ContentUnavailableView {
-                Label("common.couldnt_load", systemImage: "wifi.slash")
+                Label("common.couldnt_load", icon: "wifi.slash")
             } description: {
                 Text(error)
             } actions: {
@@ -1447,7 +1447,7 @@ private struct LibraryGridCard: View {
                     if entry.score > 0 {
                         HStack(spacing: 2) {
                             if scoreFormat != .point3 {
-                                Image(systemName: "star.fill").font(.system(size: 7))
+                                IconView("star.fill").font(.system(size: 7))
                             }
                             scoreFormat.scoreText(for: entry.displayScore(in: scoreFormat))
                                 .font(.caption2.weight(.bold))
@@ -1559,7 +1559,7 @@ private struct LibraryRowView: View {
                     if entry.score > 0 {
                         HStack(spacing: 2) {
                             if scoreFormat != .point3 {
-                                Image(systemName: "star.fill").font(.system(size: 7))
+                                IconView("star.fill").font(.system(size: 7))
                             }
                             scoreFormat.scoreText(for: entry.displayScore(in: scoreFormat))
                                 .font(.caption2.weight(.bold))
@@ -1596,7 +1596,7 @@ private struct LibraryRowView: View {
                 HStack(spacing: 8) {
                     if let avg = entry.media.averageScore {
                         HStack(spacing: 3) {
-                            Image(systemName: "chart.bar.fill")
+                            IconView("chart.bar.fill")
                                 .font(.system(size: 9))
                             Text("\(avg)%")
                                 .font(.caption2.weight(.semibold))
@@ -1606,7 +1606,7 @@ private struct LibraryRowView: View {
                     if entry.score > 0 {
                         HStack(spacing: 3) {
                             if scoreFormat != .point3 {
-                                Image(systemName: "star.fill")
+                                IconView("star.fill")
                                     .font(.system(size: 9))
                             }
                             scoreFormat.scoreText(for: entry.displayScore(in: scoreFormat))
@@ -1636,7 +1636,7 @@ private struct LibraryRowView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
 
             Button { onEdit() } label: {
-                Image(systemName: "pencil.circle.fill")
+                IconView("pencil.circle.fill")
                     .font(.system(size: 26))
                     .foregroundStyle(Color.accentColor)
             }

@@ -51,14 +51,14 @@ struct BackupSettingsView: View {
         .alert("settings.couldnt_read_backup",
                isPresented: Binding(get: { importError != nil },
                                     set: { if !$0 { importError = nil } })) {
-            Button("OK") { importError = nil }
+            Button("common.ok") { importError = nil }
         } message: {
             Text(importError ?? "")
         }
         .alert("settings.couldnt_create_backup",
                isPresented: Binding(get: { exportError != nil },
                                     set: { if !$0 { exportError = nil } })) {
-            Button("OK") { exportError = nil }
+            Button("common.ok") { exportError = nil }
         } message: {
             Text(exportError ?? "")
         }
@@ -87,12 +87,12 @@ struct BackupSettingsView: View {
             if let exportedURL {
                 #if os(iOS)
                 AnchoredShareButton(items: [exportedURL]) {
-                    Label("settings.share \(exportedURL.lastPathComponent)", systemImage: "square.and.arrow.up")
+                    Label("settings.share \(exportedURL.lastPathComponent)", icon: "square.and.arrow.up")
                 }
                 #else
                 if #available(macOS 13.0, *) {
                     ShareLink(item: exportedURL) {
-                        Label("settings.share \(exportedURL.lastPathComponent)", systemImage: "square.and.arrow.up")
+                        Label("settings.share \(exportedURL.lastPathComponent)", icon: "square.and.arrow.up")
                     }
                 }
                 #endif

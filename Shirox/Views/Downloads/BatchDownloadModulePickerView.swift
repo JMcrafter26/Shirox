@@ -276,7 +276,7 @@ private struct BatchDownloadModuleRow: View {
                 if case .success(let img) = phase {
                     img.resizable().scaledToFill()
                 } else {
-                    Image(systemName: "puzzlepiece.extension").foregroundStyle(.secondary)
+                    IconView("puzzlepiece.extension").foregroundStyle(.secondary)
                 }
             }
             .frame(width: 32, height: 32)
@@ -302,14 +302,14 @@ private struct BatchDownloadModuleRow: View {
                 .buttonStyle(.bordered).controlSize(.small)
         case .loading, .downloading:
             Button { rowVm.cancel() } label: {
-                Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                IconView("xmark.circle.fill").foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
         case .searchResults:
             Button("common.retry") { rowVm.reset(); rowVm.startFind() }
                 .buttonStyle(.bordered).controlSize(.small).foregroundStyle(Color.accentColor)
         case .done:
-            Image(systemName: "checkmark.circle.fill").foregroundStyle(.green).font(.title3)
+            IconView("checkmark.circle.fill").foregroundStyle(.green).font(.title3)
         }
     }
 
@@ -406,7 +406,7 @@ private struct BatchDownloadModuleRow: View {
 
     private var titleField: some View {
         HStack(spacing: 6) {
-            Image(systemName: "magnifyingglass").font(.caption).foregroundStyle(.secondary)
+            IconView("magnifyingglass").font(.caption).foregroundStyle(.secondary)
             TextField("downloads.search_title", text: $rowVm.searchTitle)
                 // The rounded fill around it is its border.
                 .textFieldStyle(.plain)

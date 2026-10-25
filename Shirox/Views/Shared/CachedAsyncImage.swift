@@ -106,7 +106,7 @@ struct CachedAsyncImage: View {
             } else if loadFailed {
                 Rectangle().fill(Color.gray.opacity(0.3))
                     .overlay(
-                        Image(systemName: "photo")
+                        IconView("photo")
                             .font(.largeTitle)
                             .foregroundStyle(.tertiary)
                     )

@@ -49,17 +49,17 @@ struct SimklKindMenu: View {
         Menu {
             Picker("shared.kind", selection: $kind) {
                 ForEach(MediaKind.simklKinds, id: \.self) { kind in
-                    Label(kind.simklKindTitle, systemImage: kind.simklKindSymbol).tag(kind)
+                    Label(kind.simklKindTitle, icon: kind.simklKindSymbol).tag(kind)
                 }
             }
         } label: {
             HStack(spacing: 6) {
-                Image(systemName: kind.simklKindSymbol)
+                IconView(kind.simklKindSymbol)
                     .font(.subheadline.weight(.semibold))
                     .symbolReplaceTransition()
                 Text(title(kind))
                     .font(.subheadline.weight(.semibold))
-                Image(systemName: "chevron.down").font(.caption2)
+                IconView("chevron.down").font(.caption2)
             }
             .foregroundStyle(.primary)
             .animation(.spring(response: 0.35, dampingFraction: 0.8), value: kind)

@@ -46,7 +46,7 @@ struct JellyfinLibraryView: View {
 
     private var header: some View {
         HStack {
-            Label(auth.serverName ?? "Jellyfin", systemImage: "server.rack")
+            Label(auth.serverName ?? "Jellyfin", icon: "server.rack")
                 .font(.subheadline.weight(.semibold))
             Spacer()
             Button("library.disconnect") { auth.logout() }

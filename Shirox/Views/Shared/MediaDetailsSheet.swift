@@ -135,7 +135,7 @@ struct MediaDetailsSheet: View {
                         .aspectRatio(16 / 9, contentMode: .fit)
                         .background(Color.black)
                         .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                    Image(systemName: "play.circle.fill")
+                    IconView("play.circle.fill")
                         .font(.system(size: 44))
                         .foregroundStyle(.white)
                         .shadow(color: .black.opacity(0.45), radius: 8)

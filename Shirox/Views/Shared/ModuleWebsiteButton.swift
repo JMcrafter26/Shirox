@@ -68,7 +68,7 @@ struct ModuleWebsiteButton: View {
             Menu {
                 ForEach(links, id: \.url) { link in
                     Button { openURL(link.url) } label: {
-                        Label("modules.open_on \(link.name)", systemImage: "safari")
+                        Label("modules.open_on \(link.name)", icon: "safari")
                     }
                 }
             } label: { label }
@@ -78,7 +78,7 @@ struct ModuleWebsiteButton: View {
     }
 
     private var label: some View {
-        Image(systemName: "safari")
+        IconView("safari")
             .font(.system(size: 17, weight: .medium))
             .foregroundStyle(.primary)
     }

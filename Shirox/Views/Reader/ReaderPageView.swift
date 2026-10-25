@@ -56,7 +56,7 @@ struct ReaderPageView: View {
                     .contextMenu { pageMenu(image) }
             } else if failed {
                 VStack(spacing: 8) {
-                    Image(systemName: "exclamationmark.triangle")
+                    IconView("exclamationmark.triangle")
                         .font(.title2)
                         .foregroundStyle(.white.opacity(0.7))
                     Text("reader.page_failed_to_load \(pageNumber)")
@@ -90,12 +90,12 @@ struct ReaderPageView: View {
         Button {
             Task { await saveToPhotos(fallback: shown) }
         } label: {
-            Label("reader.save_to_photos", systemImage: "photo.on.rectangle")
+            Label("reader.save_to_photos", icon: "photo.on.rectangle")
         }
         if #available(iOS 16.0, *) {
             let image = Image(uiImage: shown)
             ShareLink(item: image, preview: SharePreview(String(localized: "reader.page \(pageNumber)"), image: image)) {
-                Label("profile.share", systemImage: "square.and.arrow.up")
+                Label("profile.share", icon: "square.and.arrow.up")
             }
         }
     }

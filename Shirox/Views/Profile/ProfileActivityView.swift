@@ -77,7 +77,7 @@ struct ProfileActivityView: View {
         .overlay(alignment: .bottomTrailing) {
             if !isMAL && isOwnProfile {
                 Button { showCompose = true } label: {
-                    Image(systemName: "square.and.pencil")
+                    IconView("square.and.pencil")
                         .font(.title3.weight(.semibold))
                         #if os(iOS)
                         .foregroundStyle(Color(UIColor.systemBackground))
@@ -123,7 +123,7 @@ struct ProfileActivityView: View {
                     Task { await vm.loadActivity(userId: userId, feed: feed) }
                 } label: {
                     HStack(spacing: 6) {
-                        Image(systemName: feed.icon).font(.caption)
+                        IconView(feed.icon).font(.caption)
                         Text(feed.label).font(.caption.weight(.semibold))
                     }
                     .padding(.horizontal, 12).padding(.vertical, 7)
@@ -147,7 +147,7 @@ struct ProfileActivityView: View {
             ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if vm.activity.isEmpty {
             ContentUnavailableView {
-                Label("profile.no_activity", systemImage: "bubble.left.and.text.bubble.right")
+                Label("profile.no_activity", icon: "bubble.left.and.text.bubble.right")
             } description: {
                 Text(emptyText)
             }
@@ -278,7 +278,7 @@ struct ProfileActivityView: View {
                         Task { await toggleLike(item) }
                     } label: {
                         HStack(spacing: 4) {
-                            Image(systemName: isLiked(for: item) ? "heart.fill" : "heart")
+                            IconView(isLiked(for: item) ? "heart.fill" : "heart")
                                 .foregroundStyle(isLiked(for: item) ? .pink : .secondary)
                             Text("\(likeCount(for: item))")
                                 .foregroundStyle(isLiked(for: item) ? .pink : .secondary)
@@ -291,7 +291,7 @@ struct ProfileActivityView: View {
                     // Comments
                     Button { selectedActivity = item } label: {
                         HStack(spacing: 4) {
-                            Image(systemName: "bubble.left")
+                            IconView("bubble.left")
                             Text("\(replyCount(for: item))")
                         }
                         .font(.caption)
@@ -321,14 +321,14 @@ struct ProfileActivityView: View {
                 Button(role: .destructive) {
                     activityToDelete = item
                 } label: {
-                    Label("common.delete", systemImage: "trash")
+                    Label("common.delete", icon: "trash")
                 }
             }
             
             Button {
                 selectedActivity = item // This will open detail which has likes sheet
             } label: {
-                Label("profile.view_likes", systemImage: "heart.text.square")
+                Label("profile.view_likes", icon: "heart.text.square")
             }
         }
     }

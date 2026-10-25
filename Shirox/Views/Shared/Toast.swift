@@ -152,7 +152,7 @@ struct ToastView: View {
 
     private func card(_ toast: Toast, badge: Int? = nil) -> some View {
         HStack(spacing: 10) {
-            Image(systemName: toast.type.icon)
+            IconView(toast.type.icon)
                 .foregroundStyle(toast.type.color)
                 .font(.system(size: 15, weight: .semibold))
             Text(toast.message)

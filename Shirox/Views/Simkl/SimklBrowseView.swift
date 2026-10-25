@@ -179,7 +179,7 @@ struct SimklBrowseView: View {
                 HStack(spacing: 6) {
                     Text(vm.list(for: kind).title)
                         .font(.title3.weight(.bold))
-                    Image(systemName: "chevron.down")
+                    IconView("chevron.down")
                         .font(.caption.weight(.bold))
                 }
                 .foregroundStyle(.primary)

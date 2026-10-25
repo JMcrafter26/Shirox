@@ -36,7 +36,7 @@ struct LikesSheetView: View {
                                     Text(user.name)
                                         .font(.subheadline.weight(.semibold))
                                     Spacer()
-                                    Image(systemName: "chevron.right")
+                                    IconView("chevron.right")
                                         .font(.caption2)
                                         .foregroundStyle(.tertiary)
                                 }

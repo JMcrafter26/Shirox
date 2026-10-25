@@ -28,7 +28,7 @@ struct StreamPickerView: View {
                             vm.pickStream(stream)
                         } label: {
                             HStack(spacing: 12) {
-                                Image(systemName: "play.circle.fill")
+                                IconView("play.circle.fill")
                                     .font(.system(size: 32))
                                     .foregroundStyle(.primary)
                                 StreamRowText(stream: stream)
@@ -81,7 +81,7 @@ struct CloudflareVerifyView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Image(systemName: "shield.lefthalf.filled")
+            IconView("shield.lefthalf.filled")
                 .font(.system(size: 44))
                 .foregroundStyle(.secondary)
             VStack(spacing: 4) {
@@ -93,7 +93,7 @@ struct CloudflareVerifyView: View {
                     .multilineTextAlignment(.center)
             }
             Button(action: onVerify) {
-                Label("detail.verify_cloudflare", systemImage: "checkmark.shield")
+                Label("detail.verify_cloudflare", icon: "checkmark.shield")
                     .font(.headline)
             }
             .buttonStyle(.borderedProminent)
@@ -109,7 +109,7 @@ struct CloudflareVerifyInlineButton: View {
 
     var body: some View {
         Button(action: onVerify) {
-            Label("detail.verify_cloudflare", systemImage: "checkmark.shield")
+            Label("detail.verify_cloudflare", icon: "checkmark.shield")
                 .font(.caption.weight(.semibold))
         }
         .buttonStyle(.bordered)
@@ -246,7 +246,7 @@ struct ModulePickerMessage<Accessory: View>: View {
     var body: some View {
         ModulePickerStrip {
             VStack(spacing: 6) {
-                Image(systemName: icon)
+                IconView(icon)
                     .font(.title2)
                     .foregroundStyle(tint)
                 Text(title)
@@ -279,7 +279,7 @@ struct CloudflareVerifyCompactButton: View {
 
     var body: some View {
         Button(action: onVerify) {
-            Label("detail.verify_cloudflare", systemImage: "checkmark.shield")
+            Label("detail.verify_cloudflare", icon: "checkmark.shield")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.orange)
         }

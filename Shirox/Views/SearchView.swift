@@ -239,7 +239,7 @@ struct SearchView: View {
 
     private var localEntryView: some View {
         VStack(spacing: 20) {
-            Image(systemName: "folder.badge.plus")
+            IconView("folder.badge.plus")
                 .font(.system(size: 52))
                 .foregroundStyle(.secondary)
             VStack(spacing: 4) {
@@ -260,7 +260,7 @@ struct SearchView: View {
             // Feedback: show the staged video (and let the user drop it) before the subtitle step.
             if let title = pendingVideoTitle {
                 HStack(spacing: 8) {
-                    Image(systemName: "film.fill")
+                    IconView("film.fill")
                         .foregroundStyle(.green)
                     Text(title)
                         .lineLimit(1)
@@ -268,7 +268,7 @@ struct SearchView: View {
                     Button {
                         clearStagedVideo()
                     } label: {
-                        Image(systemName: "xmark.circle.fill")
+                        IconView("xmark.circle.fill")
                             .foregroundStyle(.secondary)
                     }
                     .buttonStyle(.plain)
@@ -284,7 +284,7 @@ struct SearchView: View {
                 showFileImporter = true
             } label: {
                 Label(needsVideoStep ? String(localized: "search.choose_video_file") : String(localized: "search.choose_subtitle_file"),
-                      systemImage: needsVideoStep ? "play.rectangle.on.rectangle" : "captions.bubble")
+                      icon: needsVideoStep ? "play.rectangle.on.rectangle" : "captions.bubble")
                     .font(.headline)
                     .foregroundStyle(platformBackground)
                     .padding(.horizontal, 20)
@@ -454,7 +454,7 @@ struct SearchView: View {
                         history.add(query)
                         vm.search(usingModule: usingModule)
                     } label: {
-                        Label(query, systemImage: "clock")
+                        Label(query, icon: "clock")
                             .foregroundStyle(.primary)
                     }
                     #if !os(tvOS)
@@ -462,7 +462,7 @@ struct SearchView: View {
                         Button(role: .destructive) {
                             history.remove(query)
                         } label: {
-                            Label("common.delete", systemImage: "trash")
+                            Label("common.delete", icon: "trash")
                         }
                         .tint(.red)
                     }
@@ -489,7 +489,7 @@ struct SearchView: View {
     // MARK: - Empty State
     private func emptyStateView(icon: String, title: String, subtitle: String) -> some View {
         VStack(spacing: 16) {
-            Image(systemName: icon)
+            IconView(icon)
                 .font(.system(size: 52))
                 .foregroundStyle(.secondary)
             VStack(spacing: 4) {
@@ -564,7 +564,7 @@ struct SearchView: View {
     }
 
     private var fallbackIcon: some View {
-        Image(systemName: "puzzlepiece.extension")
+        IconView("puzzlepiece.extension")
             .font(.system(size: 14))
             .foregroundStyle(.secondary)
     }
@@ -691,7 +691,7 @@ struct AniListCardView: View {
             }
             .overlay(alignment: .topTrailing) {
                 if let score = media.averageScore {
-                    Label("\(score)%", systemImage: "star.fill")
+                    Label("\(score)%", icon: "star.fill")
                         .font(.caption2.weight(.bold))
                         .foregroundStyle(.yellow)
                         .padding(.horizontal, 8)

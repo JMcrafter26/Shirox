@@ -44,7 +44,7 @@ struct BatchDownloadStreamPickerView: View {
                             onDismiss()
                         } label: {
                             HStack(spacing: 12) {
-                                Image(systemName: "arrow.down.circle.fill")
+                                IconView("arrow.down.circle.fill")
                                     .font(.system(size: 32))
                                     .foregroundStyle(.primary)
                                 StreamRowText(stream: stream)

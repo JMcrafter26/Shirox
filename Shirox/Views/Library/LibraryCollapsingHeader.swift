@@ -14,7 +14,7 @@ struct LibraryFilterLabel: View {
     var body: some View {
         Group {
             if collapsed {
-                Image(systemName: systemImage)
+                IconView(systemImage)
                     .font(.subheadline)
                     .frame(width: 40, height: 38)
                     .background(.ultraThinMaterial, in: Capsule())
@@ -29,12 +29,12 @@ struct LibraryFilterLabel: View {
                     }
             } else {
                 HStack(spacing: 6) {
-                    Image(systemName: systemImage)
+                    IconView(systemImage)
                         .font(.subheadline)
                     Text(text)
                         .font(.subheadline.weight(.medium))
                         .lineLimit(1)
-                    Image(systemName: "chevron.down")
+                    IconView("chevron.down")
                         .font(.caption)
                 }
                 .padding(.horizontal, 16)

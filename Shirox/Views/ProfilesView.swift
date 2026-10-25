@@ -228,7 +228,7 @@ struct ProfilePickerView: View {
             Button {
                 if managing { managing = false } else { manager.isPickerShown = false }
             } label: {
-                Image(systemName: "xmark")
+                IconView("xmark")
                     .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(.white)
                     .frame(width: 40, height: 40)
@@ -300,7 +300,7 @@ struct ProfilePickerView: View {
                         if managing {
                             ZStack {
                                 Circle().fill(.black.opacity(0.35))
-                                Image(systemName: "pencil")
+                                IconView("pencil")
                                     .font(.system(size: 24, weight: .semibold))
                                     .foregroundStyle(.white)
                                     .frame(width: 58, height: 58)
@@ -326,7 +326,7 @@ struct ProfilePickerView: View {
                 ZStack {
                     Circle().fill(Color.black.opacity(0.35))
                     Circle().strokeBorder(.white, lineWidth: 2)
-                    Image(systemName: "plus")
+                    IconView("plus")
                         .font(.system(size: avatarSize * 0.3, weight: .light))
                         .foregroundStyle(.white)
                 }
@@ -539,15 +539,15 @@ struct ProfileEditorView: View {
     private var pictureMenu: some View {
         Menu {
             if PhotoPickerModifier.isAvailable {
-                Button { showPhotoPicker = true } label: { Label("profile.choose_photo", systemImage: "photo.on.rectangle") }
+                Button { showPhotoPicker = true } label: { Label("profile.choose_photo", icon: "photo.on.rectangle") }
             }
-            Button { showFileImporter = true } label: { Label("profile.choose_file", systemImage: "folder") }
+            Button { showFileImporter = true } label: { Label("profile.choose_file", icon: "folder") }
             if hasPicture {
                 Divider()
                 Button(role: .destructive) {
                     photo = nil
                     photoRemoved = true
-                } label: { Label("profile.remove_picture", systemImage: "trash") }
+                } label: { Label("profile.remove_picture", icon: "trash") }
             }
         } label: {
             Text(hasPicture ? String(localized: "profile.change_picture") : String(localized: "profile.add_picture"))
@@ -568,7 +568,7 @@ struct ProfileEditorView: View {
                         .overlay(Circle().strokeBorder(Color.primary, lineWidth: colorHex == hex ? 3 : 0).padding(-4))
                         .overlay {
                             if takenBy != nil {
-                                Image(systemName: "person.fill").font(.caption2).foregroundStyle(.white.opacity(0.8))
+                                IconView("person.fill").font(.caption2).foregroundStyle(.white.opacity(0.8))
                             }
                         }
                 }

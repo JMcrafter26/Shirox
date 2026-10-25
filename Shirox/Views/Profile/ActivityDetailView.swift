@@ -206,7 +206,7 @@ struct ActivityDetailView: View {
             HStack(spacing: 20) {
                 likeButton
                 HStack(spacing: 5) {
-                    Image(systemName: "bubble.left")
+                    IconView("bubble.left")
                     Text("\(replies.isEmpty ? activity.replyCount : replies.count)")
                 }
                 .font(.subheadline).foregroundStyle(.secondary)
@@ -218,7 +218,7 @@ struct ActivityDetailView: View {
                 Button(role: .destructive) {
                     confirmDeleteActivity = true
                 } label: {
-                    Label("common.delete", systemImage: "trash")
+                    Label("common.delete", icon: "trash")
                 }
             }
         }
@@ -265,7 +265,7 @@ struct ActivityDetailView: View {
             Button {
                 Task { await toggleActivityLike() }
             } label: {
-                Image(systemName: isLiked ? "heart.fill" : "heart")
+                IconView(isLiked ? "heart.fill" : "heart")
                     .foregroundStyle(isLiked ? .pink : .secondary)
             }
             .buttonStyle(.plain)
@@ -342,7 +342,7 @@ struct ActivityDetailView: View {
                     Button {
                         Task { await toggleReplyLike(reply: reply) }
                     } label: {
-                        Image(systemName: liked ? "heart.fill" : "heart")
+                        IconView(liked ? "heart.fill" : "heart")
                             .foregroundStyle(liked ? .pink : .secondary)
                     }
                     .buttonStyle(.plain)
@@ -366,7 +366,7 @@ struct ActivityDetailView: View {
                 Button(role: .destructive) {
                     replyToDelete = reply
                 } label: {
-                    Label("profile.delete_reply", systemImage: "trash")
+                    Label("profile.delete_reply", icon: "trash")
                 }
             }
         }
@@ -389,7 +389,7 @@ struct ActivityDetailView: View {
                     if isPosting {
                         ProgressView().scaleEffect(0.8).frame(width: 32, height: 32)
                     } else {
-                        Image(systemName: "paperplane.fill")
+                        IconView("paperplane.fill")
                             .font(.title3)
                             .foregroundStyle(replyText.trimmingCharacters(in: .whitespaces).isEmpty
                                 ? .secondary : Color.accentColor)

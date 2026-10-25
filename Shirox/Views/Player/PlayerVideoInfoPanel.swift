@@ -39,7 +39,7 @@ struct PlayerVideoInfoPanel: View {
                     .font(.system(size: isPad ? 17 : 15, weight: .semibold))
                 Spacer()
                 Button(action: onClose) {
-                    Image(systemName: "xmark")
+                    IconView("xmark")
                         .font(.system(size: 11, weight: .bold))
                         .frame(width: 26, height: 26)
                         .background(Color.white.opacity(0.15), in: Circle())

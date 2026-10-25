@@ -66,7 +66,7 @@ struct NotificationsView: View {
                         Task { await vm.loadNotifications(filter: f) }
                     } label: {
                         HStack(spacing: 6) {
-                            Image(systemName: f.icon).font(.caption)
+                            IconView(f.icon).font(.caption)
                             Text(f.label).font(.caption.weight(.semibold))
                         }
                         .padding(.horizontal, 12).padding(.vertical, 7)
@@ -160,7 +160,7 @@ struct NotificationsView: View {
                 .frame(width: 76, height: 106)
             }
         } else {
-            Image(systemName: symbol)
+            IconView(symbol)
                 .font(.body.weight(.bold))
                 .foregroundStyle(.white)
                 .frame(width: 60, height: 60)
@@ -171,7 +171,7 @@ struct NotificationsView: View {
 
     /// The kind of notification, on the picture's corner.
     private func badge(_ symbol: String, _ color: Color) -> some View {
-        Image(systemName: symbol)
+        IconView(symbol)
             .font(.system(size: 11, weight: .bold))
             .foregroundStyle(.white)
             .frame(width: 24, height: 24)
@@ -197,10 +197,10 @@ struct NotificationsView: View {
             Spacer(minLength: 0)
 
             if isTappable(notif) {
-                Image(systemName: "chevron.right")
+                IconView("chevron.right")
                     .font(.caption2).foregroundStyle(.tertiary)
             } else if notif.kind.externalURL != nil {
-                Image(systemName: "arrow.up.right")
+                IconView("arrow.up.right")
                     .font(.caption2).foregroundStyle(.tertiary)
             }
         }

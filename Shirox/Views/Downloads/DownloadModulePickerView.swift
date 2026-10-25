@@ -146,7 +146,7 @@ private struct DownloadModuleRow: View {
                 if case .success(let img) = phase {
                     img.resizable().scaledToFill()
                 } else {
-                    Image(systemName: "puzzlepiece.extension").foregroundStyle(.secondary)
+                    IconView("puzzlepiece.extension").foregroundStyle(.secondary)
                 }
             }
             .frame(width: 32, height: 32)
@@ -172,7 +172,7 @@ private struct DownloadModuleRow: View {
                 .buttonStyle(.bordered).controlSize(.small)
         case .loading, .loadingEpisodes, .loadingStreams:
             Button { rowVm.cancel() } label: {
-                Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                IconView("xmark.circle.fill").foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
         case .searchResults, .selectingEpisode, .notFound, .error:
@@ -273,7 +273,7 @@ private struct DownloadModuleRow: View {
 
     private var titleField: some View {
         HStack(spacing: 6) {
-            Image(systemName: "magnifyingglass").font(.caption).foregroundStyle(.secondary)
+            IconView("magnifyingglass").font(.caption).foregroundStyle(.secondary)
             TextField("downloads.search_title", text: $rowVm.searchTitle)
                 // The rounded fill around it is its border.
                 .textFieldStyle(.plain)

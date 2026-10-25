@@ -64,7 +64,7 @@ struct PlayerTopBar: View {
                 }
                 if showDismiss {
                     Button(action: onDismiss) {
-                        Image(systemName: "xmark")
+                        IconView("xmark")
                             .font(.system(size: 11, weight: .bold))
                             .foregroundStyle(.white)
                             .frame(width: 26, height: 26)
@@ -80,7 +80,7 @@ struct PlayerTopBar: View {
             #else
             if showDismiss {
                 Button(action: onDismiss) {
-                    Image(systemName: "xmark")
+                    IconView("xmark")
                         .font(.system(size: isPad ? 24 : 18, weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(width: isPad ? 56 : 44, height: isPad ? 56 : 44)
@@ -157,7 +157,7 @@ struct PlayerTopBar: View {
 
         if let onInfo {
             Button(action: onInfo) {
-                Image(systemName: isInfoShown ? "info.circle.fill" : "info.circle")
+                IconView(isInfoShown ? "info.circle.fill" : "info.circle")
                     .font(.system(size: iconSize, weight: .medium))
                     .foregroundStyle(.white)
                     .frame(width: frameSize, height: frameSize)
@@ -177,7 +177,7 @@ struct PlayerTopBar: View {
             .frame(width: frameSize, height: frameSize)
         if onPiP != nil {
             Button { onPiP?() } label: {
-                Image(systemName: "pip.enter")
+                IconView("pip.enter")
                     .font(.system(size: iconSize, weight: .medium))
                     .foregroundStyle(.white)
                     .frame(width: frameSize, height: frameSize)
@@ -192,7 +192,7 @@ struct PlayerTopBar: View {
                 .help("AirPlay")
         }
         Button { onPiP?() } label: {
-            Image(systemName: isPictureInPicture ? "pip.exit" : "pip.enter")
+            IconView(isPictureInPicture ? "pip.exit" : "pip.enter")
                 .font(.system(size: iconSize, weight: .medium))
                 .foregroundStyle(.white)
                 .frame(width: frameSize, height: frameSize)
@@ -206,7 +206,7 @@ struct PlayerTopBar: View {
         Button {
             withAnimation(.easeInOut(duration: 0.2)) { isLocked.toggle() }
         } label: {
-            Image(systemName: isLocked ? "lock.fill" : "lock.open.fill")
+            IconView(isLocked ? "lock.fill" : "lock.open.fill")
                 .font(.system(size: iconSize, weight: .medium))
                 .foregroundStyle(.white)
                 .frame(width: frameSize, height: frameSize)
@@ -219,7 +219,7 @@ struct PlayerTopBar: View {
         Button {
             withAnimation(.easeInOut(duration: 0.2)) { isMuted.toggle() }
         } label: {
-            Image(systemName: isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+            IconView(isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
                 .font(.system(size: iconSize, weight: .medium))
                 .foregroundStyle(.white)
                 .frame(width: frameSize, height: frameSize)

@@ -143,7 +143,7 @@ struct SearchBrowseView: View {
                     HStack(spacing: 4) {
                         Text(vm.sort.title)
                             .font(.subheadline.weight(.semibold))
-                        Image(systemName: "chevron.down")
+                        IconView("chevron.down")
                             .font(.caption2.weight(.bold))
                     }
                     .foregroundStyle(.primary)
@@ -224,7 +224,7 @@ struct RecentSearchesRow: View {
                     ForEach(queries, id: \.self) { query in
                         Button { onSelect(query) } label: {
                             HStack(spacing: 6) {
-                                Image(systemName: "clock")
+                                IconView("clock")
                                     .font(.caption2)
                                     .foregroundStyle(.secondary)
                                 Text(query)
@@ -241,7 +241,7 @@ struct RecentSearchesRow: View {
                         // place. Long-press does the same job here.
                         .contextMenu {
                             Button(role: .destructive) { onDelete(query) } label: {
-                                Label("common.remove", systemImage: "trash")
+                                Label("common.remove", icon: "trash")
                             }
                         }
                     }

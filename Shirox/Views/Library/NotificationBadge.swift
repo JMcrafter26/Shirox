@@ -47,9 +47,9 @@ extension View {
 
 #Preview(String(localized: "library.badge_counts")) {
     HStack(spacing: 28) {
-        Image(systemName: "bell").notificationBadge(count: 0)
-        Image(systemName: "bell").notificationBadge(count: 3)
-        Image(systemName: "bell").notificationBadge(count: 42)
+        IconView("bell").notificationBadge(count: 0)
+        IconView("bell").notificationBadge(count: 3)
+        IconView("bell").notificationBadge(count: 42)
     }
     .font(.system(size: 17, weight: .medium))
     .padding(40)

@@ -589,18 +589,18 @@ struct DetailView: View {
                         showLibraryEdit = true
                     }
                 } label: {
-                    Label("detail.edit_library_entry", systemImage: "pencil")
+                    Label("detail.edit_library_entry", icon: "pencil")
                 }
                 Button {
                     showMatchingSearch = true
                 } label: {
-                    Label("detail.tracking_links", systemImage: "link")
+                    Label("detail.tracking_links", icon: "link")
                 }
             } label: {
                 if isLoadingEntry {
                     ProgressView().scaleEffect(0.8)
                 } else {
-                    Image(systemName: "pencil.circle")
+                    IconView("pencil.circle")
                         .font(.system(size: 17, weight: .medium))
                         .foregroundStyle(.primary)
                 }
@@ -610,7 +610,7 @@ struct DetailView: View {
             Button {
                 showMatchingSearch = true
             } label: {
-                Image(systemName: "link.badge.plus")
+                IconView("link.badge.plus")
                     .font(.system(size: 17, weight: .medium))
             }
         }
@@ -679,7 +679,7 @@ struct DetailView: View {
     #endif
 
     private func circleIconButton(icon: String, isActive: Bool, size: CGFloat) -> some View {
-        Image(systemName: icon)
+        IconView(icon)
             .font(.system(size: size, weight: .semibold))
             .foregroundStyle(isActive ? platformBackground : .primary)
             .frame(width: 46, height: 46)
@@ -737,7 +737,7 @@ struct DetailView: View {
             }
         } label: {
             HStack(spacing: 10) {
-                Image(systemName: "play.fill")
+                IconView("play.fill")
                     .font(.system(size: 13, weight: .bold))
                 Text(label)
                     .font(.system(size: 15, weight: .bold))
@@ -756,12 +756,12 @@ struct DetailView: View {
         .contextMenu {
             if let targetEpisode, !targetEpisode.href.isEmpty {
                 Button { vm.loadStreams(for: targetEpisode) } label: {
-                    Label("detail.change_stream", systemImage: "arrow.triangle.2.circlepath")
+                    Label("detail.change_stream", icon: "arrow.triangle.2.circlepath")
                 }
                 #if !os(tvOS)
                 if downloadedTarget == nil {
                     Button { vm.loadDownloadStreams(for: targetEpisode) } label: {
-                        Label("detail.download_episode", systemImage: "arrow.down.circle")
+                        Label("detail.download_episode", icon: "arrow.down.circle")
                     }
                 }
                 #endif
@@ -769,7 +769,7 @@ struct DetailView: View {
             #if !os(tvOS)
             if let downloadedTarget {
                 Button(role: .destructive) { DownloadManager.shared.remove(downloadedTarget) } label: {
-                    Label("detail.delete_download", systemImage: "trash")
+                    Label("detail.delete_download", icon: "trash")
                 }
             }
             #endif
@@ -780,7 +780,7 @@ struct DetailView: View {
                         aniListID: vm.aniListID ?? aniListID, moduleId: activeModule, mediaTitle: detail.title,
                         episodeNumber: nextEp, episodeHref: targetEpisode?.href)
                 } label: {
-                    Label("detail.reset_progress", systemImage: "arrow.counterclockwise")
+                    Label("detail.reset_progress", icon: "arrow.counterclockwise")
                 }
             }
         }
@@ -793,7 +793,7 @@ struct DetailView: View {
                 selectedTab = (selectedTab == 0 ? 1 : 0)
             }
         } label: {
-            Image(systemName: selectedTab == 0 ? "person.3.fill" : "list.bullet")
+            IconView(selectedTab == 0 ? "person.3.fill" : "list.bullet")
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(selectedTab == 1 ? platformBackground : .primary)
                 .frame(width: 46, height: 46)
@@ -818,7 +818,7 @@ struct DetailView: View {
                 }
             }
         } label: {
-            Image(systemName: isSelectionMode ? "checkmark.circle.fill" : "checkmark.circle")
+            IconView(isSelectionMode ? "checkmark.circle.fill" : "checkmark.circle")
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundStyle(isSelectionMode ? platformBackground : .primary)
                 .frame(width: 46, height: 46)
@@ -964,7 +964,7 @@ struct DetailView: View {
 
     @ViewBuilder private var simklEditButton: some View {
         if simklAuth.isLoggedIn, let target = simklEditTarget {
-            Button { simklEdit = target } label: { Label("detail.edit_on_simkl", systemImage: "pencil") }
+            Button { simklEdit = target } label: { Label("detail.edit_on_simkl", icon: "pencil") }
         }
     }
 
@@ -994,7 +994,7 @@ struct DetailView: View {
                             isLoadingEntry = false
                             showLibraryEdit = true
                         }
-                    } label: { Label("detail.edit_on_both_services", systemImage: "pencil") }
+                    } label: { Label("detail.edit_on_both_services", icon: "pencil") }
                 } else {
                     if hasAniListEdit {
                         Button {
@@ -1007,7 +1007,7 @@ struct DetailView: View {
                                 isLoadingEntry = false
                                 showAniListEdit = true
                             }
-                        } label: { Label("detail.edit_on_anilist", systemImage: "pencil") }
+                        } label: { Label("detail.edit_on_anilist", icon: "pencil") }
                     }
                     if hasMALEdit {
                         Button {
@@ -1019,12 +1019,12 @@ struct DetailView: View {
                                 isLoadingEntry = false
                                 showMALEdit = true
                             }
-                        } label: { Label("detail.edit_on_myanimelist", systemImage: "pencil") }
+                        } label: { Label("detail.edit_on_myanimelist", icon: "pencil") }
                     }
                 }
                 simklEditButton
                 Button { openLinks(from: "edit") } label: {
-                    Label("detail.tracking_links", systemImage: "link")
+                    Label("detail.tracking_links", icon: "link")
                 }
             } label: { libraryEditButtonLabel }
             .disabled(isLoadingEntry)
@@ -1032,7 +1032,7 @@ struct DetailView: View {
             Menu {
                 simklEditButton
                 Button { openLinks(from: "edit") } label: {
-                    Label("detail.tracking_links", systemImage: "link")
+                    Label("detail.tracking_links", icon: "link")
                 }
             } label: { libraryEditButtonLabel }
         } else {
@@ -1040,7 +1040,7 @@ struct DetailView: View {
                 if isLoadingEntry {
                     ProgressView().scaleEffect(0.8)
                 } else {
-                    Image(systemName: "link.badge.plus").font(.system(size: 17, weight: .medium))
+                    IconView("link.badge.plus").font(.system(size: 17, weight: .medium))
                 }
             }
         }
@@ -1130,7 +1130,7 @@ struct DetailView: View {
         if isLoadingEntry {
             ProgressView().scaleEffect(0.8)
         } else {
-            Image(systemName: "pencil.circle")
+            IconView("pencil.circle")
                 .font(.system(size: 17, weight: .medium))
                 .foregroundStyle(.primary)
         }
@@ -1372,7 +1372,7 @@ struct DetailView: View {
                 // Linked, with nothing related: a film or a one-off. It used to fall through to
                 // "Not linked", as if no relations meant no link.
                 VStack(spacing: 8) {
-                    Image(systemName: "checkmark.seal")
+                    IconView("checkmark.seal")
                         .font(.largeTitle)
                         .foregroundStyle(.secondary.opacity(0.5))
                     Text("detail.no_related_entries")
@@ -1395,7 +1395,7 @@ struct DetailView: View {
                 EmptyView()
             } else if watchOrder.isEmpty {
                 VStack(spacing: 16) {
-                    Image(systemName: "link.badge.plus")
+                    IconView("link.badge.plus")
                         .font(.largeTitle)
                         .foregroundStyle(.secondary.opacity(0.5))
 
@@ -1429,7 +1429,7 @@ struct DetailView: View {
     @ViewBuilder
     private func errorView(_ error: String) -> some View {
         VStack(spacing: 15) {
-            Image(systemName: "exclamationmark.triangle.fill")
+            IconView("exclamationmark.triangle.fill")
                 .font(.largeTitle)
                 .foregroundStyle(.red)
             Text(error)
@@ -1618,7 +1618,7 @@ struct DetailView: View {
                 Button {
                     isReversed.toggle()
                 } label: {
-                    Image(systemName: isReversed ? "arrow.down" : "arrow.up")
+                    IconView(isReversed ? "arrow.down" : "arrow.up")
                         .font(.system(size: 16, weight: .bold))
                         .foregroundStyle(.primary)
                         .frame(width: 42, height: 42)
@@ -1635,7 +1635,7 @@ struct DetailView: View {
                         Button {
                             showResetConfirmation = true
                         } label: {
-                            Image(systemName: "arrow.counterclockwise")
+                            IconView("arrow.counterclockwise")
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundStyle(.primary)
                                 .frame(width: 42, height: 42)
@@ -1650,7 +1650,7 @@ struct DetailView: View {
                     Button {
                         showResetConfirmation = true
                     } label: {
-                        Image(systemName: "arrow.counterclockwise")
+                        IconView("arrow.counterclockwise")
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(.primary)
                             .frame(width: 42, height: 42)
@@ -1681,13 +1681,13 @@ struct DetailView: View {
                                 } label: {
                                     Text("\(start)-\(end)")
                                     if selectedRangeIndex == index {
-                                        Image(systemName: "checkmark")
+                                        IconView("checkmark")
                                     }
                                 }
                             }
                         } label: {
                             HStack(spacing: 6) {
-                                Image(systemName: "list.number")
+                                IconView("list.number")
                                     .font(.subheadline)
                                 // Same clamp as the list, so the button never advertises a range
                                 // different from the episodes actually shown.
@@ -1698,7 +1698,7 @@ struct DetailView: View {
                                 let end = rangeIdx * 100 + shown.count
                                 Text("\(start)-\(end)")
                                     .font(.subheadline.weight(.medium))
-                                Image(systemName: "chevron.down")
+                                IconView("chevron.down")
                                     .font(.caption)
                             }
                             .padding(.horizontal, 16)
@@ -1727,17 +1727,17 @@ struct DetailView: View {
                                 } label: {
                                     Text("common.season \(i + 1)")
                                     if selectedSeason == i {
-                                        Image(systemName: "checkmark")
+                                        IconView("checkmark")
                                     }
                                 }
                             }
                         } label: {
                             HStack(spacing: 6) {
-                                Image(systemName: "tv")
+                                IconView("tv")
                                     .font(.subheadline)
                                 Text("common.season \(selectedSeason + 1)")
                                     .font(.subheadline.weight(.medium))
-                                Image(systemName: "chevron.down")
+                                IconView("chevron.down")
                                     .font(.caption)
                             }
                             .padding(.horizontal, 16)
@@ -1805,7 +1805,7 @@ struct DetailView: View {
                                     selectedEpisodeNumbers.remove(it.episodeNumber)
                                 }
                             } label: {
-                                Label("detail.delete \(deleteCount)", systemImage: "trash.fill")
+                                Label("detail.delete \(deleteCount)", icon: "trash.fill")
                                     .font(.subheadline.weight(.bold))
                             }
                             .buttonStyle(.borderedProminent)
@@ -1818,7 +1818,7 @@ struct DetailView: View {
                                 batchDownloadZoomID = "batchDownload"
                                 showBatchDownloadPicker = true
                             } label: {
-                                Label("detail.download \(downloadCount)", systemImage: "arrow.down.circle.fill")
+                                Label("detail.download \(downloadCount)", icon: "arrow.down.circle.fill")
                                     .font(.subheadline.weight(.bold))
                                     .foregroundStyle(platformBackground)
                             }
@@ -1977,7 +1977,7 @@ struct DetailView: View {
                 Spacer()
 
                 Button { isReversed.toggle() } label: {
-                    Image(systemName: isReversed ? "arrow.down" : "arrow.up")
+                    IconView(isReversed ? "arrow.down" : "arrow.up")
                         .font(.system(size: 16, weight: .bold))
                         .foregroundStyle(.primary)
                         .frame(width: 42, height: 42)
@@ -1994,7 +1994,7 @@ struct DetailView: View {
                     mediaTitle: snapshot.mediaTitle
                 ) {
                     Button { showResetConfirmation = true } label: {
-                        Image(systemName: "arrow.counterclockwise")
+                        IconView("arrow.counterclockwise")
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(.primary)
                             .frame(width: 42, height: 42)
@@ -2036,7 +2036,7 @@ struct DetailView: View {
                                 selectedEpisodeNumbers.remove(it.episodeNumber)
                             }
                         } label: {
-                            Label("detail.delete \(selectedItems.count)", systemImage: "trash.fill")
+                            Label("detail.delete \(selectedItems.count)", icon: "trash.fill")
                                 .font(.subheadline.weight(.bold))
                         }
                         .buttonStyle(.borderedProminent)
@@ -2051,7 +2051,7 @@ struct DetailView: View {
 
             if completed.isEmpty {
                 VStack(spacing: 12) {
-                    Image(systemName: "folder.badge.minus").font(.system(size: 48)).foregroundStyle(.secondary)
+                    IconView("folder.badge.minus").font(.system(size: 48)).foregroundStyle(.secondary)
                     Text("detail.no_downloaded_episodes_left").font(.headline).foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity).padding(.top, 40)

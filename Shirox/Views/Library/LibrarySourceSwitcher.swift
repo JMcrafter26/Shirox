@@ -80,7 +80,7 @@ struct LibrarySourceSwitcher: View {
     private func icon(for source: LibrarySource) -> some View {
         switch source {
         case .local:
-            Image(systemName: "books.vertical.fill")
+            IconView("books.vertical.fill")
                 .font(.system(size: 13, weight: .semibold))
                 .frame(width: 16, height: 16)
         case .simkl:

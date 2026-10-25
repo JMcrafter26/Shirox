@@ -278,7 +278,7 @@ struct CinematicMetaLine: View {
             Text(parts.joined(separator: " · "))
             if let score = media.averageScore {
                 if !parts.isEmpty { Text("·") }
-                Label("\(score)%", systemImage: "star.fill")
+                Label("\(score)%", icon: "star.fill")
                     .labelStyle(.titleAndIcon)
             }
         }
@@ -454,7 +454,7 @@ struct CinematicCircleButton: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: systemImage)
+            IconView(systemImage)
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(isOn ? Color.black : Color.white)
                 .frame(width: 46, height: 46)

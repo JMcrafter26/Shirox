@@ -111,7 +111,7 @@ struct ProfileView: View {
             ToolbarItem(placement: isPushed ? .primaryAction : .cancellationAction) {
                 if isOwnProfile {
                     Button(role: .destructive) { showLogoutConfirm = true } label: {
-                        Image(systemName: "rectangle.portrait.and.arrow.right")
+                        IconView("rectangle.portrait.and.arrow.right")
                             .foregroundStyle(.red)
                     }
                     .accessibilityLabel("profile.log_out")
@@ -188,7 +188,7 @@ struct ProfileView: View {
 
     private var retryState: some View {
         VStack(spacing: 14) {
-            Image(systemName: "wifi.exclamationmark")
+            IconView("wifi.exclamationmark")
                 .font(.largeTitle)
                 .foregroundStyle(.secondary)
             Text("profile.couldnt_load_right_now")
@@ -214,7 +214,7 @@ struct ProfileView: View {
 
     private var staleBanner: some View {
         HStack(spacing: 8) {
-            Image(systemName: "arrow.clockwise.circle")
+            IconView("arrow.clockwise.circle")
                 .font(.footnote)
             Text("profile.showing_saved_profile_rate_limited \(providerName)")
                 .font(.caption)
@@ -223,7 +223,7 @@ struct ProfileView: View {
             Button {
                 withAnimation { staleBannerDismissed = true }
             } label: {
-                Image(systemName: "xmark").font(.caption2)
+                IconView("xmark").font(.caption2)
             }
             .buttonStyle(.plain)
         }
@@ -300,7 +300,7 @@ struct ProfileView: View {
                     .fill(Color.secondary.opacity(0.25))
                     .frame(width: size, height: size)
                     .overlay(
-                        Image(systemName: "person.fill")
+                        IconView("person.fill")
                             .font(.system(size: size * 0.45))
                             .foregroundStyle(.secondary)
                     )
@@ -360,7 +360,7 @@ struct ProfileView: View {
                 } label: {
                     VStack(spacing: 6) {
                         HStack(spacing: 5) {
-                            Image(systemName: tab.icon).font(.caption)
+                            IconView(tab.icon).font(.caption)
                             Text(tab.title).font(.caption.weight(.semibold))
                         }
                         .foregroundStyle(selectedTab == tab ? Color.primary : .secondary)

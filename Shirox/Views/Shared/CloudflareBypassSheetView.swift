@@ -80,7 +80,7 @@ private struct MacCloudflareBypassView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 10) {
-                Image(systemName: "checkmark.shield")
+                IconView("checkmark.shield")
                     .foregroundStyle(.secondary)
                 VStack(alignment: .leading, spacing: 1) {
                     Text("shared.security_check").font(.headline)

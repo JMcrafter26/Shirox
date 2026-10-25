@@ -475,7 +475,7 @@ struct PlayerView: View {
         .ignoresSafeArea()
         #if os(iOS)
         .alert("app.save_frame", isPresented: $showFrameSaveAlert) {
-            Button("OK", role: .cancel) { }
+            Button("common.ok", role: .cancel) { }
         } message: {
             Text(frameSaveMessage)
         }
@@ -1118,7 +1118,7 @@ struct PlayerView: View {
     private var speedBoostBadge: some View {
         VStack {
             HStack(spacing: 4) {
-                Image(systemName: "forward.fill").font(.system(size: 12, weight: .semibold))
+                IconView("forward.fill").font(.system(size: 12, weight: .semibold))
                 Text("player.2_speed").font(.caption.weight(.semibold))
             }
             .foregroundStyle(.white).padding(.horizontal, 12).padding(.vertical, 6)
@@ -1508,7 +1508,7 @@ struct PlayerView: View {
                 Button {
                     withAnimation(.easeInOut(duration: 0.2)) { isLocked = false }
                 } label: {
-                    Image(systemName: "lock.fill")
+                    IconView("lock.fill")
                         .font(.system(size: isPad ? 24 : 18, weight: .semibold))
                         .foregroundStyle(.white).padding(isPad ? 16 : 12)
                         .mediaGlassChrome(Circle(), enabled: playerLiquidGlass, off: .ultraThinMaterial)
@@ -1551,7 +1551,7 @@ struct PlayerView: View {
             VStack {
                 HStack {
                     Button(action: castManager.isConnected ? exitCastMode : handleDismiss) {
-                        Image(systemName: "xmark")
+                        IconView("xmark")
                             .font(.system(size: isPad ? 24 : 18, weight: .semibold)).foregroundStyle(.white)
                             .frame(width: isPad ? 56 : 44, height: isPad ? 56 : 44)
                             .mediaGlassChrome(Circle(), enabled: playerLiquidGlass, off: Color.white.opacity(0.25))
@@ -1582,7 +1582,7 @@ struct PlayerView: View {
                 .onTapGesture { }
 
             VStack(spacing: 16) {
-                Image(systemName: "wifi.exclamationmark")
+                IconView("wifi.exclamationmark")
                     .font(.system(size: 44, weight: .regular))
                     .foregroundStyle(.white.opacity(0.85))
                 Text("player.playback_stalled")
@@ -1607,7 +1607,7 @@ struct PlayerView: View {
             VStack {
                 HStack {
                     Button(action: handleDismiss) {
-                        Image(systemName: "xmark")
+                        IconView("xmark")
                             .font(.system(size: isPad ? 24 : 18, weight: .semibold))
                             .foregroundStyle(.white)
                             .frame(width: isPad ? 56 : 44, height: isPad ? 56 : 44)
@@ -1628,7 +1628,7 @@ struct PlayerView: View {
     @ViewBuilder
     private var loadingViewPlaceholder: some View {
         VStack(spacing: 20) {
-            Image(systemName: "play.circle")
+            IconView("play.circle")
                 .font(.system(size: 64)).foregroundStyle(.white.opacity(0.6))
                 .opacity(loadingOpacity)
                 .onAppear {
@@ -5205,7 +5205,7 @@ private struct MPVOnExternalDisplayPlaceholder: View {
         ZStack {
             Color.black
             VStack(spacing: 12) {
-                Image(systemName: "tv")
+                IconView("tv")
                     .font(.system(size: 44, weight: .light))
                 Text("player.playing_on_the_tv")
                     .font(.headline)

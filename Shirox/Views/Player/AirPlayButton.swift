@@ -38,7 +38,8 @@ struct CastButton: UIViewRepresentable {
         return castButton
         #else
         let button = UIButton(type: .system)
-        button.setImage(UIImage(systemName: "apps.iphone.badge.plus"), for: .normal)
+        button.setImage(IconPackRenderer.shared.image("apps.iphone.badge.plus", pointSize: 20)
+            ?? UIImage(systemName: "apps.iphone.badge.plus"), for: .normal)
         button.tintColor = .white.withAlphaComponent(0.5)
         button.isEnabled = false
         return button

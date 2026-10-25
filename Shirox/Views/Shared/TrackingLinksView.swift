@@ -253,7 +253,7 @@ struct TrackingLinksView: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            Image(systemName: "link").font(.caption)
+            IconView("link").font(.caption)
         }
     }
 

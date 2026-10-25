@@ -429,6 +429,7 @@
 		1390ECEAC169F48B711F3B9E /* JellyfinService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2865E65F7A935A09C76CA04F /* JellyfinService.swift */; };
 		13F5950A2B31A7BE0691A2FE /* JellyfinPosterCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D4FBF1385A6C9330CBE7EAB /* JellyfinPosterCard.swift */; };
 		142FD17B4EC3BD021DEF20A0 /* SearchBrowseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C581970F3C23C369DD7CA074 /* SearchBrowseView.swift */; };
+		14A4A2EEF853606FFD9C21CF /* IconPacks.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5CE84DABC1229C256656877 /* IconPacks.swift */; };
 		159BCA6771C05616FBDDDD19 /* SimklTitleCopyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6BAC68F157DEEEEE58FE6F13 /* SimklTitleCopyTests.swift */; };
 		169B41F8E7B00425FE1C1F11 /* ModuleFileImport.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC5CE21A10CD16AA17744D82 /* ModuleFileImport.swift */; };
 		1723EC5CF6D021DB8BC08146 /* NSFWContentFilterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 72CCB233D0B10220690D48E3 /* NSFWContentFilterTests.swift */; };
@@ -590,6 +591,7 @@
 		45F74C8E1505094C7E16F172 /* AppDirectoriesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E058F5105C524B077072AF6 /* AppDirectoriesTests.swift */; };
 		466EC485FCE140F4C6D11896 /* JellyfinConnectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6AB4FB215071F688F19B394 /* JellyfinConnectView.swift */; };
 		466F43598FD09943F6DD7943 /* SimklTitleReads.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25BDD0001D5CF192D75C27C /* SimklTitleReads.swift */; };
+		46C3D91AB05751508C1F0B76 /* IconPacks.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5CE84DABC1229C256656877 /* IconPacks.swift */; };
 		47136FE4FAB4E486C602D7AB /* SimklWriteQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D9BBDAAE6189B464E64BBC5 /* SimklWriteQueue.swift */; };
 		47BBE712FAC005A9A0C020AA /* JellyfinLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5844D8774F9B1B6C5A7A3C3E /* JellyfinLibraryView.swift */; };
 		487D4362E36FEB276271DC6F /* PlayerAssOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A08E27B4A688BE98644F700 /* PlayerAssOverlay.swift */; };
@@ -604,7 +606,9 @@
 		4BA3D8DD86641E45FA238E9A /* MangaDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A709F7C9E219866F599F64D7 /* MangaDetailView.swift */; };
 		4BA5890186CEA7306BCE1C9B /* CardTitle.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED868467208862F86E43436C /* CardTitle.swift */; };
 		4BB64B0EE47ABDC0D6F4C1C5 /* SimklTitleLabels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EEEE6BC436B400EC32EFB21 /* SimklTitleLabels.swift */; };
+		4BBFB1CDD35CCBCA65C3A837 /* IconPacks.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5CE84DABC1229C256656877 /* IconPacks.swift */; };
 		4BD4B81BDA06B7AB329BC695 /* TrackingIDInputTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ABBAE7D9D150405EE777634 /* TrackingIDInputTests.swift */; };
+		4BE00A6EE00E138ED5FF0D38 /* IconManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBE4B8F016437376FFB554BE /* IconManifest.swift */; };
 		4C113D9B71EE645DCCD6E57E /* JellyfinSeriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F8C802FC011BC97C71DB79A /* JellyfinSeriesView.swift */; };
 		4C1AD97A92334CDC1398B62D /* JavaScriptHighlighter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 402B9AA0A66B49E9D259C62F /* JavaScriptHighlighter.swift */; };
 		4C58F1B4172D275058E301D2 /* TrackingLinksTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A58F85F7A144420BF90D4570 /* TrackingLinksTests.swift */; };
@@ -1042,6 +1046,7 @@
 		C93283E63AB142F1285293ED /* JellyfinCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E8C2D959A901D1DA465C7F4 /* JellyfinCoreTests.swift */; };
 		C94930CB548D39EC9D3DB68A /* PlayerSubtitleMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78A498256CCC09BF0F188F4B /* PlayerSubtitleMenu.swift */; };
 		C9C8A4E5BC1EB0520A5BD713 /* PlaybackFallback.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4F397C9FA6A14A5DDD98D3F /* PlaybackFallback.swift */; };
+		C9F5DBB95FB9F695DC721466 /* IconManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBE4B8F016437376FFB554BE /* IconManifest.swift */; };
 		CA0553D63A7F199BB4FB2073 /* ModuleWebLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC8E0AD5E8FE00AF92A4E88E /* ModuleWebLinks.swift */; };
 		CA868C3A72F5631FF1BF5B60 /* SimklWriteQueueDrainTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5225D82F9D0889BA8C94D76A /* SimklWriteQueueDrainTests.swift */; };
 		CA99AD9718EE1ED9DEC477F8 /* MPVSubtitleTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 466723FF4D05B75D5EC252A0 /* MPVSubtitleTests.swift */; };
@@ -1107,6 +1112,7 @@
 		DF0EAFA85275EA20CC6AA64A /* SimklEpisodePlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED7B709D7B1CC0F49AA736E6 /* SimklEpisodePlanner.swift */; };
 		DF36EB655FA0ECCBA31022A8 /* ReaderPageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF8A01C923F20C2A10CDDC33 /* ReaderPageView.swift */; };
 		DF7246AC712768A4672BE8C3 /* SimklDiscoverMedia.swift in Sources */ = {isa = PBXBuildFile; fileRef = DF82054A977EBBA7E707802F /* SimklDiscoverMedia.swift */; };
+		DF9F55C7DDCC34914F89D68B /* IconManifest.swift in Sources */ = {isa = PBXBuildFile; fileRef = FBE4B8F016437376FFB554BE /* IconManifest.swift */; };
 		DFAB4CCC07529FC1C787CBC4 /* PlayerVideoInfoPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4F322436530D1C8DAD505F3 /* PlayerVideoInfoPanel.swift */; };
 		E059DEAA9C346EE40C387E26 /* AppProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0E6CAD08552A40849DB89CD /* AppProfile.swift */; };
 		E0D096637DEB9518F3EDA707 /* JellyfinLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5844D8774F9B1B6C5A7A3C3E /* JellyfinLibraryView.swift */; };
@@ -1654,6 +1660,7 @@
 		C33E435703AA1308538E7D59 /* MALOfficialDiscoveryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MALOfficialDiscoveryTests.swift; sourceTree = "<group>"; };
 		C372736CDF3DAFB6621F4326 /* JellyfinCore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = JellyfinCore.swift; sourceTree = "<group>"; };
 		C581970F3C23C369DD7CA074 /* SearchBrowseView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SearchBrowseView.swift; sourceTree = "<group>"; };
+		C5CE84DABC1229C256656877 /* IconPacks.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IconPacks.swift; sourceTree = "<group>"; };
 		C5EF33C932D8246C4F5A0F84 /* ModuleImportView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ModuleImportView.swift; sourceTree = "<group>"; };
 		C77A983D219ED5E94C13A128 /* TMDBHosts.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TMDBHosts.swift; sourceTree = "<group>"; };
 		C802BD3203034DFFC6D5A2BF /* ExtensionInstaller.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ExtensionInstaller.swift; sourceTree = "<group>"; };
@@ -1749,6 +1756,7 @@
 		FB32994B31FB72D2DAA8327A /* NSFWContentFilter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NSFWContentFilter.swift; sourceTree = "<group>"; };
 		FB6C011401E61E32CCB64E39 /* TVDBLogoTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TVDBLogoTests.swift; sourceTree = "<group>"; };
 		FBDD5C0C8F638C5E144F1F5A /* SimklSearchTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklSearchTests.swift; sourceTree = "<group>"; };
+		FBE4B8F016437376FFB554BE /* IconManifest.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = IconManifest.swift; sourceTree = "<group>"; };
 		FC1DF7D44E93B5DA2DDAD152 /* SimklLibraryEntryPage.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklLibraryEntryPage.swift; sourceTree = "<group>"; };
 		FCBEAC7148133CCF2D13E786 /* SeanimeInstall.js */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.javascript; path = SeanimeInstall.js; sourceTree = "<group>"; };
 		FD7CC628C6AE93B4C0BEA616 /* SimklActivityStorageTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklActivityStorageTests.swift; sourceTree = "<group>"; };
@@ -2025,6 +2033,8 @@
 				226570FE33308748149BEBBC /* AdvancedNetwork.swift */,
 				D069C5BCA76BEF15809ABF35 /* ManaWebPages.swift */,
 				02DCCB8FDDAB9943AE709D29 /* AppAppearance.swift */,
+				C5CE84DABC1229C256656877 /* IconPacks.swift */,
+				FBE4B8F016437376FFB554BE /* IconManifest.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -3295,6 +3305,8 @@
 				AD84943AB15364CD958B2051 /* PlayerVideoInfoPanel.swift in Sources */,
 				A044BB41F2C2807DD5B5F873 /* AppAppearance.swift in Sources */,
 				6A5FC5A10818FFA2D2D52F89 /* GeneralSettingsView.swift in Sources */,
+				46C3D91AB05751508C1F0B76 /* IconPacks.swift in Sources */,
+				DF9F55C7DDCC34914F89D68B /* IconManifest.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3623,6 +3635,8 @@
 				DFAB4CCC07529FC1C787CBC4 /* PlayerVideoInfoPanel.swift in Sources */,
 				1F842210BB75A5F5C55CF37F /* AppAppearance.swift in Sources */,
 				787F892E9CB2CE77C31DC0EE /* GeneralSettingsView.swift in Sources */,
+				14A4A2EEF853606FFD9C21CF /* IconPacks.swift in Sources */,
+				C9F5DBB95FB9F695DC721466 /* IconManifest.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3952,6 +3966,8 @@
 				819F1C4B9A92BE705287E1C9 /* PlayerVideoInfoPanel.swift in Sources */,
 				1C740592E5F96E2468C1346A /* AppAppearance.swift in Sources */,
 				2CC23752D1A41FDE78A5B8E9 /* GeneralSettingsView.swift in Sources */,
+				4BBFB1CDD35CCBCA65C3A837 /* IconPacks.swift in Sources */,
+				4BE00A6EE00E138ED5FF0D38 /* IconManifest.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

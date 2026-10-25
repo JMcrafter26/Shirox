@@ -66,7 +66,7 @@ struct GeneralSettingsView: View {
                     IconPacksSettingsView()
                 } label: {
                     LabeledContent("settings.icon_packs") {
-                        Text("settings.sf_symbols")
+                        Text(IconPackStore.shared.selected?.pack.name ?? String(localized: "settings.sf_symbols"))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -178,7 +178,7 @@ struct GeneralSettingsView: View {
         #if os(iOS) && !targetEnvironment(macCatalyst)
         .alert("settings.couldnt_change_icon",
                isPresented: Binding(get: { appIconError != nil }, set: { if !$0 { appIconError = nil } })) {
-            Button("OK", role: .cancel) {}
+            Button("common.ok", role: .cancel) {}
         } message: {
             Text(appIconError ?? "")
         }
@@ -239,37 +239,48 @@ private extension View {
 
 // MARK: - Icon Packs
 
-/// The icon packs Shirox can draw its symbols from: SF Symbols, built in, and packs added by
-/// link. A placeholder for now: nothing is downloaded, kept or applied, and a pack added here
-/// lasts only while the page is open.
+/// SF Symbols, built in, and icon packs downloaded by link: pick one, add, update or remove.
 struct IconPacksSettingsView: View {
-    private struct Pack: Identifiable, Hashable {
-        let id = UUID()
-        let name: String
-        let source: String?
-    }
-
-    private static let builtIn = Pack(name: String(localized: "settings.sf_symbols"), source: nil)
-
-    @State private var packs: [Pack] = [Self.builtIn]
-    @State private var selected = Self.builtIn.id
+    @ObservedObject private var store = IconPackStore.shared
     @State private var link = ""
+    @State private var busy: String?
+    @State private var error: String?
 
     var body: some View {
         SettingsList {
             Section {
-                ForEach(packs) { pack in
-                    row(pack)
+                row(title: String(localized: "settings.sf_symbols"), subtitle: String(localized: "settings.built_in"),
+                    selected: store.selectedURL.isEmpty) { store.select(nil) }
+                ForEach(store.installed) { item in
+                    packRow(item)
                 }
                 .onDelete { offsets in
-                    let removed = offsets.map { packs[$0] }.filter { $0.source != nil }
-                    packs.removeAll { pack in removed.contains(pack) }
-                    if !packs.contains(where: { $0.id == selected }) { selected = Self.builtIn.id }
+                    offsets.map { store.installed[$0] }.forEach(store.remove)
                 }
             } header: {
                 Text("settings.icon_packs")
             } footer: {
                 Text("settings.icon_packs_note")
+            }
+
+            let suggestions = IconPackStore.suggested.filter { s in !store.installed.contains { $0.pack.url == s.url } }
+            if !suggestions.isEmpty {
+                Section {
+                    ForEach(suggestions, id: \.url) { suggestion in
+                        Button {
+                            add(suggestion.url)
+                        } label: {
+                            HStack {
+                                Text(suggestion.name).foregroundStyle(.primary)
+                                Spacer()
+                                if busy == suggestion.url { ProgressView() } else { Image(icon: "arrow.down.circle") }
+                            }
+                        }
+                        .disabled(busy != nil)
+                    }
+                } header: {
+                    Text("settings.suggested_icon_packs")
+                }
             }
 
             Section {
@@ -279,16 +290,27 @@ struct IconPacksSettingsView: View {
                     .textInputAutocapitalization(.never)
                     #endif
                     .autocorrectionDisabled()
-                Button("settings.add_icon_pack") {
-                    let url = URL(string: link.trimmingCharacters(in: .whitespaces))
-                    packs.append(Pack(name: url?.host ?? link, source: link))
-                    link = ""
+                Button {
+                    add(link)
+                } label: {
+                    HStack {
+                        Text("settings.add_icon_pack")
+                        if busy == link, !link.isEmpty { Spacer(); ProgressView() }
+                    }
                 }
-                .disabled(URL(string: link)?.host == nil)
+                .disabled(URL(string: link)?.host == nil || busy != nil)
             } header: {
                 Text("settings.add_icon_pack")
             } footer: {
-                Text("settings.icon_packs_coming_soon")
+                Text("settings.icon_pack_link_note")
+            }
+
+            if !store.installed.isEmpty {
+                Section {
+                    Button("settings.check_for_updates") {
+                        Task { await store.checkForUpdates() }
+                    }
+                }
             }
         }
         .softScrollEdges()
@@ -296,25 +318,78 @@ struct IconPacksSettingsView: View {
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
+        .task { await store.checkForUpdates() }
+        .alert("settings.icon_pack_failed", isPresented: Binding(get: { error != nil }, set: { if !$0 { error = nil } })) {
+            Button("common.ok", role: .cancel) {}
+        } message: {
+            Text(error ?? "")
+        }
     }
 
-    private func row(_ pack: Pack) -> some View {
-        let isSelected = pack.id == selected
-        return Button {
-            selected = pack.id
-        } label: {
+    private func add(_ link: String) {
+        busy = link
+        Task {
+            do {
+                try await store.install(from: link)
+                if busy == self.link { self.link = "" }
+            } catch {
+                self.error = error.localizedDescription
+            }
+            busy = nil
+        }
+    }
+
+    @ViewBuilder
+    private func packRow(_ item: InstalledIconPack) -> some View {
+        let pack = item.pack
+        let details = [pack.author, pack.license].compactMap { $0 }.joined(separator: " · ")
+        VStack(alignment: .leading, spacing: 6) {
+            row(title: pack.name, subtitle: details.isEmpty ? nil : details,
+                selected: store.selectedURL == pack.url, enabled: pack.fitsThisBuild) { store.select(item) }
+            if !pack.fitsThisBuild {
+                Text("settings.icon_pack_outdated")
+                    .font(.caption)
+                    .foregroundStyle(.orange)
+            }
+            if let update = store.updates[pack.url] {
+                Button {
+                    busy = pack.url
+                    Task {
+                        do { try await store.update(item) } catch { self.error = error.localizedDescription }
+                        busy = nil
+                    }
+                } label: {
+                    HStack(spacing: 6) {
+                        if busy == pack.url { ProgressView() } else { Image(icon: "arrow.down.circle") }
+                        Text("settings.update_to_version \(update.packVersion)")
+                    }
+                    .font(.caption.weight(.semibold))
+                }
+                .buttonStyle(.borderless)
+                .disabled(busy != nil)
+            }
+        }
+        .contextMenu {
+            Button("common.remove", role: .destructive) { store.remove(item) }
+        }
+    }
+
+    private func row(title: String, subtitle: String?, selected: Bool, enabled: Bool = true,
+                     action: @escaping () -> Void) -> some View {
+        Button(action: action) {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(pack.name)
-                        .foregroundStyle(.primary)
-                    Text(pack.source ?? String(localized: "settings.built_in"))
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
+                    Text(title).foregroundStyle(enabled ? .primary : .secondary)
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
                 }
                 Spacer()
-                if isSelected {
-                    Image(systemName: "checkmark")
+                if selected {
+                    Image(icon: "checkmark")
                         .font(.body.weight(.semibold))
                         .foregroundStyle(.tint)
                 }
@@ -322,17 +397,8 @@ struct IconPacksSettingsView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
-        // SF Symbols is always there; only added packs can go.
-        .deleteDisabled(pack.source == nil)
-        .contextMenu {
-            if pack.source != nil {
-                Button("common.remove", role: .destructive) {
-                    packs.removeAll { $0.id == pack.id }
-                    if selected == pack.id { selected = Self.builtIn.id }
-                }
-            }
-        }
+        .disabled(!enabled)
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
 
@@ -445,7 +511,7 @@ struct TabBarCustomizationView: View {
     private func row(_ tab: AppTab) -> some View {
         let isHidden = hidden.contains(tab)
         return HStack(spacing: 14) {
-            Image(systemName: tab.icon)
+            IconView(tab.icon)
                 .font(.system(size: 17))
                 .frame(width: 28)
             Text(tab.title)
@@ -454,7 +520,7 @@ struct TabBarCustomizationView: View {
                 Button {
                     toggle(tab)
                 } label: {
-                    Image(systemName: isHidden ? "eye.slash" : "eye")
+                    IconView(isHidden ? "eye.slash" : "eye")
                         .font(.body)
                         .foregroundStyle(isHidden ? AnyShapeStyle(.secondary) : AnyShapeStyle(.tint))
                         .frame(width: 32, height: 32)
@@ -463,7 +529,7 @@ struct TabBarCustomizationView: View {
                 .buttonStyle(.borderless)
                 .accessibilityLabel(isHidden ? String(localized: "settings.show \(tab.title)") : String(localized: "settings.hide \(tab.title)"))
             } else {
-                Image(systemName: "lock.fill")
+                IconView("lock.fill")
                     .font(.footnote)
                     .foregroundStyle(.tertiary)
                     .frame(width: 32, height: 32)
@@ -515,7 +581,7 @@ struct LanguageSettingsView: View {
                         HStack {
                             Text("settings.request_a_language")
                             Spacer()
-                            Image(systemName: "arrow.up.right")
+                            IconView("arrow.up.right")
                                 .font(.footnote.weight(.semibold))
                                 .foregroundStyle(.secondary)
                         }
@@ -567,7 +633,7 @@ struct LanguageSettingsView: View {
                 }
                 Spacer()
                 if isSelected {
-                    Image(systemName: "checkmark")
+                    IconView("checkmark")
                         .font(.body.weight(.semibold))
                         .foregroundStyle(.tint)
                 }

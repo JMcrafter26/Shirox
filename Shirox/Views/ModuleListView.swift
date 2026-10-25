@@ -114,24 +114,24 @@ struct ModuleListView: View {
                                     Button {
                                         editingScriptOf = module
                                     } label: {
-                                        Label("modules.edit_script", systemImage: "chevron.left.forwardslash.chevron.right")
+                                        Label("modules.edit_script", icon: "chevron.left.forwardslash.chevron.right")
                                     }
                                     if #available(iOS 16.0, macOS 13.0, *), let files = ModuleShareFiles.urls(for: module) {
                                         ShareLink(items: files) {
-                                            Label("modules.share_as_files", systemImage: "doc.on.doc")
+                                            Label("modules.share_as_files", icon: "doc.on.doc")
                                         }
                                     }
                                     #endif
                                     Button {
                                         Task { await moduleManager.check(module) }
                                     } label: {
-                                        Label("modules.check_again", systemImage: "checkmark.shield")
+                                        Label("modules.check_again", icon: "checkmark.shield")
                                     }
                                     .disabled(moduleManager.checking.contains(module.id))
                                     Button(role: .destructive) {
                                         removeModule(module)
                                     } label: {
-                                        Label("common.remove", systemImage: "trash")
+                                        Label("common.remove", icon: "trash")
                                     }
                                 }
                         }
@@ -177,7 +177,7 @@ struct ModuleListView: View {
                         if isRefreshing {
                             ProgressView().scaleEffect(0.8)
                         } else {
-                            Image(systemName: "arrow.clockwise")
+                            IconView("arrow.clockwise")
                                 .font(.system(size: 14, weight: .medium))
                         }
                     }
@@ -196,7 +196,7 @@ struct ModuleListView: View {
                         if isCheckingAll {
                             ProgressView().scaleEffect(0.8)
                         } else {
-                            Image(systemName: "checkmark.shield")
+                            IconView("checkmark.shield")
                                 .font(.system(size: 14, weight: .medium))
                         }
                     }
@@ -289,16 +289,16 @@ struct ModuleListView: View {
         } else {
             switch moduleManager.checkResults[module.id] {
             case .passed:
-                Label("modules.works", systemImage: "checkmark.seal.fill")
+                Label("modules.works", icon: "checkmark.seal.fill")
                     .font(.caption)
                     .foregroundStyle(.green)
             case .failed(let step, let reason):
-                Label("modules.failed \(step.label) \(reason)", systemImage: "exclamationmark.triangle.fill")
+                Label("modules.failed \(step.label) \(reason)", icon: "exclamationmark.triangle.fill")
                     .font(.caption)
                     .foregroundStyle(.orange)
                     .lineLimit(2)
             case .needsVerification:
-                Label("modules.asks_for_a_cloudflare_check", systemImage: "shield.lefthalf.filled")
+                Label("modules.asks_for_a_cloudflare_check", icon: "shield.lefthalf.filled")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             case .skipped, .none:
@@ -312,7 +312,7 @@ struct ModuleListView: View {
     private var addModuleSection: some View {
         Section {
             HStack(spacing: 10) {
-                Image(systemName: "link")
+                IconView("link")
                     .foregroundStyle(.secondary)
                     .frame(width: 22)
                 TextField("modules.module_json_url", text: $moduleURL)
@@ -336,7 +336,7 @@ struct ModuleListView: View {
                     Button {
                         if let text = Clipboard.string?.trimmingCharacters(in: .whitespacesAndNewlines) { moduleURL = text }
                     } label: {
-                        Image(systemName: "doc.on.clipboard")
+                        IconView("doc.on.clipboard")
                     }
                     .buttonStyle(.borderless)
                     .accessibilityLabel("modules.paste_link")
@@ -349,7 +349,7 @@ struct ModuleListView: View {
                 Label {
                     Text("modules.import_from_files").foregroundStyle(Color.primary)
                 } icon: {
-                    Image(systemName: "doc.badge.plus").foregroundStyle(.secondary)
+                    IconView("doc.badge.plus").foregroundStyle(.secondary)
                 }
             }
             #endif
@@ -368,7 +368,7 @@ struct ModuleListView: View {
     private var localFilesPromoCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
-                Image(systemName: "folder.badge.plus")
+                IconView("folder.badge.plus")
                     .font(.title2)
                     .foregroundStyle(Color.primary)
                     .frame(width: 44, height: 44)
@@ -394,7 +394,7 @@ struct ModuleListView: View {
                 Button {
                     copyLocalFilesURL()
                 } label: {
-                    Image(systemName: "doc.on.doc")
+                    IconView("doc.on.doc")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
@@ -409,7 +409,7 @@ struct ModuleListView: View {
                     if isAddingLocalModule {
                         ProgressView().scaleEffect(0.8)
                     } else {
-                        Label("modules.add_module", systemImage: "plus.circle.fill")
+                        Label("modules.add_module", icon: "plus.circle.fill")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(Color.primary)
                     }
@@ -435,7 +435,7 @@ struct ModuleListView: View {
     private var jellyfinPromoCard: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 12) {
-                Image(systemName: "server.rack")
+                IconView("server.rack")
                     .font(.title2)
                     .foregroundStyle(Color.primary)
                     .frame(width: 44, height: 44)
@@ -461,7 +461,7 @@ struct ModuleListView: View {
                 Button {
                     copyJellyfinURL()
                 } label: {
-                    Image(systemName: "doc.on.doc")
+                    IconView("doc.on.doc")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
@@ -476,7 +476,7 @@ struct ModuleListView: View {
                     if isAddingJellyfinModule {
                         ProgressView().scaleEffect(0.8)
                     } else {
-                        Label("modules.add_module", systemImage: "plus.circle.fill")
+                        Label("modules.add_module", icon: "plus.circle.fill")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(Color.primary)
                     }
@@ -497,7 +497,7 @@ struct ModuleListView: View {
     // MARK: - Error Banner
     private func errorBanner(_ error: String) -> some View {
         HStack(spacing: 8) {
-            Image(systemName: "xmark.circle.fill")
+            IconView("xmark.circle.fill")
                 .foregroundStyle(Color.red)   // Error remains red for clarity
             Text(error)
                 .font(.subheadline)
@@ -545,11 +545,11 @@ struct ModuleListView: View {
                     case .success(let image):
                         image.resizable().aspectRatio(contentMode: .fit)
                     case .failure, .empty:
-                        Image(systemName: "list.bullet")
+                        IconView("list.bullet")
                             .font(.title2)
                             .foregroundStyle(Color.primary)
                     @unknown default:
-                        Image(systemName: "list.bullet")
+                        IconView("list.bullet")
                             .font(.title2)
                             .foregroundStyle(Color.primary)
                     }
@@ -577,7 +577,7 @@ struct ModuleListView: View {
                 }
                 Spacer()
                 if isSelected && isChosen && !isDown {
-                    Image(systemName: "checkmark.circle.fill")
+                    IconView("checkmark.circle.fill")
                         .foregroundStyle(Color.primary)
                         .font(.title3)
                 }
@@ -642,7 +642,7 @@ struct ModuleListView: View {
                 }
                 Spacer()
                 if isActive {
-                    Image(systemName: "checkmark.circle.fill")
+                    IconView("checkmark.circle.fill")
                         .foregroundStyle(Color.primary)
                         .font(.title3)
                 }
@@ -661,7 +661,7 @@ struct ModuleListView: View {
     // MARK: - Empty State
     private var emptyModulesView: some View {
         VStack(spacing: 12) {
-            Image(systemName: "puzzlepiece.extension")
+            IconView("puzzlepiece.extension")
                 .font(.system(size: 32))
                 .foregroundStyle(.tertiary)
             Text("modules.no_modules_installed")
@@ -689,7 +689,7 @@ struct ModuleListView: View {
                 SeanimeProviderSettings.setDub(!dub, for: module.id)
                 if moduleManager.activeModule?.id == module.id { moduleManager.selectModule(module) }
             } label: {
-                if dub { Label("modules.dub", systemImage: "checkmark") } else { Text("modules.dub") }
+                if dub { Label("modules.dub", icon: "checkmark") } else { Text("modules.dub") }
             }
         }
     }
@@ -712,11 +712,11 @@ struct ModuleListView: View {
                 ToastManager.shared.show(message: String(localized: "modules.module_link_copied"), type: .info)
                 #endif
             } label: {
-                Label("modules.copy_link", systemImage: "link")
+                Label("modules.copy_link", icon: "link")
             }
             if #available(iOS 16.0, macOS 13.0, *), let url = URL(string: link) {
                 ShareLink(item: url) {
-                    Label("modules.share_module", systemImage: "square.and.arrow.up")
+                    Label("modules.share_module", icon: "square.and.arrow.up")
                 }
             }
         }

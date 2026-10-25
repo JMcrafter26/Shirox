@@ -290,7 +290,7 @@ struct MangaDetailView: View {
     /// shared `AniListMatchingSearchView` (posters + unlink), pointed at manga.
     @ViewBuilder private var matchToolbarButton: some View {
         Button { showMatchSheet = true } label: {
-            Image(systemName: vm.match != nil ? "link.circle.fill" : "link.badge.plus")
+            IconView(vm.match != nil ? "link.circle.fill" : "link.badge.plus")
                 .font(.system(size: 17, weight: .medium))
                 .foregroundStyle(.primary)
         }
@@ -416,7 +416,7 @@ struct MangaDetailView: View {
                     if let enrich = vm.enrichment {
                         HStack(spacing: 6) {
                             if let score = enrich.averageScore {
-                                Label("\(score)%", systemImage: "star.fill")
+                                Label("\(score)%", icon: "star.fill")
                                     .font(.caption2.weight(.semibold))
                                     .foregroundStyle(.primary)
                                     .padding(.horizontal, 8).padding(.vertical, 3)
@@ -521,7 +521,7 @@ struct MangaDetailView: View {
             openContinue(readableDetail(detail))
         } label: {
             HStack(spacing: 10) {
-                Image(systemName: "book.fill")
+                IconView("book.fill")
                     .font(.system(size: 13, weight: .bold))
                 Text(hasProgress ? String(localized: "shared.continue_reading") : String(localized: "detail.start_reading"))
                     .font(.system(size: 15, weight: .bold))
@@ -579,7 +579,7 @@ struct MangaDetailView: View {
                             action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 8) {
-                Image(systemName: systemImage).font(.system(size: 13, weight: .bold))
+                IconView(systemImage).font(.system(size: 13, weight: .bold))
                 Text(title).font(.system(size: 14, weight: .semibold)).lineLimit(1)
             }
             .frame(maxWidth: .infinity).frame(height: 44)
@@ -634,7 +634,7 @@ struct MangaDetailView: View {
                     // reported there was no way at all.
                     if offlineChapters != nil, !downloadedItemsForThisManga.isEmpty {
                         Button(role: .destructive) { confirmDeleteAllDownloads = true } label: {
-                            Image(systemName: "trash")
+                            IconView("trash")
                                 .font(.system(size: 14, weight: .bold))
                                 .foregroundStyle(.red)
                                 .frame(width: 36, height: 36)
@@ -655,7 +655,7 @@ struct MangaDetailView: View {
                             if !isSelectionMode { selectedChapterHrefs.removeAll() }
                         }
                     } label: {
-                        Image(systemName: isSelectionMode ? "checkmark.circle.fill" : "checkmark.circle")
+                        IconView(isSelectionMode ? "checkmark.circle.fill" : "checkmark.circle")
                             .font(.system(size: 14, weight: .bold))
                             .foregroundStyle(isSelectionMode ? platformBackground : .primary)
                             .frame(width: 36, height: 36)
@@ -670,7 +670,7 @@ struct MangaDetailView: View {
                             newestFirst.toggle()
                         }
                     } label: {
-                        Image(systemName: newestFirst ? "arrow.down" : "arrow.up")
+                        IconView(newestFirst ? "arrow.down" : "arrow.up")
                             .font(.system(size: 14, weight: .bold))
                             .foregroundStyle(.primary)
                             .frame(width: 36, height: 36)
@@ -713,7 +713,7 @@ struct MangaDetailView: View {
                             }
                             selectedChapterHrefs.removeAll()
                         } label: {
-                            Label("detail.delete \(toDelete)", systemImage: "trash.fill").font(.subheadline.weight(.bold))
+                            Label("detail.delete \(toDelete)", icon: "trash.fill").font(.subheadline.weight(.bold))
                         }
                         .buttonStyle(.borderedProminent).tint(.red).controlSize(.small).clipShape(Capsule())
                     }
@@ -726,7 +726,7 @@ struct MangaDetailView: View {
                             selectedChapterHrefs.removeAll()
                             isSelectionMode = false
                         } label: {
-                            Label("detail.download \(toDownload)", systemImage: "arrow.down.circle.fill")
+                            Label("detail.download \(toDownload)", icon: "arrow.down.circle.fill")
                                 .font(.subheadline.weight(.bold)).foregroundStyle(platformBackground)
                         }
                         .buttonStyle(.borderedProminent).appTint().controlSize(.small).clipShape(Capsule())
@@ -928,7 +928,7 @@ private struct MangaChapterRowView: View {
                             .fill(isRead ? Color.green : Color.primary)
                             .frame(width: 40, height: 40)
                         if isRead {
-                            Image(systemName: "checkmark")
+                            IconView("checkmark")
                                 .font(.caption2.weight(.bold))
                                 .foregroundStyle(.white)   // green is dark enough in both modes
                         } else {
@@ -960,7 +960,7 @@ private struct MangaChapterRowView: View {
                     }
 
                     if isSelectionMode {
-                        Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                        IconView(isSelected ? "checkmark.circle.fill" : "circle")
                             .font(.title3)
                             .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
                     } else if let downloadState {
@@ -968,10 +968,10 @@ private struct MangaChapterRowView: View {
                         case .completed:
                             Menu {
                                 Button(role: .destructive) { onDeleteDownload?() } label: {
-                                    Label("detail.delete_download", systemImage: "trash")
+                                    Label("detail.delete_download", icon: "trash")
                                 }
                             } label: {
-                                Image(systemName: "checkmark.circle.fill")
+                                IconView("checkmark.circle.fill")
                                     .font(.caption).foregroundStyle(.green)
                                     .padding(8).background(Color.primary.opacity(0.1), in: Circle())
                             }
@@ -979,7 +979,7 @@ private struct MangaChapterRowView: View {
                             ProgressView().controlSize(.small)
                         case .failed:
                             Button { onDownload?() } label: {
-                                Image(systemName: "exclamationmark.arrow.circlepath")
+                                IconView("exclamationmark.arrow.circlepath")
                                     .font(.caption).foregroundStyle(.orange)
                                     .padding(8).background(Color.primary.opacity(0.1), in: Circle())
                             }
@@ -987,14 +987,14 @@ private struct MangaChapterRowView: View {
                         }
                     } else if let onDownload {
                         Button(action: onDownload) {
-                            Image(systemName: "arrow.down.circle")
+                            IconView("arrow.down.circle")
                                 .font(.caption.weight(.semibold)).foregroundStyle(.primary)
                                 .padding(8).background(Color.primary.opacity(0.1), in: Circle())
                         }
                         .buttonStyle(.plain)
                     }
 
-                    Image(systemName: "book.fill")
+                    IconView("book.fill")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.primary)
                         .padding(8)
@@ -1026,11 +1026,11 @@ private struct MangaChapterRowView: View {
         .contextMenu {
             if isRead {
                 Button { onMarkUnread?() } label: {
-                    Label("detail.mark_as_unread", systemImage: "xmark.circle")
+                    Label("detail.mark_as_unread", icon: "xmark.circle")
                 }
             } else {
                 Button { onMarkRead?() } label: {
-                    Label("detail.mark_as_read", systemImage: "checkmark.circle")
+                    Label("detail.mark_as_read", icon: "checkmark.circle")
                 }
             }
             // Mirrors the episode row's menu. A chapter could only be downloaded one at a
@@ -1039,14 +1039,14 @@ private struct MangaChapterRowView: View {
             if let onDownload {
                 Divider()
                 Button { onDownload() } label: {
-                    Label("detail.download_chapter", systemImage: "arrow.down.circle")
+                    Label("detail.download_chapter", icon: "arrow.down.circle")
                 }
                 .disabled(downloadState == .completed || downloadState == .downloading || downloadState == .pending)
             }
             if let onDeleteDownload, downloadState == .completed {
                 Divider()
                 Button(role: .destructive) { onDeleteDownload() } label: {
-                    Label("detail.delete_download", systemImage: "trash")
+                    Label("detail.delete_download", icon: "trash")
                 }
             }
         }

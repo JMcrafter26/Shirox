@@ -48,7 +48,7 @@ struct BookmarkButton: View {
         switch style {
         case .floating:
             Button(action: action) {
-                Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
+                IconView(isSaved ? "bookmark.fill" : "bookmark")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(isSaved ? Color.accentColor : .primary)
                     .frame(width: 52, height: 52)
@@ -59,7 +59,7 @@ struct BookmarkButton: View {
             .buttonStyle(.plain)
         case .round:
             Button(action: action) {
-                Image(systemName: isSaved ? "bookmark.fill" : "bookmark")
+                IconView(isSaved ? "bookmark.fill" : "bookmark")
                     .font(.system(size: 17, weight: .semibold))
                     .foregroundStyle(.primary)
                     .frame(width: 46, height: 46)
@@ -69,7 +69,7 @@ struct BookmarkButton: View {
             .buttonStyle(.plain)
         case .toolbar:
             Button(action: action) {
-                Label(isSaved ? String(localized: "library.saved") : String(localized: "common.save"), systemImage: isSaved ? "bookmark.fill" : "bookmark")
+                Label(isSaved ? String(localized: "library.saved") : String(localized: "common.save"), icon: isSaved ? "bookmark.fill" : "bookmark")
             }
         }
     }
@@ -111,7 +111,7 @@ struct FloatingBatchButton: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: icon)
+            IconView(icon)
                 .font(.system(size: 18, weight: .bold))
                 .foregroundStyle(count > 0 ? tint : .secondary)
                 .frame(width: 52, height: 52)
@@ -174,7 +174,7 @@ private struct LocalCollectionPickerSheet: View {
                                 Text(collection.name).foregroundStyle(.primary)
                                 Spacer()
                                 if collection.mediaUniqueIds.contains(media.uniqueId) {
-                                    Image(systemName: "checkmark").foregroundStyle(.tint)
+                                    IconView("checkmark").foregroundStyle(.tint)
                                 }
                             }
                         }
@@ -182,7 +182,7 @@ private struct LocalCollectionPickerSheet: View {
                     Button {
                         showNewCollection = true
                     } label: {
-                        Label("library.new_collection", systemImage: "plus")
+                        Label("library.new_collection", icon: "plus")
                     }
                 }
                 Section {
@@ -190,7 +190,7 @@ private struct LocalCollectionPickerSheet: View {
                         local.remove(uniqueId: media.uniqueId)
                         dismiss()
                     } label: {
-                        Label("library.remove_from_library", systemImage: "bookmark.slash")
+                        Label("library.remove_from_library", icon: "bookmark.slash")
                     }
                 }
             }

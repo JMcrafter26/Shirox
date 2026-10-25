@@ -77,7 +77,7 @@ struct ModuleImportView: View {
                         Text(scriptName == String(localized: "modules.written_in_the_editor") ? String(localized: "modules.edit_in_editor") : String(localized: "modules.write_or_paste_in_editor"))
                             .foregroundStyle(Color.primary)
                     } icon: {
-                        Image(systemName: "square.and.pencil").foregroundStyle(.secondary)
+                        IconView("square.and.pencil").foregroundStyle(.secondary)
                     }
                 }
             } header: {
@@ -107,12 +107,12 @@ struct ModuleImportView: View {
                     }
                 }
                 Menu {
-                    Button { picking = .icon } label: { Label("modules.choose_picture", systemImage: "photo") }
+                    Button { picking = .icon } label: { Label("modules.choose_picture", icon: "photo") }
                     if iconData != nil || !iconURL.isEmpty {
-                        Button(role: .destructive) { iconData = nil; iconURL = "" } label: { Label("modules.remove_icon", systemImage: "trash") }
+                        Button(role: .destructive) { iconData = nil; iconURL = "" } label: { Label("modules.remove_icon", icon: "trash") }
                     }
                 } label: {
-                    Label(iconData == nil && iconURL.isEmpty ? String(localized: "modules.add_icon") : String(localized: "modules.change_icon"), systemImage: "photo.badge.plus")
+                    Label(iconData == nil && iconURL.isEmpty ? String(localized: "modules.add_icon") : String(localized: "modules.change_icon"), icon: "photo.badge.plus")
                 }
                 urlField(String(localized: "modules.icon_url"), text: $iconURL)
             } header: {
@@ -173,7 +173,7 @@ struct ModuleImportView: View {
             Button("modules.keep_editing", role: .cancel) {}
         }
         .alert("modules.couldnt_do_that", isPresented: Binding(get: { problem != nil }, set: { if !$0 { problem = nil } })) {
-            Button("OK", role: .cancel) {}
+            Button("common.ok", role: .cancel) {}
         } message: {
             Text(problem ?? "")
         }
@@ -185,7 +185,7 @@ struct ModuleImportView: View {
                          action: String, pick: @escaping () -> Void) -> some View {
         Button(action: pick) {
             HStack(spacing: 12) {
-                Image(systemName: file == nil ? systemImage : "checkmark.circle.fill")
+                IconView(file == nil ? systemImage : "checkmark.circle.fill")
                     .font(.title3)
                     .foregroundStyle(file == nil ? Color.secondary : Color.green)
                     .frame(width: 28)
@@ -214,7 +214,7 @@ struct ModuleImportView: View {
             } else if !iconURL.isEmpty {
                 CachedAsyncImage(urlString: iconURL)
             } else {
-                Image(systemName: "puzzlepiece.extension.fill")
+                IconView("puzzlepiece.extension.fill")
                     .font(.title2)
                     .foregroundStyle(.secondary)
             }
@@ -354,7 +354,7 @@ private struct ScriptDraftView: View {
         VStack(spacing: 0) {
             CodeTextEditor(text: $text)
             if let syntaxError {
-                Label(syntaxError, systemImage: "exclamationmark.triangle.fill")
+                Label(syntaxError, icon: "exclamationmark.triangle.fill")
                     .font(.caption)
                     .foregroundStyle(.orange)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -372,7 +372,7 @@ private struct ScriptDraftView: View {
                 Button {
                     if text.isEmpty { paste() } else { confirmPaste = true }
                 } label: {
-                    Label("modules.paste", systemImage: "doc.on.clipboard")
+                    Label("modules.paste", icon: "doc.on.clipboard")
                 }
             }
             ToolbarItem(placement: .confirmationAction) {

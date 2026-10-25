@@ -52,7 +52,7 @@ struct ProfileSocialView: View {
                     .listRowBackground(Color.clear)
             } else if users.isEmpty {
                 ContentUnavailableView {
-                    Label("profile.no_users", systemImage: "person.2")
+                    Label("profile.no_users", icon: "person.2")
                 } description: {
                     Text(isMAL ? String(localized: "profile.no_friends_yet") : (selectedSocial == .followers ? String(localized: "profile.no_followers_yet") : String(localized: "profile.not_following_anyone_yet")))
                 }
@@ -75,7 +75,7 @@ struct ProfileSocialView: View {
                                 .font(.subheadline.weight(.semibold))
                             Spacer()
                             if !isMAL {
-                                Image(systemName: "chevron.right")
+                                IconView("chevron.right")
                                     .font(.caption2)
                                     .foregroundStyle(.tertiary)
                             }

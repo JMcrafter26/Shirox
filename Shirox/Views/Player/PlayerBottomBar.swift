@@ -140,7 +140,7 @@ struct PlayerBottomBar: View {
     private var skip85Button: some View {
         Button(action: onSkip85) {
             HStack(spacing: isPad ? 8 : 5) {
-                Image(systemName: "goforward")
+                IconView("goforward")
                     .font(.system(size: isPad ? 18 : 15, weight: .medium))
                 Text("\(skipLongAmount)s")
                     .font(isPad ? .body.weight(.semibold) : .subheadline.weight(.semibold))
@@ -230,7 +230,7 @@ struct PlayerBottomBar: View {
             }
             if shown.contains(.fill) {
                 Button(action: onFillTap) {
-                    Image(systemName: isFilled ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
+                    IconView(isFilled ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
                         .font(.system(size: iconSize - 1, weight: .medium))
                         .foregroundStyle(.white)
                         .frame(width: buttonWidth, height: height)
@@ -250,7 +250,7 @@ struct PlayerBottomBar: View {
             }
             if shown.contains(.nextEpisode), let onNextEpisodeTap {
                 Button(action: onNextEpisodeTap) {
-                    Image(systemName: "forward.end.fill")
+                    IconView("forward.end.fill")
                         .font(.system(size: iconSize, weight: .medium))
                         .foregroundStyle(.white)
                         .frame(width: buttonWidth, height: height)

@@ -36,7 +36,7 @@ struct SimklSearchSheet: View {
             ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
         case .failed:
             ContentUnavailableView {
-                Label("library.couldnt_search", systemImage: "wifi.slash")
+                Label("library.couldnt_search", icon: "wifi.slash")
             } description: {
                 Text(errorMessage ?? "")
             } actions: {
@@ -90,7 +90,7 @@ struct SimklSearchSheet: View {
                         Button(status.displayName) { Task { await add(item, as: status) } }
                     }
                 } label: {
-                    Image(systemName: "plus.circle").font(.title2)
+                    IconView("plus.circle").font(.title2)
                 }
                 .buttonStyle(.borderless)
             }

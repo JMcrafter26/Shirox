@@ -124,7 +124,7 @@ private struct RefreshLimitNoticeView: View {
         VStack {
             if let message = notice.message {
                 HStack(spacing: 8) {
-                    Image(systemName: "exclamationmark.circle.fill")
+                    IconView("exclamationmark.circle.fill")
                         .foregroundStyle(.red)
                     Text(message)
                         .font(.footnote.weight(.semibold))

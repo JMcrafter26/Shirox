@@ -67,12 +67,12 @@ struct JellyfinSeriesView: View {
                 Text(ep.indexNumber.map { "\($0). \(ep.name)" } ?? ep.name)
                     .font(.subheadline).lineLimit(2)
                 if ep.userData?.played == true {
-                    Label("detail.watched", systemImage: "checkmark.circle.fill")
+                    Label("detail.watched", icon: "checkmark.circle.fill")
                         .font(.caption2).foregroundStyle(.secondary)
                 }
             }
             Spacer()
-            Image(systemName: "play.circle").foregroundStyle(.secondary)
+            IconView("play.circle").foregroundStyle(.secondary)
         }
         .padding(.vertical, 4)
         .contentShape(Rectangle())

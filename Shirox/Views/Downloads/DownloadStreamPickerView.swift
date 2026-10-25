@@ -55,7 +55,7 @@ private struct DownloadStreamRow: View {
     var body: some View {
         Button(action: onSelect) {
             HStack(spacing: 12) {
-                Image(systemName: "play.circle.fill")
+                IconView("play.circle.fill")
                     .font(.system(size: 32))
                     .foregroundStyle(.primary)
 

@@ -88,7 +88,7 @@ struct JellyfinContinueCard: View {
                 )
                 .overlay(alignment: .bottomLeading) {
                     HStack(spacing: 4) {
-                        Image(systemName: isInProgress ? "play.fill" : "arrow.right.circle.fill")
+                        IconView(isInProgress ? "play.fill" : "arrow.right.circle.fill")
                             .font(.system(size: isInProgress ? 8 : 10, weight: .bold))
                         Text(episodeLabel)
                             .font(.caption2.weight(isInProgress ? .medium : .bold))

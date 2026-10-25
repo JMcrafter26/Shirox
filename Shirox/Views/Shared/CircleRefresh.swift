@@ -60,7 +60,7 @@ struct RefreshCircle: View {
                     .progressViewStyle(CircularProgressViewStyle(tint: tint))
                     .scaleEffect(0.8)
             } else {
-                Image(systemName: "arrow.down")
+                IconView("arrow.down")
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(tint)
                     .rotationEffect(.degrees(RefreshCircleGeometry.arrowDegrees(progress: progress)))

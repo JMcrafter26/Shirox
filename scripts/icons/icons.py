@@ -6,21 +6,31 @@
                                                # the set of icons changes
     python3 -I scripts/icons/icons.py check    # fails if the code uses a symbol icons.json lacks
     python3 -I scripts/icons/icons.py packs    # checks every pack in iconpacks/ against icons.json
+    python3 -I scripts/icons/icons.py build PACK [VERSION]  # svg/*.svg -> icons/*.pdf, rewrites
+                                               # pack.json for the current icons version
 
 An icon is any string literal in the Swift sources that names a real SF Symbol, wherever it sits:
 `Image(systemName:)`, `Label(…, systemImage:)`, an enum's `icon` property, either side of a
 ternary. Names put together at runtime ("\\(name).fill") can't be found this way; write the
 full names out as literals instead.
 
-A pack is a folder in iconpacks/ with a pack.json and its SVG files:
+A pack is a folder with a pack.json and one vector PDF per icon (iOS and macOS draw PDFs
+natively; the SVGs in svg/ are the source, turned into PDFs by `build` with rsvg-convert):
 
     { "name": "Font Awesome", "author": "Fonticons, Inc.", "license": "CC BY 4.0",
-      "url": "https://fontawesome.com", "iconsVersion": 3, "packVersion": 1,
-      "icons": { "house.fill": "house.svg", … } }
+      "website": "https://fontawesome.com",
+      "url": "https://raw.githubusercontent.com/xibrox/Shirox/main/iconpacks/fontawesome/pack.json",
+      "iconsVersion": 3, "packVersion": 2,
+      "icons": { "house.fill": "icons/house.fill.pdf", … } }
 
+`url` is where the pack's own pack.json is published, and the icon paths are relative to it: the
+app downloads a pack from that address and checks it there for updates (a higher packVersion).
 `iconsVersion` is the icons.json version the pack was made for. The app loads a pack only when
-it matches the version it ships with, so a pack missing new icons is never half applied.
+it matches the version it ships with, so a pack missing new icons is never half applied; bump
+`packVersion` with every change to a pack so installed copies update.
 """
+import shutil
+import subprocess
 import glob
 import json
 import os
@@ -104,6 +114,7 @@ def cmd_update(_):
         removed = sorted(set(manifest.get("icons", [])) - set(icons))
         manifest = {"version": manifest.get("version", 0) + 1, "icons": icons}
         write_json(MANIFEST, manifest)
+        write_swift_manifest(manifest)
         print(f"icons.json is version {manifest['version']}: {len(icons)} icons "
               f"(+{len(added)} -{len(removed)})")
         for name in added:
@@ -112,6 +123,7 @@ def cmd_update(_):
             print(f"  - {name}")
         print("Packs made for the previous version won't load until they're updated.")
     else:
+        write_swift_manifest(manifest)
         print(f"icons.json is up to date: version {manifest['version']}, {len(icons)} icons")
 
 
@@ -153,7 +165,9 @@ def cmd_packs(_):
         icons = pack.get("icons", {})
         problems += [f"no icon for {n}" for n in manifest["icons"] if n not in icons]
         problems += [f"{n}: {f} is missing" for n, f in icons.items()
-                     if not os.path.exists(os.path.join(folder, "icons", f))]
+                     if not os.path.exists(os.path.join(folder, f))]
+        if not pack.get("url", "").startswith("https://"):
+            problems.append("no https url")
         print(f"{name}: {'ok' if not problems else str(len(problems)) + ' problems'}")
         for problem in problems[:20]:
             print(f"  {problem}")
@@ -161,7 +175,50 @@ def cmd_packs(_):
     sys.exit(1 if failed else 0)
 
 
-COMMANDS = {"update": cmd_update, "check": cmd_check, "packs": cmd_packs}
+def cmd_build(args):
+    """Turns a pack's svg/<icon>.svg files into icons/<icon>.pdf and points pack.json at them,
+    for the current icons version. A higher packVersion can be passed; otherwise it goes up
+    by one whenever the pack changes."""
+    if not args:
+        sys.exit("build: name the pack folder, e.g. fontawesome")
+    folder = os.path.join(PACKS, args[0])
+    manifest = load_json(MANIFEST, {"version": 0, "icons": []})
+    pack = load_json(os.path.join(folder, "pack.json"), None)
+    if pack is None:
+        sys.exit(f"{folder}/pack.json is missing")
+    missing = [n for n in manifest["icons"] if not os.path.exists(os.path.join(folder, "svg", n + ".svg"))]
+    if missing:
+        sys.exit("no SVG for: " + ", ".join(missing))
+    if not shutil.which("rsvg-convert"):
+        sys.exit("build needs rsvg-convert (brew install librsvg)")
+    out = os.path.join(folder, "icons")
+    shutil.rmtree(out, ignore_errors=True)
+    os.makedirs(out)
+    for name in manifest["icons"]:
+        subprocess.run(["rsvg-convert", "-f", "pdf", "-o", os.path.join(out, name + ".pdf"),
+                        os.path.join(folder, "svg", name + ".svg")], check=True)
+    icons = {n: f"icons/{n}.pdf" for n in manifest["icons"]}
+    changed = icons != pack.get("icons") or pack.get("iconsVersion") != manifest["version"]
+    version = int(args[1]) if len(args) > 1 else pack.get("packVersion", 0) + (1 if changed else 0)
+    pack.update({"iconsVersion": manifest["version"], "packVersion": version, "icons": icons})
+    write_json(os.path.join(folder, "pack.json"), pack)
+    print(f"{args[0]}: {len(icons)} icons, pack version {version}, icons version {manifest['version']}")
+
+
+def write_swift_manifest(manifest):
+    """The version the app checks packs against, compiled in."""
+    path = os.path.join(SOURCES, "Services", "IconManifest.swift")
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("// Generated by scripts/icons/icons.py update; don't edit.\n\n")
+        f.write("/// The icons.json version this build was made with: icon packs for any other\n")
+        f.write("/// version aren't loaded.\n")
+        f.write("enum IconManifest {\n")
+        f.write(f"    static let version = {manifest['version']}\n")
+        f.write(f"    static let count = {len(manifest['icons'])}\n")
+        f.write("}\n")
+
+
+COMMANDS = {"update": cmd_update, "check": cmd_check, "packs": cmd_packs, "build": cmd_build}
 
 if __name__ == "__main__":
     if len(sys.argv) < 2 or sys.argv[1] not in COMMANDS:

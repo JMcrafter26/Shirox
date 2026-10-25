@@ -26,7 +26,7 @@ struct ContentUnavailableView: View {
     }
 
     init(_ title: LocalizedStringKey, systemImage name: String, description: Text? = nil) {
-        let icon = Image(systemName: name)
+        let icon = IconView(name)
             .font(.system(size: 52, weight: .medium))
         let titleText = Text(title).font(.title2.weight(.semibold))
         labelContent = AnyView(VStack(spacing: 8) { icon; titleText }.foregroundColor(.secondary))

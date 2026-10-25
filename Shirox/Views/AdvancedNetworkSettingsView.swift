@@ -234,7 +234,7 @@ private struct ConnectionTestSection: View {
             .disabled(isTesting)
             ForEach(checks) { check in
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    Image(systemName: icon(for: check.outcome))
+                    IconView(icon(for: check.outcome))
                         .foregroundStyle(color(for: check.outcome))
                     VStack(alignment: .leading, spacing: 2) {
                         Text(check.title)

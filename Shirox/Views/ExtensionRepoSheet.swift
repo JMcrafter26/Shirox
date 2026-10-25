@@ -54,7 +54,7 @@ struct ExtensionRepoSheet: View {
             AsyncImage(url: entry.iconUrl.flatMap(URL.init(string:))) { image in
                 image.resizable().scaledToFit()
             } placeholder: {
-                Image(systemName: "puzzlepiece.extension").foregroundStyle(.secondary)
+                IconView("puzzlepiece.extension").foregroundStyle(.secondary)
             }
             .frame(width: 32, height: 32)
             .clipShape(RoundedRectangle(cornerRadius: 6))
@@ -73,7 +73,7 @@ struct ExtensionRepoSheet: View {
             if installing.contains(entry.key) {
                 ProgressView()
             } else if isInstalled(entry) {
-                Image(systemName: "checkmark")
+                IconView("checkmark")
                     .foregroundStyle(.secondary)
             } else {
                 Button("modules.install") {

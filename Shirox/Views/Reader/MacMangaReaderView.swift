@@ -179,7 +179,7 @@ struct MacMangaReaderView: View {
                 Color.clear.frame(width: 62, height: 1)
             }
             Button { MacReaderWindowManager.shared.close() } label: {
-                Image(systemName: "xmark")
+                IconView("xmark")
                     .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(.white)
                     .frame(width: 30, height: 30)
@@ -264,12 +264,12 @@ struct MacMangaReaderView: View {
         VStack(spacing: 8) {
             if isAutoScrolling {
                 HStack(spacing: 10) {
-                    Image(systemName: "tortoise.fill")
+                    IconView("tortoise.fill")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.white.opacity(0.7))
                     Slider(value: $autoScrollSpeed, in: 30...600)
                         .tint(.white)
-                    Image(systemName: "hare.fill")
+                    IconView("hare.fill")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.white.opacity(0.7))
                 }
@@ -327,7 +327,7 @@ struct MacMangaReaderView: View {
     private func chapterButton(previous: Bool) -> some View {
         let enabled = previous ? hasPrevious : hasNext
         return Button { go(to: chapterIndex + (previous ? -1 : 1)) } label: {
-            Image(systemName: previous ? "backward.end.fill" : "forward.end.fill")
+            IconView(previous ? "backward.end.fill" : "forward.end.fill")
                 .font(.system(size: 14, weight: .semibold))
                 .scaleEffect(x: controlsReversed ? -1 : 1, y: 1)
                 .foregroundStyle(.white.opacity(enabled ? 1 : 0.3))
@@ -342,7 +342,7 @@ struct MacMangaReaderView: View {
 
     private var autoScrollButton: some View {
         Button { toggleAutoScroll() } label: {
-            Image(systemName: isAutoScrolling ? "pause.fill" : "play.fill")
+            IconView(isAutoScrolling ? "pause.fill" : "play.fill")
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(isAutoScrolling ? .black : .white)
                 .frame(width: 36, height: 36)
@@ -567,7 +567,7 @@ struct MacMangaReaderView: View {
 
     private func failure(_ message: String) -> some View {
         VStack(spacing: 12) {
-            Image(systemName: "exclamationmark.triangle").font(.largeTitle).foregroundStyle(.secondary)
+            IconView("exclamationmark.triangle").font(.largeTitle).foregroundStyle(.secondary)
             Text(message).foregroundStyle(.secondary)
             Button("library.try_again") { Task { await load() } }
         }

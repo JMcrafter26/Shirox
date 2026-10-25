@@ -52,7 +52,7 @@ struct FullTitleMenuItems: View {
                     ToastManager.shared.show(message: String(localized: "shared.title_copied"), type: .success, duration: 1.6)
                     #endif
                 } label: {
-                    Label("shared.copy_title", systemImage: "doc.on.doc")
+                    Label("shared.copy_title", icon: "doc.on.doc")
                 }
                 #endif
             }
@@ -94,7 +94,7 @@ extension View {
                     ToastManager.shared.show(message: String(localized: "shared.title_copied"), type: .success, duration: 1.6)
                     #endif
                 } label: {
-                    Label("shared.copy_title", systemImage: "doc.on.doc")
+                    Label("shared.copy_title", icon: "doc.on.doc")
                 }
             }
         }
@@ -118,7 +118,7 @@ extension View {
                     ToastManager.shared.show(message: String(localized: "shared.error_copied"), type: .success, duration: 1.6)
                     #endif
                 } label: {
-                    Label("shared.copy_error", systemImage: "doc.on.doc")
+                    Label("shared.copy_error", icon: "doc.on.doc")
                 }
             }
         } else {
@@ -149,7 +149,7 @@ extension View {
                     #endif
                     ToastManager.shared.show(message: String(localized: "shared.description_copied"), type: .success, duration: 1.6)
                 } label: {
-                    Label("shared.copy_description", systemImage: "doc.on.doc")
+                    Label("shared.copy_description", icon: "doc.on.doc")
                 }
             }
         } else {

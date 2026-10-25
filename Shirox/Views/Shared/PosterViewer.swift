@@ -79,7 +79,7 @@ struct PosterViewer<Content: View>: View {
         VStack {
             HStack {
                 Button(action: dismiss) {
-                    Image(systemName: "xmark")
+                    IconView("xmark")
                         .font(.system(size: 15, weight: .bold))
                         .foregroundStyle(.primary)
                         .padding(10)

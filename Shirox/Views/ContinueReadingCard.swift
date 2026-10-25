@@ -30,12 +30,12 @@ struct ContinueReadingSection: View {
                 .frame(width: cinematic ? 150 : 120)
                 .contextMenu {
                     Button { openDetails(item) } label: {
-                        Label("shared.view_details", systemImage: "list.bullet.below.rectangle")
+                        Label("shared.view_details", icon: "list.bullet.below.rectangle")
                     }
                     Button(role: .destructive) {
                         MangaProgressManager.shared.remove(item)
                     } label: {
-                        Label("common.remove", systemImage: "xmark.circle")
+                        Label("common.remove", icon: "xmark.circle")
                     }
                 }
             }
@@ -133,7 +133,7 @@ struct ContinueReadingCardDisplay: View {
                 )
                 .overlay(alignment: .bottomLeading) {
                     HStack(spacing: 4) {
-                        Image(systemName: "book.fill")
+                        IconView("book.fill")
                             .font(.system(size: 8, weight: .bold))
                         Text(progressLabel)
                             .font(.caption2.weight(.medium))

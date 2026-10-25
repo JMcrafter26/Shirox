@@ -187,7 +187,7 @@ struct TabBarMenu: View {
                      action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack(spacing: 14) {
-                Image(systemName: systemImage)
+                IconView(systemImage)
                     .font(.system(size: 19))
                     .frame(width: 28)
                 Text(title)

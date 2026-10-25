@@ -514,7 +514,7 @@ private struct ModuleStreamRow: View {
                 if case .success(let img) = phase {
                     img.resizable().scaledToFill()
                 } else {
-                    Image(systemName: "puzzlepiece.extension")
+                    IconView("puzzlepiece.extension")
                         .foregroundStyle(.secondary)
                 }
             }
@@ -547,7 +547,7 @@ private struct ModuleStreamRow: View {
 
         case .loading, .loadingEpisodes, .loadingStreams:
             Button { rowVm.cancel() } label: {
-                Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                IconView("xmark.circle.fill").foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
 
@@ -669,7 +669,7 @@ private struct ModuleStreamRow: View {
 
     private var titleField: some View {
         HStack(spacing: 6) {
-            Image(systemName: "magnifyingglass")
+            IconView("magnifyingglass")
                 .font(.caption).foregroundStyle(.secondary)
             TextField("downloads.search_title", text: $rowVm.searchTitle)
                 // The rounded fill around it is its border.
@@ -808,7 +808,7 @@ private struct ModuleStreamSelectionView: View {
                             onSelect(stream)
                         } label: {
                             HStack(spacing: 12) {
-                                Image(systemName: "play.circle.fill")
+                                IconView("play.circle.fill")
                                     .font(.system(size: 32))
                                     .foregroundStyle(.primary)
                                 StreamRowText(stream: stream)

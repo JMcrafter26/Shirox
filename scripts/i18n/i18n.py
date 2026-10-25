@@ -81,6 +81,9 @@ IGNORED = {
     "Profile 1",                                              # compared against to spot the untouched first profile
 }
 
+# Words that are written in capitals but still translated.
+UPPERCASE_WORDS = {"OK"}
+
 # Names that stay as they are in every language.
 PROPER_NOUNS = {"AniList", "MyAnimeList", "MAL", "Simkl", "Jellyfin", "TMDB", "TVDB", "Shirox", "MPV",
                 "AirPlay", "Discord", "GitHub", "Seanime", "CloudStream", "Kitsu", "AniSkip", "iCloud"}
@@ -138,7 +141,7 @@ def is_ui_text(text, kind):
         return False
     if text.startswith(("%", "#", "$", "application/", "text/", "image/", "Bearer ", "Mozilla/")):
         return False
-    if re.fullmatch(r"[A-Z0-9_\-]+", text) and len(text) > 1:
+    if re.fullmatch(r"[A-Z0-9_\-]+", text) and len(text) > 1 and text not in UPPERCASE_WORDS:
         return False                                      # codes and headers: "GET", "HLS"
     return True
 

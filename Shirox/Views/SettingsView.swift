@@ -12,7 +12,7 @@ struct SettingsNavRow: View {
     var body: some View {
         HStack(spacing: 12) {
             ZStack {
-                Image(systemName: icon)
+                IconView(icon)
                     .font(.system(size: 13, weight: .semibold))
                     // Adapts to the appearance: white vanished against light mode's pale glass.
                     .foregroundStyle(.primary)
@@ -93,7 +93,7 @@ private struct ProfileSettingsRow: View {
                     .foregroundStyle(.secondary)
             }
             Spacer()
-            Image(systemName: "chevron.right")
+            IconView("chevron.right")
                 .font(.footnote.weight(.semibold))
                 .foregroundStyle(.tertiary)
         }
@@ -1176,7 +1176,7 @@ struct ModulesSettingsView: View {
                                     if case .success(let image) = phase {
                                         image.resizable().aspectRatio(contentMode: .fit)
                                     } else {
-                                        Image(systemName: "list.bullet")
+                                        IconView("list.bullet")
                                             .font(.title)
                                             .foregroundStyle(Color.red)
                                     }
@@ -1240,7 +1240,7 @@ struct LibrarySettingsView: View {
                 NavigationLink {
                     LibraryListOrderView()
                 } label: {
-                    Label("settings.list_order_and_custom_lists", systemImage: "list.bullet.indent")
+                    Label("settings.list_order_and_custom_lists", icon: "list.bullet.indent")
                 }
             }
 
@@ -1257,7 +1257,7 @@ struct LibrarySettingsView: View {
             Section("settings.matching") {
                 ForEach(orderedLanguages, id: \.self) { lang in
                     HStack {
-                        Image(systemName: "line.3.horizontal")
+                        IconView("line.3.horizontal")
                             .font(.caption2)
                             .foregroundStyle(.tertiary)
                         Text(lang.capitalized)
@@ -1289,7 +1289,7 @@ struct LibrarySettingsView: View {
                 Button(role: .destructive) {
                     showClearLocalLibrary = true
                 } label: {
-                    Label("settings.clear_local_library", systemImage: "trash")
+                    Label("settings.clear_local_library", icon: "trash")
                 }
             } header: {
                 Text("settings.local_library")
@@ -1330,7 +1330,7 @@ struct LibraryListOrderView: View {
         List {
             Section {
                 ForEach(statuses) { status in
-                    Label(status.displayName, systemImage: icon(for: status))
+                    Label(status.displayName, icon: icon(for: status))
                 }
                 .onMove { from, to in
                     var list = statuses
@@ -1344,7 +1344,7 @@ struct LibraryListOrderView: View {
             if !customListNames.isEmpty {
                 Section {
                     ForEach(customListNames, id: \.self) { name in
-                        Label(name, systemImage: "list.star")
+                        Label(name, icon: "list.star")
                     }
                 } header: {
                     Text("library.custom_lists")
@@ -1820,7 +1820,7 @@ struct LogEntryRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 6) {
-                Image(systemName: logTypeIcon(entry.type))
+                IconView(logTypeIcon(entry.type))
                     .font(.caption)
                     .foregroundStyle(logTypeColor(entry.type))
                 Text(entry.type.uppercased())
@@ -1903,7 +1903,7 @@ struct SettingsViewLogger: View {
                         NSPasteboard.general.setString(text, forType: .string)
                         #endif
                     } label: {
-                        Label("settings.copy_to_clipboard", systemImage: "doc.on.doc")
+                        Label("settings.copy_to_clipboard", icon: "doc.on.doc")
                     }
                     Button(role: .destructive) {
                         Task {
@@ -1911,14 +1911,14 @@ struct SettingsViewLogger: View {
                             await MainActor.run { entries = [] }
                         }
                     } label: {
-                        Label("settings.clear_logs", systemImage: "trash")
+                        Label("settings.clear_logs", icon: "trash")
                     }
                 } label: {
-                    Image(systemName: "ellipsis.circle")
+                    IconView("ellipsis.circle")
                 }
 
                 NavigationLink(destination: SettingsViewLoggerFilter(viewModel: filterViewModel)) {
-                    Image(systemName: "slider.horizontal.3")
+                    IconView("slider.horizontal.3")
                 }
             }
         }
@@ -1946,7 +1946,7 @@ struct SettingsViewLoggerFilter: View {
                         Label {
                             Text(filter.type)
                         } icon: {
-                            Image(systemName: logTypeIcon(filter.type))
+                            IconView(logTypeIcon(filter.type))
                                 .foregroundStyle(logTypeColor(filter.type))
                         }
                     }
@@ -2220,7 +2220,7 @@ private struct ProvidersSettingsSection: View {
         Section {
             ForEach(manager.orderedProviders, id: \.providerType) { provider in
                 HStack(spacing: 12) {
-                    Image(systemName: "line.3.horizontal")
+                    IconView("line.3.horizontal")
                         .font(.caption2)
                         .foregroundStyle(.tertiary)
                     CachedAsyncImage(urlString: provider.providerType.iconURL)

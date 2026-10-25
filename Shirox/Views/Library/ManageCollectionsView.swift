@@ -115,7 +115,7 @@ struct ManageCollectionsView: View {
                         newCollectionName = ""
                         showNewCollection = true
                     } label: {
-                        Label("library.new_collection", systemImage: "plus")
+                        Label("library.new_collection", icon: "plus")
                     }
                 }
             }
@@ -156,7 +156,7 @@ struct ManageCollectionsView: View {
             Button(role: .destructive) {
                 editor.requestDelete(collection)
             } label: {
-                Label("common.delete", systemImage: "trash")
+                Label("common.delete", icon: "trash")
             }
             .tint(.red)
         }
@@ -164,7 +164,7 @@ struct ManageCollectionsView: View {
             Button {
                 editor.beginRename(collection)
             } label: {
-                Label("library.rename", systemImage: "pencil")
+                Label("library.rename", icon: "pencil")
             }
             .tint(.blue)
         }
@@ -173,12 +173,12 @@ struct ManageCollectionsView: View {
             Button {
                 editor.beginRename(collection)
             } label: {
-                Label("library.rename", systemImage: "pencil")
+                Label("library.rename", icon: "pencil")
             }
             Button(role: .destructive) {
                 editor.requestDelete(collection)
             } label: {
-                Label("common.delete", systemImage: "trash")
+                Label("common.delete", icon: "trash")
             }
         }
     }

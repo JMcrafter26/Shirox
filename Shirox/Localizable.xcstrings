@@ -3321,6 +3321,88 @@
         }
       }
     },
+    "common.ok" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aceptar"
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OKE"
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ОК"
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tamam"
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "好"
+          }
+        }
+      }
+    },
     "common.open_video" : {
       "comment" : "ShiroxApp",
       "localizations" : {
@@ -66842,6 +66924,22 @@
         }
       }
     },
+    "settings.check_for_updates" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nach Updates suchen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Check for Updates"
+          }
+        }
+      }
+    },
     "settings.checks_tmdbs_api_and_images" : {
       "comment" : "AdvancedNetworkSettingsView",
       "localizations" : {
@@ -73233,6 +73331,38 @@
         }
       }
     },
+    "settings.icon_pack_download_failed %@" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Symbol für %@ konnte nicht geladen werden."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't download the icon for %@."
+          }
+        }
+      }
+    },
+    "settings.icon_pack_failed" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbolpaket konnte nicht hinzugefügt werden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't Add Icon Pack"
+          }
+        }
+      }
+    },
     "settings.icon_pack_link" : {
       "comment" : "GeneralSettingsView, Icon Packs",
       "localizations" : {
@@ -73312,6 +73442,86 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "图标包链接"
+          }
+        }
+      }
+    },
+    "settings.icon_pack_link_note" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Link zur pack.json eines Pakets. Pakete aktualisieren sich über denselben Link."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The link to a pack's pack.json. Packs update from the same link."
+          }
+        }
+      }
+    },
+    "settings.icon_pack_needs_https" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Der Link muss mit https:// beginnen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The link has to start with https://."
+          }
+        }
+      }
+    },
+    "settings.icon_pack_outdated" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Für eine andere Version von Shirox gemacht. Aktualisiere das Paket, um es zu verwenden."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Made for a different version of Shirox. Update the pack to use it."
+          }
+        }
+      }
+    },
+    "settings.icon_pack_unreadable" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unter diesem Link gibt es kein Symbolpaket."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There's no icon pack at that link."
+          }
+        }
+      }
+    },
+    "settings.icon_pack_wrong_version %lld %lld" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Dieses Paket wurde für Symbolsatz %1$lld gemacht; diese Version von Shirox verwendet %2$lld."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This pack was made for icon set %1$lld; this version of Shirox uses %2$lld."
           }
         }
       }
@@ -73399,102 +73609,19 @@
         }
       }
     },
-    "settings.icon_packs_coming_soon" : {
-      "comment" : "GeneralSettingsView, Icon Packs",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kommt bald: Pakete werden noch nicht geladen oder angewendet, und hier hinzugefügte verschwinden, wenn du die Seite verlässt."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Coming soon: packs aren't downloaded or applied yet, and ones added here are gone when you leave this page."
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Próximamente: los paquetes aún no se descargan ni se aplican, y los que añadas aquí desaparecen al salir de esta página."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bientôt disponible : les packs ne sont pas encore téléchargés ni appliqués, et ceux ajoutés ici disparaissent quand vous quittez cette page."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Segera hadir: paket belum diunduh atau diterapkan, dan paket yang ditambahkan di sini akan hilang saat Anda meninggalkan halaman ini."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Prossimamente: i pacchetti non vengono ancora scaricati né applicati, e quelli aggiunti qui spariscono quando lasci questa pagina."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "近日公開: パックはまだダウンロードも適用もされず、ここで追加したものはこのページを離れると消えます。"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wkrótce: pakiety nie są jeszcze pobierane ani stosowane, a dodane tutaj znikną po opuszczeniu tej strony."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Em breve: os pacotes ainda não são baixados nem aplicados, e os adicionados aqui somem quando você sai desta página."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Скоро: наборы пока не загружаются и не применяются, а добавленные здесь пропадут, когда вы покинете эту страницу."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Yakında: paketler henüz indirilmiyor veya uygulanmıyor ve buraya eklenenler bu sayfadan ayrıldığınızda kaybolur."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sắp ra mắt: các gói chưa được tải xuống hay áp dụng, và các gói thêm ở đây sẽ mất khi bạn rời khỏi trang này."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "即将推出：图标包尚不会下载或应用，在此添加的图标包在你离开此页面后会消失。"
-          }
-        }
-      }
-    },
     "settings.icon_packs_note" : {
       "comment" : "GeneralSettingsView, Icon Packs",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Die Symbole, mit denen Shirox seine Tasten und Zeilen zeichnet. SF Symbols ist eingebaut und lässt sich nicht entfernen, per Link hinzugefügte Pakete schon."
+            "value" : "Die Symbole, mit denen Shirox seine Tasten und Zeilen zeichnet. SF Symbols ist eingebaut und lässt sich nicht entfernen; wische oder halte ein Paket, um es zu entfernen."
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The symbols Shirox draws its buttons and rows with. SF Symbols is built in and can't be removed; packs added by link can."
+            "value" : "The symbols Shirox draws its buttons and rows with. SF Symbols is built in and can't be removed; swipe or hold a pack to remove it."
           }
         },
         "es" : {
@@ -88588,6 +88715,22 @@
         }
       }
     },
+    "settings.suggested_icon_packs" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbolpakete laden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Get Icon Packs"
+          }
+        }
+      }
+    },
     "settings.switch_or_manage_profiles" : {
       "comment" : "SettingsView",
       "localizations" : {
@@ -91406,6 +91549,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "类型"
+          }
+        }
+      }
+    },
+    "settings.update_to_version %lld" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Auf Version %lld aktualisieren"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Update to version %lld"
           }
         }
       }

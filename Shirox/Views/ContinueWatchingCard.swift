@@ -104,20 +104,20 @@ struct ContinueWatchingSection: View {
                 }
                 navTarget = .detail(item)
             } label: {
-                Label("shared.view_details", systemImage: "list.bullet.below.rectangle")
+                Label("shared.view_details", icon: "list.bullet.below.rectangle")
             }
         }
         if item.aniListID != nil {
             Button {
                 navTarget = .anilist(item)
             } label: {
-                Label("shared.view_on_anilist", systemImage: "tv")
+                Label("shared.view_on_anilist", icon: "tv")
             }
         }
         Button(role: .destructive) {
             ContinueWatchingManager.shared.remove(item)
         } label: {
-            Label("common.remove", systemImage: "xmark.circle")
+            Label("common.remove", icon: "xmark.circle")
         }
     }
 }
@@ -209,17 +209,17 @@ struct ContinueWatchingCardDisplay: View {
                 .overlay(alignment: .bottomLeading) {
                     HStack(spacing: 4) {
                         if !item.streamUrl.isEmpty && !isWatched {
-                            Image(systemName: "play.fill")
+                            IconView("play.fill")
                                 .font(.system(size: 8, weight: .bold))
                             Text(episodeLabelText(item: item, prefix: nil))
                                 .font(.caption2.weight(.medium))
                         } else if isCaughtUp {
-                            Image(systemName: "checkmark.circle.fill")
+                            IconView("checkmark.circle.fill")
                                 .font(.system(size: 10, weight: .bold))
                             Text(episodeLabelText(item: item, prefix: String(localized: "shared.caught_up")))
                                 .font(.caption2.weight(.bold))
                         } else {
-                            Image(systemName: "arrow.right.circle.fill")
+                            IconView("arrow.right.circle.fill")
                                 .font(.system(size: 10, weight: .bold))
                             Text(episodeLabelText(item: item, prefix: String(localized: "shared.up_next")))
                                 .font(.caption2.weight(.bold))

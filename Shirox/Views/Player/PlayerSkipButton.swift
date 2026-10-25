@@ -16,7 +16,7 @@ struct PlayerSkipButton: View {
     var body: some View {
         Button(action: onSkip) {
             HStack(spacing: isPad ? 8 : 5) {
-                Image(systemName: "forward.end.fill")
+                IconView("forward.end.fill")
                     .font(.system(size: isPad ? 18 : 15, weight: .medium))
                 Text(segmentType.label)
                     .font(isPad ? .body.weight(.semibold) : .subheadline.weight(.semibold))

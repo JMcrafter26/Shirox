@@ -174,7 +174,7 @@ struct LibraryEntryEditSheet: View {
                                     Text(list.name).foregroundStyle(.primary)
                                     Spacer()
                                     if list.isMember {
-                                        Image(systemName: "checkmark").foregroundStyle(.tint)
+                                        IconView("checkmark").foregroundStyle(.tint)
                                     }
                                 }
                                 .contentShape(Rectangle())
@@ -348,7 +348,7 @@ struct LibraryEntryEditSheet: View {
                                     Text(collection.name).foregroundStyle(.primary)
                                     Spacer()
                                     if collection.mediaUniqueIds.contains(media.uniqueId) {
-                                        Image(systemName: "checkmark").foregroundStyle(.tint)
+                                        IconView("checkmark").foregroundStyle(.tint)
                                     }
                                 }
                             }
@@ -357,7 +357,7 @@ struct LibraryEntryEditSheet: View {
                                 Button(role: .destructive) {
                                     editor.requestDelete(collection)
                                 } label: {
-                                    Label("common.delete", systemImage: "trash")
+                                    Label("common.delete", icon: "trash")
                                 }
                                 .tint(.red)
                             }
@@ -365,7 +365,7 @@ struct LibraryEntryEditSheet: View {
                                 Button {
                                     editor.beginRename(collection)
                                 } label: {
-                                    Label("library.rename", systemImage: "pencil")
+                                    Label("library.rename", icon: "pencil")
                                 }
                                 .tint(.blue)
                             }
@@ -374,19 +374,19 @@ struct LibraryEntryEditSheet: View {
                                 Button {
                                     editor.beginRename(collection)
                                 } label: {
-                                    Label("library.rename", systemImage: "pencil")
+                                    Label("library.rename", icon: "pencil")
                                 }
                                 Button(role: .destructive) {
                                     editor.requestDelete(collection)
                                 } label: {
-                                    Label("common.delete", systemImage: "trash")
+                                    Label("common.delete", icon: "trash")
                                 }
                             }
                         }
                         Button {
                             showNewCollection = true
                         } label: {
-                            Label("library.new_collection", systemImage: "plus")
+                            Label("library.new_collection", icon: "plus")
                         }
                     }
                 }
@@ -396,7 +396,7 @@ struct LibraryEntryEditSheet: View {
                         Button(role: .destructive) {
                             showDeleteConfirmation = true
                         } label: {
-                            Label("library.remove_from_library", systemImage: "trash")
+                            Label("library.remove_from_library", icon: "trash")
                         }
                     }
                 }

@@ -59,7 +59,7 @@ struct PlayerSubtitleSettingsView: View {
                         Button {
                             showImporter = true
                         } label: {
-                            Label("common.import_subtitle_file", systemImage: "square.and.arrow.down")
+                            Label("common.import_subtitle_file", icon: "square.and.arrow.down")
                         }
                     }
                 }
@@ -209,7 +209,7 @@ struct PlayerSubtitleSettingsView: View {
                     .foregroundStyle(.primary)
                 Spacer()
                 if isActive {
-                    Image(systemName: "checkmark")
+                    IconView("checkmark")
                         .foregroundStyle(Color.accentColor)
                         .font(.system(size: 14, weight: .semibold))
                 }

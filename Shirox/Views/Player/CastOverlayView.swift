@@ -79,7 +79,7 @@ struct CastOverlayView: View {
                         Text("player.reconnecting_to \(deviceName)")
                             .font(.caption.weight(.semibold))
                     } else {
-                        Image(systemName: "tv.fill")
+                        IconView("tv.fill")
                             .font(.system(size: 12, weight: .semibold))
                         Text("player.playing_on \(deviceName)")
                             .font(.caption.weight(.semibold))
@@ -95,7 +95,7 @@ struct CastOverlayView: View {
 
             // // Dismiss button — respects safe area so it sits at the real top
             // Button(action: onDismiss) {
-            //     Image(systemName: "xmark")
+            //     IconView("xmark")
             //         .font(.system(size: 18, weight: .semibold))
             //         .foregroundStyle(.white)
             //         .frame(width: 44, height: 44)

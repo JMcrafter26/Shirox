@@ -7,7 +7,7 @@ struct ProviderStatusBanner: View {
     var body: some View {
         if manager.fallbackActive {
             HStack(alignment: .top, spacing: 8) {
-                Image(systemName: "exclamationmark.triangle.fill")
+                IconView("exclamationmark.triangle.fill")
                     .foregroundStyle(.yellow)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(headline)
@@ -185,7 +185,7 @@ struct ProviderMenuButton: View {
         } label: {
             #if os(macOS)
             let providerLabel = Label { Text(shown.displayName) } icon: {
-                cachedIcon(shown) ?? Image(systemName: "sparkles.tv")
+                cachedIcon(shown) ?? Image(icon: "sparkles.tv")
             }
             if style == .iconOnly {
                 providerLabel.labelStyle(.iconOnly)
@@ -202,7 +202,7 @@ struct ProviderMenuButton: View {
                     Text(shown.displayName)
                         .font(.subheadline.weight(.semibold))
                 }
-                Image(systemName: "chevron.down").font(.caption2)
+                IconView("chevron.down").font(.caption2)
             }
             .foregroundStyle(.primary)
             #endif

@@ -190,7 +190,7 @@ struct OnboardingView: View {
                         .background(Circle().fill(isDone ? accent : Color.clear))
                         .frame(width: 26, height: 26)
                     if isDone {
-                        Image(systemName: "checkmark")
+                        IconView("checkmark")
                             .font(.caption2.weight(.bold))
                             .foregroundStyle(.white)
                     }
@@ -219,7 +219,7 @@ struct OnboardingView: View {
 
                 Spacer(minLength: 0)
 
-                Image(systemName: "chevron.right")
+                IconView("chevron.right")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.tertiary)
             }

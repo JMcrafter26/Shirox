@@ -44,7 +44,7 @@ struct DownloadRowView: View {
                 } else if item.state == .completed {
                     let fileFormat = (item.fileName as NSString?)?.pathExtension.uppercased() ?? "MP4"
                     HStack(spacing: 4) {
-                        Image(systemName: item.isHLS ? "folder.fill" : "play.circle.fill")
+                        IconView(item.isHLS ? "folder.fill" : "play.circle.fill")
                         Text(item.isHLS ? String(localized: "downloads.local_hls") : String(localized: "downloads.format_video \(fileFormat)"))
                     }
                     .font(.system(size: 10, weight: .medium))
@@ -66,20 +66,20 @@ struct DownloadRowView: View {
     private var statusIcon: some View {
         switch item.state {
         case .pending:
-            Image(systemName: "hourglass").foregroundStyle(.secondary)
+            IconView("hourglass").foregroundStyle(.secondary)
         case .downloading:
             ProgressView().controlSize(.small)
         case .paused:
-            Image(systemName: "pause.circle.fill").foregroundStyle(.secondary)
+            IconView("pause.circle.fill").foregroundStyle(.secondary)
         case .completed:
-            Image(systemName: "play.fill")
+            IconView("play.fill")
                 .foregroundStyle(Color.primary)
                 .colorInvert()
                 .font(.system(size: 12))
                 .padding(8)
                 .background(Color.primary, in: Circle())
         case .failed:
-            Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.red)
+            IconView("exclamationmark.triangle.fill").foregroundStyle(.red)
         }
     }
 }

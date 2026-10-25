@@ -347,7 +347,7 @@ private struct HomeToolbar: ViewModifier {
         // launch ("failed to demangle witness … does not conform to protocol ToolbarContent").
         content.toolbar {
             ToolbarItem(placement: .navigation) {
-                Button(action: openCalendar) { Label("shared.upcoming", systemImage: "calendar") }
+                Button(action: openCalendar) { Label("shared.upcoming", icon: "calendar") }
                     .help("home.upcoming_episodes")
             }
             if discovery.usesSimkl {
@@ -399,7 +399,7 @@ private struct HomeToolbar: ViewModifier {
 
     private var calendarItem: some ToolbarContent {
         ToolbarItem(placement: Self.leadingPlacement) {
-            Button(action: openCalendar) { Image(systemName: "calendar") }
+            Button(action: openCalendar) { IconView("calendar") }
         }
     }
 
@@ -419,7 +419,7 @@ private struct CalendarButton: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: "calendar")
+            IconView("calendar")
                 .font(.system(size: 19, weight: .semibold))
                 .foregroundStyle(.primary)
                 .frame(width: 52, height: 52)
@@ -569,7 +569,7 @@ private struct FeaturedCarousel: View {
                                     MediaDestination(media: currentMedia)
                                 } label: {
                                     HStack(spacing: 6) {
-                                        Image(systemName: "play.fill").font(.footnote.weight(.semibold))
+                                        IconView("play.fill").font(.footnote.weight(.semibold))
                                         Text("home.watch").fontWeight(.semibold)
                                     }
                                     .foregroundStyle(platformBackground)
@@ -825,7 +825,7 @@ private struct MacFeaturedCarousel: View {
 
             HStack(spacing: 8) {
                 if let score = media.averageScore {
-                    Label("\(score)%", systemImage: "star.fill")
+                    Label("\(score)%", icon: "star.fill")
                         .font(.callout.weight(.semibold))
                         .foregroundStyle(.yellow)
                 }
@@ -850,7 +850,7 @@ private struct MacFeaturedCarousel: View {
             NavigationLink {
                 MediaDestination(media: media)
             } label: {
-                Label("home.watch", systemImage: "play.fill")
+                Label("home.watch", icon: "play.fill")
                     .font(.body.weight(.semibold))
                     .foregroundStyle(.black)
                     .padding(.horizontal, 18)
@@ -874,7 +874,7 @@ private struct MacFeaturedCarousel: View {
 
     private func arrow(_ symbol: String, help: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: symbol)
+            IconView(symbol)
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(.white)
                 .frame(width: 40, height: 40)
@@ -1014,7 +1014,7 @@ private struct CinematicHome<Rows: View>: View {
                             MediaDestination(media: media)
                         } label: {
                             HStack(spacing: 10) {
-                                Image(systemName: "play.fill")
+                                IconView("play.fill")
                                     .font(.system(size: 13, weight: .bold))
                                 Text("home.watch")
                                     .font(.system(size: 15, weight: .bold))
@@ -1075,7 +1075,7 @@ private struct CinematicHome<Rows: View>: View {
 
     private func pagerButton(_ symbol: String, help: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: symbol)
+            IconView(symbol)
                 .font(.system(size: 13, weight: .bold))
                 .foregroundStyle(.white)
                 .frame(width: 32, height: 32)
@@ -1259,7 +1259,7 @@ private struct FeaturedCard: View {
 
             HStack(spacing: 8) {
                 if let score = media.averageScore {
-                    Label("\(score)%", systemImage: "star.fill")
+                    Label("\(score)%", icon: "star.fill")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.yellow)
                         .lineLimit(1)
@@ -1323,7 +1323,7 @@ private struct AnimeSection<SeeAll: View>: View {
                     HStack(spacing: 3) {
                         Text("home.see_all")
                             .font(.subheadline.weight(.semibold))
-                        Image(systemName: "chevron.right")
+                        IconView("chevron.right")
                             .font(.caption.weight(.semibold))
                     }
                     .foregroundStyle(.primary)
