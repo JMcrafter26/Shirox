@@ -246,6 +246,8 @@ struct SettingsView: View {
                         subtitle: modulesSubtitle
                     )
                 }
+            } header: {
+                Text("settings.section_preferences")
             }
 
             Section {
@@ -279,6 +281,8 @@ struct SettingsView: View {
                     )
                 }
                 #endif
+            } header: {
+                Text("settings.section_library_storage")
             }
 
             Section {
@@ -304,6 +308,8 @@ struct SettingsView: View {
 
                 // Expert settings for blocked regions, deliberately last.
                 NavigationLink { AdvancedNetworkSettingsView() } label: { SettingsNavRow(icon: "network", title: String(localized: "settings.advanced_network")) }
+            } header: {
+                Text("settings.section_data")
             }
 
             Section {
@@ -327,6 +333,8 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                 }
                 .padding(.vertical, 4)
+            } header: {
+                Text("settings.section_about")
             }
 
             Section {
@@ -334,6 +342,8 @@ struct SettingsView: View {
                         copying: Platform.summary, toast: String(localized: "settings.platform_copied"))
                 copyRow(SettingsNavRow(icon: "info.circle", title: String(localized: "modules.version"), subtitle: Self.appVersion),
                         copying: Self.appVersion, toast: String(localized: "settings.version_copied"))
+            } header: {
+                Text("settings.section_device")
             }
     }
 
