@@ -8,6 +8,8 @@
     python3 -I scripts/i18n/i18n.py sync [--build DIR] [--prune]  # adds the keys a build found to the
                                                      # catalog; --prune drops ones no longer in code
     python3 -I scripts/i18n/i18n.py loose [files…]    # other text-like literals, to review by hand
+    python3 -I scripts/i18n/i18n.py rename FILE      # renames keys everywhere, from `old new` lines
+    python3 -I scripts/i18n/i18n.py import LANG FILE # adds a language from a JSON of key -> text
 
 A key is `<area>.<up to five words>`, lowercase with underscores. Arguments stay in the key as
 interpolations, `Text("detail.download_episodes \\(count)")`, and the catalog holds the sentence
@@ -15,8 +17,9 @@ around them: "Download %lld Episodes". Text that must stay as written takes `// 
 end of its line.
 
 Adding a string: write the key in the code, put it and its English text in the catalog (Xcode adds
-the key on build; fill in the English), and run `check`. Adding a language: fill in that language's
-column in the catalog; it shows up in Settings › General › Change Language by itself.
+the key on build; fill in the English), and run `check`. Adding a language: translate the catalog's
+English into a JSON of key -> text and `import` it (or fill in the column in Xcode), and add the
+language to the project's known regions; it shows up in Settings › General › Change Language by itself.
 """
 import csv
 import glob
@@ -518,7 +521,79 @@ def rewrite(rows):
     print(f"extracted {len(rows)} strings in {len(by_file)} files; run a build, then `sync`")
 
 
-COMMANDS = {"pick": cmd_pick, "dedupe": cmd_dedupe, "list": cmd_list, "loose": cmd_loose, "check": cmd_check, "inventory": cmd_inventory, "extract": cmd_extract, "sync": cmd_sync}
+def cmd_rename(args):
+    """Renames keys in code, catalog and texts.json at once, from a file of `old new` lines.
+    One pass, so two keys can swap names."""
+    if not args:
+        sys.exit("rename: name a file of `old new` lines")
+    with open(args[0], encoding="utf-8") as f:
+        renames = dict(line.split() for line in f if line.strip() and not line.startswith("#"))
+    bad = [n for n in renames.values() if not KEY.match(n)]
+    if bad:
+        sys.exit(f"rename: not keys: {bad}")
+    pattern = re.compile(r'"(' + "|".join(map(re.escape, sorted(renames, key=len, reverse=True))) + r')(?=[ "])')
+    changed = 0
+    for path in swift_files():
+        with open(path, encoding="utf-8") as f:
+            code = f.read()
+        new = pattern.sub(lambda m: '"' + renames[m.group(1)], code)
+        if new != code:
+            changed += 1
+            with open(path, "w", encoding="utf-8") as f:
+                f.write(new)
+    catalog = load_json(CATALOG, {"strings": {}})
+    strings = {}
+    for key, entry in catalog["strings"].items():
+        base, _, specifiers = key.partition(" ")
+        strings[renames.get(base, base) + (" " + specifiers if specifiers else "")] = entry
+    catalog["strings"] = strings
+    write_json(CATALOG, catalog)
+    texts = load_json(TEXTS, {})
+    write_json(TEXTS, dict(sorted((renames.get(k, k), v) for k, v in texts.items())))
+    print(f"renamed {len(renames)} keys in {changed} files")
+
+
+def cmd_import(args):
+    """Adds a language's text to the catalog from a JSON file of key -> text, or for plurals
+    key -> {"one": …, "other": …}: `import de de.json`. Checks every format specifier made it."""
+    if len(args) != 2:
+        sys.exit("import: give a language code and a JSON file")
+    language, path = args
+    translated = load_json(path, None)
+    if translated is None:
+        sys.exit(f"import: can't read {path}")
+    catalog = load_json(CATALOG, {"strings": {}})
+    strings = catalog["strings"]
+    spec = re.compile(r"%(?:\d+\$)?[-+ 0#]*\d*(?:\.\d+)?(?:lld|ld|lu|llu|@|d|u|f|lf|s)")
+    norm = lambda v: sorted(re.sub(r"\d+\$", "", m) for m in spec.findall(v))
+    unit = lambda v: {"stringUnit": {"state": "translated", "value": v}}
+    problems, imported = [], 0
+    for key, value in translated.items():
+        entry = strings.get(key)
+        if entry is None:
+            problems.append(f"{key}: not in the catalog")
+            continue
+        english = entry["localizations"]["en"]
+        if isinstance(value, dict):
+            forms = english.get("variations", {}).get("plural", {})
+            for form, text in value.items():
+                source = forms.get(form, forms.get("other", {})).get("stringUnit", {}).get("value", "")
+                if norm(text) != norm(source):
+                    problems.append(f"{key} [{form}]: specifiers differ from the English")
+            entry["localizations"][language] = {"variations": {"plural": {f: unit(t) for f, t in value.items()}}}
+        else:
+            if norm(value) != norm(english.get("stringUnit", {}).get("value", "")):
+                problems.append(f"{key}: specifiers differ from the English")
+            entry["localizations"][language] = unit(value)
+        imported += 1
+    missing = [k for k in strings if k not in translated and language not in strings[k]["localizations"]]
+    write_json(CATALOG, catalog)
+    print(f"imported {imported} {language} strings; {len(missing)} keys still without {language}")
+    for problem in problems:
+        print("  " + problem)
+
+
+COMMANDS = {"import": cmd_import, "rename": cmd_rename, "pick": cmd_pick, "dedupe": cmd_dedupe, "list": cmd_list, "loose": cmd_loose, "check": cmd_check, "inventory": cmd_inventory, "extract": cmd_extract, "sync": cmd_sync}
 
 if __name__ == "__main__":
     if len(sys.argv) < 2 or sys.argv[1] not in COMMANDS:
