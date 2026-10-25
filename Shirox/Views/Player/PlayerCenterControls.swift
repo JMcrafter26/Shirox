@@ -30,11 +30,33 @@ struct PlayerCenterControls: View {
         }
     }
 
+    /// Spelled out, so icon packs can see every one; a length SF Symbols has no number for
+    /// gets the plain arrow.
+    private static func backwardSymbol(_ seconds: Double) -> String {
+        switch Int(seconds) {
+        case 5:  return "gobackward.5"
+        case 10: return "gobackward.10"
+        case 15: return "gobackward.15"
+        case 30: return "gobackward.30"
+        default: return "gobackward"
+        }
+    }
+
+    private static func forwardSymbol(_ seconds: Double) -> String {
+        switch Int(seconds) {
+        case 5:  return "goforward.5"
+        case 10: return "goforward.10"
+        case 15: return "goforward.15"
+        case 30: return "goforward.30"
+        default: return "goforward"
+        }
+    }
+
     private var backwardButton: some View {
         let size: CGFloat = isPad ? 80 : compact ? 40 : 60
         let iconSize: CGFloat = isPad ? 44 : compact ? 21 : 32
         return circleButton(size: size, iconSize: iconSize) {
-            Image(systemName: "gobackward.\(Int(skipAmount))")
+            Image(systemName: Self.backwardSymbol(skipAmount))
                 .font(.system(size: iconSize))
         } action: { onBackward() }
     }
@@ -53,7 +75,7 @@ struct PlayerCenterControls: View {
         let size: CGFloat = isPad ? 80 : compact ? 40 : 60
         let iconSize: CGFloat = isPad ? 44 : compact ? 21 : 32
         return circleButton(size: size, iconSize: iconSize) {
-            Image(systemName: "goforward.\(Int(skipAmount))")
+            Image(systemName: Self.forwardSymbol(skipAmount))
                 .font(.system(size: iconSize))
         } action: { onForward() }
     }

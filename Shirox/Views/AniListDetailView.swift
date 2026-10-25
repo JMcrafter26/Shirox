@@ -2178,7 +2178,7 @@ struct AniListMatchingSearchView: View {
                         dismiss()
                     } label: {
                         HStack {
-                            Image(systemName: "link.badge.minus")
+                            Image(systemName: "minus.circle")
                             Text("detail.unlink_current_series")
                             Spacer()
                         }
