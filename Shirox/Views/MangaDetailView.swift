@@ -737,7 +737,7 @@ struct MangaDetailView: View {
             #endif
 
             if visibleChapters.isEmpty {
-                Text(offlineChapters == nil ? String(localized: "detail.no_chapters_found") : String(localized: "detail.no_downloaded_chapters"))
+                Text(offlineChapters == nil ? String(localized: "common.no_chapters_found") : String(localized: "detail.no_downloaded_chapters"))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 16)
@@ -822,7 +822,7 @@ struct MangaDetailView: View {
         // Opening the reader with no chapters leaves it with nothing to display; the reader
         // handles this as an error state, but there is no point pushing it in the first place.
         guard !detail.chapters.isEmpty else {
-            ToastManager.shared.show(message: String(localized: "shared.no_chapters_found"), type: .error)
+            ToastManager.shared.show(message: String(localized: "common.no_chapters_found"), type: .error)
             return
         }
         if let last = progress.lastRead(for: item.href),

@@ -256,6 +256,23 @@
         }
       }
     },
+    "common.ch" : {
+      "comment" : "DownloadsView",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kap."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ch"
+          }
+        }
+      }
+    },
     "common.couldnt_load" : {
       "comment" : "AniListMangaDetailView, LegalWebView, LibraryView, SimklBrowseView, SimklListView",
       "localizations" : {
@@ -609,6 +626,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Name"
+          }
+        }
+      }
+    },
+    "common.no_chapters_found" : {
+      "comment" : "MangaDetailView",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keine Kapitel gefunden"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No chapters found"
           }
         }
       }
@@ -1691,23 +1725,6 @@
         }
       }
     },
-    "detail.no_chapters_found" : {
-      "comment" : "MangaDetailView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keine Kapitel gefunden."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No chapters found."
-          }
-        }
-      }
-    },
     "detail.no_data" : {
       "comment" : "AniListMangaDetailView",
       "localizations" : {
@@ -2622,23 +2639,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Cancel Download"
-          }
-        }
-      }
-    },
-    "downloads.ch" : {
-      "comment" : "DownloadsView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kap."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ch."
           }
         }
       }
@@ -5004,23 +5004,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Badge counts"
-          }
-        }
-      }
-    },
-    "library.ch" : {
-      "comment" : "LibraryView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kap."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ch"
           }
         }
       }
@@ -13631,6 +13614,23 @@
         }
       }
     },
+    "settings.cinematic_note" : {
+      "comment" : "GeneralSettingsView",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Artwork füllt das Fenster, und die Reihen der Startseite oder die Details einer Serie scrollen darüber. Schalte es aus, um auf der Startseite das Banner mit den Reihen darunter und bei einer Serie das Poster über der Folgenliste zu sehen."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The artwork fills the window, with Home's rows or a show's details scrolling up over it. Turn off for Home's banner with the rows under it, and a show's poster above its episode list."
+          }
+        }
+      }
+    },
     "settings.clear_everything" : {
       "comment" : "SettingsView",
       "localizations" : {
@@ -16198,6 +16198,23 @@
         }
       }
     },
+    "settings.platform_copied" : {
+      "comment" : "SettingsView",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plattform kopiert"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Platform copied"
+          }
+        }
+      }
+    },
     "settings.play_in_background" : {
       "comment" : "SettingsView",
       "localizations" : {
@@ -18489,6 +18506,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Username"
+          }
+        }
+      }
+    },
+    "settings.version_copied" : {
+      "comment" : "SettingsView",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version kopiert"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version copied"
           }
         }
       }
@@ -20868,23 +20902,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Newest"
-          }
-        }
-      }
-    },
-    "shared.no_chapters_found" : {
-      "comment" : "ContinueReadingCard, MangaDetailView",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keine Kapitel gefunden"
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No chapters found"
           }
         }
       }

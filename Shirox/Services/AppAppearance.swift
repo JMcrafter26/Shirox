@@ -231,7 +231,7 @@ enum AppLanguage {
 
 // MARK: - Tabs
 
-/// The tabs of the iPhone, iPad and Apple TV tab bar. Raw values are the `TabView` selection
+/// The tabs of the tab bar, and of a Mac's toolbar or sidebar. Raw values are the `TabView` selection
 /// values, which quick actions and the tab bar menu use too.
 enum AppTab: Int, CaseIterable, Identifiable {
     case home = 0, library = 1, downloads = 2, settings = 3, search = 4
@@ -267,12 +267,15 @@ enum AppTab: Int, CaseIterable, Identifiable {
     /// Settings can't go: it's where a hidden tab is brought back.
     var canHide: Bool { self != .settings }
 
-    /// The tabs this platform has, in their default order. Apple TV has no downloads.
+    /// The tabs this platform has, in their default order. Apple TV has no downloads; a Mac
+    /// lists search second and settings last.
     static var available: [AppTab] {
-        #if os(iOS)
-        return [.home, .library, .downloads, .settings, .search]
-        #else
+        #if os(tvOS)
         return [.home, .library, .settings, .search]
+        #elseif os(macOS) || targetEnvironment(macCatalyst)
+        return [.home, .search, .library, .downloads, .settings]
+        #else
+        return [.home, .library, .downloads, .settings, .search]
         #endif
     }
 

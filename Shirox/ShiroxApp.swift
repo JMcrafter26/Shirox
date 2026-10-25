@@ -114,6 +114,11 @@ struct ShiroxApp: App {
 #endif
     @StateObject private var moduleManager = ModuleManager.shared
     @AppStorage("hasCompletedOnboarding") private var hasCompletedOnboarding = false
+    #if targetEnvironment(macCatalyst) || os(macOS)
+    // Read so View ▸ Home, Search… and their ⌘1, ⌘2… follow the tab order.
+    @AppStorage(AppTab.orderKey) private var tabOrder = ""
+    @AppStorage(AppTab.hiddenKey) private var hiddenTabs = ""
+    #endif
     /// Shown on every cold start, not just the first — the system launch screen is blank, so
     /// without this the app opens on nothing and then snaps to content.
     @State private var showSplash = true
@@ -275,8 +280,18 @@ struct ShiroxApp: App {
 enum SidebarTab: Int, CaseIterable, Hashable {
     case home, search, library, downloads, settings
 
-    /// What the sidebar lists.
-    static var available: [SidebarTab] { allCases }
+    /// What the sidebar lists: the tabs left showing, in the order set in Settings › General.
+    static var available: [SidebarTab] { AppTab.visible.map(SidebarTab.init) }
+
+    init(_ tab: AppTab) {
+        switch tab {
+        case .home:      self = .home
+        case .library:   self = .library
+        case .downloads: self = .downloads
+        case .settings:  self = .settings
+        case .search:    self = .search
+        }
+    }
 
     var label: String {
         switch self {
@@ -298,15 +313,6 @@ enum SidebarTab: Int, CaseIterable, Hashable {
         }
     }
 
-    init(_ launch: LaunchTab) {
-        switch launch {
-        case .home:      self = .home
-        case .library:   self = .library
-        case .downloads: self = .downloads
-        case .search:    self = .search
-        }
-    }
-
     /// ⌘1, ⌘2… in the order the sidebar lists them.
     var shortcut: KeyEquivalent? {
         guard let index = Self.available.firstIndex(of: self), index < 9 else { return nil }
@@ -317,6 +323,9 @@ enum SidebarTab: Int, CaseIterable, Hashable {
 /// The app's sections, as a Mac sidebar lists them: the system's own selection and highlight.
 private struct MacSidebarView: View {
     @Binding var selection: SidebarTab
+    // Read so the sidebar follows the order and hiding set in Settings › General.
+    @AppStorage(AppTab.orderKey) private var tabOrder = ""
+    @AppStorage(AppTab.hiddenKey) private var hiddenTabs = ""
 
     var body: some View {
         List(selection: Binding<SidebarTab?>(get: { selection }, set: { if let tab = $0 { selection = tab } })) {
@@ -400,7 +409,7 @@ private struct RootTabView: View {
     @State private var showsModuleList = false
     #endif
     #if targetEnvironment(macCatalyst) || os(macOS)
-    @State private var sidebarTab = SidebarTab(LaunchTab.current)
+    @State private var sidebarTab = SidebarTab(LaunchTab.initialTab)
     #endif
     #if os(macOS)
     /// Bumped when the tab already showing is clicked again, which rebuilds it at its first page,
@@ -411,6 +420,22 @@ private struct RootTabView: View {
         Binding(get: { sidebarTab }, set: { tab in
             if tab == sidebarTab { tabResets[tab, default: 0] += 1 } else { sidebarTab = tab }
         })
+    }
+
+    /// The toolbar's tabs, in the order and with the ones hidden in Settings › General.
+    private var macTabs: [SidebarTab] {
+        AppTab.visible(order: tabOrder, hidden: hiddenTabs).map(SidebarTab.init)
+    }
+
+    @ViewBuilder
+    private func macPage(_ tab: SidebarTab) -> some View {
+        switch tab {
+        case .home:      HomeView()
+        case .library:   LibraryView()
+        case .downloads: DownloadsView()
+        case .settings:  SettingsView()
+        case .search:    SearchView()
+        }
     }
     #endif
 
@@ -493,20 +518,10 @@ private struct RootTabView: View {
                 // Tabs in the window's toolbar, as iOS has them in its tab bar, rather than a
                 // sidebar taking a column of the window for five rows.
                 TabView(selection: macTabSelection) {
-                    Tab(SidebarTab.home.label, systemImage: SidebarTab.home.icon, value: SidebarTab.home) {
-                        HomeView().id(tabResets[.home, default: 0])
-                    }
-                    Tab(SidebarTab.search.label, systemImage: SidebarTab.search.icon, value: SidebarTab.search) {
-                        SearchView().id(tabResets[.search, default: 0])
-                    }
-                    Tab(SidebarTab.library.label, systemImage: SidebarTab.library.icon, value: SidebarTab.library) {
-                        LibraryView().id(tabResets[.library, default: 0])
-                    }
-                    Tab(SidebarTab.downloads.label, systemImage: SidebarTab.downloads.icon, value: SidebarTab.downloads) {
-                        DownloadsView().id(tabResets[.downloads, default: 0])
-                    }
-                    Tab(SidebarTab.settings.label, systemImage: SidebarTab.settings.icon, value: SidebarTab.settings) {
-                        SettingsView().id(tabResets[.settings, default: 0])
+                    ForEach(macTabs, id: \.self) { tab in
+                        Tab(tab.label, systemImage: tab.icon, value: tab) {
+                            macPage(tab).id(tabResets[tab, default: 0])
+                        }
                     }
                 }
                 .tabViewStyle(.tabBarOnly)
@@ -599,12 +614,15 @@ private struct RootTabView: View {
             if let tab = note.object as? SidebarTab { sidebarTab = tab }
         }
         #endif
-        #if !targetEnvironment(macCatalyst) && !os(macOS)
         // The tab showing was just hidden: on to the first one left.
         .onChangeOf(visibleTabs.map(\.rawValue)) { visible in
+            #if targetEnvironment(macCatalyst) || os(macOS)
+            let tabs = visibleTabs.map(SidebarTab.init)
+            if !tabs.contains(sidebarTab), let first = tabs.first { sidebarTab = first }
+            #else
             if !visible.contains(selectedTab), let first = visible.first { selectedTab = first }
+            #endif
         }
-        #endif
         .onReceive(NotificationCenter.default.publisher(for: .openSettingsTab)) { _ in
             #if targetEnvironment(macCatalyst) || os(macOS)
             sidebarTab = .settings

@@ -330,9 +330,31 @@ struct SettingsView: View {
             }
 
             Section {
-                SettingsNavRow(icon: Platform.icon, title: String(localized: "settings.platform"), subtitle: Platform.summary)
-                SettingsNavRow(icon: "info.circle", title: String(localized: "modules.version"), subtitle: Self.appVersion)
+                copyRow(SettingsNavRow(icon: Platform.icon, title: String(localized: "settings.platform"), subtitle: Platform.summary),
+                        copying: Platform.summary, toast: String(localized: "settings.platform_copied"))
+                copyRow(SettingsNavRow(icon: "info.circle", title: String(localized: "modules.version"), subtitle: Self.appVersion),
+                        copying: Self.appVersion, toast: String(localized: "settings.version_copied"))
             }
+    }
+
+    /// A row that copies its value when tapped, for pasting into a bug report. Apple TV has no
+    /// clipboard, so it's a plain row there.
+    @ViewBuilder
+    private func copyRow(_ row: SettingsNavRow, copying value: String, toast: String) -> some View {
+        #if os(tvOS)
+        row
+        #else
+        Button {
+            Clipboard.copy(value)
+            #if os(iOS)
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+            #endif
+            ToastManager.shared.show(message: toast, type: .success, duration: 1.6)
+        } label: {
+            row.contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        #endif
     }
 
     private static var appVersion: String {

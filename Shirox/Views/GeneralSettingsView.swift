@@ -57,11 +57,11 @@ struct GeneralSettingsView: View {
             }
 
             Section {
-                #if os(iOS) && !targetEnvironment(macCatalyst)
+                #if !os(tvOS)
                 NavigationLink {
                     TabBarCustomizationView()
                 } label: {
-                    LabeledContent("settings.customize_bottom_tabs") {
+                    LabeledContent(Self.hasTabBar ? "settings.customize_bottom_tabs" : "settings.customize_tabs") {
                         Text(tabsSubtitle)
                             .foregroundStyle(.secondary)
                     }
@@ -97,6 +97,8 @@ struct GeneralSettingsView: View {
                         .switchTint()
                 } header: {
                     Text("settings.layout")
+                } footer: {
+                    Text("settings.cinematic_note")
                 }
             }
 
@@ -267,7 +269,7 @@ private struct TintColorRow: View {
     }
 }
 
-#if os(iOS) && !targetEnvironment(macCatalyst)
+#if !os(tvOS)
 // MARK: - Tab Bar Customization
 
 /// The tabs in the bar's order: drag to move, the eye to hide or show.
@@ -304,15 +306,19 @@ struct TabBarCustomizationView: View {
         }
         .softScrollEdges()
         .navigationTitle("settings.customize_tabs")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .environment(\.editMode, .constant(.active))
+        #endif
     }
 
     private var footer: String {
         var text = String(localized: "settings.drag_to_reorder_settings_always")
+        #if os(iOS) && !targetEnvironment(macCatalyst)
         if #available(iOS 26, *) {
             text += String(localized: "settings.search_keeps_its_own_button")
         }
+        #endif
         return text
     }
 

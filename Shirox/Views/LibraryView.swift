@@ -1397,7 +1397,7 @@ private struct LibraryGridCard: View {
         if let kind = entry.media.simklTitleKind {
             return kind == .movie ? SimklTitleLabels.movieLine(entry.media) : SimklTitleLabels.showProgress(entry)
         }
-        let unit = entry.media.isManga ? String(localized: "library.ch") : String(localized: "downloads.ep")
+        let unit = entry.media.isManga ? String(localized: "common.ch") : String(localized: "downloads.ep")
         if let total = entry.media.episodes, total > 0 { return "\(unit) \(entry.progress) of \(total)" }
         return "\(unit) \(entry.progress)"
     }

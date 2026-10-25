@@ -75,7 +75,7 @@ struct ContinueReadingSection: View {
             do {
                 let chapters = try await JSEngine.shared.mangaChapters(url: item.mangaHref)
                 guard !chapters.isEmpty else {
-                    ToastManager.shared.show(message: String(localized: "shared.no_chapters_found"), type: .error)
+                    ToastManager.shared.show(message: String(localized: "common.no_chapters_found"), type: .error)
                     return
                 }
                 let idx = chapters.firstIndex(where: { $0.href == item.chapterHref }) ?? 0

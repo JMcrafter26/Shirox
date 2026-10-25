@@ -586,7 +586,7 @@ struct MacMangaReaderView: View {
 
     private func load() async {
         guard let chapter else {
-            loadError = String(localized: "shared.no_chapters_found")
+            loadError = String(localized: "common.no_chapters_found")
             isLoading = false
             return
         }

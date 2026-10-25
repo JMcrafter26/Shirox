@@ -807,7 +807,7 @@ private struct MediaGroupRow: View {
     private var rangeLine: String? {
         let sorted = Array(Set(numbers)).sorted()
         guard let first = sorted.first, let last = sorted.last else { return nil }
-        let prefix = unit == "chapter" ? String(localized: "downloads.ch") : String(localized: "downloads.ep")
+        let prefix = unit == "chapter" ? String(localized: "common.ch") : String(localized: "downloads.ep")
         if first == last { return "\(prefix) \(display(first))" }
         return "\(prefix) \(display(first))–\(display(last))"
     }

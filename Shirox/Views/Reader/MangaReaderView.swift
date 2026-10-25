@@ -769,7 +769,7 @@ struct MangaReaderView: View {
         // Reading entry) used to reach `context.chapters[-1]` and crash the app.
         guard !context.chapters.isEmpty else {
             strip = []
-            loadError = String(localized: "shared.no_chapters_found")
+            loadError = String(localized: "common.no_chapters_found")
             isLoading = false
             return
         }
