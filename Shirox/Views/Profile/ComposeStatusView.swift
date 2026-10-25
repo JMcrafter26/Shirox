@@ -21,16 +21,16 @@ struct ComposeStatusView: View {
                     .padding(.top, 6)
                 Spacer()
             }
-            .navigationTitle("New Status")
+            .navigationTitle("profile.new_status")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("common.cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Post") {
+                    Button("profile.post") {
                         Task {
                             await profileVM.postStatus(text: text)
                             dismiss()

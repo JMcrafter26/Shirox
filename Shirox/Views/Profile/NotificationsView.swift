@@ -14,10 +14,10 @@ struct ActivityFetchView: View {
             } else if let activity {
                 ActivityDetailView(activity: activity)
             } else {
-                ContentUnavailableView("Activity not found", systemImage: "bubble.left.and.bubble.right")
+                ContentUnavailableView("profile.activity_not_found", systemImage: "bubble.left.and.bubble.right")
             }
         }
-        .navigationTitle("Activity")
+        .navigationTitle("shared.activity")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -48,7 +48,7 @@ struct NotificationsView: View {
 
             content
         }
-        .navigationTitle("Notifications")
+        .navigationTitle("profile.notifications")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -92,18 +92,18 @@ struct NotificationsView: View {
             ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if vm.notificationsUnsupported {
             ContentUnavailableView(
-                "Notifications Need AniList",
+                "profile.notifications_need_anilist",
                 systemImage: "bell.slash",
-                description: Text("Sign in with AniList to see notifications. MyAnimeList doesn't provide them.")
+                description: Text("profile.sign_in_with_anilist_to")
             )
         } else if let error = vm.error, vm.notifications.isEmpty {
             ContentUnavailableView(
-                "Couldn't Load Notifications",
+                "profile.couldnt_load_notifications",
                 systemImage: "exclamationmark.triangle",
                 description: Text(error)
             )
         } else if vm.notifications.isEmpty {
-            ContentUnavailableView("No Notifications", systemImage: "bell.slash")
+            ContentUnavailableView("profile.no_notifications", systemImage: "bell.slash")
         } else {
             ScrollView {
                 LazyVStack(spacing: 8) {
@@ -212,9 +212,9 @@ struct NotificationsView: View {
     private func bodyText(for notif: ProviderNotification) -> some View {
         switch notif.kind {
         case .airing(let episode, let mediaTitle, _, _):
-            Text("\(mediaTitle ?? "Anime") ").bold() + Text("episode \(episode) aired")
+            Text(verbatim: (mediaTitle ?? String(localized: "common.anime")) + " ").bold() + Text("profile.episode_aired \(episode)")
         case .following(_, let userName, _):
-            Text(userName ?? "Someone").bold() + Text(" followed you")
+            Text(userName ?? String(localized: "shared.someone")).bold() + Text("profile.followed_you")
         case .activityMessage(_, let userName, let context, _), .activityReply(_, let userName, let context, _),
              .activityMention(_, let userName, let context, _), .activityLike(_, let userName, let context, _):
             sentenceText(NotificationSentence(userName: userName, context: context,
@@ -229,10 +229,10 @@ struct NotificationsView: View {
             if let title, !title.isEmpty {
                 Text(title).bold() + Text(context ?? " was recently added to the site.")
             } else {
-                Text(context ?? "A title was updated")
+                Text(context ?? String(localized: "profile.a_title_was_updated"))
             }
         case .unknown(let context):
-            Text(context ?? "Notification").foregroundStyle(.secondary)
+            Text(context ?? String(localized: "profile.notification")).foregroundStyle(.secondary)
         }
     }
 

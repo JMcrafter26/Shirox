@@ -48,9 +48,9 @@ struct LibraryFilterLabel: View {
     }
 }
 
-#Preview("Filter labels") {
+#Preview(String(localized: "library.filter_labels")) {
     HStack(spacing: 10) {
-        LibraryFilterLabel(systemImage: "line.3.horizontal.decrease", text: "Watching", isActive: false, collapsed: false)
+        LibraryFilterLabel(systemImage: "line.3.horizontal.decrease", text: String(localized: "shared.watching"), isActive: false, collapsed: false)
         LibraryFilterLabel(systemImage: "tag", text: "2 selected", isActive: true, collapsed: false)
     }
     .padding()

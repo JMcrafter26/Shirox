@@ -216,7 +216,7 @@ struct ShiroxApp: App {
         #if targetEnvironment(macCatalyst) || os(macOS)
         .commands {
             CommandGroup(replacing: .appSettings) {
-                Button("Settings…") {
+                Button("app.settings") {
                     NotificationCenter.default.post(name: .openSettingsTab, object: nil)
                 }
                 .keyboardShortcut(",", modifiers: .command)
@@ -231,7 +231,7 @@ struct ShiroxApp: App {
                 }
                 Divider()
                 // A Mac has no pull to refresh.
-                Button("Reload") {
+                Button("app.reload") {
                     NotificationCenter.default.post(name: .reloadPage, object: nil)
                 }
                 .keyboardShortcut("r", modifiers: .command)
@@ -239,29 +239,29 @@ struct ShiroxApp: App {
             }
             #if os(macOS)
             CommandGroup(after: .newItem) {
-                Button("Open Video…") { MacOpenVideo.choose() }
+                Button("app.open_video") { MacOpenVideo.choose() }
                     .keyboardShortcut("o", modifiers: .command)
             }
             // The player window's actions, where a Mac looks for them. Its keys (space, the
             // arrows, F, S, P, M) work as well while it's in front.
-            CommandMenu("Playback") {
-                Button("Play/Pause") { MacPlayerCommand.send(.playPause) }
+            CommandMenu("app.playback") {
+                Button("app.play_pause") { MacPlayerCommand.send(.playPause) }
                     .keyboardShortcut(.space, modifiers: [.option])
-                Button("Skip Back") { MacPlayerCommand.send(.skipBack) }
+                Button("app.skip_back") { MacPlayerCommand.send(.skipBack) }
                     .keyboardShortcut(.leftArrow, modifiers: [.option])
-                Button("Skip Forward") { MacPlayerCommand.send(.skipForward) }
+                Button("app.skip_forward") { MacPlayerCommand.send(.skipForward) }
                     .keyboardShortcut(.rightArrow, modifiers: [.option])
                 Divider()
-                Button("Picture in Picture") { MacPlayerWindowManager.shared.togglePictureInPicture() }
+                Button("app.picture_in_picture") { MacPlayerWindowManager.shared.togglePictureInPicture() }
                     .keyboardShortcut("p", modifiers: [.command, .option])
-                Button("Mute/Unmute") { MacPlayerCommand.send(.toggleMute) }
+                Button("app.mute_unmute") { MacPlayerCommand.send(.toggleMute) }
                     .keyboardShortcut("m", modifiers: [.command, .option])
-                Button("Save Frame") { MacPlayerCommand.send(.saveFrame) }
+                Button("app.save_frame") { MacPlayerCommand.send(.saveFrame) }
                     .keyboardShortcut("s", modifiers: [.command, .option])
             }
             #endif
             CommandGroup(after: .textEditing) {
-                Button("Find") {
+                Button("common.find") {
                     NotificationCenter.default.post(name: .selectSidebarTab, object: SidebarTab.search)
                 }
                 .keyboardShortcut("f", modifiers: .command)
@@ -280,11 +280,11 @@ enum SidebarTab: Int, CaseIterable, Hashable {
 
     var label: String {
         switch self {
-        case .home:      return "Home"
-        case .library:   return "Library"
-        case .downloads: return "Downloads"
-        case .settings:  return "Settings"
-        case .search:    return "Search"
+        case .home:      return String(localized: "settings.home")
+        case .library:   return String(localized: "common.library")
+        case .downloads: return String(localized: "common.downloads")
+        case .settings:  return String(localized: "settings.settings")
+        case .search:    return String(localized: "common.search")
         }
     }
 
@@ -356,8 +356,8 @@ import UniformTypeIdentifiers
 enum MacOpenVideo {
     static func choose() {
         let panel = NSOpenPanel()
-        panel.title = "Open Video"
-        panel.prompt = "Play"
+        panel.title = String(localized: "app.open_video_2")
+        panel.prompt = String(localized: "shared.play")
         panel.allowedContentTypes = [.movie, .video, .mpeg4Movie, .quickTimeMovie]
             + ["mkv", "webm", "avi", "flv", "ts"].compactMap { UTType(filenameExtension: $0) }
         panel.allowsMultipleSelection = false
@@ -538,21 +538,21 @@ private struct RootTabView: View {
                 #if targetEnvironment(macCatalyst) || os(macOS)
                 TabView(selection: $selectedTab) {
                     HomeView()
-                        .tabItem { Label("Home", systemImage: "house.fill") }
+                        .tabItem { Label("settings.home", systemImage: "house.fill") }
                         .tag(0)
                     LibraryView()
-                        .tabItem { Label("Library", systemImage: "books.vertical.fill") }
+                        .tabItem { Label("common.library", systemImage: "books.vertical.fill") }
                         .tag(1)
                     #if os(iOS)
                     DownloadsView()
-                        .tabItem { Label("Downloads", systemImage: "arrow.down.circle.fill") }
+                        .tabItem { Label("common.downloads", systemImage: "arrow.down.circle.fill") }
                         .tag(2)
                     #endif
                     SettingsView()
-                        .tabItem { Label("Settings", systemImage: "gearshape.fill") }
+                        .tabItem { Label("settings.settings", systemImage: "gearshape.fill") }
                         .tag(3)
                     SearchView()
-                        .tabItem { Label("Search", systemImage: "magnifyingglass") }
+                        .tabItem { Label("common.search", systemImage: "magnifyingglass") }
                         .tag(4)
                 }
                 .appTint()
@@ -665,7 +665,7 @@ private struct RootTabView: View {
                 title: request.title,
                 imageUrl: request.posterURL ?? "",
                 scoreFormat: .point10,
-                heading: request.ref.kind == .movie ? "Rate Movie" : "Rate Show",
+                heading: request.ref.kind == .movie ? String(localized: "app.rate_movie") : String(localized: "app.rate_show"),
                 onSave: { score in
                     Task { await SimklPlayTracker.rate(request, score: score) }
                     playerPresenter.pendingSimklRating = nil

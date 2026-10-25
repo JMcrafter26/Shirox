@@ -11,7 +11,7 @@ struct DownloadFileMenuItems: View {
     var body: some View {
         if #available(iOS 16, macOS 13, *) {
             ShareLink(item: file) {
-                Label("Share Video", systemImage: "square.and.arrow.up")
+                Label("downloads.share_video", systemImage: "square.and.arrow.up")
             }
         }
         DownloadFolderMenuItem(file: file)
@@ -25,9 +25,9 @@ struct DownloadFolderMenuItem: View {
     var body: some View {
         Button { Self.reveal(file) } label: {
             #if os(macOS) || targetEnvironment(macCatalyst)
-            Label("Show in Finder", systemImage: "folder")
+            Label("downloads.show_in_finder", systemImage: "folder")
             #else
-            Label("Show in Files", systemImage: "folder")
+            Label("downloads.show_in_files", systemImage: "folder")
             #endif
         }
     }

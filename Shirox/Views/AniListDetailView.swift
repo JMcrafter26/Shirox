@@ -131,7 +131,7 @@ struct AniListDetailView: View {
 
     @ViewBuilder private var simklEditButton: some View {
         if simklAuth.isLoggedIn, let target = simklEditTarget {
-            Button { simklEdit = target } label: { Label("Edit on Simkl", systemImage: "pencil") }
+            Button { simklEdit = target } label: { Label("detail.edit_on_simkl", systemImage: "pencil") }
         }
     }
     #endif
@@ -186,7 +186,7 @@ struct AniListDetailView: View {
             #endif
         } else if let error = vm.error {
             ContentUnavailableView(
-                "Couldn't Load",
+                "common.couldnt_load",
                 systemImage: "wifi.slash",
                 description: Text(error)
             )
@@ -229,7 +229,7 @@ struct AniListDetailView: View {
                         isLoadingEntry = false
                         showLibraryEdit = true
                     }
-                } label: { Label("Edit on MyAnimeList", systemImage: "pencil") }
+                } label: { Label("detail.edit_on_myanimelist", systemImage: "pencil") }
                 Button {
                     Task {
                         isLoadingEntry = true
@@ -239,10 +239,10 @@ struct AniListDetailView: View {
                         isLoadingEntry = false
                         showAniListEdit = true
                     }
-                } label: { Label("Edit on AniList", systemImage: "pencil") }
+                } label: { Label("detail.edit_on_anilist", systemImage: "pencil") }
                 simklEditButton
                 Button { showTrackingLinks = true } label: {
-                    Label("Tracking Links…", systemImage: "link")
+                    Label("detail.tracking_links", systemImage: "link")
                 }
             } label: {
                 if isLoadingEntry {
@@ -263,7 +263,7 @@ struct AniListDetailView: View {
                         isLoadingEntry = false
                         showLibraryEdit = true
                     }
-                } label: { Label("Edit on AniList", systemImage: "pencil") }
+                } label: { Label("detail.edit_on_anilist", systemImage: "pencil") }
                 Button {
                     Task {
                         isLoadingEntry = true
@@ -273,10 +273,10 @@ struct AniListDetailView: View {
                         isLoadingEntry = false
                         showMALEdit = true
                     }
-                } label: { Label("Edit on MyAnimeList", systemImage: "pencil") }
+                } label: { Label("detail.edit_on_myanimelist", systemImage: "pencil") }
                 simklEditButton
                 Button { showTrackingLinks = true } label: {
-                    Label("Tracking Links…", systemImage: "link")
+                    Label("detail.tracking_links", systemImage: "link")
                 }
             } label: {
                 if isLoadingEntry {
@@ -300,10 +300,10 @@ struct AniListDetailView: View {
                         isLoadingEntry = false
                         showLibraryEdit = true
                     }
-                } label: { Label("Edit Library Entry", systemImage: "pencil") }
+                } label: { Label("detail.edit_library_entry", systemImage: "pencil") }
                 simklEditButton
                 Button { showTrackingLinks = true } label: {
-                    Label("Tracking Links…", systemImage: "link")
+                    Label("detail.tracking_links", systemImage: "link")
                 }
             } label: {
                 if isLoadingEntry {
@@ -319,7 +319,7 @@ struct AniListDetailView: View {
             Menu {
                 simklEditButton
                 Button { showTrackingLinks = true } label: {
-                    Label("Tracking Links…", systemImage: "link")
+                    Label("detail.tracking_links", systemImage: "link")
                 }
             } label: {
                 Image(systemName: "pencil.circle")
@@ -894,7 +894,7 @@ struct AniListDetailView: View {
                                 )
                         }
                         .buttonStyle(.plain)
-                        .help(selectedTab == 0 ? "Show related titles" : "Show episodes")
+                        .help(selectedTab == 0 ? String(localized: "detail.show_related_titles") : String(localized: "detail.show_episodes"))
 
                         // Picks episodes to download.
                         #if !os(tvOS)
@@ -955,7 +955,7 @@ struct AniListDetailView: View {
                                     Image(systemName: "link.badge.plus")
                                         .font(.system(size: 48))
                                         .foregroundStyle(.secondary.opacity(0.5))
-                                    Text("No relations found")
+                                    Text("detail.no_relations_found")
                                         .font(.subheadline)
                                         .foregroundStyle(.secondary)
                                 }
@@ -1011,8 +1011,8 @@ struct AniListDetailView: View {
         let nextEp = rawNext > total && total > 0 ? 1 : rawNext
         let continuing = item != nil && !item!.streamUrl.isEmpty
         let label = isSingleEpisode(media)
-            ? (continuing ? "Continue" : "Watch") + (media.format == "MOVIE" ? " Movie" : "")
-            : continuing ? "Continue Ep \(nextEp)" : "Watch Ep \(nextEp)"
+            ? (continuing ? String(localized: "shared.continue") : String(localized: "home.watch")) + (media.format == "MOVIE" ? String(localized: "detail.movie") : "")
+            : continuing ? String(localized: "detail.continue_ep \(nextEp)") : String(localized: "detail.watch_ep \(nextEp)")
         let hasProgress = continueWatching.items.contains { $0.aniListID == media.id && $0.episodeNumber == nextEp }
 
         Button {
@@ -1044,11 +1044,11 @@ struct AniListDetailView: View {
         .contextMenu {
             if total > 0 {
                 Button { vm.watchEpisode(nextEp) } label: {
-                    Label("Change Stream", systemImage: "arrow.triangle.2.circlepath")
+                    Label("detail.change_stream", systemImage: "arrow.triangle.2.circlepath")
                 }
                 #if !os(tvOS)
                 Button { pendingDownloadEpisodeNumber = DownloadEpisodeItem(episodeNumber: nextEp) } label: {
-                    Label("Download Episode", systemImage: "arrow.down.circle")
+                    Label("detail.download_episode", systemImage: "arrow.down.circle")
                 }
                 #endif
                 if hasProgress {
@@ -1058,7 +1058,7 @@ struct AniListDetailView: View {
                             aniListID: media.id, moduleId: nil, mediaTitle: media.title.searchTitle,
                             episodeNumber: nextEp)
                     } label: {
-                        Label("Reset Progress", systemImage: "arrow.counterclockwise")
+                        Label("detail.reset_progress", systemImage: "arrow.counterclockwise")
                     }
                 }
             }
@@ -1077,7 +1077,7 @@ struct AniListDetailView: View {
         }
 
         let stream = StreamResult(
-            title: item.streamTitle ?? item.episodeTitle ?? "Episode \(item.episodeNumber)",
+            title: item.streamTitle ?? item.episodeTitle ?? String(localized: "common.episode \(item.episodeNumber)"),
             url: url,
             headers: item.headers ?? [:],
             subtitle: item.subtitle,
@@ -1294,7 +1294,7 @@ struct AniListDetailView: View {
             HStack(alignment: .center) {
                 VStack(alignment: .leading, spacing: 5) {
                     HStack(spacing: 8) {
-                        Text("Episodes")
+                        Text("common.episodes")
                             .font(.title3.weight(.bold))
                         #if !os(tvOS)
                         if !isSelectionMode {
@@ -1327,7 +1327,7 @@ struct AniListDetailView: View {
                         .overlay(Circle().strokeBorder(Color.primary.opacity(0.15), lineWidth: 1))
                 }
                 .buttonStyle(.plain)
-                .help(isReversed ? "Newest episodes first — show oldest first" : "Oldest episodes first — show newest first")
+                .help(isReversed ? String(localized: "detail.newest_episodes_first_show_oldest") : String(localized: "detail.oldest_episodes_first_show_newest"))
                 .padding(.trailing, 4)
 
                 // Reset progress button (only when not in selection mode)
@@ -1390,7 +1390,7 @@ struct AniListDetailView: View {
                 HStack(spacing: 10) {
                     Image(systemName: "puzzlepiece.extension")
                         .foregroundStyle(.secondary)
-                    Text("Install a module in the Search tab to watch episodes")
+                    Text("detail.install_a_module_in_the")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
@@ -1409,13 +1409,13 @@ struct AniListDetailView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.horizontal, 16)
                 } else {
-                    Text("No episodes in this range.")
+                    Text("detail.no_episodes_in_this_range")
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 16)
                 }
             } else {
-                Text("Episode count not available")
+                Text("detail.episode_count_not_available")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 16)
@@ -1423,14 +1423,14 @@ struct AniListDetailView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.bottom, 32)
-        .alert("Reset Progress", isPresented: $showResetConfirmation) {
-            Button("Reset", role: .destructive) {
+        .alert("detail.reset_progress", isPresented: $showResetConfirmation) {
+            Button("common.reset", role: .destructive) {
                 ContinueWatchingManager.shared.resetProgress(
                     aniListID: media.id, moduleId: nil, mediaTitle: "")
             }
-            Button("Cancel", role: .cancel) {}
+            Button("common.cancel", role: .cancel) {}
         } message: {
-            Text("This will clear all watched history and progress for \(media.title.displayTitle).")
+            Text("detail.this_will_clear_all_watched \(media.title.displayTitle)")
         }
     }
 
@@ -1508,7 +1508,7 @@ struct AniListDetailView: View {
 
                 // "All", not "Range", to match the identical control on DetailView and
                 // MangaDetailView — every one of them acts on the visible range.
-                Button(allInCurrentRangeSelected ? "Deselect All" : "Select All") {
+                Button(allInCurrentRangeSelected ? String(localized: "detail.deselect_all") : String(localized: "detail.select_all")) {
                     if allInCurrentRangeSelected {
                         selectableEpisodes.forEach { selectedEpisodeNumbers.remove($0) }
                     } else {
@@ -1530,7 +1530,7 @@ struct AniListDetailView: View {
                     batchDownloadZoomID = "batchDownload"
                     showBatchDownloadPicker = true
                 } label: {
-                    Label("Download \(selectedEpisodeNumbers.count)", systemImage: "arrow.down.circle.fill")
+                    Label("detail.download \(selectedEpisodeNumbers.count)", systemImage: "arrow.down.circle.fill")
                         .font(.subheadline.weight(.bold))
                         .foregroundStyle(platformBackground)
                 }
@@ -1606,9 +1606,9 @@ struct AniListDetailView: View {
     // MARK: - Tabs
     @ViewBuilder
     private var tabSelector: some View {
-        Picker("Section", selection: $selectedTab) {
-            Text("Episodes").tag(0)
-            Text("Relations").tag(1)
+        Picker("detail.section", selection: $selectedTab) {
+            Text("common.episodes").tag(0)
+            Text("detail.relations").tag(1)
         }
         .pickerStyle(.segmented)
         .labelsHidden()
@@ -1628,7 +1628,7 @@ struct AniListDetailView: View {
                 Image(systemName: "film")
                     .font(.system(size: 48))
                     .foregroundStyle(.secondary.opacity(0.5))
-                Text("No anime relations")
+                Text("detail.no_anime_relations")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -1684,14 +1684,14 @@ extension AniListDetailView {
             WatchOrderSection(entries: watchOrder, margin: CinematicMetrics.margin, titleFont: .title2.weight(.bold))
             cinematicRelations(media: media)
         }
-        .alert("Reset Progress", isPresented: $showResetConfirmation) {
-            Button("Reset", role: .destructive) {
+        .alert("detail.reset_progress", isPresented: $showResetConfirmation) {
+            Button("common.reset", role: .destructive) {
                 ContinueWatchingManager.shared.resetProgress(
                     aniListID: media.id, moduleId: nil, mediaTitle: "")
             }
-            Button("Cancel", role: .cancel) {}
+            Button("common.cancel", role: .cancel) {}
         } message: {
-            Text("This will clear all watched history and progress for \(media.title.displayTitle).")
+            Text("detail.this_will_clear_all_watched \(media.title.displayTitle)")
         }
     }
 
@@ -1718,7 +1718,7 @@ extension AniListDetailView {
                     CinematicCircleButton(
                         systemImage: isSelectionMode ? "xmark" : "arrow.down",
                         isOn: isSelectionMode,
-                        help: isSelectionMode ? "Stop picking episodes" : "Pick episodes to download"
+                        help: isSelectionMode ? String(localized: "detail.stop_picking_episodes") : String(localized: "detail.pick_episodes_to_download")
                     ) {
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                             isSelectionMode.toggle()
@@ -1727,7 +1727,7 @@ extension AniListDetailView {
                     }
                 }
                 if continueWatching.hasProgress(aniListID: media.id, moduleId: nil, mediaTitle: "") {
-                    CinematicCircleButton(systemImage: "arrow.counterclockwise", help: "Reset progress") {
+                    CinematicCircleButton(systemImage: "arrow.counterclockwise", help: String(localized: "detail.reset_progress_2")) {
                         showResetConfirmation = true
                     }
                 }
@@ -1749,7 +1749,7 @@ extension AniListDetailView {
                     .contentShape(Rectangle())
                     .onTapGesture { showDetailsSheet = true }
                     .copyDescriptionContextMenu(desc)
-                    .help("Show full details")
+                    .help("detail.show_full_details")
             }
         }
         .padding(.horizontal, CinematicMetrics.margin)
@@ -1768,13 +1768,13 @@ extension AniListDetailView {
         let totalEpisodes = episodeTotal(for: media)
 
         VStack(alignment: .leading, spacing: 14) {
-            CinematicSectionHeader(title: "Episodes") {
+            CinematicSectionHeader(title: String(localized: "common.episodes")) {
                 if totalEpisodes > 100 {
                     episodeRangeMenu(totalEpisodes: totalEpisodes)
                 }
                 CinematicCircleButton(
                     systemImage: isReversed ? "arrow.down" : "arrow.up",
-                    help: isReversed ? "Newest episodes first — show oldest first" : "Oldest episodes first — show newest first"
+                    help: isReversed ? String(localized: "detail.newest_episodes_first_show_oldest") : String(localized: "detail.oldest_episodes_first_show_newest")
                 ) { isReversed.toggle() }
             }
 
@@ -1785,7 +1785,7 @@ extension AniListDetailView {
             }
 
             if moduleManager.modules.isEmpty {
-                Label("Install a module in the Search tab to watch episodes", systemImage: "puzzlepiece.extension")
+                Label("detail.install_a_module_in_the", systemImage: "puzzlepiece.extension")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, CinematicMetrics.margin)
@@ -1801,7 +1801,7 @@ extension AniListDetailView {
                 // A new range or order starts the row over.
                 .id("\(window.lowerBound)-\(isReversed)")
             } else {
-                Text("Episode count not available")
+                Text("detail.episode_count_not_available")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, CinematicMetrics.margin)
@@ -1814,7 +1814,7 @@ extension AniListDetailView {
         let edges = (media.relations?.edges ?? []).filter { $0.node.type != "MANGA" }
         if !edges.isEmpty {
             VStack(alignment: .leading, spacing: 14) {
-                CinematicSectionHeader(title: "Relations")
+                CinematicSectionHeader(title: String(localized: "detail.relations"))
                 CinematicShelf(items: edges) { edge in
                     NavigationLink {
                         AniListDetailView(mediaId: edge.node.id, preloadedMedia: edge.node)
@@ -1846,7 +1846,7 @@ struct SynopsisSection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 10) {
-                Text("Synopsis")
+                Text("detail.synopsis")
                     .font(.title3.weight(.bold))
             }
             .padding(.horizontal, 16)
@@ -1868,7 +1868,7 @@ struct SynopsisSection: View {
 
             if let onMore {
                 Button(action: onMore) {
-                    Text("View more…")
+                    Text("detail.view_more")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)
                 }
@@ -1981,19 +1981,19 @@ private struct AniListEpisodeRowContainer: View {
             style: style
         )
         .alert(
-            "Update tracking progress?",
+            String(localized: "detail.update_tracking_progress"),
             isPresented: Binding(get: { pendingDowngrade != nil }, set: { if !$0 { pendingDowngrade = nil } }),
             presenting: pendingDowngrade
         ) { d in
-            Button("Update everywhere (ep \(d.newProgress))") {
+            Button("detail.update_everywhere_ep \(d.newProgress)") {
                 Task { await d.confirm(); pendingDowngrade = nil }
             }
-            Button("This device only") { d.localOnly(); pendingDowngrade = nil }
-            Button("Cancel", role: .cancel) { pendingDowngrade = nil }
+            Button("detail.this_device_only") { d.localOnly(); pendingDowngrade = nil }
+            Button("common.cancel", role: .cancel) { pendingDowngrade = nil }
         } message: { d in
             let parts = [
-                d.anilistFrom.map { "AniList: \($0) → \(d.newProgress)" },
-                d.malFrom.map { "MAL: \($0) → \(d.newProgress)" }
+                d.anilistFrom.map { String(localized: "detail.anilist \($0) \(d.newProgress)") },
+                d.malFrom.map { String(localized: "detail.mal \($0) \(d.newProgress)") }
             ].compactMap { $0 }
             Text(parts.joined(separator: "\n"))
         }
@@ -2020,9 +2020,9 @@ struct AniListStreamResultSheet: View {
             Group {
                 if streams.isEmpty {
                     ContentUnavailableView(
-                        "No Streams Found",
+                        "detail.no_streams_found",
                         systemImage: "antenna.radiowaves.left.and.right.slash",
-                        description: Text("No playable streams were found.")
+                        description: Text("detail.no_playable_streams_were_found")
                     )
                 } else {
                     List(streams) { stream in
@@ -2044,13 +2044,13 @@ struct AniListStreamResultSheet: View {
                     .softScrollEdges()
                 }
             }
-            .navigationTitle("Episode \(episodeNumber)")
+            .navigationTitle("detail.episode \(episodeNumber)")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { onDismiss() }
+                    Button("common.cancel") { onDismiss() }
                 }
             }
             .appTint()
@@ -2155,7 +2155,7 @@ struct AniListMatchingSearchView: View {
                 HStack {
                     Image(systemName: "magnifyingglass")
                         .foregroundStyle(.secondary)
-                    TextField("Search AniList...", text: $searchText)
+                    TextField("detail.search_anilist", text: $searchText)
                         .textFieldStyle(.plain)
                         .onChangeOf(searchText) { performSearch() }
                     
@@ -2179,7 +2179,7 @@ struct AniListMatchingSearchView: View {
                     } label: {
                         HStack {
                             Image(systemName: "link.badge.minus")
-                            Text("Unlink current series")
+                            Text("detail.unlink_current_series")
                             Spacer()
                         }
                         .foregroundStyle(.red)
@@ -2197,7 +2197,7 @@ struct AniListMatchingSearchView: View {
                     Spacer()
                 } else if results.isEmpty && !searchText.isEmpty {
                     Spacer()
-                    ContentUnavailableView("No Results", systemImage: "magnifyingglass", description: Text("Try a different title or keyword"))
+                    ContentUnavailableView("detail.no_results", systemImage: "magnifyingglass", description: Text("detail.try_a_different_title_or"))
                     Spacer()
                 } else {
                     List(results) { media in
@@ -2248,12 +2248,12 @@ struct AniListMatchingSearchView: View {
                 }
             }
         }
-        .navigationTitle("Link AniList Series")
+        .navigationTitle("detail.link_anilist_series")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { dismiss() }
+                Button("common.cancel") { dismiss() }
             }
         }
         #if os(iOS)

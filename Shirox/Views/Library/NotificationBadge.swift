@@ -32,7 +32,7 @@ private struct NotificationBadgeModifier: ViewModifier {
                     .overlay(Capsule().strokeBorder(badgeStroke, lineWidth: 1))
                     .drawingGroup()
                     .offset(x: 6, y: -2)
-                    .accessibilityLabel("\(count) unread notifications")
+                    .accessibilityLabel("library.unread_notifications \(count)")
             }
         }
     }
@@ -45,7 +45,7 @@ extension View {
     }
 }
 
-#Preview("Badge counts") {
+#Preview(String(localized: "library.badge_counts")) {
     HStack(spacing: 28) {
         Image(systemName: "bell").notificationBadge(count: 0)
         Image(systemName: "bell").notificationBadge(count: 3)

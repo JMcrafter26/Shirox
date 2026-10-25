@@ -27,11 +27,11 @@ enum SimklError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .dailyLimit:
-            return "Simkl's daily limit for your account has been reached. It resets at midnight US Eastern time."
+            return String(localized: "shared.simkls_daily_limit_for_your")
         case .readOnly:
-            return "Sign in to Simkl again to allow edits."
+            return String(localized: "shared.sign_in_to_simkl_again")
         case .budgetReserved:
-            return "Simkl's last requests today are kept for your own actions."
+            return String(localized: "shared.simkls_last_requests_today_are")
         }
     }
 }

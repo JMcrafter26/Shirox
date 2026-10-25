@@ -95,7 +95,7 @@ struct TrackingLinksView: View {
         NavigationStack {
             List {
                 Section {
-                    Picker("Service", selection: $side) {
+                    Picker("shared.service", selection: $side) {
                         ForEach(sides, id: \.self) { Text($0.name).tag($0) }
                     }
                     .pickerStyle(.segmented)
@@ -103,22 +103,22 @@ struct TrackingLinksView: View {
 
                 if isModulePage && side == .simkl {
                     Section {
-                        Picker("Kind", selection: $simklKind) {
+                        Picker("shared.kind", selection: $simklKind) {
                             ForEach(MediaKind.simklKinds, id: \.self) { Text($0.simklKindTitle).tag($0) }
                         }
                         .pickerStyle(.segmented)
                     } footer: {
-                        Text("A show or movie linked here is marked on Simkl as you finish its episodes.")
+                        Text("shared.a_show_or_movie_linked")
                     }
                 }
 
-                Section("Linked") {
+                Section("shared.linked") {
                     if linksTitle { titleLinkRow } else { currentRow }
                 }
 
                 if page.fixedSide != side {
-                    Section("Search \(side.name)") {
-                        TextField("Title", text: $query)
+                    Section("shared.search \(side.name)") {
+                        TextField("shared.title", text: $query)
                             .onChangeOf(query) { performSearch() }
                         if isSearching { ProgressView() }
                         ForEach(results) { candidate in
@@ -128,18 +128,18 @@ struct TrackingLinksView: View {
                     }
                     Section {
                         HStack {
-                            TextField("ID or link", text: $idText)
+                            TextField("shared.id_or_link", text: $idText)
                                 #if os(iOS)
                                 .textInputAutocapitalization(.never)
                                 .autocorrectionDisabled()
                                 #endif
-                            Button("Link") { linkTypedID() }
+                            Button("shared.link") { linkTypedID() }
                                 .disabled(idText.trimmingCharacters(in: .whitespaces).isEmpty)
                         }
                     } header: {
-                        Text("Or enter an ID")
+                        Text("shared.or_enter_an_id")
                     } footer: {
-                        Text("A number, or a link to the \(kindNoun) on \(side.name).")
+                        Text("shared.a_number_or_a_link \(kindNoun) \(side.name)")
                     }
                 }
 
@@ -147,12 +147,12 @@ struct TrackingLinksView: View {
                     Section { Text(message).font(.caption).foregroundStyle(.secondary) }
                 }
             }
-            .navigationTitle("Tracking Links")
+            .navigationTitle("shared.tracking_links")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
+                ToolbarItem(placement: .cancellationAction) { Button("common.done") { dismiss() } }
             }
         }
         .task {
@@ -182,7 +182,7 @@ struct TrackingLinksView: View {
         let id = currentID(for: side)
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text(currentTitles[side] ?? (id.map { "#\($0)" } ?? "Not linked"))
+                Text(currentTitles[side] ?? (id.map { "#\($0)" } ?? String(localized: "shared.not_linked")))
                     .font(.headline)
                 Text(badge(for: side, id: id))
                     .font(.caption)
@@ -190,12 +190,12 @@ struct TrackingLinksView: View {
             }
             Spacer()
             if isUserSet(side) {
-                Button("Reset to automatic") { reset(side) }
+                Button("shared.reset_to_automatic") { reset(side) }
                     .font(.caption)
             }
         }
         if isModulePage, side == .anilist, id != nil {
-            Button("Unlink", role: .destructive) {
+            Button("shared.unlink", role: .destructive) {
                 onAniListMatch?(nil)
                 dismiss()
             }
@@ -207,28 +207,28 @@ struct TrackingLinksView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(titleLinkName ?? "#\(link.simklID)").font(.headline)
-                    Text(link.automatic ? "Matched automatically" : "Set by you")
+                    Text(link.automatic ? String(localized: "shared.matched_automatically") : String(localized: "shared.set_by_you"))
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button("Unlink") { unlinkTitle() }
+                Button("shared.unlink") { unlinkTitle() }
                     .font(.caption)
             }
             if link.kind == .tv {
-                Picker("This page is", selection: Binding(get: { link.season ?? 0 },
+                Picker("shared.this_page_is", selection: Binding(get: { link.season ?? 0 },
                                                           set: { setSeason($0 == 0 ? nil : $0) })) {
-                    Text("All seasons").tag(0)
+                    Text("shared.all_seasons").tag(0)
                     ForEach(Array(Set(seasons + [link.season].compactMap { $0 })).sorted(), id: \.self) {
-                        Text("Season \($0)").tag($0)
+                        Text("shared.season_2 \($0)").tag($0)
                     }
                 }
             }
         } else {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Not linked").font(.headline)
-                Text(titleLink.map { "Linked as a \($0.kind == .movie ? "movie" : "show")" }
-                     ?? "Episodes finished here aren't marked on Simkl")
+                Text("shared.not_linked").font(.headline)
+                Text(titleLink.map { $0.kind == .movie ? String(localized: "shared.linked_as_a_movie") : String(localized: "shared.linked_as_a_show") }
+                     ?? String(localized: "shared.episodes_finished_here_arent_marked"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -282,11 +282,11 @@ struct TrackingLinksView: View {
     }
 
     private func badge(for s: LibrarySide, id: Int?) -> String {
-        if page.fixedSide == s { return "This page" }
-        if isModulePage, s == .anilist { return id == nil ? "Not linked" : "Matched to this page" }
-        if isUserSet(s) { return "Set by you" }
-        if s == .simkl, id == nil { return "Automatic — Simkl matches it from the other ids" }
-        return id == nil ? "Not linked" : "Automatic"
+        if page.fixedSide == s { return String(localized: "shared.this_page") }
+        if isModulePage, s == .anilist { return id == nil ? String(localized: "shared.not_linked") : String(localized: "shared.matched_to_this_page") }
+        if isUserSet(s) { return String(localized: "shared.set_by_you") }
+        if s == .simkl, id == nil { return String(localized: "shared.automatic_simkl_matches_it_from") }
+        return id == nil ? String(localized: "shared.not_linked") : String(localized: "shared.automatic")
     }
 
     private func reload() async {
@@ -333,11 +333,11 @@ struct TrackingLinksView: View {
                 let found = try await Self.search(q, on: s, simklKind: kind)
                 guard !Task.isCancelled else { return }
                 results = found
-                message = found.isEmpty ? "No results on \(s.name)." : nil
+                message = found.isEmpty ? String(localized: "shared.no_results_on \(s.name)") : nil
             } catch {
                 guard !Task.isCancelled else { return }
                 results = []
-                message = "Search failed: \(error.localizedDescription)"
+                message = String(localized: "shared.search_failed \(error.localizedDescription)")
             }
             isSearching = false
         }
@@ -348,10 +348,10 @@ struct TrackingLinksView: View {
         let kind = searchKind
         let noun = kindNoun
         guard let id = TrackingIDInput.parse(idText, for: s, simklKind: kind) else {
-            message = "Enter a number, or a link to the \(noun) on \(s.name)."
+            message = String(localized: "shared.enter_a_number_or_a \(noun) \(s.name)")
             return
         }
-        message = "Checking…"
+        message = String(localized: "modules.checking")
         Task {
             do {
                 guard let found = try await Self.lookup(id, on: s, simklKind: kind) else {
@@ -360,7 +360,7 @@ struct TrackingLinksView: View {
                 }
                 link(found)
             } catch {
-                message = "Couldn't check that ID: \(error.localizedDescription)"
+                message = String(localized: "shared.couldnt_check_that_id \(error.localizedDescription)")
             }
         }
     }
@@ -376,7 +376,7 @@ struct TrackingLinksView: View {
             return
         }
         guard let key = page.storeKey else {
-            message = "This page has no module address, so links can't be saved for it."
+            message = String(localized: "shared.this_page_has_no_module")
             return
         }
         let s = side
@@ -387,7 +387,7 @@ struct TrackingLinksView: View {
             case .simkl:   l.simkl = candidate.id
             }
         }
-        message = "Linked \(s.name) to \(candidate.title)."
+        message = String(localized: "shared.linked_to \(s.name) \(candidate.title)")
         idText = ""
         onChange()
         Task { await reload() }
@@ -410,11 +410,11 @@ struct TrackingLinksView: View {
     /// Links the page's show or movie. A show's season starts at the guess; the picker changes it.
     private func linkTitle(_ candidate: LinkCandidate) {
         guard let key = page.storeKey else {
-            message = "This page has no module address, so links can't be saved for it."
+            message = String(localized: "shared.this_page_has_no_module")
             return
         }
         let kind = simklKind
-        message = "Linking…"
+        message = String(localized: "shared.linking")
         Task {
             var season: Int?
             if kind == .tv {
@@ -426,7 +426,7 @@ struct TrackingLinksView: View {
                 $0.simklSearched = true
                 $0.simklNoMatchAt = nil
             }
-            message = "Linked Simkl to \(candidate.title)."
+            message = String(localized: "shared.linked_simkl_to \(candidate.title)")
             idText = ""
             onChange()
             await reload()
@@ -474,7 +474,7 @@ struct TrackingLinksView: View {
         init?(simkl item: SimklCatalogItem) {
             guard let simklID = item.simklID else { return nil }
             id = simklID
-            title = item.title ?? "Simkl #\(simklID)"
+            title = item.title ?? String(localized: "shared.simkl \(simklID)")
             detail = [item.type?.uppercased(), item.year.map(String.init)].compactMap { $0 }.joined(separator: " · ")
                 .nilIfEmpty
             posterURL = item.posterURL

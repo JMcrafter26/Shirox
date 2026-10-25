@@ -13,7 +13,7 @@ struct WatchOrderSection: View {
             EmptyView()
         } else {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Watch Order")
+                Text("shared.watch_order")
                     .font(titleFont)
                     .padding(.horizontal, margin)
 
@@ -68,7 +68,7 @@ private struct WatchOrderCard: View {
                     .padding(6)
             }
 
-            CardTitle(entry.title ?? "Unknown")
+            CardTitle(entry.title ?? String(localized: "shared.unknown"))
                 .font(.caption.weight(.medium))
                 .foregroundStyle(.primary)
                 .frame(width: 110, alignment: .leading)

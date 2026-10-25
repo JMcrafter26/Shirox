@@ -9,10 +9,10 @@ enum JellyfinAuthError: Error, LocalizedError {
     case invalidURL, unreachable, badCredentials, server(Int)
     var errorDescription: String? {
         switch self {
-        case .invalidURL: return "Enter a valid server address."
-        case .unreachable: return "Couldn't reach the server. Check the address and your network."
-        case .badCredentials: return "Wrong username or password."
-        case .server(let code): return "Server error (\(code))."
+        case .invalidURL: return String(localized: "jellyfin.enter_a_valid_server_address")
+        case .unreachable: return String(localized: "jellyfin.couldnt_reach_the_server_check")
+        case .badCredentials: return String(localized: "jellyfin.wrong_username_or_password")
+        case .server(let code): return String(localized: "shared.server_error \(code)")
         }
     }
 }

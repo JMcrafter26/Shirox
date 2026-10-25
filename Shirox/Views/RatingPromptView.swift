@@ -4,7 +4,7 @@ struct RatingPromptView: View {
     let title: String
     let imageUrl: String
     let scoreFormat: ScoreFormat
-    var heading = "Rate Anime"
+    var heading = String(localized: "shared.rate_anime")
     let onSave: (Double) -> Void
     let onSkip: () -> Void
 
@@ -28,7 +28,7 @@ struct RatingPromptView: View {
                             Text(title)
                                 .font(.headline)
                                 .multilineTextAlignment(.center)
-                            Text("How would you rate it?")
+                            Text("shared.how_would_you_rate_it")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                         }
@@ -37,7 +37,7 @@ struct RatingPromptView: View {
                     .listRowBackground(Color.clear)
                 }
 
-                Section("Score") {
+                Section("library.score") {
                     ScoreInputView(score: $score, format: scoreFormat)
                 }
             }
@@ -48,13 +48,13 @@ struct RatingPromptView: View {
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Skip") {
+                    Button("shared.skip") {
                         onSkip()
                         dismiss()
                     }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button("common.save") {
                         onSave(score)
                         dismiss()
                     }

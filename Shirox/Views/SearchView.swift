@@ -66,7 +66,7 @@ struct SearchView: View {
             withModuleButton(
                 mainContent
                     .background(SearchActivationObserver { vm.clearResults() })
-                    .navigationTitle("Search")
+                    .navigationTitle("common.search")
             )
                 .modifier(ConditionalSearchable(enabled: !isLocalModule && !isJellyfinModule, text: $vm.query))
                 // The module button stays up while searching, keyboard and all, rather than
@@ -169,12 +169,12 @@ struct SearchView: View {
             } else {
                 emptyStateView(
                     icon: usingModule ? "puzzlepiece.extension" : "magnifyingglass",
-                    title: usingModule ? "Search via Module" : (discovery.usesSimkl ? "Search Simkl" : "Search Anime"),
+                    title: usingModule ? String(localized: "search.search_via_module") : (discovery.usesSimkl ? String(localized: "search.search_simkl") : String(localized: "search.search_anime_2")),
                     subtitle: usingModule
-                        ? "Searching \(moduleManager.activeModule?.sourceName ?? "")…"
+                        ? String(localized: "search.searching_module \(moduleManager.activeModule?.sourceName ?? String())")
                         : discovery.usesSimkl
-                            ? "Find anime, shows and movies on Simkl"
-                            : "Find any anime via \(primaryProvider.displayName)"
+                            ? String(localized: "search.find_anime_shows_and_movies")
+                            : String(localized: "search.find_any_anime_via \(primaryProvider.displayName)")
                 )
             }
         } else if vm.isLoading {
@@ -182,7 +182,7 @@ struct SearchView: View {
         } else if let err = vm.errorMessage {
             emptyStateView(
                 icon: "exclamationmark.triangle",
-                title: "Something went wrong",
+                title: String(localized: "search.something_went_wrong"),
                 subtitle: err
             )
         } else if !vm.hasResults && !vm.query.isEmpty {
@@ -204,11 +204,11 @@ struct SearchView: View {
 
     private var localStepDescription: String {
         if !needsVideoStep {
-            return "Step 2 of 2 — choose a subtitle file for this video."
+            return String(localized: "search.step_2_of_2_choose")
         }
         return addSubtitleUpFront
-            ? "Step 1 of 2 — choose the video, then you'll add a subtitle."
-            : "Pick a video from Files to play it in Shirox."
+            ? String(localized: "search.step_1_of_2_choose")
+            : String(localized: "search.pick_a_video_from_files")
     }
 
     private var localEntryView: some View {
@@ -217,14 +217,14 @@ struct SearchView: View {
                 .font(.system(size: 52))
                 .foregroundStyle(.secondary)
             VStack(spacing: 4) {
-                Text("Play a Local File")
+                Text("search.play_a_local_file")
                     .font(.headline)
                 Text(localStepDescription)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
-            Toggle("Add subtitle file", isOn: $addSubtitleUpFront)
+            Toggle("search.add_subtitle_file", isOn: $addSubtitleUpFront)
                 .toggleStyle(.switch)
                 .switchTint()
                 .fixedSize()
@@ -257,7 +257,7 @@ struct SearchView: View {
                 importPhase = needsVideoStep ? .video : .subtitle
                 showFileImporter = true
             } label: {
-                Label(needsVideoStep ? "Choose video file" : "Choose subtitle file",
+                Label(needsVideoStep ? String(localized: "search.choose_video_file") : String(localized: "search.choose_subtitle_file"),
                       systemImage: needsVideoStep ? "play.rectangle.on.rectangle" : "captions.bubble")
                     .font(.headline)
                     .foregroundStyle(platformBackground)
@@ -269,7 +269,7 @@ struct SearchView: View {
 
             // On the subtitle step, allow playing the staged video without one.
             if !needsVideoStep {
-                Button("Play without subtitle") { playStaged(subtitle: nil) }
+                Button("search.play_without_subtitle") { playStaged(subtitle: nil) }
                     .font(.subheadline)
                     .buttonStyle(.plain)
                     .foregroundStyle(.secondary)
@@ -373,7 +373,7 @@ struct SearchView: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 20) {
                 if !vm.simklFailedKinds.isEmpty {
-                    Text("Couldn't search \(ListFormatter.localizedString(byJoining: vm.simklFailedKinds.map(\.simklKindTitle))) on Simkl.")
+                    Text("search.couldnt_search_on_simkl \(ListFormatter.localizedString(byJoining: vm.simklFailedKinds.map(\.simklKindTitle)))")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 16)
@@ -411,7 +411,7 @@ struct SearchView: View {
         VStack(spacing: 12) {
             ProgressView()
                 .scaleEffect(1.2)
-            Text("Searching…")
+            Text("search.searching")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
@@ -436,7 +436,7 @@ struct SearchView: View {
                         Button(role: .destructive) {
                             history.remove(query)
                         } label: {
-                            Label("Delete", systemImage: "trash")
+                            Label("common.delete", systemImage: "trash")
                         }
                         .tint(.red)
                     }
@@ -444,9 +444,9 @@ struct SearchView: View {
                 }
             } header: {
                 HStack {
-                    Text("Recent Searches")
+                    Text("search.recent_searches")
                     Spacer()
-                    Button("Clear All") { history.clear() }
+                    Button("downloads.clear_all") { history.clear() }
                         .font(.caption)
                         .textCase(nil)
                 }
@@ -523,7 +523,7 @@ struct SearchView: View {
 
                 // Text label
                 if buttonStyle != .iconOnly {
-                    Text(usingModule ? (moduleManager.activeModule?.sourceName ?? "Module") : shownProvider.displayName)
+                    Text(usingModule ? (moduleManager.activeModule?.sourceName ?? String(localized: "modules.module")) : shownProvider.displayName)
                         .font(.callout)
                         .fontWeight(.medium)
                         // A toolbar item takes whatever width it asks for, so a long module name
@@ -612,7 +612,7 @@ private struct ConditionalSearchable: ViewModifier {
     @Binding var text: String
     func body(content: Content) -> some View {
         if enabled {
-            content.searchable(text: $text, prompt: "Search anime…")
+            content.searchable(text: $text, prompt: String(localized: "search.search_anime"))
         } else {
             content
         }

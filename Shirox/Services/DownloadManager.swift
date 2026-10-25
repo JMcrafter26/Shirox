@@ -222,7 +222,7 @@ final class DownloadManager: NSObject, ObservableObject {
         // Prevent duplicates
         if let existing = items.first(where: { $0.episodeNumber == context.episodeNumber && $0.episodeHref == episodeHref && $0.streamTitle == context.streamTitle }) {
             let status = existing.state == .completed ? "already downloaded" : "already in queue"
-            ToastManager.shared.show(message: "\(context.mediaTitle) - \(context.episodeNumber) is \(status)", type: .warning)
+            ToastManager.shared.show(message: String(localized: "shared.is \(context.mediaTitle) \(context.episodeNumber) \(status)"), type: .warning)
             return
         }
         
@@ -257,7 +257,7 @@ final class DownloadManager: NSObject, ObservableObject {
                                                episodeHrefs: [episodeHref])
         }
 
-        ToastManager.shared.show(message: "Download added: \(context.mediaTitle) - \(context.episodeNumber)", type: .info)
+        ToastManager.shared.show(message: String(localized: "shared.download_added \(context.mediaTitle) \(context.episodeNumber)"), type: .info)
 
         if enrichSnapshot {
             let enrichItem = item
@@ -462,14 +462,16 @@ final class DownloadManager: NSObject, ObservableObject {
         if !unmatched.isEmpty {
             let list = unmatched.sorted().map(String.init).joined(separator: ", ")
             ToastManager.shared.show(
-                message: "Couldn't match episode\(unmatched.count == 1 ? "" : "s") \(list) on this source — its numbering may differ",
+                message: unmatched.count == 1
+                    ? String(localized: "downloads.couldnt_match_episode \(list)")
+                    : String(localized: "downloads.couldnt_match_episodes \(list)"),
                 type: .warning,
                 duration: 5
             )
         }
 
         guard !queuedIDs.isEmpty else { return }
-        ToastManager.shared.show(message: "Queued \(queuedIDs.count) episode\(queuedIDs.count == 1 ? "" : "s")", type: .info)
+        ToastManager.shared.show(message: String(localized: "downloads.queued_episodes \(queuedIDs.count)"), type: .info)
 
         // Only stream hosts behind Cloudflare apply the 13–14s cooldown on
         // back-to-back extractStreamUrl calls. For non-CF modules (no cached
@@ -557,7 +559,7 @@ final class DownloadManager: NSObject, ObservableObject {
         streamTitle: String
     ) async {
         guard !streams.isEmpty else {
-            await MainActor.run { self.markPendingItemFailed(id: queued.id, reason: "No streams found") }
+            await MainActor.run { self.markPendingItemFailed(id: queued.id, reason: String(localized: "common.no_streams_found")) }
             return
         }
         let stream = streams.first(where: { $0.title == streamTitle }) ?? streams[0]
@@ -589,7 +591,7 @@ final class DownloadManager: NSObject, ObservableObject {
         items[idx].error = reason
         persist()
         ToastManager.shared.show(
-            message: "Failed to fetch Ep \(items[idx].episodeNumber): \(reason)",
+            message: String(localized: "shared.failed_to_fetch_ep \(items[idx].episodeNumber) \(reason)"),
             type: .warning
         )
     }
@@ -630,7 +632,7 @@ final class DownloadManager: NSObject, ObservableObject {
             Task {
                 let fetched = await Self.fetchStreamsWithRetry(episodeUrl: href, epNum: 0)
                 guard !fetched.isEmpty else {
-                    await MainActor.run { self.markPendingItemFailed(id: id, reason: "No streams found") }
+                    await MainActor.run { self.markPendingItemFailed(id: id, reason: String(localized: "common.no_streams_found")) }
                     return
                 }
                 let stream = fetched.first(where: { $0.title == preferredTitle }) ?? fetched[0]
@@ -689,7 +691,7 @@ final class DownloadManager: NSObject, ObservableObject {
             DownloadedMediaSnapshotStore.shared.removeIfOrphaned(
                 mediaTitle: item.mediaTitle, moduleId: item.moduleId)
         }
-        ToastManager.shared.show(message: "Removed \(toRemove.count) downloads", type: .info)
+        ToastManager.shared.show(message: String(localized: "shared.removed_downloads \(toRemove.count)"), type: .info)
         processQueue()
     }
 
@@ -800,7 +802,7 @@ final class DownloadManager: NSObject, ObservableObject {
             mediaTitle: item.mediaTitle,
             moduleId: item.moduleId
         )
-        ToastManager.shared.show(message: "Download removed: \(item.mediaTitle) - \(item.episodeNumber)", type: .info)
+        ToastManager.shared.show(message: String(localized: "shared.download_removed \(item.mediaTitle) \(item.episodeNumber)"), type: .info)
         processQueue()
     }
 
@@ -846,7 +848,7 @@ final class DownloadManager: NSObject, ObservableObject {
             // resetting to .pending + processQueue(), which would silently re-download it.
             if let idx = items.firstIndex(where: { $0.id == item.id }) {
                 items[idx].state = .failed
-                items[idx].error = "Downloaded file is missing"
+                items[idx].error = String(localized: "shared.downloaded_file_is_missing")
                 items[idx].fileName = nil
                 items[idx].progress = 0
                 persist()
@@ -874,7 +876,7 @@ final class DownloadManager: NSObject, ObservableObject {
                 ? SubtitleTrack(title: track.title, url: url, headers: [:]) : nil
         }
         return StreamResult(
-            title: item.episodeTitle ?? "Episode \(item.episodeNumber)",
+            title: item.episodeTitle ?? String(localized: "common.episode \(item.episodeNumber)"),
             url: playURL,
             headers: [:],
             subtitle: localSubtitle,
@@ -974,7 +976,7 @@ final class DownloadManager: NSObject, ObservableObject {
             || item.streamURL?.pathExtension.lowercased() == "m3u8"
             || item.taskIdentifier == nil
         guard inApp else { return nil }
-        return autoResume ? (.pending, nil) : (.failed, "Interrupted when the app closed")
+        return autoResume ? (.pending, nil) : (.failed, String(localized: "shared.interrupted_when_the_app_closed"))
     }
 
     private func reconnectBackgroundTasks() {
@@ -1228,7 +1230,7 @@ final class DownloadManager: NSObject, ObservableObject {
             if inBackground {
                 sendCompletionNotification(item: item)
             } else {
-                ToastManager.shared.show(message: "Download finished: \(item.mediaTitle) - Ep \(item.episodeNumber)", type: .success)
+                ToastManager.shared.show(message: String(localized: "shared.download_finished_ep \(item.mediaTitle) \(item.episodeNumber)"), type: .success)
             }
             processQueue()
         }
@@ -1237,7 +1239,7 @@ final class DownloadManager: NSObject, ObservableObject {
     private func sendCompletionNotification(item: DownloadItem) {
         let content = UNMutableNotificationContent()
         content.title = item.mediaTitle
-        content.body = "Episode \(item.episodeNumber) finished downloading"
+        content.body = String(localized: "shared.episode_finished_downloading \(item.episodeNumber)")
         content.sound = .default
         let request = UNNotificationRequest(identifier: item.id.uuidString, content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request)
@@ -1257,7 +1259,7 @@ final class DownloadManager: NSObject, ObservableObject {
                 items[idx].error = error.localizedDescription
                 persist()
                 
-                ToastManager.shared.show(message: "Download failed: \(item.mediaTitle) - \(item.episodeNumber)", type: .error)
+                ToastManager.shared.show(message: String(localized: "shared.download_failed \(item.mediaTitle) \(item.episodeNumber)"), type: .error)
                 processQueue()
             }
         }
@@ -1312,7 +1314,7 @@ final class DownloadManager: NSObject, ObservableObject {
             if item.state == .pending && item.streamURL == nil {
                 var reset = item
                 reset.state = .failed
-                reset.error = "Stream extraction was interrupted"
+                reset.error = String(localized: "shared.stream_extraction_was_interrupted")
                 return reset
             }
             guard item.state == .completed, let fileName = item.fileName else { return item }
@@ -1327,7 +1329,7 @@ final class DownloadManager: NSObject, ObservableObject {
                 // network download on launch without the user asking.
                 var reset = item
                 reset.state = .failed
-                reset.error = "Downloaded file is missing"
+                reset.error = String(localized: "shared.downloaded_file_is_missing")
                 reset.fileName = nil
                 reset.progress = 0
                 return reset
@@ -1694,8 +1696,8 @@ extension DownloadManager {
             guard !restored.isEmpty else { return }
             #if os(iOS)
             ToastManager.shared.show(
-                message: restored.count == 1 ? "Added the missing audio to \(restored[0])"
-                    : "Added the missing audio to \(restored.count) downloads",
+                message: restored.count == 1 ? String(localized: "shared.added_the_missing_audio_to \(restored[0])")
+                    : String(localized: "shared.added_the_missing_audio_to_2 \(restored.count)"),
                 type: .info, duration: 4)
             #endif
         }

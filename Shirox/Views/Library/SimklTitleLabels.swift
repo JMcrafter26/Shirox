@@ -5,7 +5,7 @@ enum SimklTitleLabels {
     /// "S2 E5 · 17 of 73" — how far the user is, then the count.
     static func showProgress(_ entry: LibraryEntry) -> String {
         let place = SimklEpisodePlanner.lastWatched(entry.watchedEpisodes)?.label
-            ?? (entry.status == .completed ? "Completed" : "Not started")
+            ?? (entry.status == .completed ? String(localized: "shared.completed") : String(localized: "library.not_started"))
         guard let total = entry.media.episodes, total > 0 else { return "\(place) · \(entry.progress) watched" }
         return "\(place) · \(entry.progress) of \(total)"
     }
@@ -13,7 +13,7 @@ enum SimklTitleLabels {
     /// "1994 · 2h 34m".
     static func movieLine(_ media: Media) -> String {
         let parts = [media.seasonYear.map(String.init), media.runtime.map { Self.runtime($0) }].compactMap { $0 }
-        return parts.isEmpty ? "Movie" : parts.joined(separator: " · ")
+        return parts.isEmpty ? String(localized: "jellyfin.movie") : parts.joined(separator: " · ")
     }
 
     /// "2h 28m", "2h", "58m".

@@ -12,9 +12,9 @@ enum MangaReadingMode: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .vertical: return "Vertical Scroll"
-        case .pagedLTR: return "Paged (Left to Right)"
-        case .pagedRTL: return "Paged (Right to Left)"
+        case .vertical: return String(localized: "reader.vertical_scroll")
+        case .pagedLTR: return String(localized: "reader.paged_left_to_right")
+        case .pagedRTL: return String(localized: "reader.paged_right_to_left")
         }
     }
 
@@ -586,7 +586,7 @@ struct MangaReaderView: View {
             Spacer()
 
             Menu {
-                Picker("Reading Mode", selection: Binding(
+                Picker("reader.reading_mode", selection: Binding(
                     get: { modeRaw },
                     set: { newMode in
                         guard newMode != modeRaw else { return }
@@ -598,15 +598,15 @@ struct MangaReaderView: View {
                     }
                 }
                 Toggle(isOn: $pageCurl) {
-                    Label("Page Curl", systemImage: "book.pages")
+                    Label("reader.page_curl", systemImage: "book.pages")
                 }
                 .disabled(mode == .vertical)
                 Section {
                     Toggle(isOn: $tapZones) {
-                        Label("Tap Sides to \(mode == .vertical ? "Scroll" : "Turn")", systemImage: "hand.tap")
+                        Label(mode == .vertical ? String(localized: "reader.tap_sides_to_scroll") : String(localized: "reader.tap_sides_to_turn"), systemImage: "hand.tap")
                     }
                     Toggle(isOn: $tapZonesReversed) {
-                        Label("Reverse Direction", systemImage: "arrow.left.arrow.right")
+                        Label("reader.reverse_direction", systemImage: "arrow.left.arrow.right")
                     }
                     .disabled(mode != .vertical)
                 }
@@ -727,7 +727,7 @@ struct MangaReaderView: View {
         VStack {
             Spacer()
             Button { goToChapter(displayedChapterIndex + 1) } label: {
-                Label("Next Chapter", systemImage: "arrow.right")
+                Label("reader.next_chapter_2", systemImage: "arrow.right")
                     .font(.subheadline.weight(.bold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 20)
@@ -748,7 +748,7 @@ struct MangaReaderView: View {
                 .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.8))
                 .multilineTextAlignment(.center)
-            Button("Retry") {
+            Button("common.retry") {
                 let chapterIdx = displayedChapterIndex
                 Task { await loadChapter(chapterIdx) }
             }
@@ -769,7 +769,7 @@ struct MangaReaderView: View {
         // Reading entry) used to reach `context.chapters[-1]` and crash the app.
         guard !context.chapters.isEmpty else {
             strip = []
-            loadError = "No chapters found"
+            loadError = String(localized: "shared.no_chapters_found")
             isLoading = false
             return
         }
@@ -795,7 +795,7 @@ struct MangaReaderView: View {
                 result = try await CloudflareBypassManager.shared.pastWall { try await JSEngine.shared.mangaImages(url: target.href) }
             }
             if result.isEmpty {
-                loadError = "No pages found"
+                loadError = String(localized: "reader.no_pages_found")
             } else {
                 strip = result.enumerated().map {
                     StripPage(chapterIdx: clamped, pageIdx: $0.offset, url: $0.element, globalIdx: $0.offset)

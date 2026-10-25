@@ -30,7 +30,7 @@ struct BookmarkButton: View {
     var body: some View {
         if let media {
             button(for: media)
-                .help(isSaved ? "In your library — change its collections" : "Save to your library")
+                .help(isSaved ? String(localized: "library.in_your_library_change_its") : String(localized: "library.save_to_your_library"))
                 .zoomSource("collections", in: collectionsZoom, cornerRadius: 26)
                 .adaptiveSheet(isPresented: $showCollections) {
                     LocalCollectionPickerSheet(media: media, localSource: localSource)
@@ -69,7 +69,7 @@ struct BookmarkButton: View {
             .buttonStyle(.plain)
         case .toolbar:
             Button(action: action) {
-                Label(isSaved ? "Saved" : "Save", systemImage: isSaved ? "bookmark.fill" : "bookmark")
+                Label(isSaved ? String(localized: "library.saved") : String(localized: "common.save"), systemImage: isSaved ? "bookmark.fill" : "bookmark")
             }
         }
     }
@@ -84,7 +84,7 @@ struct FloatingDownloadButton: View {
 
     var body: some View {
         FloatingBatchButton(icon: "arrow.down", tint: .accentColor, count: count,
-                            label: count > 0 ? "Download \(count) episodes" : "Download",
+                            label: count > 0 ? String(localized: "library.download_episodes \(count)") : String(localized: "library.download"),
                             action: action)
     }
 }
@@ -96,7 +96,7 @@ struct FloatingDeleteButton: View {
 
     var body: some View {
         FloatingBatchButton(icon: "trash", tint: .red, count: count,
-                            label: count > 0 ? "Delete \(count) episodes" : "Delete",
+                            label: count > 0 ? String(localized: "library.delete_episodes \(count)") : String(localized: "common.delete"),
                             action: action)
     }
 }
@@ -162,7 +162,7 @@ private struct LocalCollectionPickerSheet: View {
     @ViewBuilder private var sheetBody: some View {
         NavigationStack {
             Form {
-                Section("Collections") {
+                Section("library.collections") {
                     ForEach(local.collections) { collection in
                         Button {
                             let member = collection.mediaUniqueIds.contains(media.uniqueId)
@@ -182,7 +182,7 @@ private struct LocalCollectionPickerSheet: View {
                     Button {
                         showNewCollection = true
                     } label: {
-                        Label("New Collection", systemImage: "plus")
+                        Label("library.new_collection", systemImage: "plus")
                     }
                 }
                 Section {
@@ -190,23 +190,23 @@ private struct LocalCollectionPickerSheet: View {
                         local.remove(uniqueId: media.uniqueId)
                         dismiss()
                     } label: {
-                        Label("Remove from Library", systemImage: "bookmark.slash")
+                        Label("library.remove_from_library", systemImage: "bookmark.slash")
                     }
                 }
             }
             .softScrollEdges()
-            .navigationTitle("Add to Collection")
+            .navigationTitle("library.add_to_collection")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                    Button("common.done") { dismiss() }
                 }
             }
-            .alert("New Collection", isPresented: $showNewCollection) {
-                TextField("Name", text: $newCollectionName)
-                Button("Create") {
+            .alert("library.new_collection", isPresented: $showNewCollection) {
+                TextField("common.name", text: $newCollectionName)
+                Button("library.create") {
                     let trimmed = newCollectionName.trimmingCharacters(in: .whitespacesAndNewlines)
                     newCollectionName = ""
                     guard !trimmed.isEmpty else { return }
@@ -215,7 +215,7 @@ private struct LocalCollectionPickerSheet: View {
                                         inCollection: collection.id, member: true,
                                         localSource: localSource)
                 }
-                Button("Cancel", role: .cancel) { newCollectionName = "" }
+                Button("common.cancel", role: .cancel) { newCollectionName = "" }
             }
         }
     }

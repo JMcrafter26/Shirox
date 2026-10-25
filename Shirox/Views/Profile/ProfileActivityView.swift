@@ -69,7 +69,7 @@ struct ProfileActivityView: View {
                 .zoomingOut(of: "compose", in: composeZoom)
         }
         .adaptiveSheet(item: $targetUserId) { uid in
-            ProfileView(userId: uid, username: targetUsername ?? "Profile", avatarURL: nil)
+            ProfileView(userId: uid, username: targetUsername ?? String(localized: "common.profile"), avatarURL: nil)
         }
         .adaptiveSheet(item: $targetMediaId) { mid in
             AniListDetailView(mediaId: mid)
@@ -94,18 +94,18 @@ struct ProfileActivityView: View {
                 .padding(20)
             }
         }
-        .alert("Delete Activity?", isPresented: Binding(
+        .alert("profile.delete_activity", isPresented: Binding(
             get: { activityToDelete != nil },
             set: { if !$0 { activityToDelete = nil } }
         )) {
-            Button("Delete", role: .destructive) {
+            Button("common.delete", role: .destructive) {
                 if let item = activityToDelete {
                     Task { await performDelete(item) }
                 }
             }
-            Button("Cancel", role: .cancel) { activityToDelete = nil }
+            Button("common.cancel", role: .cancel) { activityToDelete = nil }
         } message: {
-            Text("This cannot be undone.")
+            Text("profile.this_cannot_be_undone")
         }
     }
 
@@ -147,7 +147,7 @@ struct ProfileActivityView: View {
             ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if vm.activity.isEmpty {
             ContentUnavailableView {
-                Label("No Activity", systemImage: "bubble.left.and.text.bubble.right")
+                Label("profile.no_activity", systemImage: "bubble.left.and.text.bubble.right")
             } description: {
                 Text(emptyText)
             }
@@ -179,7 +179,7 @@ struct ProfileActivityView: View {
                             if vm.isLoadingActivity {
                                 ProgressView().controlSize(.small)
                             } else {
-                                Text("Load More").font(.subheadline.weight(.medium))
+                                Text("profile.load_more").font(.subheadline.weight(.medium))
                             }
                             Spacer()
                         }
@@ -199,9 +199,9 @@ struct ProfileActivityView: View {
 
     private var emptyText: String {
         switch vm.activityFeed {
-        case .mine: return "No activity found."
-        case .following: return "No recent activity from people you follow."
-        case .global: return "No global activity available."
+        case .mine: return String(localized: "profile.no_activity_found")
+        case .following: return String(localized: "profile.no_recent_activity_from_people")
+        case .global: return String(localized: "profile.no_global_activity_available")
         }
     }
 
@@ -223,7 +223,7 @@ struct ProfileActivityView: View {
                             }
                     }
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(item.user?.name ?? "Unknown")
+                        Text(item.user?.name ?? String(localized: "shared.unknown"))
                             .font(.subheadline.weight(.semibold))
                             .onTapGesture {
                                 targetUsername = item.user?.name
@@ -258,7 +258,7 @@ struct ProfileActivityView: View {
                                 CardTitle(media?.displayTitle ?? "")
                                     .font(.subheadline.weight(.semibold))
                                     .multilineTextAlignment(.leading)
-                                Text("\(status.capitalized) \(progress ?? "")")
+                                Text(verbatim: "\(status.capitalized) \(progress ?? "")")
                                     .font(.caption).foregroundStyle(.secondary)
                             }
                             Spacer()
@@ -321,14 +321,14 @@ struct ProfileActivityView: View {
                 Button(role: .destructive) {
                     activityToDelete = item
                 } label: {
-                    Label("Delete", systemImage: "trash")
+                    Label("common.delete", systemImage: "trash")
                 }
             }
             
             Button {
                 selectedActivity = item // This will open detail which has likes sheet
             } label: {
-                Label("View Likes", systemImage: "heart.text.square")
+                Label("profile.view_likes", systemImage: "heart.text.square")
             }
         }
     }
@@ -345,7 +345,7 @@ struct ProfileActivityView: View {
             Logger.shared.log("[Social] Delete activity failed: \(error.localizedDescription)", type: "Error")
             withAnimation { vm.activity = backup }
             #if os(iOS)
-            ToastManager.shared.show(message: "Couldn't delete activity", type: .error)
+            ToastManager.shared.show(message: String(localized: "profile.couldnt_delete_activity"), type: .error)
             #endif
         }
     }

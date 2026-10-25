@@ -24,7 +24,7 @@ struct NotificationSentence: Equatable {
     let object: String?
 
     init(userName: String?, context: String?, fallbackAction: String, objectTitle: String? = nil) {
-        subject = NotificationSentence.trimmed(userName) ?? "Someone"
+        subject = NotificationSentence.trimmed(userName) ?? String(localized: "shared.someone")
         action = NotificationSentence.trimmed(context) ?? fallbackAction
         object = NotificationSentence.trimmed(objectTitle)
     }

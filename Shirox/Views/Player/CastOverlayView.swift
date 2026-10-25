@@ -65,7 +65,7 @@ struct CastOverlayView: View {
                         .lineLimit(2)
 
                     if let ep = episodeNumber {
-                        Text("Episode \(ep)")
+                        Text("player.episode \(ep)")
                             .font(.subheadline)
                             .foregroundStyle(.white.opacity(0.65))
                     }
@@ -76,12 +76,12 @@ struct CastOverlayView: View {
                         ProgressView()
                             .controlSize(.mini)
                             .tint(.white)
-                        Text("Reconnecting to \(deviceName)…")
+                        Text("player.reconnecting_to \(deviceName)")
                             .font(.caption.weight(.semibold))
                     } else {
                         Image(systemName: "tv.fill")
                             .font(.system(size: 12, weight: .semibold))
-                        Text("Playing on \(deviceName)")
+                        Text("player.playing_on \(deviceName)")
                             .font(.caption.weight(.semibold))
                     }
                 }

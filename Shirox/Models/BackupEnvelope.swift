@@ -26,7 +26,7 @@ enum JSONValue: Codable, Equatable {
         if let v = try? c.decode(String.self) { self = .string(v); return }
         if let v = try? c.decode([JSONValue].self) { self = .array(v); return }
         if let v = try? c.decode([String: JSONValue].self) { self = .object(v); return }
-        throw DecodingError.dataCorruptedError(in: c, debugDescription: "Unsupported JSON value")
+        throw DecodingError.dataCorruptedError(in: c, debugDescription: String(localized: "shared.unsupported_json_value"))
     }
 
     func encode(to encoder: Encoder) throws {
@@ -96,9 +96,9 @@ enum BackupValidationError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .notABackupFile:
-            return "This isn't a Shirox backup file."
+            return String(localized: "shared.this_isnt_a_shirox_backup")
         case .newerFormat(let file, let app):
-            return "This backup was made by a newer version of Shirox (format \(file); this version reads up to \(app)). Update Shirox and try again."
+            return String(localized: "shared.this_backup_was_made_by \(file) \(app)")
         }
     }
 }

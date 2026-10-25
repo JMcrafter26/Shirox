@@ -51,7 +51,7 @@ struct ContinueWatchingSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            HomeRowHeader(title: "Continue Watching")
+            HomeRowHeader(title: String(localized: "shared.continue_watching"))
             HomeShelf(items: items) { item in
                 itemView(for: item)
                     .frame(width: cardWidth)
@@ -104,20 +104,20 @@ struct ContinueWatchingSection: View {
                 }
                 navTarget = .detail(item)
             } label: {
-                Label("View Details", systemImage: "list.bullet.below.rectangle")
+                Label("shared.view_details", systemImage: "list.bullet.below.rectangle")
             }
         }
         if item.aniListID != nil {
             Button {
                 navTarget = .anilist(item)
             } label: {
-                Label("View on AniList", systemImage: "tv")
+                Label("shared.view_on_anilist", systemImage: "tv")
             }
         }
         Button(role: .destructive) {
             ContinueWatchingManager.shared.remove(item)
         } label: {
-            Label("Remove", systemImage: "xmark.circle")
+            Label("common.remove", systemImage: "xmark.circle")
         }
     }
 }
@@ -148,15 +148,15 @@ struct ContinueWatchingCardDisplay: View {
             // renders an out-of-range numerator (e.g. "Ep 9 / 8").
             let shownEp = min(item.episodeNumber, avail)
             if isOngoing {
-                epPart = "Ep \(shownEp) / \(avail) • Ongoing"
+                epPart = String(localized: "shared.ep_ongoing \(shownEp) \(avail)")
             } else {
                 // completed or single-season module show
-                epPart = "Ep \(shownEp) / \(avail)"
+                epPart = String(localized: "shared.ep \(shownEp) \(avail)")
             }
         } else if let total {
-            epPart = "Ep \(min(item.episodeNumber, total)) / \(total)"
+            epPart = String(localized: "shared.ep \(min(item.episodeNumber, total)) \(total)")
         } else {
-            epPart = "Ep \(item.episodeNumber)"
+            epPart = String(localized: "shared.ep_3 \(item.episodeNumber)")
         }
 
         if let prefix {
@@ -216,12 +216,12 @@ struct ContinueWatchingCardDisplay: View {
                         } else if isCaughtUp {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.system(size: 10, weight: .bold))
-                            Text(episodeLabelText(item: item, prefix: "Caught up"))
+                            Text(episodeLabelText(item: item, prefix: String(localized: "shared.caught_up")))
                                 .font(.caption2.weight(.bold))
                         } else {
                             Image(systemName: "arrow.right.circle.fill")
                                 .font(.system(size: 10, weight: .bold))
-                            Text(episodeLabelText(item: item, prefix: "Up Next"))
+                            Text(episodeLabelText(item: item, prefix: String(localized: "shared.up_next")))
                                 .font(.caption2.weight(.bold))
                         }
                     }
@@ -351,7 +351,7 @@ enum ContinueWatchingResume {
                     .map { SubtitleTrack(title: LocalPlaybackCoordinator.displayTitle(for: $0), url: $0, headers: [:]) }
                 LocalPlaybackCoordinator.shared.launch(videoURL: url, subtitle: subtitle, resumeFrom: item.watchedSeconds)
             } else {
-                ToastManager.shared.show(message: "File moved or unavailable — remove this item", type: .error)
+                ToastManager.shared.show(message: String(localized: "shared.file_moved_or_unavailable_remove"), type: .error)
             }
             return
         }
@@ -360,7 +360,7 @@ enum ContinueWatchingResume {
             if let url = LocalPlaybackCoordinator.shared.resolveBookmark(data) {
                 LocalPlaybackCoordinator.shared.launch(videoURL: url, subtitle: nil, resumeFrom: item.watchedSeconds)
             } else {
-                ToastManager.shared.show(message: "File moved or unavailable — remove this item", type: .error)
+                ToastManager.shared.show(message: String(localized: "shared.file_moved_or_unavailable_remove"), type: .error)
             }
             return
         }
@@ -374,7 +374,7 @@ enum ContinueWatchingResume {
         }
 
         let stream = StreamResult(
-            title: item.streamTitle ?? item.episodeTitle ?? "Episode \(item.episodeNumber)",
+            title: item.streamTitle ?? item.episodeTitle ?? String(localized: "common.episode \(item.episodeNumber)"),
             url: url,
             headers: item.headers ?? [:],
             subtitle: item.subtitle,
@@ -533,7 +533,7 @@ enum ContinueWatchingResume {
         ) {
             Task {
                 guard let localStream = await DownloadManager.shared.getStream(for: download) else {
-                    ToastManager.shared.show(message: "Downloaded file is missing — re-download to play offline", type: .error)
+                    ToastManager.shared.show(message: String(localized: "shared.downloaded_file_is_missing_re"), type: .error)
                     return
                 }
                 // Next plays the next download when there is one, and streams otherwise.

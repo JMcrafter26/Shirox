@@ -33,12 +33,12 @@ final class ManaWebPages: NSObject {
         case closed, badURL(String), blocked(String), timedOut(Double), unknown(String), script(String)
         var errorDescription: String? {
             switch self {
-            case .closed: return "The page was already closed."
+            case .closed: return String(localized: "shared.the_page_was_already_closed")
             case .badURL(let url): return "\(url) isn't a web page."
-            case .blocked(let host): return "Blocked host: \(host)"
-            case .timedOut(let seconds): return "The page didn't answer in \(Int(seconds)) s."
-            case .unknown(let op): return "Unknown web view call \(op)."
-            case .script(let message): return "The page's script failed: \(message)"
+            case .blocked(let host): return String(localized: "shared.blocked_host \(host)")
+            case .timedOut(let seconds): return String(localized: "shared.the_page_didnt_answer_in \(Int(seconds))")
+            case .unknown(let op): return String(localized: "shared.unknown_web_view_call \(op)")
+            case .script(let message): return String(localized: "shared.the_pages_script_failed \(message)")
             }
         }
     }

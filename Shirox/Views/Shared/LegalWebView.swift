@@ -11,10 +11,10 @@ enum LegalPage {
 
     var title: String {
         switch self {
-        case .imprint:      return "Imprint"
-        case .privacy:      return "Data Privacy"
-        case .contributors: return "Contributors"
-        case .licenses:     return "Licenses"
+        case .imprint:      return String(localized: "shared.imprint")
+        case .privacy:      return String(localized: "shared.data_privacy")
+        case .contributors: return String(localized: "shared.contributors")
+        case .licenses:     return String(localized: "shared.licenses")
         }
     }
 
@@ -53,7 +53,7 @@ struct LegalWebView: View {
     var body: some View {
         Group {
             if failed {
-                ContentUnavailableView("Couldn't Load", systemImage: "wifi.slash")
+                ContentUnavailableView("common.couldnt_load", systemImage: "wifi.slash")
             } else if transitionDone {
                 _WebViewBridge(html: html, baseURL: page.url)
                     .ignoresSafeArea()

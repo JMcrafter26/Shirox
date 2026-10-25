@@ -30,11 +30,11 @@ struct AniListMedia: Identifiable, Codable {
 
     var statusDisplay: String? {
         switch status {
-        case "RELEASING": return "Airing"
-        case "FINISHED": return "Finished"
-        case "NOT_YET_RELEASED": return "Upcoming"
-        case "CANCELLED": return "Cancelled"
-        case "HIATUS": return "Hiatus"
+        case "RELEASING": return String(localized: "shared.airing")
+        case "FINISHED": return String(localized: "shared.finished")
+        case "NOT_YET_RELEASED": return String(localized: "shared.upcoming")
+        case "CANCELLED": return String(localized: "shared.cancelled")
+        case "HIATUS": return String(localized: "shared.hiatus")
         default: return status
         }
     }
@@ -56,7 +56,7 @@ struct AniListTitle: Codable {
             default: break
             }
         }
-        return english ?? romaji ?? native ?? "Unknown"
+        return english ?? romaji ?? native ?? String(localized: "shared.unknown")
     }
 
     var searchTitle: String {

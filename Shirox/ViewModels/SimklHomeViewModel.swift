@@ -75,7 +75,7 @@ final class SimklHomeViewModel: ObservableObject {
         }
         guard wanted == kind, !Task.isCancelled else { return }
         if files.isEmpty {
-            error = failure?.localizedDescription ?? "Simkl sent nothing to show."
+            error = failure?.localizedDescription ?? String(localized: "home.simkl_sent_nothing_to_show")
         } else {
             await show(files, kind: kind)
         }

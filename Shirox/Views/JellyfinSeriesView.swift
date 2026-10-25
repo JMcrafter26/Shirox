@@ -67,7 +67,7 @@ struct JellyfinSeriesView: View {
                 Text(ep.indexNumber.map { "\($0). \(ep.name)" } ?? ep.name)
                     .font(.subheadline).lineLimit(2)
                 if ep.userData?.played == true {
-                    Label("Watched", systemImage: "checkmark.circle.fill")
+                    Label("detail.watched", systemImage: "checkmark.circle.fill")
                         .font(.caption2).foregroundStyle(.secondary)
                 }
             }
@@ -89,7 +89,7 @@ struct JellyfinSeriesView: View {
                 isLoading = false
             }
         } catch {
-            self.error = "Couldn't load seasons."
+            self.error = String(localized: "jellyfin.couldnt_load_seasons")
             isLoading = false
         }
     }
@@ -99,7 +99,7 @@ struct JellyfinSeriesView: View {
         do {
             episodes = try await JellyfinService.shared.episodes(seriesId: series.id, seasonId: season.id)
         } catch {
-            self.error = "Couldn't load episodes."
+            self.error = String(localized: "jellyfin.couldnt_load_episodes")
         }
         isLoading = false
     }

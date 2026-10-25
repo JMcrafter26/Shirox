@@ -6,14 +6,14 @@ extension JSEngine {
         guard let data = json.data(using: .utf8),
               let array = try JSONSerialization.jsonObject(with: data) as? [[String: Any]],
               let first = array.first else {
-            throw JSEngineError.parseError("Could not parse details")
+            throw JSEngineError.parseError(String(localized: "detail.could_not_parse_details"))
         }
         return MediaDetail(
             title: title,
             image: image,
-            description: first["description"] as? String ?? "N/A",
-            aliases: first["aliases"] as? String ?? "N/A",
-            airdate: first["airdate"] as? String ?? "N/A",
+            description: first["description"] as? String ?? String(localized: "detail.n_a"),
+            aliases: first["aliases"] as? String ?? String(localized: "detail.n_a"),
+            airdate: first["airdate"] as? String ?? String(localized: "detail.n_a"),
             episodes: []
         )
     }
@@ -22,7 +22,7 @@ extension JSEngine {
         let json = try await callAsyncJS("extractEpisodes", args: [url])
         guard let data = json.data(using: .utf8),
               let array = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
-            throw JSEngineError.parseError("Could not parse episodes")
+            throw JSEngineError.parseError(String(localized: "detail.could_not_parse_episodes"))
         }
         return array.compactMap { item in
             guard let href = item["href"] as? String else { return nil }

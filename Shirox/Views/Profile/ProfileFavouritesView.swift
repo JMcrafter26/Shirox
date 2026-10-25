@@ -26,7 +26,7 @@ struct ProfileFavouritesView: View {
                 }
                 .padding(16)
             } else {
-                ContentUnavailableView("No Favourites", systemImage: "heart.slash")
+                ContentUnavailableView("profile.no_favourites", systemImage: "heart.slash")
             }
         }
         .adaptiveSheet(item: $targetMediaId) { mid in

@@ -16,11 +16,11 @@ struct CloudflareBypassSheetView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
-            .navigationTitle("Security Check")
+            .navigationTitle("shared.security_check")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { manager.cancelActiveBypass() }
+                    Button("common.cancel") { manager.cancelActiveBypass() }
                 }
             }
         }
@@ -83,13 +83,13 @@ private struct MacCloudflareBypassView: View {
                 Image(systemName: "checkmark.shield")
                     .foregroundStyle(.secondary)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("Security Check").font(.headline)
-                    Text("Complete the check below. This closes by itself when it's done.")
+                    Text("shared.security_check").font(.headline)
+                    Text("shared.complete_the_check_below_this")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button("Cancel") { manager.cancelActiveBypass() }
+                Button("common.cancel") { manager.cancelActiveBypass() }
                     .keyboardShortcut(.cancelAction)
             }
             .padding(.horizontal, 16)
@@ -126,7 +126,7 @@ final class CloudflareBypassWindowController {
         let sheet = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 560, height: 680),
                              styleMask: [.titled, .resizable],
                              backing: .buffered, defer: false)
-        sheet.title = "Security Check"
+        sheet.title = String(localized: "shared.security_check")
         sheet.isReleasedWhenClosed = false
         sheet.contentMinSize = NSSize(width: 480, height: 520)
         sheet.contentView = NSHostingView(rootView: MacCloudflareBypassView())

@@ -343,7 +343,7 @@ class NetworkFetchSimpleMonitor: NSObject, ObservableObject {
                     "originalUrl": urlString,
                     "requests": [],
                     "success": false,
-                    "error": "Invalid URL format"
+                    "error": String(localized: "shared.invalid_url_format")
                 ])
                 return
             }
@@ -352,7 +352,7 @@ class NetworkFetchSimpleMonitor: NSObject, ObservableObject {
                     "originalUrl": urlString,
                     "requests": [],
                     "success": false,
-                    "error": "Blocked host"
+                    "error": String(localized: "shared.blocked_host_2")
                 ])
                 return
             }
@@ -774,7 +774,7 @@ class NetworkFetchMonitor: NSObject, ObservableObject {
                     "html": NSNull(),
                     "cookies": NSNull(),
                     "success": false,
-                    "error": "Invalid URL format",
+                    "error": String(localized: "shared.invalid_url_format"),
                     "cutoffTriggered": false,
                     "cutoffUrl": NSNull(),
                     "htmlCaptured": false,
@@ -791,7 +791,7 @@ class NetworkFetchMonitor: NSObject, ObservableObject {
                     "html": NSNull(),
                     "cookies": NSNull(),
                     "success": false,
-                    "error": "Blocked host",
+                    "error": String(localized: "shared.blocked_host_2"),
                     "cutoffTriggered": false,
                     "cutoffUrl": NSNull(),
                     "htmlCaptured": false,

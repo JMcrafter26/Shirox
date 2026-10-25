@@ -37,7 +37,7 @@ struct ScoreInputView: View {
             }
         case .point10:
             #if !os(tvOS)
-            Stepper(score == 0 ? "No score" : "\(Int(score)) / 10", value: $score, in: 0...10, step: 1)
+            Stepper(score == 0 ? String(localized: "shared.no_score") : "\(Int(score)) / 10", value: $score, in: 0...10, step: 1)
             #else
             EmptyView()
             #endif

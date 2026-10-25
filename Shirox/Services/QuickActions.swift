@@ -18,9 +18,9 @@ enum QuickAction: String, CaseIterable {
 
     var title: String {
         switch self {
-        case .search:    return "Search"
-        case .downloads: return "Downloads"
-        case .library:   return "Library"
+        case .search:    return String(localized: "common.search")
+        case .downloads: return String(localized: "common.downloads")
+        case .library:   return String(localized: "common.library")
         }
     }
 

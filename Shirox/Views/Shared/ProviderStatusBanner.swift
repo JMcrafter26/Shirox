@@ -35,8 +35,8 @@ struct ProviderStatusBanner: View {
     /// Names the provider actually serving results — `fallbackServedBy`, not `primary`, which
     /// stays whichever provider the user chose and would name the one that *didn't* answer.
     private var headline: String {
-        guard let served = manager.fallbackServedBy else { return "Using fallback provider" }
-        return "Showing \(served.displayName) instead"
+        guard let served = manager.fallbackServedBy else { return String(localized: "shared.using_fallback_provider") }
+        return String(localized: "shared.showing_instead \(served.displayName)")
     }
 }
 
@@ -98,9 +98,9 @@ enum ProviderMenuStyle: String, CaseIterable {
 
     var title: String {
         switch self {
-        case .iconAndName: return "Icon & Name"
-        case .iconOnly:    return "Icon Only"
-        case .hidden:      return "Hidden"
+        case .iconAndName: return String(localized: "shared.icon_and_name")
+        case .iconOnly:    return String(localized: "shared.icon_only")
+        case .hidden:      return String(localized: "shared.hidden")
         }
     }
 }
@@ -208,7 +208,7 @@ struct ProviderMenuButton: View {
             #endif
         }
         #if os(macOS)
-        .help("Where Home and Search come from")
+        .help("shared.where_home_and_search_come")
         #endif
         .background(iconWarmer)
     }

@@ -145,19 +145,19 @@ struct HomeView: View {
                         }
                     } else {
                         if !vm.trending.isEmpty {
-                            AnimeSection(title: "Trending Now", items: vm.trending) { BrowseView(category: .trending) }
+                            AnimeSection(title: String(localized: "shared.trending_now"), items: vm.trending) { BrowseView(category: .trending) }
                         }
                         if !vm.seasonal.isEmpty {
-                            AnimeSection(title: "This Season", items: vm.seasonal) { BrowseView(category: .seasonal) }
+                            AnimeSection(title: String(localized: "shared.this_season"), items: vm.seasonal) { BrowseView(category: .seasonal) }
                         }
                         if !vm.lastSeason.isEmpty {
-                            AnimeSection(title: "Last Season · Complete", items: vm.lastSeason) { BrowseView(category: .lastSeason) }
+                            AnimeSection(title: String(localized: "shared.last_season_complete"), items: vm.lastSeason) { BrowseView(category: .lastSeason) }
                         }
                         if !vm.popular.isEmpty {
-                            AnimeSection(title: "All-Time Popular", items: vm.popular) { BrowseView(category: .popular) }
+                            AnimeSection(title: String(localized: "shared.all_time_popular"), items: vm.popular) { BrowseView(category: .popular) }
                         }
                         if !vm.topRated.isEmpty {
-                            AnimeSection(title: "Top Rated", items: vm.topRated) { BrowseView(category: .topRated) }
+                            AnimeSection(title: String(localized: "shared.top_rated"), items: vm.topRated) { BrowseView(category: .topRated) }
                         }
                     }
                 }
@@ -175,13 +175,13 @@ struct HomeView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if let error = emptyError {
                     ContentUnavailableView(
-                        "Couldn't Load",
+                        "common.couldnt_load",
                         systemImage: "wifi.slash",
                         description: Text(error)
                     )
                     .toolbar {
                         ToolbarItem(placement: .primaryAction) {
-                            Button("Retry") { Task { await reloadCurrent() } }
+                            Button("common.retry") { Task { await reloadCurrent() } }
                         }
                     }
                 } else if usesCinematicLayout {
@@ -347,8 +347,8 @@ private struct HomeToolbar: ViewModifier {
         // launch ("failed to demangle witness … does not conform to protocol ToolbarContent").
         content.toolbar {
             ToolbarItem(placement: .navigation) {
-                Button(action: openCalendar) { Label("Upcoming", systemImage: "calendar") }
-                    .help("Upcoming episodes")
+                Button(action: openCalendar) { Label("shared.upcoming", systemImage: "calendar") }
+                    .help("home.upcoming_episodes")
             }
             if discovery.usesSimkl {
                 ToolbarItem(placement: .navigation) { SimklKindMenu(kind: $kind) }
@@ -419,7 +419,7 @@ private struct CalendarButton: View {
                 .shadow(color: .black.opacity(0.18), radius: 10, y: 4)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Upcoming")
+        .accessibilityLabel("shared.upcoming")
     }
 }
 #endif
@@ -562,7 +562,7 @@ private struct FeaturedCarousel: View {
                                 } label: {
                                     HStack(spacing: 6) {
                                         Image(systemName: "play.fill").font(.footnote.weight(.semibold))
-                                        Text("Watch").fontWeight(.semibold)
+                                        Text("home.watch").fontWeight(.semibold)
                                     }
                                     .foregroundStyle(platformBackground)
                                     .frame(width: 130, height: 42)
@@ -842,7 +842,7 @@ private struct MacFeaturedCarousel: View {
             NavigationLink {
                 MediaDestination(media: media)
             } label: {
-                Label("Watch", systemImage: "play.fill")
+                Label("home.watch", systemImage: "play.fill")
                     .font(.body.weight(.semibold))
                     .foregroundStyle(.black)
                     .padding(.horizontal, 18)
@@ -857,9 +857,9 @@ private struct MacFeaturedCarousel: View {
 
     private var arrows: some View {
         HStack {
-            arrow("chevron.left", help: "Previous") { step(-1) }
+            arrow("chevron.left", help: String(localized: "home.previous")) { step(-1) }
             Spacer()
-            arrow("chevron.right", help: "Next") { step(1) }
+            arrow("chevron.right", help: String(localized: "home.next")) { step(1) }
         }
         .padding(.horizontal, 16)
     }
@@ -1008,7 +1008,7 @@ private struct CinematicHome<Rows: View>: View {
                             HStack(spacing: 10) {
                                 Image(systemName: "play.fill")
                                     .font(.system(size: 13, weight: .bold))
-                                Text("Watch")
+                                Text("home.watch")
                                     .font(.system(size: 15, weight: .bold))
                             }
                             .foregroundStyle(Color.black)
@@ -1042,9 +1042,9 @@ private struct CinematicHome<Rows: View>: View {
 
             if displayItems.count > 1 {
                 HStack(spacing: 12) {
-                    pagerButton("chevron.left", help: "Previous") { step(-1) }
+                    pagerButton("chevron.left", help: String(localized: "home.previous")) { step(-1) }
                     PageIndicator(numberOfPages: displayItems.count, currentPage: currentIndex)
-                    pagerButton("chevron.right", help: "Next") { step(1) }
+                    pagerButton("chevron.right", help: String(localized: "home.next")) { step(1) }
                 }
                 .padding(.top, 4)
             }
@@ -1313,7 +1313,7 @@ private struct AnimeSection<SeeAll: View>: View {
                     seeAll()
                 } label: {
                     HStack(spacing: 3) {
-                        Text("See all")
+                        Text("home.see_all")
                             .font(.subheadline.weight(.semibold))
                         Image(systemName: "chevron.right")
                             .font(.caption.weight(.semibold))

@@ -86,7 +86,7 @@ private struct ProfileSettingsRow: View {
                 ProfileAvatarView(profile: active, size: 52, glass: true)
             }
             VStack(alignment: .leading, spacing: 2) {
-                Text(profiles.active?.name ?? "Profile")
+                Text(profiles.active?.name ?? String(localized: "common.profile"))
                     .font(.headline.weight(.semibold))
                 Text(subtitle)
                     .font(.caption)
@@ -104,9 +104,9 @@ private struct ProfileSettingsRow: View {
     /// "Add a Profile" only while the one profile is still as Shirox made it: named
     /// "Profile 1", with no picture of its own.
     private var subtitle: String {
-        if profiles.profiles.count > 1 { return "Switch or Manage Profiles" }
-        guard let only = profiles.active else { return "Add a Profile" }
-        return only.name == "Profile 1" && !only.hasPhoto ? "Add a Profile" : "Manage Profiles"
+        if profiles.profiles.count > 1 { return String(localized: "settings.switch_or_manage_profiles") }
+        guard let only = profiles.active else { return String(localized: "settings.add_a_profile") }
+        return only.name == "Profile 1" && !only.hasPhoto ? String(localized: "settings.add_a_profile") : String(localized: "profile.manage_profiles")
     }
 }
 #endif
@@ -129,7 +129,7 @@ struct SettingsView: View {
             malAuth.isLoggedIn ? "MAL" : nil,
             simklAuth.isLoggedIn ? "Simkl" : nil,
         ].compactMap { $0 }
-        return services.isEmpty ? "Sign In" : services.joined(separator: ", ")
+        return services.isEmpty ? String(localized: "library.sign_in") : services.joined(separator: ", ")
     }
 
     private var modulesSubtitle: String? {
@@ -138,9 +138,9 @@ struct SettingsView: View {
 
     private var playerSubtitle: String {
         switch preferredQuality {
-        case "auto": return "Auto"
-        case "highest": return "Highest"
-        case "lowest": return "Lowest"
+        case "auto": return String(localized: "player.auto")
+        case "highest": return String(localized: "settings.highest")
+        case "lowest": return String(localized: "settings.lowest")
         default: return "\(preferredQuality)p"
         }
     }
@@ -157,7 +157,7 @@ struct SettingsView: View {
                 #endif
             }
             .softScrollEdges()
-            .navigationTitle("Settings")
+            .navigationTitle("settings.settings")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.large)
             .onAppear {
@@ -193,7 +193,7 @@ struct SettingsView: View {
                 } label: {
                     SettingsNavRow(
                         icon: "gearshape",
-                        title: "General"
+                        title: String(localized: "settings.general")
                     )
                 }
 
@@ -202,7 +202,7 @@ struct SettingsView: View {
                 } label: {
                     SettingsNavRow(
                         icon: "person.2",
-                        title: "Providers",
+                        title: String(localized: "settings.providers"),
                         subtitle: providersSubtitle
                     )
                 }
@@ -212,7 +212,7 @@ struct SettingsView: View {
                 } label: {
                     SettingsNavRow(
                         icon: "play.tv",
-                        title: "Player",
+                        title: String(localized: "settings.player"),
                         subtitle: playerSubtitle
                     )
                 }
@@ -222,7 +222,7 @@ struct SettingsView: View {
                 } label: {
                     SettingsNavRow(
                         icon: "captions.bubble",
-                        title: "Subtitles"
+                        title: String(localized: "settings.subtitles")
                     )
                 }
 
@@ -232,7 +232,7 @@ struct SettingsView: View {
                 } label: {
                     SettingsNavRow(
                         icon: "book",
-                        title: "Reader"
+                        title: String(localized: "settings.reader")
                     )
                 }
                 #endif
@@ -242,7 +242,7 @@ struct SettingsView: View {
                 } label: {
                     SettingsNavRow(
                         icon: "puzzlepiece.extension",
-                        title: "Modules",
+                        title: String(localized: "common.modules"),
                         subtitle: modulesSubtitle
                     )
                 }
@@ -254,8 +254,8 @@ struct SettingsView: View {
                 } label: {
                     SettingsNavRow(
                         icon: "books.vertical",
-                        title: "Library",
-                        subtitle: "Lists & Matching"
+                        title: String(localized: "common.library"),
+                        subtitle: String(localized: "settings.lists_and_matching")
                     )
                 }
 
@@ -264,7 +264,7 @@ struct SettingsView: View {
                 } label: {
                     SettingsNavRow(
                         icon: "arrow.down.circle",
-                        title: "Downloads"
+                        title: String(localized: "common.downloads")
                     )
                 }
 
@@ -274,7 +274,7 @@ struct SettingsView: View {
                 } label: {
                     SettingsNavRow(
                         icon: "internaldrive",
-                        title: "Storage & Cache",
+                        title: String(localized: "settings.storage_and_cache"),
                         subtitle: totalUsage > 0 ? Self.formattedBytes(totalUsage) : nil
                     )
                 }
@@ -288,7 +288,7 @@ struct SettingsView: View {
                 } label: {
                     SettingsNavRow(
                         icon: "arrow.up.arrow.down.circle",
-                        title: "Backup & Restore"
+                        title: String(localized: "settings.backup_and_restore")
                     )
                 }
                 #endif
@@ -298,12 +298,12 @@ struct SettingsView: View {
                 } label: {
                     SettingsNavRow(
                         icon: "terminal",
-                        title: "App Logs"
+                        title: String(localized: "settings.app_logs")
                     )
                 }
 
                 // Expert settings for blocked regions, deliberately last.
-                NavigationLink { AdvancedNetworkSettingsView() } label: { SettingsNavRow(icon: "network", title: "Advanced Network") }
+                NavigationLink { AdvancedNetworkSettingsView() } label: { SettingsNavRow(icon: "network", title: String(localized: "settings.advanced_network")) }
             }
 
             Section {
@@ -322,7 +322,7 @@ struct SettingsView: View {
                         .scaledToFit()
                         .frame(height: 12)
                         .accessibilityLabel("TMDB")
-                    Text("This application uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.")
+                    Text("settings.this_application_uses_tmdb_and")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }
@@ -330,8 +330,8 @@ struct SettingsView: View {
             }
 
             Section {
-                SettingsNavRow(icon: Platform.icon, title: "Platform", subtitle: Platform.summary)
-                SettingsNavRow(icon: "info.circle", title: "Version", subtitle: Self.appVersion)
+                SettingsNavRow(icon: Platform.icon, title: String(localized: "settings.platform"), subtitle: Platform.summary)
+                SettingsNavRow(icon: "info.circle", title: String(localized: "modules.version"), subtitle: Self.appVersion)
             }
     }
 
@@ -501,14 +501,14 @@ struct AccountsSettingsView: View {
                         Text(simklAuth.username ?? "Simkl")
                             .font(.headline)
                         Text(simklAuth.isLoggedIn
-                             ? (simklAuth.needsReauthorization ? "Sign in again to allow syncing" : "Signed in")
-                             : "Not signed in")
+                             ? (simklAuth.needsReauthorization ? String(localized: "settings.sign_in_again_to_allow") : String(localized: "settings.signed_in"))
+                             : String(localized: "settings.not_signed_in"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
                     #if !os(tvOS)
-                    Button(simklAuth.isLoggedIn ? "Sign Out" : "Sign In") {
+                    Button(simklAuth.isLoggedIn ? String(localized: "settings.sign_out") : String(localized: "library.sign_in")) {
                         if simklAuth.isLoggedIn {
                             simklAuth.logout()
                         } else {
@@ -527,28 +527,28 @@ struct AccountsSettingsView: View {
                     SimklBudgetRow()
                 }
             } footer: {
-                Text("Tracks your anime, shows and movies on Simkl alongside AniList and MyAnimeList. Simkl has no manga.")
+                Text("settings.tracks_your_anime_shows_and")
             }
 
             if aniListAuth.isLoggedIn || malAuth.isLoggedIn || simklAuth.isLoggedIn {
-                Section("Tracking") {
+                Section("library.tracking") {
                     if aniListAuth.isLoggedIn {
-                        Toggle("Track on AniList", isOn: $aniListTrackingEnabled)
+                        Toggle("settings.track_on_anilist", isOn: $aniListTrackingEnabled)
                             .switchTint()
                     }
                     if malAuth.isLoggedIn {
-                        Toggle("Track on MyAnimeList", isOn: $malTrackingEnabled)
+                        Toggle("settings.track_on_myanimelist", isOn: $malTrackingEnabled)
                             .switchTint()
                     }
                     if simklAuth.isLoggedIn {
-                        Toggle("Track on Simkl", isOn: $simklTrackingEnabled)
+                        Toggle("settings.track_on_simkl", isOn: $simklTrackingEnabled)
                             .switchTint()
                     }
-                    Toggle("Never reduce progress", isOn: $skipReWatchTracking)
+                    Toggle("settings.never_reduce_progress", isOn: $skipReWatchTracking)
                         .switchTint()
-                    Toggle("Prompt to rate after finishing", isOn: $rateOnFinish)
+                    Toggle("settings.prompt_to_rate_after_finishing", isOn: $rateOnFinish)
                         .switchTint()
-                    Text("Automatically update your watch progress as you watch.")
+                    Text("settings.automatically_update_your_watch_progress")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -561,48 +561,48 @@ struct AccountsSettingsView: View {
                             .switchTint()
                     }
                 } header: {
-                    Text("Mirror Edits")
+                    Text("settings.mirror_edits")
                 } footer: {
-                    Text("An edit you make to a title — its status, progress, score, or removing it — is also written to every other service switched on here. Services left off change only through the sync runs below.")
+                    Text("settings.an_edit_you_make_to")
                 }
             }
 
             if signedInSides.count >= 2 {
-                Section("Sync Library") {
+                Section("settings.sync_library") {
                     ForEach(SyncRun.runs(in: .sync, among: signedInSides)) { run in
                         syncRow(run)
                     }
-                    Text("Brings your two accounts into line — a one-time backfill for everything you tracked before signing in here. Syncing both ways reconciles them in a single pass; the one-way copies only ever write to the destination. Either way progress is only ever moved forward, so anything further along is left as it is.")
+                    Text("settings.brings_your_two_accounts_into")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
 
-                Section("Overwrite Library") {
+                Section("settings.overwrite_library") {
                     ForEach(SyncRun.runs(in: .overwrite, among: signedInSides)) { run in
                         syncRow(run)
                     }
-                    Text("Use when one account is simply the one you want to keep. Overwrites the other with it — progress, status, score and rewatch count — even where that means going backwards. Titles only the overwritten account has are left in place. This can't be undone.")
+                    Text("settings.use_when_one_account_is")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
 
-                Section("Mirror Library") {
+                Section("settings.mirror_library") {
                     ForEach(SyncRun.runs(in: .mirror, among: signedInSides)) { run in
                         syncRow(run)
                     }
-                    Text("Everything Overwrite does, and the overwritten account also loses any entry the other doesn't have, ending up an exact copy. Entries whose match can't be confirmed are kept rather than deleted. This can't be undone.")
+                    Text("settings.everything_overwrite_does_and_the")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
             }
         }
         .softScrollEdges()
-        .navigationTitle("Providers")
+        .navigationTitle("settings.providers")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
         .alert(
-            pendingSyncRun?.title ?? "Sync Library",
+            pendingSyncRun?.title ?? String(localized: "settings.sync_library"),
             isPresented: Binding(
                 get: { pendingSyncRun != nil },
                 set: { if !$0 { pendingSyncRun = nil } }
@@ -613,7 +613,7 @@ struct AccountsSettingsView: View {
                 pendingSyncRun = nil
                 Task { await librarySync.sync(run) }
             }
-            Button("Cancel", role: .cancel) { pendingSyncRun = nil }
+            Button("common.cancel", role: .cancel) { pendingSyncRun = nil }
         } message: { run in
             Text(run.confirmationMessage)
         }
@@ -712,10 +712,10 @@ struct PlayerSettingsView: View {
 
     var body: some View {
         SettingsList {
-            Section("Display & Style") {
+            Section("settings.display_and_style") {
                 // A phone's: a Mac's player is a window.
                 #if !os(macOS)
-                Toggle("Force Landscape Mode", isOn: $forceLandscape)
+                Toggle("settings.force_landscape_mode", isOn: $forceLandscape)
                     .switchTint()
                     #if os(iOS)
                     .onChangeOf(forceLandscape) {
@@ -725,120 +725,120 @@ struct PlayerSettingsView: View {
                 #endif
 
                 if forceLandscape, !Self.isMac {
-                    Toggle("Auto-Rotate in Landscape", isOn: $autoRotateForcedLandscape)
+                    Toggle("settings.auto_rotate_in_landscape", isOn: $autoRotateForcedLandscape)
                         .switchTint()
-                    Text("Turns the player to the other landscape side even with Rotation Lock on in Control Center.")
+                    Text("settings.turns_the_player_to_the")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
 
                 if #available(iOS 26.0, macOS 26.0, *) {
-                    Toggle("Liquid Glass Controls", isOn: $playerLiquidGlass)
+                    Toggle("settings.liquid_glass_controls", isOn: $playerLiquidGlass)
                         .switchTint()
-                    Text("Frosted glass buttons in the video player. Turn off for solid controls.")
+                    Text("settings.frosted_glass_buttons_in_the")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
 
                 #if os(iOS)
                 if !Self.isMac {
-                    Toggle("Play in Background", isOn: $playInBackground)
+                    Toggle("settings.play_in_background", isOn: $playInBackground)
                         .switchTint()
-                    Text("Keeps a video playing when you leave the app. Off, it pauses, unless it's in Picture in Picture, on AirPlay or cast to a TV.")
+                    Text("settings.keeps_a_video_playing_when")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Toggle("Spatial Audio", isOn: $spatialAudio)
+                    Toggle("settings.spatial_audio", isOn: $spatialAudio)
                         .switchTint()
                         .onChangeOf(spatialAudio) { _ in AppAudioSession.applySpatialAudioSetting() }
-                    Text("Lets iOS play videos in Spatial Audio, with its movie sound processing, on AirPods and other headphones. Turn off for plain stereo, or if headphones play quieter here than in other apps. Takes effect from the next video.")
+                    Text("settings.lets_ios_play_videos_in")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
-                Toggle("Ambient Mode", isOn: $ambientMode)
+                Toggle("settings.ambient_mode", isOn: $ambientMode)
                     .switchTint()
-                Text("Fills the bars around the video with a soft glow of its colours. Native engine only.")
+                Text("settings.fills_the_bars_around_the")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 #endif
 
                 #if !os(tvOS)
-                Picker("Player Engine", selection: $playerEngine) {
-                    Text("Native").tag(PlaybackEngineKind.native.rawValue)
+                Picker("settings.player_engine", selection: $playerEngine) {
+                    Text("settings.native").tag(PlaybackEngineKind.native.rawValue)
                     Text("MPV").tag(PlaybackEngineKind.mpv.rawValue)
                 }
-                Text("MPV plays more formats, like MKV, and more subtitle styles. AirPlay moves playback to Native, or sends only the sound when Native can't play it. Native switches to MPV by itself when it can't play something.")
+                Text("settings.mpv_plays_more_formats_like")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 #endif
             }
 
-            Section(Self.isMac ? "Playback Quality" : "Playback Quality & Gestures") {
-                Picker("Preferred Quality", selection: $preferredQuality) {
-                    Text("Auto").tag("auto")
-                    Text("Highest").tag("highest")
+            Section(Self.isMac ? String(localized: "settings.playback_quality") : String(localized: "settings.playback_quality_and_gestures")) {
+                Picker("settings.preferred_quality", selection: $preferredQuality) {
+                    Text("player.auto").tag("auto")
+                    Text("settings.highest").tag("highest")
                     Text("1080p").tag("1080")
                     Text("720p").tag("720")
                     Text("480p").tag("480")
-                    Text("Lowest").tag("lowest")
+                    Text("settings.lowest").tag("lowest")
                 }
-                Text("Which rendition to start on when a stream offers several. Auto lets the player adapt to your connection; a fixed choice falls back to the closest available.")
+                Text("settings.which_rendition_to_start_on")
                     .font(.caption)
                     .foregroundStyle(.secondary)
 
                 // Holding a finger on the video; there's no such gesture with a pointer.
                 #if !os(macOS)
-                Picker("Hold Action", selection: $playerHoldAction) {
-                    Text("2× Speed").tag("speed")
-                    Text("Save Frame to Photos").tag("saveFrame")
+                Picker("settings.hold_action", selection: $playerHoldAction) {
+                    Text("player.2_speed").tag("speed")
+                    Text("settings.save_frame_to_photos").tag("saveFrame")
                 }
 
-                Picker("Hold Tolerance", selection: $speedBoostTolerance) {
-                    Text("Strict").tag(10)
-                    Text("Relaxed").tag(30)
-                    Text("Very Relaxed").tag(60)
+                Picker("settings.hold_tolerance", selection: $speedBoostTolerance) {
+                    Text("settings.strict").tag(10)
+                    Text("settings.relaxed").tag(30)
+                    Text("settings.very_relaxed").tag(60)
                 }
-                Text("How far your finger may drift before a hold is recognized. Raise it if the hold action keeps cancelling.")
+                Text("settings.how_far_your_finger_may")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 #endif
 
                 #if os(iOS)
-                Toggle("Pause for Control Center", isOn: $pauseWhenInactive)
+                Toggle("settings.pause_for_control_center", isOn: $pauseWhenInactive)
                     .switchTint()
-                Text("Pauses while Control Center or Notification Center is open and picks up again when you close it. Leaving the app or locking the phone still plays in the background.")
+                Text("settings.pauses_while_control_center_or")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 #endif
             }
 
-            Section("Skipping") {
-                Picker("Skip Duration", selection: $skipShort) {
+            Section("settings.skipping") {
+                Picker("settings.skip_duration", selection: $skipShort) {
                     ForEach(shortOptions, id: \.self) { s in
                         Text("\(s)s").tag(s)
                     }
                 }
-                Picker("Long Skip Duration", selection: $skipLong) {
+                Picker("settings.long_skip_duration", selection: $skipLong) {
                     ForEach(longOptions, id: \.self) { s in
                         Text("\(s)s").tag(s)
                     }
                 }
-                Toggle("Auto-Skip Segments", isOn: $autoSkipSegments)
+                Toggle("settings.auto_skip_segments", isOn: $autoSkipSegments)
                     .switchTint()
-                Text("Automatically skip intros, recaps, credits, and previews")
+                Text("settings.automatically_skip_intros_recaps_credits")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
-            Section("Episodes & Progress") {
-                Toggle("Auto Next Episode", isOn: $autoNextEpisode)
+            Section("settings.episodes_and_progress") {
+                Toggle("settings.auto_next_episode", isOn: $autoNextEpisode)
                     .switchTint()
 
-                Toggle("Reverse Episode List by Default", isOn: EpisodeSortManager.shared.$defaultReverseSort)
+                Toggle("settings.reverse_episode_list_by_default", isOn: EpisodeSortManager.shared.$defaultReverseSort)
                     .switchTint()
 
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Text("Episode Progress Threshold")
+                        Text("settings.episode_progress_threshold")
                         Spacer()
                         Text("\(Int(watchedPercentage))%")
                             .font(.headline)
@@ -851,7 +851,7 @@ struct PlayerSettingsView: View {
             }
         }
         .softScrollEdges()
-        .navigationTitle("Player")
+        .navigationTitle("settings.player")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
@@ -870,53 +870,53 @@ struct SubtitleSettingsPage: View {
 
     var body: some View {
         SettingsList {
-            Section("Preview") {
+            Section("settings.preview") {
                 preview
                     .listRowInsets(EdgeInsets())
             }
 
             Section {
-                Toggle("Show Subtitles", isOn: $settings.enabled)
+                Toggle("player.show_subtitles", isOn: $settings.enabled)
                     .switchTint()
             } footer: {
-                Text("Turns subtitles on or off in every video. The player's subtitles button changes it too.")
+                Text("settings.turns_subtitles_on_or_off")
             }
 
             Section {
                 #if !os(tvOS)
-                ColorPicker("Text Color", selection: $settings.foregroundColor, supportsOpacity: false)
+                ColorPicker("settings.text_color", selection: $settings.foregroundColor, supportsOpacity: false)
                 #endif
-                Picker("Size", selection: sizeSelection) {
+                Picker("player.size", selection: sizeSelection) {
                     ForEach(PlayerSubtitleMenu.sizes, id: \.points) { size in
                         Text(size.name).tag(size.points)
                     }
                     if !PlayerSubtitleMenu.sizes.contains(where: { $0.points == settings.fontSize }) {
-                        Text("\(Int(settings.fontSize.rounded())) pt").tag(settings.fontSize)
+                        Text("settings.pt_2 \(Int(settings.fontSize.rounded()))").tag(settings.fontSize)
                     }
                 }
                 #if !os(tvOS)
-                sliderRow("Font Size", value: $settings.fontSize, in: 12...40, step: 1,
+                sliderRow(String(localized: "settings.font_size"), value: $settings.fontSize, in: 12...40, step: 1,
                           text: "\(Int(settings.fontSize))")
-                sliderRow("Shadow", value: $settings.shadowRadius, in: 0...8, step: 0.5,
+                sliderRow(String(localized: "settings.shadow"), value: $settings.shadowRadius, in: 0...8, step: 0.5,
                           text: String(format: "%.1f", settings.shadowRadius))
                 #endif
             } header: {
-                Text("Appearance")
+                Text("settings.appearance")
             } footer: {
                 #if !os(tvOS)
-                Text("Shadow is a soft dark glow around the text, for bright scenes.")
+                Text("settings.shadow_is_a_soft_dark")
                 #endif
             }
 
-            Section("Background") {
-                Toggle("Show Background", isOn: $settings.backgroundEnabled)
+            Section("settings.background") {
+                Toggle("settings.show_background", isOn: $settings.backgroundEnabled)
                     .switchTint()
                 #if !os(tvOS)
                 if settings.backgroundEnabled {
-                    ColorPicker("Color", selection: $settings.backgroundColor, supportsOpacity: false)
-                    sliderRow("Opacity", value: $settings.backgroundOpacity, in: 0.1...1, step: 0.05,
+                    ColorPicker("settings.color", selection: $settings.backgroundColor, supportsOpacity: false)
+                    sliderRow(String(localized: "settings.opacity"), value: $settings.backgroundOpacity, in: 0.1...1, step: 0.05,
                               text: "\(Int((settings.backgroundOpacity * 100).rounded()))%")
-                    sliderRow("Rounding", value: $settings.backgroundCornerRadius, in: 0...20, step: 1,
+                    sliderRow(String(localized: "settings.rounding"), value: $settings.backgroundCornerRadius, in: 0...20, step: 1,
                               text: "\(Int(settings.backgroundCornerRadius))pt")
                 }
                 #endif
@@ -924,37 +924,37 @@ struct SubtitleSettingsPage: View {
 
             #if !os(tvOS)
             Section {
-                sliderRow("Bottom Padding", value: $settings.bottomPadding, in: 20...200, step: 5,
+                sliderRow(String(localized: "settings.bottom_padding"), value: $settings.bottomPadding, in: 20...200, step: 5,
                           text: "\(Int(settings.bottomPadding))pt")
             } header: {
-                Text("Position")
+                Text("settings.position")
             }
 
             Section {
                 HStack {
-                    Text("Delay")
+                    Text("player.delay")
                     Spacer()
                     Text(PlayerSubtitleMenu.delayLabel(settings.delaySeconds))
                         .monospacedDigit()
                         .foregroundStyle(.secondary)
                 }
-                Button("Reset Delay") { settings.delaySeconds = 0 }
+                Button("settings.reset_delay") { settings.delaySeconds = 0 }
                     .disabled(settings.delaySeconds == 0)
             } header: {
-                Text("Sync")
+                Text("shared.sync")
             } footer: {
-                Text("Set while watching, from the subtitles button. It carries over to the next video until you reset it.")
+                Text("settings.set_while_watching_from_the")
             }
             #endif
 
             Section {
-                Button("Restore Defaults", role: .destructive) { settings.restoreDefaults() }
+                Button("settings.restore_defaults", role: .destructive) { settings.restoreDefaults() }
             } footer: {
-                Text("Styled (.ass) subtitles keep their own fonts and colours; size and delay still apply.")
+                Text("settings.styled_ass_subtitles_keep_their")
             }
         }
         .softScrollEdges()
-        .navigationTitle("Subtitles")
+        .navigationTitle("settings.subtitles")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -986,7 +986,7 @@ struct SubtitleSettingsPage: View {
     }
 
     private var subtitleLine: some View {
-        Text("Did he give you any clues,\nany coordinates, anything?")
+        Text("settings.did_he_give_you_any")
             .font(.system(size: min(settings.fontSize, 32)))
             .foregroundStyle(settings.foregroundColor)
             .shadow(color: .black, radius: 0, x: -1, y: 0)
@@ -1033,73 +1033,87 @@ struct ReaderSettingsView: View {
     var body: some View {
         SettingsList {
             Section {
-                Toggle("Tap Sides to Scroll or Turn", isOn: $tapZones)
+                Toggle("settings.tap_sides_to_scroll_or", isOn: $tapZones)
                     .switchTint()
             } header: {
-                Text("Tap Zones")
+                Text("settings.tap_zones")
             } footer: {
-                Text(tapZones
-                     ? "\(Self.tapVerb) the right side to scroll down or turn to the next page, the left to go back; right to left reading swaps them. The middle shows and hides the controls."
-                     : "A \(Self.tapVerb.lowercased()) anywhere on a page shows and hides the controls.")
+                Text(tapZones ? Self.tapZonesOn : Self.tapZonesOff)
             }
             Section {
-                Toggle("Reverse Direction", isOn: $tapZonesReversed)
+                Toggle("reader.reverse_direction", isOn: $tapZonesReversed)
                     .switchTint()
             } header: {
-                Text("Vertical Scroll")
+                Text("reader.vertical_scroll")
             } footer: {
-                Text("Runs the page slider and the chapter buttons from right to left, and swaps the \(Self.tapVerb.lowercased()) sides with them.")
+                Text(Self.reverseFooter)
             }
             // A Mac's reader turns pages with a slide; there's no curl to turn off.
             #if os(iOS)
             Section {
-                Toggle("Page Curl", isOn: $readerPageCurl)
+                Toggle("reader.page_curl", isOn: $readerPageCurl)
                     .switchTint()
             } header: {
-                Text("Turning Pages")
+                Text("settings.turning_pages")
             } footer: {
-                Text("Turn pages with a curl, like a book, in the paged reading modes. Turn off to slide them instead.")
+                Text("settings.turn_pages_with_a_curl")
             }
             // An iPad turns everywhere, so this only means something on iPhone.
             if UIDevice.current.userInterfaceIdiom == .phone {
                 Section {
-                    Toggle("Portrait Only", isOn: $readerPortraitOnly)
+                    Toggle("settings.portrait_only", isOn: $readerPortraitOnly)
                         .switchTint()
                 } header: {
-                    Text("Orientation")
+                    Text("settings.orientation")
                 } footer: {
-                    Text("Keep the reader upright. Turn off to read sideways when you turn your phone.")
+                    Text("settings.keep_the_reader_upright_turn")
                 }
             }
             #endif
             if #available(iOS 26.0, macOS 26.0, *) {
                 Section {
-                    Toggle("Liquid Glass Controls", isOn: $readerLiquidGlass)
+                    Toggle("settings.liquid_glass_controls", isOn: $readerLiquidGlass)
                         .switchTint()
                 } header: {
-                    Text("Style")
+                    Text("settings.style")
                 } footer: {
-                    Text("Frosted glass buttons in the manga reader. Turn off for solid controls.")
+                    Text("settings.frosted_glass_buttons_in_the_2")
                 }
             } else {
                 Section {
-                    Text("Liquid Glass reader controls need \(Self.systemName) 26.")
+                    Text("settings.liquid_glass_reader_controls_need \(Self.systemName)")
                         .foregroundStyle(.secondary)
                 }
             }
         }
         .softScrollEdges()
-        .navigationTitle("Reader")
+        .navigationTitle("settings.reader")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
     }
 
-    private static var tapVerb: String {
+    private static var tapZonesOn: String {
         #if os(macOS)
-        "Click"
+        String(localized: "settings.click_the_right_side_to")
         #else
-        "Tap"
+        String(localized: "settings.tap_the_right_side_to")
+        #endif
+    }
+
+    private static var reverseFooter: String {
+        #if os(macOS)
+        String(localized: "settings.runs_the_page_slider_click")
+        #else
+        String(localized: "settings.runs_the_page_slider_tap")
+        #endif
+    }
+
+    private static var tapZonesOff: String {
+        #if os(macOS)
+        String(localized: "settings.a_click_anywhere_on_a")
+        #else
+        String(localized: "settings.a_tap_anywhere_on_a")
         #endif
     }
 
@@ -1151,7 +1165,7 @@ struct ModulesSettingsView: View {
                         VStack(alignment: .leading, spacing: 3) {
                             Text(moduleManager.activeModule?.sourceName ?? providerManager.primary?.providerType.displayName ?? "AniList")
                                 .font(.headline)
-                            Text("Manage Installed Modules")
+                            Text("settings.manage_installed_modules")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                         }
@@ -1161,21 +1175,21 @@ struct ModulesSettingsView: View {
             }
 
             Section {
-                Toggle("Use Default Extension", isOn: $useDefaultExtension)
+                Toggle("settings.use_default_extension", isOn: $useDefaultExtension)
                     .switchTint()
                     .disabled(moduleManager.activeModule == nil)
-                Toggle("Auto-pick Last Search Result", isOn: $autoPickLastSearchResult)
+                Toggle("settings.auto_pick_last_search_result", isOn: $autoPickLastSearchResult)
                     .switchTint()
-                Toggle("Auto-pick Last Stream", isOn: $autoPickLastStream)
+                Toggle("settings.auto_pick_last_stream", isOn: $autoPickLastStream)
                     .switchTint()
             } header: {
-                Text("Automation")
+                Text("settings.automation")
             } footer: {
-                Text("Auto-pick choices reuse your previous source and stream selections when opening an episode or chapter.")
+                Text("settings.auto_pick_choices_reuse_your")
             }
         }
         .softScrollEdges()
-        .navigationTitle("Modules")
+        .navigationTitle("common.modules")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -1201,21 +1215,21 @@ struct LibrarySettingsView: View {
                 NavigationLink {
                     LibraryListOrderView()
                 } label: {
-                    Label("List Order & Custom Lists", systemImage: "list.bullet.indent")
+                    Label("settings.list_order_and_custom_lists", systemImage: "list.bullet.indent")
                 }
             }
 
             Section {
-                Toggle("New Episode Badges", isOn: $newEpisodeBadges)
+                Toggle("settings.new_episode_badges", isOn: $newEpisodeBadges)
                     .switchTint()
-                Text("Marks shows you're watching that have aired episodes you haven't seen, with a dot for ones that came out since you last opened the show. Sort by New Episodes First from the Library's sort menu.")
+                Text("settings.marks_shows_youre_watching_that")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             } header: {
-                Text("Cards")
+                Text("settings.cards")
             }
 
-            Section("Matching") {
+            Section("settings.matching") {
                 ForEach(orderedLanguages, id: \.self) { lang in
                     HStack {
                         Image(systemName: "line.3.horizontal")
@@ -1229,7 +1243,7 @@ struct LibrarySettingsView: View {
                     langs.move(fromOffsets: from, toOffset: to)
                     titlePriority = langs.joined(separator: ",")
                 }
-                Text("Drag to reorder title priority for display and matching.")
+                Text("settings.drag_to_reorder_title_priority")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -1238,34 +1252,34 @@ struct LibrarySettingsView: View {
             #endif
 
             Section {
-                Toggle("Auto-track what you watch", isOn: $localAutoTrackEnabled)
+                Toggle("settings.auto_track_what_you_watch", isOn: $localAutoTrackEnabled)
                     .switchTint()
-                Picker("Score Format", selection: $localScoreFormatRaw) {
-                    Text("100 Point").tag(ScoreFormat.point100.rawValue)
-                    Text("10 Point (Decimal)").tag(ScoreFormat.point10Decimal.rawValue)
-                    Text("10 Point").tag(ScoreFormat.point10.rawValue)
-                    Text("5 Star").tag(ScoreFormat.point5.rawValue)
-                    Text("3 Point").tag(ScoreFormat.point3.rawValue)
+                Picker("settings.score_format", selection: $localScoreFormatRaw) {
+                    Text("settings.100_point").tag(ScoreFormat.point100.rawValue)
+                    Text("settings.10_point_decimal").tag(ScoreFormat.point10Decimal.rawValue)
+                    Text("settings.10_point").tag(ScoreFormat.point10.rawValue)
+                    Text("settings.5_star").tag(ScoreFormat.point5.rawValue)
+                    Text("settings.3_point").tag(ScoreFormat.point3.rawValue)
                 }
                 Button(role: .destructive) {
                     showClearLocalLibrary = true
                 } label: {
-                    Label("Clear Local Library", systemImage: "trash")
+                    Label("settings.clear_local_library", systemImage: "trash")
                 }
             } header: {
-                Text("Local Library")
+                Text("settings.local_library")
             } footer: {
-                Text("Your on-device library works without signing in. Auto-track keeps its Watching list in sync with what you watch.")
+                Text("settings.your_on_device_library_works")
             }
-            .alert("Clear Local Library", isPresented: $showClearLocalLibrary) {
-                Button("Clear", role: .destructive) { LocalLibraryManager.shared.clearAll() }
-                Button("Cancel", role: .cancel) {}
+            .alert("settings.clear_local_library", isPresented: $showClearLocalLibrary) {
+                Button("search.clear", role: .destructive) { LocalLibraryManager.shared.clearAll() }
+                Button("common.cancel", role: .cancel) {}
             } message: {
-                Text("This permanently removes all on-device entries and collections. AniList/MyAnimeList lists are not affected.")
+                Text("settings.this_permanently_removes_all_on")
             }
         }
         .softScrollEdges()
-        .navigationTitle("Library")
+        .navigationTitle("common.library")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -1299,7 +1313,7 @@ struct LibraryListOrderView: View {
                     statusOrderRaw = list.map(\.rawValue).joined(separator: ",")
                 }
             } header: {
-                Text("Drag to reorder status tabs")
+                Text("settings.drag_to_reorder_status_tabs")
             }
 
             if !customListNames.isEmpty {
@@ -1308,14 +1322,14 @@ struct LibraryListOrderView: View {
                         Label(name, systemImage: "list.star")
                     }
                 } header: {
-                    Text("Custom Lists")
+                    Text("library.custom_lists")
                 } footer: {
-                    Text("Custom lists are managed on AniList.")
+                    Text("settings.custom_lists_are_managed_on")
                 }
             }
         }
         .softScrollEdges()
-        .navigationTitle("List Order")
+        .navigationTitle("settings.list_order")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .environment(\.editMode, .constant(.active))
@@ -1349,29 +1363,29 @@ struct DownloadsSettingsView: View {
 
     var body: some View {
         SettingsList {
-            Section("Downloads") {
-                Picker("Download Quality", selection: $downloadQuality) {
-                    Text("Best").tag("highest")
+            Section("common.downloads") {
+                Picker("settings.download_quality", selection: $downloadQuality) {
+                    Text("settings.best").tag("highest")
                     Text("1080p").tag("1080")
                     Text("720p").tag("720")
                     Text("480p").tag("480")
-                    Text("Smallest").tag("lowest")
+                    Text("settings.smallest").tag("lowest")
                 }
-                Picker("Concurrent Downloads", selection: $maxConcurrentDownloads) {
+                Picker("settings.concurrent_downloads", selection: $maxConcurrentDownloads) {
                     ForEach(1...5, id: \.self) { count in
                         Text("\(count)").tag(count)
                     }
                 }
                 // A Mac app keeps running in the background; only iOS has to ask to.
                 #if os(iOS)
-                Toggle("Background Downloads", isOn: $backgroundDownloadsEnabled)
+                Toggle("settings.background_downloads", isOn: $backgroundDownloadsEnabled)
                     .switchTint()
                 #endif
-                Toggle("Auto-Resume Interrupted", isOn: $autoResumeDownloads)
+                Toggle("settings.auto_resume_interrupted", isOn: $autoResumeDownloads)
                     .switchTint()
-                Toggle("Delete After Watching", isOn: $autoDeleteWatched)
+                Toggle("settings.delete_after_watching", isOn: $autoDeleteWatched)
                     .switchTint()
-                Text("Download Quality picks the rendition for streams that offer several, falling back to the closest below. A downloaded episode keeps the one it was saved in. Delete After Watching removes a downloaded episode once you finish it and close the player. Retry downloads that were interrupted or failed when the app next opens — off by default so reopening the app never starts a large transfer on cellular without you asking.")
+                Text("settings.download_quality_picks_the_rendition")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -1381,7 +1395,7 @@ struct DownloadsSettingsView: View {
                 Button(role: .destructive) {
                     showDeleteDownloadsConfirmation = true
                 } label: {
-                    LabeledContent("Delete All Downloads") {
+                    LabeledContent("settings.delete_all_downloads") {
                         Text(SettingsView.formattedBytes(downloadsSize))
                             .foregroundStyle(.secondary)
                     }
@@ -1389,25 +1403,25 @@ struct DownloadsSettingsView: View {
                 .foregroundStyle(.red)
                 .disabled(downloadsSize == 0)
             } footer: {
-                Text("Removes every downloaded episode and chapter. Kept out of cache resets — these are files you saved for offline use, not a cache the app can rebuild.")
+                Text("settings.removes_every_downloaded_episode_and")
             }
             #endif
         }
         .softScrollEdges()
-        .navigationTitle("Downloads")
+        .navigationTitle("common.downloads")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
         #if !os(tvOS)
-        .alert("Delete All Downloads?", isPresented: $showDeleteDownloadsConfirmation) {
-            Button("Delete", role: .destructive) {
+        .alert("settings.delete_all_downloads_2", isPresented: $showDeleteDownloadsConfirmation) {
+            Button("common.delete", role: .destructive) {
                 DownloadManager.shared.removeAll(DownloadManager.shared.items)
                 MangaDownloadManager.shared.removeAll(MangaDownloadManager.shared.items)
                 downloadsSize = DownloadManager.shared.bytesOnDisk + MangaDownloadManager.shared.bytesOnDisk
             }
-            Button("Cancel", role: .cancel) {}
+            Button("common.cancel", role: .cancel) {}
         } message: {
-            Text("Every downloaded episode and chapter will be removed from this device. You can download them again later.")
+            Text("settings.every_downloaded_episode_and_chapter")
         }
         .onAppear {
             downloadsSize = DownloadManager.shared.bytesOnDisk + MangaDownloadManager.shared.bytesOnDisk
@@ -1438,15 +1452,15 @@ struct StorageSettingsView: View {
 
     var body: some View {
         SettingsList {
-            Section("Data") {
-                Toggle("Data Saver", isOn: $dataSaverEnabled)
+            Section("settings.data") {
+                Toggle("settings.data_saver", isOn: $dataSaverEnabled)
                     .switchTint()
-                Text("Loads smaller artwork and skips the large banner images on Home. Posters look softer; everything still works, and downloads and playback are unaffected.")
+                Text("settings.loads_smaller_artwork_and_skips")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
 
-            Section("Storage & Cache") {
+            Section("settings.storage_and_cache") {
                 Button(role: .destructive) {
                     guard !isClearing else { return }
                     isClearing = true
@@ -1456,7 +1470,7 @@ struct StorageSettingsView: View {
                         updateCacheSizes()
                     }
                 } label: {
-                    LabeledContent("Clear Everything") {
+                    LabeledContent("settings.clear_everything") {
                         if isClearing {
                             ProgressView().scaleEffect(0.7)
                         } else {
@@ -1468,14 +1482,14 @@ struct StorageSettingsView: View {
                 .foregroundStyle(.red)
                 .disabled(isClearing)
 
-                DisclosureGroup("Individual Resets") {
+                DisclosureGroup(String(localized: "settings.individual_resets")) {
                     Button {
                         Task {
                             await CacheManager.shared.clearImageCache()
                             updateCacheSizes()
                         }
                     } label: {
-                        LabeledContent("Reset Image Cache") {
+                        LabeledContent("settings.reset_image_cache") {
                             Text(SettingsView.formattedBytes(imageCacheSize))
                                 .foregroundStyle(.secondary)
                         }
@@ -1492,7 +1506,7 @@ struct StorageSettingsView: View {
                             isClearing = false
                         }
                     } label: {
-                        LabeledContent("Reset Website Data") {
+                        LabeledContent("settings.reset_website_data") {
                             Text(SettingsView.formattedBytes(websiteDataSize))
                                 .foregroundStyle(.secondary)
                         }
@@ -1503,7 +1517,7 @@ struct StorageSettingsView: View {
                         CacheManager.shared.clearNetworkCache()
                         updateCacheSizes()
                     } label: {
-                        LabeledContent("Reset Network Cache") {
+                        LabeledContent("settings.reset_network_cache") {
                             Text(SettingsView.formattedBytes(networkCacheSize))
                                 .foregroundStyle(.secondary)
                         }
@@ -1514,7 +1528,7 @@ struct StorageSettingsView: View {
                         CacheManager.shared.clearDataCaches()
                         updateCacheSizes()
                     } label: {
-                        LabeledContent("Reset Home & Simkl Cache") {
+                        LabeledContent("settings.reset_home_and_simkl_cache") {
                             Text(SettingsView.formattedBytes(dataCacheSize))
                                 .foregroundStyle(.secondary)
                         }
@@ -1525,7 +1539,7 @@ struct StorageSettingsView: View {
                         CacheManager.shared.clearTempFiles()
                         updateCacheSizes()
                     } label: {
-                        LabeledContent("Clear Temporary Files") {
+                        LabeledContent("settings.clear_temporary_files") {
                             Text(SettingsView.formattedBytes(tempFilesSize))
                                 .foregroundStyle(.secondary)
                         }
@@ -1536,7 +1550,7 @@ struct StorageSettingsView: View {
                         CacheManager.shared.clearSearchAliases()
                         updateCacheSizes()
                     } label: {
-                        LabeledContent("Reset Search Aliases") {
+                        LabeledContent("settings.reset_search_aliases") {
                             Text(SettingsView.formattedBytes(searchAliasSize))
                                 .foregroundStyle(.secondary)
                         }
@@ -1547,7 +1561,7 @@ struct StorageSettingsView: View {
                         CacheManager.shared.clearIDMappingCache()
                         updateCacheSizes()
                     } label: {
-                        LabeledContent("Reset ID Mapping Cache") {
+                        LabeledContent("settings.reset_id_mapping_cache") {
                             Text(SettingsView.formattedBytes(idMappingSize))
                                 .foregroundStyle(.secondary)
                         }
@@ -1558,7 +1572,7 @@ struct StorageSettingsView: View {
                         CacheManager.shared.clearEpisodeSortPreferences()
                         updateCacheSizes()
                     } label: {
-                        LabeledContent("Reset Episode Sort Preferences") {
+                        LabeledContent("settings.reset_episode_sort_preferences") {
                             Text(SettingsView.formattedBytes(episodeSortSize))
                                 .foregroundStyle(.secondary)
                         }
@@ -1568,7 +1582,7 @@ struct StorageSettingsView: View {
                     Button {
                         showResetCWConfirmation = true
                     } label: {
-                        LabeledContent("Reset Watch Progress") {
+                        LabeledContent("settings.reset_watch_progress") {
                             Text(SettingsView.formattedBytes(continueWatchingSize))
                                 .foregroundStyle(.secondary)
                         }
@@ -1578,7 +1592,7 @@ struct StorageSettingsView: View {
                 .font(.subheadline)
                 .disabled(isClearing)
 
-                Text("Clear Everything removes caches the app can rebuild. It keeps your watch progress, which has its own reset. Website Data includes cookies and local storage from module scrapers. Search Aliases store remembered search results and stream picks per module. The Network Cache holds saved answers from sites and services.")
+                Text("settings.clear_everything_removes_caches_the")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -1587,45 +1601,45 @@ struct StorageSettingsView: View {
                 Button(role: .destructive) {
                     showDeleteDownloadsConfirmation = true
                 } label: {
-                    LabeledContent("Delete All Downloads") {
+                    LabeledContent("settings.delete_all_downloads") {
                         Text(SettingsView.formattedBytes(downloadsSize))
                             .foregroundStyle(.secondary)
                     }
                 }
                 .foregroundStyle(.red)
                 .disabled(downloadsSize == 0)
-                NavigationLink("Download Settings") { DownloadsSettingsView() }
+                NavigationLink("settings.download_settings") { DownloadsSettingsView() }
             } header: {
-                Text("Downloads")
+                Text("common.downloads")
             } footer: {
-                Text("Downloaded episodes and chapters aren't a cache, so Clear Everything leaves them alone. Delete single episodes from the Downloads tab, or turn on Delete After Watching in Download Settings.")
+                Text("settings.downloaded_episodes_and_chapters_arent")
             }
         }
-        .alert("Delete All Downloads?", isPresented: $showDeleteDownloadsConfirmation) {
-            Button("Delete", role: .destructive) {
+        .alert("settings.delete_all_downloads_2", isPresented: $showDeleteDownloadsConfirmation) {
+            Button("common.delete", role: .destructive) {
                 DownloadManager.shared.removeAll(DownloadManager.shared.items)
                 MangaDownloadManager.shared.removeAll(MangaDownloadManager.shared.items)
                 downloadsSize = DownloadManager.shared.bytesOnDisk + MangaDownloadManager.shared.bytesOnDisk
             }
-            Button("Cancel", role: .cancel) {}
+            Button("common.cancel", role: .cancel) {}
         } message: {
-            Text("Every downloaded episode and chapter will be removed from this device. You can download them again later.")
+            Text("settings.every_downloaded_episode_and_chapter")
         }
         .softScrollEdges()
-        .navigationTitle("Storage & Cache")
+        .navigationTitle("settings.storage_and_cache")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
-        .alert("Reset Watch Progress?", isPresented: $showResetCWConfirmation) {
-            Button("Reset", role: .destructive) {
+        .alert("settings.reset_watch_progress_2", isPresented: $showResetCWConfirmation) {
+            Button("common.reset", role: .destructive) {
                 CacheManager.shared.clearContinueWatching()
                 updateCacheSizes()
             }
-            Button("Cancel", role: .cancel) {}
+            Button("common.cancel", role: .cancel) {}
         } message: {
             // It takes the watched marks too: the old wording promised only the Home cards, and a
             // separate Watch History reset, of data nothing writes any more, promised the marks.
-            Text("Clears Continue Watching and every Watched mark in episode lists on this device. AniList, MyAnimeList and Simkl aren't changed.")
+            Text("settings.clears_continue_watching_and_every")
         }
         .onAppear {
             updateCacheSizes()
@@ -1827,12 +1841,12 @@ struct SettingsViewLogger: View {
     var body: some View {
         Group {
             if isLoading {
-                ProgressView("Loading logs…")
+                ProgressView(String(localized: "settings.loading_logs"))
             } else if filteredEntries.isEmpty {
                 ContentUnavailableView(
-                    entries.isEmpty ? "No Logs" : "No Results",
+                    entries.isEmpty ? "settings.no_logs" : "detail.no_results",
                     systemImage: entries.isEmpty ? "doc.text" : "magnifyingglass",
-                    description: Text(entries.isEmpty ? "Nothing has been logged yet." : "No logs match your search.")
+                    description: Text(entries.isEmpty ? String(localized: "settings.nothing_has_been_logged_yet") : String(localized: "settings.no_logs_match_your_search"))
                 )
             } else {
                 ScrollView {
@@ -1846,8 +1860,8 @@ struct SettingsViewLogger: View {
                 .softScrollEdges()
             }
         }
-        .searchable(text: $searchText, prompt: "Search logs")
-        .navigationTitle("Logs")
+        .searchable(text: $searchText, prompt: String(localized: "settings.search_logs"))
+        .navigationTitle("settings.logs")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -1864,7 +1878,7 @@ struct SettingsViewLogger: View {
                         NSPasteboard.general.setString(text, forType: .string)
                         #endif
                     } label: {
-                        Label("Copy to Clipboard", systemImage: "doc.on.doc")
+                        Label("settings.copy_to_clipboard", systemImage: "doc.on.doc")
                     }
                     Button(role: .destructive) {
                         Task {
@@ -1872,7 +1886,7 @@ struct SettingsViewLogger: View {
                             await MainActor.run { entries = [] }
                         }
                     } label: {
-                        Label("Clear Logs", systemImage: "trash")
+                        Label("settings.clear_logs", systemImage: "trash")
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")
@@ -1901,7 +1915,7 @@ struct SettingsViewLoggerFilter: View {
 
     var body: some View {
         SettingsList {
-            Section(header: Text("Log Types"), footer: Text("Choose which log categories to record. Debug and HTMLStrings can be very verbose.")) {
+            Section(header: Text("settings.log_types"), footer: Text("settings.choose_which_log_categories_to")) {
                 ForEach($viewModel.filters) { $filter in
                     Toggle(isOn: $filter.isEnabled) {
                         Label {
@@ -1916,7 +1930,7 @@ struct SettingsViewLoggerFilter: View {
             }
         }
         .softScrollEdges()
-        .navigationTitle("Log Filters")
+        .navigationTitle("settings.log_filters")
     }
 }
 
@@ -1938,13 +1952,13 @@ class LogFilterViewModel: ObservableObject {
     
     private let userDefaultsKey = "LogFilterStates"
     private let hardcodedFilters: [(type: String, description: String, defaultState: Bool)] = [
-        ("General", "General events and activities.", true),
-        ("Stream", "Streaming and video playback.", true),
-        ("Error", "Errors and critical issues.", true),
-        ("Debug", "Debugging and troubleshooting.", false),
-        ("Network", "Network requests and responses.", false),
-        ("Download", "HLS video downloading.", true),
-        ("HTMLStrings", "Raw HTML response strings.", false)
+        ("General", String(localized: "settings.general_events_and_activities"), true),
+        ("Stream", String(localized: "settings.streaming_and_video_playback"), true),
+        ("Error", String(localized: "settings.errors_and_critical_issues"), true),
+        ("Debug", String(localized: "settings.debugging_and_troubleshooting"), false),
+        ("Network", String(localized: "settings.network_requests_and_responses"), false),
+        ("Download", String(localized: "settings.hls_video_downloading"), true),
+        ("HTMLStrings", String(localized: "settings.raw_html_response_strings"), false)
     ]
     
     private init() {
@@ -2202,7 +2216,7 @@ private struct ProvidersSettingsSection: View {
                     Spacer()
                     HStack(spacing: 8) {
                         if manager.orderedProviders.first?.providerType == provider.providerType {
-                            Text("Primary")
+                            Text("settings.primary")
                                 .font(.caption.weight(.semibold))
                                 .lineLimit(1)
                                 .fixedSize()
@@ -2210,7 +2224,7 @@ private struct ProvidersSettingsSection: View {
                                 .padding(.horizontal, 8).padding(.vertical, 3)
                                 .background(.primary.opacity(0.1), in: Capsule())
                         } else if isSignedIn(provider.providerType) {
-                            Button("Make Primary") {
+                            Button("settings.make_primary") {
                                 manager.selectProvider(provider.providerType)
                             }
                             .font(.caption.weight(.semibold))
@@ -2231,9 +2245,9 @@ private struct ProvidersSettingsSection: View {
                 manager.moveProvider(from: from, to: to)
             }
         } header: {
-            Text("Providers")
+            Text("settings.providers")
         } footer: {
-            Text("Drag to reorder. The first provider is primary; the second is used as fallback.")
+            Text("settings.drag_to_reorder_the_first")
         }
         #if os(iOS)
         .environment(\.editMode, .constant(.active))
@@ -2250,7 +2264,7 @@ private struct ProvidersSettingsSection: View {
     @ViewBuilder
     private func providerAuthButton(for type: ProviderType) -> some View {
         let isLoggedIn = type == .anilist ? aniListAuth.isLoggedIn : malAuth.isLoggedIn
-        Button(isLoggedIn ? "Sign Out" : "Sign In") {
+        Button(isLoggedIn ? String(localized: "settings.sign_out") : String(localized: "library.sign_in")) {
             if isLoggedIn {
                 if type == .anilist { aniListAuth.logout() } else { malAuth.logout() }
             } else {
@@ -2290,15 +2304,15 @@ private struct ProvidersSettingsSection: View {
     private func providerStatus(_ provider: any MediaProvider) -> String {
         switch provider.providerType {
         case .anilist:
-            guard aniListAuth.isLoggedIn else { return "Not signed in" }
+            guard aniListAuth.isLoggedIn else { return String(localized: "settings.not_signed_in") }
             // A token AniList has started refusing still has `isLoggedIn` true — the token is
             // kept on purpose, since a revoked one and a failing auth backend are
             // indistinguishable from here. Saying "Signed in" while every sync fails is the
             // part that left people with no idea what to do about it.
-            return aniListAuth.needsReauthentication ? "Sign in again" : "Signed in"
-        case .mal: return malAuth.isLoggedIn ? "Signed in" : "Not signed in"
-        case .simkl: return SimklAuthManager.shared.isLoggedIn ? "Signed in" : "Not signed in"
-        case .local: return "Not signed in"
+            return aniListAuth.needsReauthentication ? String(localized: "settings.sign_in_again") : String(localized: "settings.signed_in")
+        case .mal: return malAuth.isLoggedIn ? String(localized: "settings.signed_in") : String(localized: "settings.not_signed_in")
+        case .simkl: return SimklAuthManager.shared.isLoggedIn ? String(localized: "settings.signed_in") : String(localized: "settings.not_signed_in")
+        case .local: return String(localized: "settings.not_signed_in")
         }
     }
 }
@@ -2327,21 +2341,21 @@ private struct OverwritePreviewSheet: View {
                         .foregroundStyle(.secondary)
                 }
 
-                Section("What this will do") {
+                Section("settings.what_this_will_do") {
                     if plan.isEmpty {
-                        Text("Nothing — \(run.targetName) already matches.")
+                        Text("settings.nothing_already_matches \(run.targetName)")
                             .foregroundStyle(.secondary)
                     }
-                    if additions > 0 { row("Add to \(run.targetName)", additions) }
-                    if overwrites > 0 { row("Overwrite on \(run.targetName)", overwrites) }
+                    if additions > 0 { row(String(localized: "settings.add_to \(run.targetName)"), additions) }
+                    if overwrites > 0 { row(String(localized: "settings.overwrite_on \(run.targetName)"), overwrites) }
                     if !plan.deletions.isEmpty {
-                        row("Delete from \(run.targetName)", plan.deletions.count, tint: .red)
+                        row(String(localized: "settings.delete_from \(run.targetName)"), plan.deletions.count, tint: .red)
                     }
-                    if plan.unchanged > 0 { row("Leave unchanged", plan.unchanged, tint: .secondary) }
+                    if plan.unchanged > 0 { row(String(localized: "settings.leave_unchanged"), plan.unchanged, tint: .secondary) }
                 }
 
                 if !plan.deletions.isEmpty {
-                    Section("Will be deleted") {
+                    Section("settings.will_be_deleted") {
                         ForEach(plan.deletions, id: \.id) { deletion in
                             Text(deletion.title)
                                 .font(.callout)
@@ -2350,14 +2364,14 @@ private struct OverwritePreviewSheet: View {
                 }
 
                 if plan.keptUnverified > 0 || !plan.unmatched.isEmpty {
-                    Section("Left alone") {
+                    Section("settings.left_alone") {
                         if plan.keptUnverified > 0 {
-                            Text("\(plan.keptUnverified) on \(run.targetName) couldn't be matched against \(run.sourceName), so they're kept rather than deleted.")
+                            Text("settings.on_couldnt_be_matched_against \(plan.keptUnverified) \(run.targetName) \(run.sourceName)")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
                         if !plan.unmatched.isEmpty {
-                            Text("\(plan.unmatched.count) on \(run.sourceName) have no \(run.targetName) entry to write to.")
+                            Text("settings.on_have_no_entry_to \(plan.unmatched.count) \(run.sourceName) \(run.targetName)")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
@@ -2368,7 +2382,7 @@ private struct OverwritePreviewSheet: View {
                     Button(run.confirmButtonTitle, role: .destructive, action: onConfirm)
                         .disabled(plan.isEmpty)
                 } footer: {
-                    Text("This can't be undone.")
+                    Text("settings.this_cant_be_undone")
                 }
             }
             .navigationTitle(run.confirmationTitle)
@@ -2377,7 +2391,7 @@ private struct OverwritePreviewSheet: View {
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", action: onCancel)
+                    Button("common.cancel", action: onCancel)
                 }
             }
         }

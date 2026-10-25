@@ -28,9 +28,9 @@ enum VTTSubtitlesLoader {
 
         var errorDescription: String? {
             switch self {
-            case .invalidURL:     return "The subtitle URL is invalid."
-            case .decodingFailed: return "Could not decode subtitle data as UTF-8."
-            case .unknownFormat:  return "Subtitle format is not recognised (expected VTT, SRT or ASS)."
+            case .invalidURL:     return String(localized: "shared.the_subtitle_url_is_invalid")
+            case .decodingFailed: return String(localized: "shared.could_not_decode_subtitle_data")
+            case .unknownFormat:  return String(localized: "shared.subtitle_format_is_not_recognised")
             }
         }
     }

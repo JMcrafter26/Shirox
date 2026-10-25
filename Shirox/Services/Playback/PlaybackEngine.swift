@@ -71,7 +71,7 @@ struct PlaybackStats: Equatable {
         case ".mp3", "mp3": return "MP3"
         case "flac", "flac ": return "FLAC"
         case "alac": return "ALAC"
-        case "": return "Unknown"
+        case "": return String(localized: "shared.unknown")
         default: return code.uppercased()
         }
     }
@@ -93,8 +93,8 @@ struct PlaybackStats: Equatable {
     var channelsText: String? {
         switch audioChannels {
         case nil, 0?: return nil
-        case 1?: return "Mono"
-        case 2?: return "Stereo"
+        case 1?: return String(localized: "shared.mono")
+        case 2?: return String(localized: "shared.stereo")
         case 6?: return "5.1"
         case 8?: return "7.1"
         case let count?: return "\(count) channels"

@@ -32,30 +32,30 @@ struct BackupSettingsView: View {
             importSection
             if let report { reportSection(report) }
         }
-        .navigationTitle("Backup")
+        .navigationTitle("settings.backup")
         // One importer only: two `.fileImporter` modifiers in a single view conflict —
         // see the note in SearchView.swift.
         .fileImporter(isPresented: $showImporter,
                       allowedContentTypes: Self.backupContentTypes) { result in
             handlePickedFile(result)
         }
-        .confirmationDialog("Restore this backup?",
+        .confirmationDialog("settings.restore_this_backup",
                             isPresented: Binding(get: { pendingSummary != nil },
                                                  set: { if !$0 { clearPendingImport() } }),
                             titleVisibility: .visible) {
-            Button("Replace Data on This Device", role: .destructive) { runRestore() }
-            Button("Cancel", role: .cancel) { clearPendingImport() }
+            Button("settings.replace_data_on_this_device", role: .destructive) { runRestore() }
+            Button("common.cancel", role: .cancel) { clearPendingImport() }
         } message: {
             if let pendingSummary { Text(Self.confirmationMessage(pendingSummary)) }
         }
-        .alert("Couldn't Read Backup",
+        .alert("settings.couldnt_read_backup",
                isPresented: Binding(get: { importError != nil },
                                     set: { if !$0 { importError = nil } })) {
             Button("OK") { importError = nil }
         } message: {
             Text(importError ?? "")
         }
-        .alert("Couldn't Create Backup",
+        .alert("settings.couldnt_create_backup",
                isPresented: Binding(get: { exportError != nil },
                                     set: { if !$0 { exportError = nil } })) {
             Button("OK") { exportError = nil }
@@ -68,31 +68,31 @@ struct BackupSettingsView: View {
 
     @ViewBuilder
     private var exportSection: some View {
-        Section("Create Backup") {
-            Toggle("Include Accounts", isOn: $includeAccounts)
+        Section("settings.create_backup") {
+            Toggle("settings.include_accounts", isOn: $includeAccounts)
                 .switchTint()
             Text(includeAccounts
-                 ? "This backup will contain live login tokens for AniList, MyAnimeList and Jellyfin. Anyone who opens the file can sign in as you — keep it to yourself."
-                 : "Progress, library, settings and modules. No login tokens, so the file is safe to share.")
+                 ? String(localized: "settings.this_backup_will_contain_live")
+                 : String(localized: "settings.progress_library_settings_and_modules"))
                 .font(.caption)
                 .foregroundStyle(includeAccounts ? .orange : .secondary)
 
             #if os(macOS)
             // A Mac saves the file where it's told; the share menu there has no "Save".
-            Button("Save Backup…") { saveBackup() }
+            Button("settings.save_backup") { saveBackup() }
             #else
-            Button("Create Backup") { createBackup() }
+            Button("settings.create_backup") { createBackup() }
             #endif
 
             if let exportedURL {
                 #if os(iOS)
                 AnchoredShareButton(items: [exportedURL]) {
-                    Label("Share \(exportedURL.lastPathComponent)", systemImage: "square.and.arrow.up")
+                    Label("settings.share \(exportedURL.lastPathComponent)", systemImage: "square.and.arrow.up")
                 }
                 #else
                 if #available(macOS 13.0, *) {
                     ShareLink(item: exportedURL) {
-                        Label("Share \(exportedURL.lastPathComponent)", systemImage: "square.and.arrow.up")
+                        Label("settings.share \(exportedURL.lastPathComponent)", systemImage: "square.and.arrow.up")
                     }
                 }
                 #endif
@@ -114,7 +114,7 @@ struct BackupSettingsView: View {
                 try FileManager.default.removeItem(at: destination)
             }
             try FileManager.default.copyItem(at: exportedURL, to: destination)
-            ToastManager.shared.show(message: "Backup saved", type: .success)
+            ToastManager.shared.show(message: String(localized: "settings.backup_saved"), type: .success)
         } catch {
             exportError = error.localizedDescription
         }
@@ -133,10 +133,10 @@ struct BackupSettingsView: View {
 
     @ViewBuilder
     private var importSection: some View {
-        Section("Restore") {
-            Button("Restore from Backup") { showImporter = true }
+        Section("settings.restore") {
+            Button("settings.restore_from_backup") { showImporter = true }
                 .disabled(isRestoring)
-            Text("Replaces the progress, library, settings and modules on this device with the ones in the backup. Downloaded episodes and chapters are left alone.")
+            Text("settings.replaces_the_progress_library_settings")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
@@ -169,12 +169,12 @@ struct BackupSettingsView: View {
     private static func confirmationMessage(_ summary: BackupSummary) -> String {
         var parts: [String] = []
         parts.append(summary.lines.isEmpty
-                     ? "This backup records no data."
+                     ? String(localized: "settings.this_backup_records_no_data")
                      : summary.lines.joined(separator: " · "))
-        parts.append("Made \(summary.createdAt.formatted(date: .abbreviated, time: .shortened)) with Shirox \(summary.appVersion).")
-        parts.append("This replaces the data on this device.")
+        parts.append(String(localized: "settings.made_with_shirox \(summary.createdAt.formatted(date: .abbreviated, time: .shortened)) \(summary.appVersion)"))
+        parts.append(String(localized: "settings.this_replaces_the_data_on"))
         if summary.includesAccounts {
-            parts.append("It also signs this device into the accounts saved in the backup.")
+            parts.append(String(localized: "settings.it_also_signs_this_device"))
         }
         return parts.joined(separator: "\n\n")
     }
@@ -197,9 +197,9 @@ struct BackupSettingsView: View {
 
     @ViewBuilder
     private func reportSection(_ report: BackupImportReport) -> some View {
-        Section("Last Restore") {
+        Section("settings.last_restore") {
             if !report.applied.isEmpty {
-                LabeledContent("Restored") {
+                LabeledContent("settings.restored") {
                     Text(report.applied.map(Self.label).joined(separator: ", "))
                 }
             }
@@ -209,12 +209,12 @@ struct BackupSettingsView: View {
                     .foregroundStyle(.orange)
             }
             ForEach(report.skipped, id: \.detail) { note in
-                Text("Skipped \(Self.label(note.section)): \(note.detail)")
+                Text("settings.skipped \(Self.label(note.section)) \(note.detail)")
                     .font(.caption)
                     .foregroundStyle(.red)
             }
             if report.skipped.isEmpty && report.warnings.isEmpty {
-                Text("Everything in the backup was restored.")
+                Text("settings.everything_in_the_backup_was")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -223,12 +223,12 @@ struct BackupSettingsView: View {
 
     private static func label(_ sectionID: String) -> String {
         switch sectionID {
-        case BackupSectionID.progress: return "Progress"
-        case BackupSectionID.localLibrary: return "Local Library"
-        case BackupSectionID.settings: return "Settings"
-        case BackupSectionID.modules: return "Modules"
-        case BackupSectionID.accounts: return "Accounts"
-        case BackupSectionID.links: return "Links"
+        case BackupSectionID.progress: return String(localized: "settings.progress")
+        case BackupSectionID.localLibrary: return String(localized: "settings.local_library")
+        case BackupSectionID.settings: return String(localized: "settings.settings")
+        case BackupSectionID.modules: return String(localized: "common.modules")
+        case BackupSectionID.accounts: return String(localized: "settings.accounts")
+        case BackupSectionID.links: return String(localized: "settings.links")
         default: return sectionID
         }
     }

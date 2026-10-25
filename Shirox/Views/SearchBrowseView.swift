@@ -85,7 +85,7 @@ struct SearchBrowseView: View {
 
                 if let errorMessage = vm.errorMessage, vm.results.isEmpty {
                     ContentUnavailableView(
-                        "Couldn't Load",
+                        "common.couldnt_load",
                         systemImage: "exclamationmark.triangle",
                         description: Text(errorMessage)
                     )
@@ -99,11 +99,11 @@ struct SearchBrowseView: View {
                     // nobody matched, versus nothing coming back at all — which is never a real
                     // answer when no genre is applied.
                     ContentUnavailableView(
-                        vm.genre == nil ? "Nothing came back" : "No \(vm.genre ?? "") anime",
+                        LocalizedStringKey(vm.genre.map { String(localized: "search.no_genre_anime \($0)") } ?? String(localized: "search.nothing_came_back")),
                         systemImage: vm.genre == nil ? "antenna.radiowaves.left.and.right.slash" : "square.stack.3d.up.slash",
                         description: Text(vm.genre == nil
-                                          ? "The catalogue didn't respond. Try again in a moment."
-                                          : "Nothing matched in this ordering. Try another genre or sort.")
+                                          ? String(localized: "search.the_catalogue_didnt_respond_try")
+                                          : String(localized: "search.nothing_matched_in_this_ordering"))
                     )
                     .padding(.top, 40)
                 } else {
@@ -127,11 +127,11 @@ struct SearchBrowseView: View {
     private var filters: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Browse")
+                Text("search.browse")
                     .font(.title3.weight(.bold))
                 Spacer()
                 Menu {
-                    Picker("Sort", selection: Binding(
+                    Picker("search.sort", selection: Binding(
                         get: { vm.sort },
                         set: { vm.sort = $0; vm.reload() }
                     )) {
@@ -156,7 +156,7 @@ struct SearchBrowseView: View {
 
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    genreChip(title: "All", value: nil)
+                    genreChip(title: String(localized: "common.all"), value: nil)
                     ForEach(DiscoverGenre.all, id: \.self) { name in
                         genreChip(title: name, value: name)
                     }
@@ -210,10 +210,10 @@ struct RecentSearchesRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Recent")
+                Text("search.recent")
                     .font(.title3.weight(.bold))
                 Spacer()
-                Button("Clear", action: onClear)
+                Button("search.clear", action: onClear)
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.secondary)
             }
@@ -241,7 +241,7 @@ struct RecentSearchesRow: View {
                         // place. Long-press does the same job here.
                         .contextMenu {
                             Button(role: .destructive) { onDelete(query) } label: {
-                                Label("Remove", systemImage: "trash")
+                                Label("common.remove", systemImage: "trash")
                             }
                         }
                     }

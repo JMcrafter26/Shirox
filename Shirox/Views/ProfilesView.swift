@@ -176,7 +176,7 @@ struct ProfilePickerView: View {
     }
 
     private var title: some View {
-        Text(managing ? "Manage Profiles" : "Who's going on an adventure?")
+        Text(managing ? String(localized: "profile.manage_profiles") : String(localized: "profile.whos_going_on_an_adventure"))
             .font(.system(size: 30, weight: .semibold, design: .rounded))
             .foregroundStyle(.white)
             .multilineTextAlignment(.center)
@@ -235,7 +235,7 @@ struct ProfilePickerView: View {
                     .mediaGlassChrome(Circle(), enabled: liquidGlass, off: Color.white.opacity(0.15))
             }
             .buttonStyle(PressScaleStyle())
-            .accessibilityLabel(managing ? "Done" : "Close")
+            .accessibilityLabel(managing ? String(localized: "common.done") : String(localized: "profile.close"))
             .keyboardShortcut(.cancelAction)
         }
         .padding(.horizontal, 20)
@@ -255,11 +255,11 @@ struct ProfilePickerView: View {
                                 .overlay(Circle().strokeBorder(.white, lineWidth: themeHex == hex ? 2.5 : 0).padding(-4))
                         }
                         .buttonStyle(PressScaleStyle())
-                        .accessibilityLabel("Background colour")
+                        .accessibilityLabel("profile.background_colour")
                     }
                 }
                 .padding(.bottom, 4)
-                Toggle("Ask at Launch", isOn: $askAtLaunch)
+                Toggle("profile.ask_at_launch", isOn: $askAtLaunch)
                     .tint(.white.opacity(0.6))
                     .foregroundStyle(.white)
                     .font(.subheadline)
@@ -268,7 +268,7 @@ struct ProfilePickerView: View {
             Button {
                 managing.toggle()
             } label: {
-                Text(managing ? "DONE" : "MANAGE PROFILES")
+                Text(managing ? "DONE" : String(localized: "profile.manage_profiles_2"))
                     .font(.system(size: 16, weight: .bold))
                     .tracking(0.8)
                     .foregroundStyle(.white)
@@ -316,7 +316,7 @@ struct ProfilePickerView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(PressScaleStyle())
-        .accessibilityLabel(managing ? "Edit \(profile.name)" : isActive ? "\(profile.name), current" : "Switch to \(profile.name)")
+        .accessibilityLabel(managing ? String(localized: "profile.edit \(profile.name)") : isActive ? "\(profile.name), current" : String(localized: "profile.switch_to \(profile.name)"))
     }
 
     private var addTile: some View {
@@ -330,7 +330,7 @@ struct ProfilePickerView: View {
                         .foregroundStyle(.white)
                 }
                 .frame(width: avatarSize, height: avatarSize)
-                Text("Add Profile")
+                Text("profile.add_profile")
                     .font(.system(size: 17, weight: .regular))
                     .foregroundStyle(.white)
             }
@@ -345,7 +345,7 @@ struct ProfilePickerView: View {
             VStack(spacing: 20) {
                 ProfileAvatarView(profile: profile, size: avatarSize)
                 ProgressView().tint(.white)
-                Text("Switching to \(profile.name)…")
+                Text("profile.switching_to \(profile.name)")
                     .font(.headline)
                     .foregroundStyle(.white.opacity(0.85))
             }
@@ -434,7 +434,7 @@ struct ProfileEditorView: View {
                 VStack(spacing: 12) {
                     avatarPreview
                     pictureMenu
-                    Text("Without a picture, the profile uses its AniList picture, then MyAnimeList's, then Simkl's, or else its initial.")
+                    Text("profile.without_a_picture_the_profile")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
@@ -445,8 +445,8 @@ struct ProfileEditorView: View {
                 .listRowBackground(Color.clear)
             }
 
-            Section("Name") {
-                TextField("Name", text: $name)
+            Section("common.name") {
+                TextField("common.name", text: $name)
                     #if os(iOS)
                     .textInputAutocapitalization(.words)
                     #endif
@@ -455,16 +455,16 @@ struct ProfileEditorView: View {
             Section {
                 colorSwatches
             } header: {
-                Text("Colour")
+                Text("profile.colour")
             } footer: {
-                Text("Shown when the profile has no picture of its own or from its account.")
+                Text("profile.shown_when_the_profile_has")
             }
 
             if editing == nil {
                 modulesSection
             } else if let editing, !manager.moduleSharers(of: editing).isEmpty {
-                Section("Modules") {
-                    Text("Shares modules with \(manager.moduleSharers(of: editing).map(\.name).joined(separator: ", ")).")
+                Section("common.modules") {
+                    Text("profile.shares_modules_with \(manager.moduleSharers(of: editing).map(\.name).formatted(.list(type: .and)))")
                         .foregroundStyle(.secondary)
                 }
             }
@@ -472,7 +472,7 @@ struct ProfileEditorView: View {
             // Any but the last: the one in use is switched away from first.
             if let editing, manager.profiles.count > 1 {
                 Section {
-                    Button("Delete Profile", role: .destructive) { confirmDelete = true }
+                    Button("profile.delete_profile", role: .destructive) { confirmDelete = true }
                 } footer: {
                     Text(deleteFooter(editing))
                 }
@@ -481,15 +481,15 @@ struct ProfileEditorView: View {
         #if os(macOS)
         .formStyle(.grouped)
         #endif
-        .navigationTitle(editing == nil ? "New Profile" : "Edit Profile")
+        .navigationTitle(editing == nil ? String(localized: "profile.new_profile") : String(localized: "profile.edit_profile"))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
         .interactiveDismissDisabled(true)
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+            ToolbarItem(placement: .cancellationAction) { Button("common.cancel") { dismiss() } }
             ToolbarItem(placement: .confirmationAction) {
-                Button(editing == nil ? "Add" : "Save", action: save)
+                Button(editing == nil ? String(localized: "modules.add") : String(localized: "common.save"), action: save)
                     .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
             }
         }
@@ -501,19 +501,19 @@ struct ProfileEditorView: View {
             if let data = try? Data(contentsOf: url) { usePhoto(data) }
         }
         .modifier(PhotoPickerModifier(isPresented: $showPhotoPicker) { usePhoto($0) })
-        .confirmationDialog("Delete \(editing?.name ?? "")?", isPresented: $confirmDelete, titleVisibility: .visible) {
-            Button("Delete Profile", role: .destructive) {
+        .confirmationDialog(String(localized: "profile.delete_name \(editing?.name ?? String())"), isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("profile.delete_profile", role: .destructive) {
                 if let id = editing?.id { Task { await manager.deleteSwitchingAway(id) } }
                 dismiss()
             }
-            Button("Cancel", role: .cancel) {}
+            Button("common.cancel", role: .cancel) {}
         } message: {
-            Text("Its library, progress, settings and sign-ins on this device are deleted. This can't be undone.")
+            Text("profile.its_library_progress_settings_and")
         }
     }
 
     private func deleteFooter(_ profile: AppProfile) -> String {
-        let deletes = "Deletes \(profile.name)'s library, progress, settings and sign-ins on this device. Accounts themselves aren't touched."
+        let deletes = String(localized: "profile.deletes_s_library_progress_settings \(profile.name)")
         guard isActive, let next = manager.profiles.first(where: { $0.id != profile.id }) else { return deletes }
         return deletes + " You're using it now, so Shirox switches to \(next.name) first."
     }
@@ -538,18 +538,18 @@ struct ProfileEditorView: View {
     private var pictureMenu: some View {
         Menu {
             if PhotoPickerModifier.isAvailable {
-                Button { showPhotoPicker = true } label: { Label("Choose Photo", systemImage: "photo.on.rectangle") }
+                Button { showPhotoPicker = true } label: { Label("profile.choose_photo", systemImage: "photo.on.rectangle") }
             }
-            Button { showFileImporter = true } label: { Label("Choose File", systemImage: "folder") }
+            Button { showFileImporter = true } label: { Label("profile.choose_file", systemImage: "folder") }
             if hasPicture {
                 Divider()
                 Button(role: .destructive) {
                     photo = nil
                     photoRemoved = true
-                } label: { Label("Remove Picture", systemImage: "trash") }
+                } label: { Label("profile.remove_picture", systemImage: "trash") }
             }
         } label: {
-            Text(hasPicture ? "Change Picture" : "Add Picture")
+            Text(hasPicture ? String(localized: "profile.change_picture") : String(localized: "profile.add_picture"))
                 .font(.subheadline.weight(.semibold))
         }
         .menuStyle(.borderlessButton)
@@ -572,7 +572,7 @@ struct ProfileEditorView: View {
                         }
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(takenBy.map { "Colour used by \($0.name)" } ?? "Colour")
+                .accessibilityLabel(takenBy.map { String(localized: "profile.colour_used_by \($0.name)") } ?? String(localized: "profile.colour"))
             }
         }
         .padding(.vertical, 6)
@@ -580,21 +580,21 @@ struct ProfileEditorView: View {
 
     private var modulesSection: some View {
         Section {
-            Picker("Modules", selection: $moduleChoice) {
-                Text("Its Own").tag(ModuleChoiceTag.own)
-                Text("Copy").tag(ModuleChoiceTag.copy)
-                Text("Share").tag(ModuleChoiceTag.share)
+            Picker("common.modules", selection: $moduleChoice) {
+                Text("profile.its_own").tag(ModuleChoiceTag.own)
+                Text("shared.copy").tag(ModuleChoiceTag.copy)
+                Text("profile.share").tag(ModuleChoiceTag.share)
             }
             .pickerStyle(.segmented)
             if moduleChoice != .own {
-                Picker(moduleChoice == .share ? "Share with" : "Copy from", selection: $moduleSource) {
+                Picker(moduleChoice == .share ? String(localized: "profile.share_with") : String(localized: "profile.copy_from"), selection: $moduleSource) {
                     ForEach(manager.profiles) { profile in
                         Text(profile.name).tag(Optional(profile.id))
                     }
                 }
             }
         } header: {
-            Text("Modules")
+            Text("common.modules")
         } footer: {
             Text(modulesFootnote)
         }
@@ -603,9 +603,9 @@ struct ProfileEditorView: View {
     private var modulesFootnote: String {
         let other = manager.profiles.first { $0.id == moduleSource }?.name ?? "the other profile"
         switch moduleChoice {
-        case .own: return "Starts with no modules; add its own from Settings › Modules."
-        case .copy: return "Starts with \(other)'s modules. After that each profile's are its own."
-        case .share: return "Uses the same modules as \(other): adding, removing or editing one changes both."
+        case .own: return String(localized: "profile.starts_with_no_modules_add")
+        case .copy: return String(localized: "profile.starts_with_s_modules_after \(other)")
+        case .share: return String(localized: "profile.uses_the_same_modules_as \(other)")
         }
     }
 

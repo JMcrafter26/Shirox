@@ -113,7 +113,7 @@ struct ThumbnailEpisodeRow: View {
 
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
-                        Text("Episode \(number)")
+                        Text("detail.episode \(number)")
                             .font(.callout.weight(.semibold))
                             .foregroundStyle(.primary)
                             .lineLimit(1)
@@ -133,7 +133,7 @@ struct ThumbnailEpisodeRow: View {
                         // matters which ones were already watched.
                         if isSelectionMode {
                             if isComplete {
-                                Label("Watched", systemImage: "checkmark")
+                                Label("detail.watched", systemImage: "checkmark")
                                     .labelStyle(.titleAndIcon)
                                     .font(.system(size: 10, weight: .bold))
                                     .foregroundStyle(.green)
@@ -331,7 +331,7 @@ struct ThumbnailEpisodeRow: View {
                 .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(title.flatMap { $0.isEmpty ? nil : $0 } ?? "Episode \(number)")
+                Text(title.flatMap { $0.isEmpty ? nil : $0 } ?? String(localized: "detail.episode \(number)"))
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.primary)
                     .lineLimit(1)
@@ -356,7 +356,7 @@ struct ThumbnailEpisodeRow: View {
     private var cardSubtitle: String {
         let hasTitle = !(title ?? "").isEmpty
         let date = Self.formattedAirdate(airdate)
-        let parts = [hasTitle ? "Episode \(number)" : nil, date].compactMap { $0 }
+        let parts = [hasTitle ? String(localized: "detail.episode \(number)") : nil, date].compactMap { $0 }
         return parts.isEmpty ? " " : parts.joined(separator: " · ")
     }
 
@@ -382,29 +382,29 @@ struct ThumbnailEpisodeRow: View {
         if !isSelectionMode {
             if isComplete {
                 Button { onMarkUnwatched?() } label: {
-                    Label("Mark as Unwatched", systemImage: "xmark.circle")
+                    Label("detail.mark_as_unwatched", systemImage: "xmark.circle")
                 }
             } else {
                 Button { onMarkWatched?() } label: {
-                    Label("Mark as Watched", systemImage: "checkmark.circle")
+                    Label("detail.mark_as_watched", systemImage: "checkmark.circle")
                 }
             }
             if let onTryOtherStream {
                 Divider()
                 Button { onTryOtherStream() } label: {
-                    Label("Change Stream", systemImage: "arrow.triangle.2.circlepath")
+                    Label("detail.change_stream", systemImage: "arrow.triangle.2.circlepath")
                 }
             }
             if let onResetProgress, progress != nil {
                 Divider()
                 Button(role: .destructive) { onResetProgress() } label: {
-                    Label("Reset Progress", systemImage: "arrow.counterclockwise")
+                    Label("detail.reset_progress", systemImage: "arrow.counterclockwise")
                 }
             }
             if let onDownload {
                 Divider()
                 Button { onDownload() } label: {
-                    Label("Download Episode", systemImage: "arrow.down.circle")
+                    Label("detail.download_episode", systemImage: "arrow.down.circle")
                 }
                 .disabled(downloadState == .completed || downloadState == .downloading || downloadState == .pending)
             }
@@ -417,7 +417,7 @@ struct ThumbnailEpisodeRow: View {
             if let onDeleteDownload {
                 Divider()
                 Button(role: .destructive) { onDeleteDownload() } label: {
-                    Label("Delete Download", systemImage: "trash")
+                    Label("detail.delete_download", systemImage: "trash")
                 }
             }
         }
@@ -433,8 +433,8 @@ extension ThumbnailEpisodeRow {
 
         var label: String {
             switch self {
-            case .filler: return "Filler"
-            case .mixed:  return "Mixed"
+            case .filler: return String(localized: "detail.filler")
+            case .mixed:  return String(localized: "detail.mixed")
             }
         }
         var tint: Color {
@@ -464,9 +464,9 @@ extension ThumbnailEpisodeRow {
         input.dateFormat = "yyyy-MM-dd"
         guard let date = input.date(from: raw) else { return nil }
         let output = DateFormatter()
-        output.locale = Locale(identifier: "en_US_POSIX")
         output.timeZone = TimeZone(identifier: "UTC")
-        output.dateFormat = "MMM d, yyyy"
+        // "Mar 4, 2025" in English, the reader's own order elsewhere.
+        output.setLocalizedDateFormatFromTemplate("MMMdyyyy")
         return output.string(from: date)
     }
 }

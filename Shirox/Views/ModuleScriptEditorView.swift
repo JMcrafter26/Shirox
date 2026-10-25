@@ -35,19 +35,19 @@ struct ModuleScriptEditorView: View {
             CodeTextEditor(text: $text)
             footer
         }
-        .navigationTitle(module?.sourceName ?? "Script")
+        .navigationTitle(module?.sourceName ?? String(localized: "modules.script"))
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         .interactiveDismissDisabled(isDirty)
         #endif
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
+                Button("common.cancel") {
                     if isDirty { confirmDiscard = true } else { dismiss() }
                 }
             }
             ToolbarItem(placement: .confirmationAction) {
-                Button("Save", action: save)
+                Button("common.save", action: save)
                     .disabled(!isDirty)
             }
             ToolbarItem(placement: .automatic) {
@@ -55,22 +55,22 @@ struct ModuleScriptEditorView: View {
                     Button(role: .destructive) {
                         confirmPaste = true
                     } label: {
-                        Label("Replace All with Clipboard", systemImage: "doc.on.clipboard")
+                        Label("modules.replace_all_with_clipboard", systemImage: "doc.on.clipboard")
                     }
                     Button {
                         confirmImport = true
                     } label: {
-                        Label("Replace with a .js File", systemImage: "doc.badge.arrow.up")
+                        Label("modules.replace_with_a_js_file", systemImage: "doc.badge.arrow.up")
                     }
                     Divider()
                     Button {
                         Clipboard.copy(text)
                     } label: {
-                        Label("Copy All", systemImage: "doc.on.doc")
+                        Label("modules.copy_all", systemImage: "doc.on.doc")
                     }
                     if #available(iOS 16.0, macOS 13.0, *) {
                         ShareLink(item: text) {
-                            Label("Share Script", systemImage: "square.and.arrow.up")
+                            Label("modules.share_script", systemImage: "square.and.arrow.up")
                         }
                     }
                     if let module, module.isScriptEdited {
@@ -78,7 +78,7 @@ struct ModuleScriptEditorView: View {
                         Button(role: .destructive) {
                             confirmRevert = true
                         } label: {
-                            Label("Revert to Original", systemImage: "arrow.uturn.backward")
+                            Label("modules.revert_to_original", systemImage: "arrow.uturn.backward")
                         }
                     }
                 } label: {
@@ -92,37 +92,37 @@ struct ModuleScriptEditorView: View {
             saved = text
             loaded = true
         }
-        .confirmationDialog("Replace the whole script?", isPresented: $confirmPaste, titleVisibility: .visible) {
-            Button("Delete All and Paste", role: .destructive, action: pasteClipboard)
-            Button("Cancel", role: .cancel) {}
+        .confirmationDialog("modules.replace_the_whole_script", isPresented: $confirmPaste, titleVisibility: .visible) {
+            Button("modules.delete_all_and_paste", role: .destructive, action: pasteClipboard)
+            Button("common.cancel", role: .cancel) {}
         } message: {
-            Text("Everything in the editor is deleted and replaced with what's on your clipboard. A broken script stops this module from working. Nothing is kept until you tap Save.")
+            Text("modules.everything_in_the_editor_is_2")
         }
-        .confirmationDialog("Replace the whole script?", isPresented: $confirmImport, titleVisibility: .visible) {
-            Button("Choose a .js File", role: .destructive) { showImporter = true }
-            Button("Cancel", role: .cancel) {}
+        .confirmationDialog("modules.replace_the_whole_script", isPresented: $confirmImport, titleVisibility: .visible) {
+            Button("modules.choose_a_js_file", role: .destructive) { showImporter = true }
+            Button("common.cancel", role: .cancel) {}
         } message: {
-            Text("Everything in the editor is replaced with the file's script. Nothing is kept until you tap Save.")
+            Text("modules.everything_in_the_editor_is_3")
         }
-        .confirmationDialog("Discard your changes?", isPresented: $confirmDiscard, titleVisibility: .visible) {
-            Button("Discard Changes", role: .destructive) { dismiss() }
-            Button("Keep Editing", role: .cancel) {}
+        .confirmationDialog("modules.discard_your_changes", isPresented: $confirmDiscard, titleVisibility: .visible) {
+            Button("modules.discard_changes", role: .destructive) { dismiss() }
+            Button("modules.keep_editing", role: .cancel) {}
         }
-        .confirmationDialog("Revert to the original script?", isPresented: $confirmRevert, titleVisibility: .visible) {
-            Button("Revert", role: .destructive, action: revert)
-            Button("Cancel", role: .cancel) {}
+        .confirmationDialog("modules.revert_to_the_original_script", isPresented: $confirmRevert, titleVisibility: .visible) {
+            Button("modules.revert", role: .destructive, action: revert)
+            Button("common.cancel", role: .cancel) {}
         } message: {
-            Text("Your edits are thrown away and the module's own script is downloaded again. Updates resume.")
+            Text("modules.your_edits_are_thrown_away")
         }
-        .alert("The script has a syntax error", isPresented: Binding(
+        .alert("modules.the_script_has_a_syntax", isPresented: Binding(
             get: { syntaxError != nil }, set: { if !$0 { syntaxError = nil } }
         )) {
-            Button("Save Anyway", role: .destructive) { commit() }
-            Button("Keep Editing", role: .cancel) {}
+            Button("modules.save_anyway", role: .destructive) { commit() }
+            Button("modules.keep_editing", role: .cancel) {}
         } message: {
-            Text("\(syntaxError ?? "")\n\nSaved like this, the module won't work.")
+            Text(verbatim: (syntaxError.map { $0 + "\n\n" } ?? "") + String(localized: "modules.saved_like_this_the_module"))
         }
-        .alert("Couldn't do that", isPresented: Binding(
+        .alert("modules.couldnt_do_that", isPresented: Binding(
             get: { problem != nil }, set: { if !$0 { problem = nil } }
         )) {
             Button("OK", role: .cancel) {}
@@ -140,7 +140,7 @@ struct ModuleScriptEditorView: View {
     private var editedBanner: some View {
         HStack(spacing: 8) {
             Image(systemName: "pencil.circle.fill")
-            Text("Edited in Shirox. Updates skip this module until you revert it.")
+            Text("modules.edited_in_shirox_updates_skip")
                 .font(.caption)
             Spacer(minLength: 0)
         }
@@ -152,12 +152,12 @@ struct ModuleScriptEditorView: View {
 
     private var footer: some View {
         HStack {
-            Text("\(lineCount) lines · \(ByteCountFormatter.string(fromByteCount: Int64(text.utf8.count), countStyle: .file))")
+            Text("modules.lines \(lineCount) \(ByteCountFormatter.string(fromByteCount: Int64(text.utf8.count), countStyle: .file))")
             Spacer()
             if isReverting {
                 ProgressView().scaleEffect(0.7)
             } else if isDirty {
-                Text("Unsaved changes")
+                Text("modules.unsaved_changes")
             }
         }
         .font(.caption.monospacedDigit())
@@ -173,7 +173,7 @@ struct ModuleScriptEditorView: View {
 
     private func pasteClipboard() {
         guard let pasted = Clipboard.string, !pasted.isEmpty else {
-            problem = "There's no text on the clipboard."
+            problem = String(localized: "modules.theres_no_text_on_the")
             return
         }
         text = pasted
@@ -202,7 +202,7 @@ struct ModuleScriptEditorView: View {
         moduleManager.saveScript(text, for: moduleID)
         saved = text
         #if os(iOS)
-        ToastManager.shared.show(message: "Script saved", type: .info)
+        ToastManager.shared.show(message: String(localized: "modules.script_saved"), type: .info)
         #endif
         dismiss()
     }
@@ -216,7 +216,7 @@ struct ModuleScriptEditorView: View {
                 text = module?.scriptContent ?? ""
                 saved = text
             } else {
-                problem = "The original script couldn't be downloaded. Your edits are still there."
+                problem = String(localized: "modules.the_original_script_couldnt_be")
             }
         }
     }

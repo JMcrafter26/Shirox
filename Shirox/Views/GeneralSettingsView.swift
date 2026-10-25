@@ -33,7 +33,7 @@ struct GeneralSettingsView: View {
     var body: some View {
         SettingsList {
             Section {
-                Picker("Appearance", selection: $colorScheme) {
+                Picker("settings.appearance", selection: $colorScheme) {
                     ForEach(AppColorScheme.allCases) { scheme in
                         Text(scheme.title).tag(scheme.rawValue)
                     }
@@ -41,7 +41,7 @@ struct GeneralSettingsView: View {
                 .pickerStyle(.menu)
 
                 #if os(iOS) && !targetEnvironment(macCatalyst)
-                Picker("App Icon", selection: appIconSelection) {
+                Picker("settings.app_icon", selection: appIconSelection) {
                     ForEach(AppIconOption.all) { option in
                         Text(option.title).tag(option.name)
                     }
@@ -51,9 +51,9 @@ struct GeneralSettingsView: View {
                 #endif
 
                 TintColorRow(tint: $tint)
-                note("Buttons, switches and highlights. Monochrome keeps Shirox black and white; the colors adjust themselves to light and dark mode.")
+                note(String(localized: "settings.buttons_switches_and_highlights_monochrome"))
             } header: {
-                Text("Appearance")
+                Text("settings.appearance")
             }
 
             Section {
@@ -61,14 +61,14 @@ struct GeneralSettingsView: View {
                 NavigationLink {
                     TabBarCustomizationView()
                 } label: {
-                    LabeledContent("Customize Bottom Tabs") {
+                    LabeledContent("settings.customize_bottom_tabs") {
                         Text(tabsSubtitle)
                             .foregroundStyle(.secondary)
                     }
                 }
                 #endif
 
-                Picker("Open On", selection: $launchTab) {
+                Picker("settings.open_on", selection: $launchTab) {
                     ForEach(LaunchTab.available) { tab in
                         Text(tab.title).tag(tab.rawValue)
                     }
@@ -77,48 +77,48 @@ struct GeneralSettingsView: View {
                 .retinted(tint)
 
                 #if os(iOS) && !targetEnvironment(macCatalyst)
-                Toggle("Hide Tab Labels", isOn: $hideTabLabels)
+                Toggle("settings.hide_tab_labels", isOn: $hideTabLabels)
                     .switchTint()
 
                 if #available(iOS 26, *) {
-                    Toggle("Minimize on Scroll", isOn: $minimizeTabBar)
+                    Toggle("settings.minimize_on_scroll", isOn: $minimizeTabBar)
                         .switchTint()
                 }
                 #endif
             } header: {
-                Text(Self.hasTabBar ? "Tab Bar" : "Tabs")
+                Text(Self.hasTabBar ? String(localized: "settings.tab_bar") : String(localized: "settings.tabs"))
             }
 
             if DetailLayoutSetting.isOffered {
                 Section {
-                    Toggle("Cinematic Home", isOn: $cinematicHomeLayout)
+                    Toggle("settings.cinematic_home", isOn: $cinematicHomeLayout)
                         .switchTint()
-                    Toggle("Cinematic Detail Pages", isOn: $cinematicDetailLayout)
+                    Toggle("settings.cinematic_detail_pages", isOn: $cinematicDetailLayout)
                         .switchTint()
                 } header: {
-                    Text("Layout")
+                    Text("settings.layout")
                 }
             }
 
             Section {
-                Toggle("Hide Titles on Cards", isOn: $hideCardTitles)
+                Toggle("settings.hide_titles_on_cards", isOn: $hideCardTitles)
                     .switchTint()
-                note("Posters from TVDB carry the show's name, so the title over them says it twice. Hold a card for its full title.")
-                Picker("Home & Search Buttons", selection: $providerMenuStyle) {
+                note(String(localized: "settings.posters_from_tvdb_carry_the"))
+                Picker("settings.home_and_search_buttons", selection: $providerMenuStyle) {
                     ForEach(ProviderMenuStyle.allCases, id: \.self) { style in
                         Text(style.title).tag(style)
                     }
                 }
                 .pickerStyle(.menu)
                 .retinted(tint)
-                note("The buttons at the top of Home and Search: Home's picks the provider, Search's the module. Hidden, both keep the last choice; modules are also in Settings › Modules.")
+                note(String(localized: "settings.the_buttons_at_the_top"))
             } header: {
-                Text("Cards & Buttons")
+                Text("settings.cards_and_buttons")
             }
 
             #if os(iOS)
             Section {
-                Picker("Pull to Refresh", selection: $refreshStyle) {
+                Picker("settings.pull_to_refresh", selection: $refreshStyle) {
                     ForEach(PullToRefreshStyle.allCases) { style in
                         Text(style.title).tag(style)
                     }
@@ -126,7 +126,7 @@ struct GeneralSettingsView: View {
                 .pickerStyle(.menu)
                 .retinted(tint)
             } header: {
-                Text("Refreshing")
+                Text("settings.refreshing")
             } footer: {
                 Text(refreshNote)
             }
@@ -136,24 +136,24 @@ struct GeneralSettingsView: View {
                 NavigationLink {
                     LanguageSettingsView()
                 } label: {
-                    LabeledContent("Change Language") {
+                    LabeledContent("settings.change_language") {
                         Text(AppLanguage.name(for: AppLanguage.current))
                             .foregroundStyle(.secondary)
                     }
                 }
             } header: {
-                Text("Language")
+                Text("settings.language")
             } footer: {
-                Text("The language Shirox shows itself in, or the one your device uses.")
+                Text("settings.the_language_shirox_shows_itself")
             }
         }
         .softScrollEdges()
-        .navigationTitle("General")
+        .navigationTitle("settings.general")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
         #if os(iOS) && !targetEnvironment(macCatalyst)
-        .alert("Couldn't Change Icon",
+        .alert("settings.couldnt_change_icon",
                isPresented: Binding(get: { appIconError != nil }, set: { if !$0 { appIconError = nil } })) {
             Button("OK", role: .cancel) {}
         } message: {
@@ -171,16 +171,16 @@ struct GeneralSettingsView: View {
 
     private var refreshNote: String {
         switch refreshStyle {
-        case .gooey: return "Pulling stretches a drop out of the Dynamic Island that holds the spinner."
-        case .glass: return "A frosted circle holds the spinner, as sheets always have."
-        case .none:  return "Pulling down still refreshes, with nothing on screen: a tap when you've pulled far enough, another when it's done."
+        case .gooey: return String(localized: "settings.pulling_stretches_a_drop_out")
+        case .glass: return String(localized: "settings.a_frosted_circle_holds_the")
+        case .none:  return String(localized: "settings.pulling_down_still_refreshes_with")
         }
     }
 
     private var tabsSubtitle: String {
         let all = AppTab.available.count
         let shown = AppTab.visible(order: tabOrder, hidden: hiddenTabs).count
-        return shown == all ? "All" : "\(shown) of \(all)"
+        return shown == all ? String(localized: "common.all") : "\(shown) of \(all)"
     }
 
     #if os(iOS) && !targetEnvironment(macCatalyst)
@@ -189,7 +189,7 @@ struct GeneralSettingsView: View {
         Binding(get: { appIcon }, set: { name in
             guard name != appIcon else { return }
             guard UIApplication.shared.supportsAlternateIcons else {
-                appIconError = "This device doesn't support changing the app icon."
+                appIconError = String(localized: "settings.this_device_doesnt_support_changing")
                 return
             }
             UIApplication.shared.setAlternateIconName(name) { error in
@@ -223,7 +223,7 @@ private struct TintColorRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            LabeledContent("Accent Color") {
+            LabeledContent("settings.accent_color") {
                 Text(AppTint(rawValue: tint)?.title ?? AppTint.monochrome.title)
                     .foregroundStyle(.secondary)
             }
@@ -295,7 +295,7 @@ struct TabBarCustomizationView: View {
             }
 
             Section {
-                Button("Reset to Default") {
+                Button("settings.reset_to_default") {
                     orderRaw = ""
                     hiddenRaw = ""
                 }
@@ -303,15 +303,15 @@ struct TabBarCustomizationView: View {
             }
         }
         .softScrollEdges()
-        .navigationTitle("Customize Tabs")
+        .navigationTitle("settings.customize_tabs")
         .navigationBarTitleDisplayMode(.inline)
         .environment(\.editMode, .constant(.active))
     }
 
     private var footer: String {
-        var text = "Drag to reorder. Settings always stays, so hidden tabs can come back."
+        var text = String(localized: "settings.drag_to_reorder_settings_always")
         if #available(iOS 26, *) {
-            text += " Search keeps its own button at the end of the bar."
+            text += String(localized: "settings.search_keeps_its_own_button")
         }
         return text
     }
@@ -335,7 +335,7 @@ struct TabBarCustomizationView: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.borderless)
-                .accessibilityLabel(isHidden ? "Show \(tab.title)" : "Hide \(tab.title)")
+                .accessibilityLabel(isHidden ? String(localized: "settings.show \(tab.title)") : String(localized: "settings.hide \(tab.title)"))
             } else {
                 Image(systemName: "lock.fill")
                     .font(.footnote)
@@ -369,7 +369,7 @@ struct LanguageSettingsView: View {
     var body: some View {
         SettingsList {
             Section {
-                row(code: nil, title: "System Default",
+                row(code: nil, title: String(localized: "settings.system_default"),
                     subtitle: AppLanguage.localizedName(for: Locale.preferredLanguages.first ?? "en"))
             }
 
@@ -387,14 +387,14 @@ struct LanguageSettingsView: View {
                 Section {
                     Link(destination: requestURL) {
                         HStack {
-                            Text("Request a Language")
+                            Text("settings.request_a_language")
                             Spacer()
                             Image(systemName: "arrow.up.right")
                                 .font(.footnote.weight(.semibold))
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    Text("Missing yours? Open an issue on GitHub; translations are welcome too.")
+                    Text("settings.missing_yours_open_an_issue")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -402,7 +402,7 @@ struct LanguageSettingsView: View {
             #endif
         }
         .softScrollEdges()
-        .navigationTitle("Language")
+        .navigationTitle("settings.language")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -413,7 +413,7 @@ struct LanguageSettingsView: View {
         let target = selected ?? Bundle.preferredLocalizations(from: AppLanguage.available).first ?? running
         return target == running
             ? nil
-            : "Shirox switches language the next time it opens. Close it from the app switcher to switch now."
+            : String(localized: "settings.shirox_switches_language_the_next")
     }
 
     /// A new issue on the app's repository, titled for a language request.

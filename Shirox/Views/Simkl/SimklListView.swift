@@ -29,8 +29,8 @@ struct SimklListView: View {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if items.isEmpty {
-                ContentUnavailableView("Couldn't Load", systemImage: "wifi.slash",
-                                       description: Text(error ?? "Nothing to show right now."))
+                ContentUnavailableView("common.couldnt_load", systemImage: "wifi.slash",
+                                       description: Text(error ?? String(localized: "simkl.nothing_to_show_right_now")))
             } else {
                 ScrollView {
                     LazyVGrid(columns: columns, spacing: 12) {

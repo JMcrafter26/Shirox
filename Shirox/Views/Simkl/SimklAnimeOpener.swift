@@ -20,7 +20,7 @@ struct SimklAnimeOpener: View {
                 SimklTitlePage(simklID: seed.id, kind: .anime, seedTitle: seed.title.displayTitle,
                                seedPosterURL: seed.coverImage.large)
             } else if let failure {
-                ContentUnavailableView("Can't Open", systemImage: "questionmark.circle", description: Text(failure))
+                ContentUnavailableView("simkl.cant_open", systemImage: "questionmark.circle", description: Text(failure))
             } else {
                 ProgressView()
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -35,7 +35,7 @@ struct SimklAnimeOpener: View {
         let tracker = SimklDiscoverMedia.tracker
         do {
             guard let ids = try await SimklCatalog.animeIDs(simklID: seed.id) else {
-                failure = "Simkl no longer lists this anime."
+                failure = String(localized: "simkl.simkl_no_longer_lists_this")
                 return
             }
             var mapped: Int?

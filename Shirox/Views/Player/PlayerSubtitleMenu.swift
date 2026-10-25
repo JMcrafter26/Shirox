@@ -23,7 +23,7 @@ enum PlayerSubtitleMenu {
 
     static let delaySteps: [Double] = [-5, -1, -0.5, -0.1, 0.1, 0.5, 1, 5]
     static let sizes: [(name: String, points: Double)] = [
-        ("Small", 18), ("Medium", 24), ("Large", 30), ("Extra Large", 36),
+        (String(localized: "player.small"), 18), (String(localized: "player.medium"), 24), (String(localized: "player.large"), 30), (String(localized: "player.extra_large"), 36),
     ]
 
     /// - Parameters:
@@ -34,16 +34,16 @@ enum PlayerSubtitleMenu {
                          selected: SubtitleTrack?, embedded: [PlaybackSubtitleOption] = [],
                          selectedEmbedded: Int? = nil, actions: Actions) -> [PlayerMenuElement] {
         var elements: [PlayerMenuElement] = [
-            .item(PlayerMenuItem(title: "Show Subtitles", isOn: enabled) { actions.setEnabled(!enabled) }),
+            .item(PlayerMenuItem(title: String(localized: "player.show_subtitles"), isOn: enabled) { actions.setEnabled(!enabled) }),
         ]
 
         if !tracks.isEmpty {
             let isDefault = selected == nil && selectedEmbedded == nil
-            let rows = [PlayerMenuItem(title: "Default", isOn: isDefault) { actions.selectTrack(nil) }]
+            let rows = [PlayerMenuItem(title: String(localized: "settings.default"), isOn: isDefault) { actions.selectTrack(nil) }]
                 + tracks.map { track in
                     PlayerMenuItem(title: track.title, isOn: selected?.id == track.id) { actions.selectTrack(track) }
                 }
-            elements.append(.section("Track", rows.map(PlayerMenuElement.item)))
+            elements.append(.section(String(localized: "player.track"), rows.map(PlayerMenuElement.item)))
         }
 
         if !embedded.isEmpty {
@@ -52,7 +52,7 @@ enum PlayerSubtitleMenu {
                     actions.selectEmbedded(option.id)
                 })
             }
-            elements.append(.section("In This Video", rows))
+            elements.append(.section(String(localized: "settings.in_this_video"), rows))
         }
 
         let steps = delaySteps.map { step in
@@ -60,20 +60,20 @@ enum PlayerSubtitleMenu {
                 actions.setDelay(stepped(actions.currentDelay(), by: step))
             })
         }
-        let delayMenu = PlayerMenuElement.submenu(title: "Delay", value: delayLabel(delay), [
-            .section("Currently \(delayLabel(delay))", steps),
-            .item(PlayerMenuItem(title: "Reset") { actions.setDelay(0) }),
+        let delayMenu = PlayerMenuElement.submenu(title: String(localized: "player.delay"), value: delayLabel(delay), [
+            .section(String(localized: "player.currently \(delayLabel(delay))"), steps),
+            .item(PlayerMenuItem(title: String(localized: "common.reset")) { actions.setDelay(0) }),
         ])
-        let sizeMenu = PlayerMenuElement.submenu(title: "Size", value: sizeLabel(fontSize), sizes.map { size in
+        let sizeMenu = PlayerMenuElement.submenu(title: String(localized: "player.size"), value: sizeLabel(fontSize), sizes.map { size in
             .item(PlayerMenuItem(title: size.name, isOn: fontSize == size.points) { actions.setFontSize(size.points) })
         })
         elements.append(.section(nil, [delayMenu, sizeMenu]))
 
         var last: [PlayerMenuElement] = []
         if let importFile = actions.importFile {
-            last.append(.item(PlayerMenuItem(title: "Import Subtitle File…", action: importFile)))
+            last.append(.item(PlayerMenuItem(title: String(localized: "player.import_subtitle_file"), action: importFile)))
         }
-        last.append(.item(PlayerMenuItem(title: "More Settings…", action: actions.moreSettings)))
+        last.append(.item(PlayerMenuItem(title: String(localized: "player.more_settings"), action: actions.moreSettings)))
         elements.append(.section(nil, last))
         return elements
     }

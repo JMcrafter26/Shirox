@@ -86,7 +86,7 @@ struct PosterViewer<Content: View>: View {
                         .background(.ultraThinMaterial, in: Circle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Close poster")
+                .accessibilityLabel("shared.close_poster")
 
                 Spacer()
             }
@@ -136,7 +136,7 @@ private struct ExpandablePosterModifier<Poster: View>: ViewModifier {
             .contentShape(Rectangle())
             .onTapGesture { isPresented = true }
             .accessibilityAddTraits(.isButton)
-            .accessibilityHint("Shows the full poster")
+            .accessibilityHint("shared.shows_the_full_poster")
             .fullPosterCover(isPresented: $isPresented, poster: poster)
         #endif
     }

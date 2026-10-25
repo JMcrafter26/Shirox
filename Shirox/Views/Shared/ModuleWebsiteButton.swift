@@ -53,7 +53,7 @@ struct ModuleWebsiteButton: View {
             url = ModuleDefinition.webURL(forHref: href, baseUrl: nil)
         }
         guard let url else { return nil }
-        return WebLink(name: module?.sourceName ?? url.host ?? "Website", url: url)
+        return WebLink(name: module?.sourceName ?? url.host ?? String(localized: "modules.website"), url: url)
     }
 
     private var links: [WebLink] { (moduleLink.map { [$0] } ?? []) + trackers }
@@ -63,16 +63,16 @@ struct ModuleWebsiteButton: View {
         let links = links
         if links.count == 1, let only = links.first {
             Button { openURL(only.url) } label: { label }
-                .accessibilityLabel("Open on \(only.name)")
+                .accessibilityLabel("modules.open_on \(only.name)")
         } else if !links.isEmpty {
             Menu {
                 ForEach(links, id: \.url) { link in
                     Button { openURL(link.url) } label: {
-                        Label("Open on \(link.name)", systemImage: "safari")
+                        Label("modules.open_on \(link.name)", systemImage: "safari")
                     }
                 }
             } label: { label }
-                .accessibilityLabel("Open Website")
+                .accessibilityLabel("modules.open_website")
         }
         #endif
     }

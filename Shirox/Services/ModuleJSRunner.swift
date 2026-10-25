@@ -94,7 +94,7 @@ final class ModuleJSRunner {
         let json = try await callAsyncJS("searchResults", args: [keyword])
         guard let data = json.data(using: .utf8),
               let array = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
-            throw JSEngineError.parseError("Could not parse search results")
+            throw JSEngineError.parseError(String(localized: "search.could_not_parse_search_results"))
         }
         ModuleWebLinks.shared.record(array, moduleId: module?.id)
         return array.compactMap { item in
@@ -111,7 +111,7 @@ final class ModuleJSRunner {
         let json = try await callAsyncJS("extractEpisodes", args: [url])
         guard let data = json.data(using: .utf8),
               let array = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
-            throw JSEngineError.parseError("Could not parse episodes")
+            throw JSEngineError.parseError(String(localized: "detail.could_not_parse_episodes"))
         }
         let links = array.compactMap { item -> EpisodeLink? in
             guard let href = item["href"] as? String else { return nil }
@@ -137,12 +137,12 @@ final class ModuleJSRunner {
         let trimmed = json.trimmingCharacters(in: .whitespacesAndNewlines)
 
         if let url = URL(string: trimmed), url.scheme != nil, !trimmed.hasPrefix("{") {
-            return [StreamResult(title: "Play", url: url, headers: [:])]
+            return [StreamResult(title: String(localized: "shared.play"), url: url, headers: [:])]
         }
 
         guard let data = trimmed.data(using: .utf8),
               let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            throw JSEngineError.parseError("Could not parse stream result")
+            throw JSEngineError.parseError(String(localized: "shared.could_not_parse_stream_result"))
         }
 
         let streams = parseStreamResults(from: obj)
@@ -188,7 +188,7 @@ final class ModuleJSRunner {
                     gate.settle(.success(result.toString() ?? ""))
                 }
                 let catchBlock: @convention(block) (JSValue) -> Void = { error in
-                    gate.settle(.failure(JSEngineError.jsError(error.toString() ?? "Unknown JS error")))
+                    gate.settle(.failure(JSEngineError.jsError(error.toString() ?? String(localized: "shared.unknown_js_error"))))
                 }
 
                 let thenFn = JSValue(object: thenBlock, in: ctx)

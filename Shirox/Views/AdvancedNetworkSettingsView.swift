@@ -18,7 +18,7 @@ struct AdvancedNetworkSettingsView: View {
             NetworkResetSection()
         }
         .softScrollEdges()
-        .navigationTitle("Advanced Network")
+        .navigationTitle("settings.advanced_network")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -53,7 +53,7 @@ private struct TMDBProxySections: View {
 
     var body: some View {
         Section {
-            Toggle("Use Custom TMDB Proxies", isOn: $useProxies)
+            Toggle("settings.use_custom_tmdb_proxies", isOn: $useProxies)
                 .switchTint()
                 .onChangeOf(useProxies) { isOn in
                     guard isOn else { return }
@@ -62,8 +62,8 @@ private struct TMDBProxySections: View {
                 }
             if useProxies {
                 noteRow(Self.note)
-                addressField("Custom API Base URL", text: $apiBase, prompt: TMDBHostSettings.defaultAPIBase)
-                addressField("Custom Image Base URL", text: $imageBase, prompt: TMDBHostSettings.defaultImageBase)
+                addressField(String(localized: "settings.custom_api_base_url"), text: $apiBase, prompt: TMDBHostSettings.defaultAPIBase)
+                addressField(String(localized: "settings.custom_image_base_url"), text: $imageBase, prompt: TMDBHostSettings.defaultImageBase)
             }
         } header: {
             Text("TMDB")
@@ -72,15 +72,18 @@ private struct TMDBProxySections: View {
         }
     }
 
-    private static let note = "Routes TMDB traffic through your own endpoints, for regions that block it."
+    private static let note = String(localized: "settings.routes_tmdb_traffic_through_your")
 
     private var footer: String {
-        let explanation = "Replaces https://api.themoviedb.org and https://image.tmdb.org; the path, query and key go along. TMDB traffic then goes only there, and only to a valid https address."
-        let invalid = [("API", apiBase), ("image", imageBase)]
-            .filter { TMDBHostSettings.validBase($0.1) == nil }
-            .map(\.0)
-        guard !invalid.isEmpty else { return explanation }
-        return "No valid \(invalid.joined(separator: " or ")) address yet. " + explanation
+        let explanation = String(localized: "settings.replaces_https_api_themoviedb_org")
+        let apiValid = TMDBHostSettings.validBase(apiBase) != nil
+        let imageValid = TMDBHostSettings.validBase(imageBase) != nil
+        switch (apiValid, imageValid) {
+        case (true, true):   return explanation
+        case (false, true):  return String(localized: "settings.no_valid_api_address_yet") + " " + explanation
+        case (true, false):  return String(localized: "settings.no_valid_image_address_yet") + " " + explanation
+        case (false, false): return String(localized: "settings.no_valid_api_or_image") + " " + explanation
+        }
     }
 }
 
@@ -93,7 +96,7 @@ private struct SecureDNSSections: View {
 
     var body: some View {
         Section {
-            Toggle("Encrypted DNS", isOn: $secureDNS)
+            Toggle("settings.encrypted_dns", isOn: $secureDNS)
                 .switchTint()
                 .onChangeOf(secureDNS) { isOn in
                     guard isOn else { return }
@@ -102,22 +105,22 @@ private struct SecureDNSSections: View {
                 }
             if secureDNS {
                 noteRow(Self.note)
-                addressField("Server URL", text: $serverURL, prompt: SecureDNSSettings.defaultServerURL)
-                addressField("Server IP Addresses", text: $serverAddresses, prompt: SecureDNSSettings.defaultServerAddresses)
+                addressField(String(localized: "settings.server_url"), text: $serverURL, prompt: SecureDNSSettings.defaultServerURL)
+                addressField(String(localized: "settings.server_ip_addresses"), text: $serverAddresses, prompt: SecureDNSSettings.defaultServerAddresses)
             }
         } header: {
-            Text("DNS over HTTPS")
+            Text("settings.dns_over_https")
         } footer: {
             Text(secureDNS ? footer : Self.note)
         }
     }
 
-    private static let note = "Looks up servers over encrypted DNS, for networks that tamper with it. Not for video or web views; a device DNS profile or VPN comes first. Applies after a restart."
+    private static let note = String(localized: "settings.looks_up_servers_over_encrypted")
 
     private var footer: String {
-        let explanation = "Cloudflare: https://cloudflare-dns.com/dns-query at 1.1.1.1. Google: https://dns.google/dns-query at 8.8.8.8. If the server can't be reached, nothing loads; turn this off to recover."
+        let explanation = String(localized: "settings.cloudflare_https_cloudflare_dns_com")
         let usable = SecureDNSSettings(enabled: true, serverURL: serverURL, serverAddresses: serverAddresses).resolver != nil
-        return usable ? explanation : "Needs an https URL and an IP address; off until then. " + explanation
+        return usable ? explanation : String(localized: "settings.needs_an_https_url_and_2") + explanation
     }
 }
 
@@ -136,14 +139,14 @@ private struct ProxySections: View {
 
     var body: some View {
         Section {
-            Toggle("Proxy All Traffic", isOn: $enabled)
+            Toggle("settings.proxy_all_traffic", isOn: $enabled)
                 .switchTint()
                 .onChangeOf(enabled) { isOn in
                     if isOn, port.isEmpty { port = kind.defaultPort }
                 }
             if enabled {
                 noteRow(Self.note)
-                Picker("Type", selection: $kindValue) {
+                Picker("settings.type", selection: $kindValue) {
                     ForEach(NetworkProxySettings.Kind.allCases, id: \.rawValue) { kind in
                         Text(kind.title).tag(kind.rawValue)
                     }
@@ -152,17 +155,17 @@ private struct ProxySections: View {
                     // A port that was the other type's default follows the type.
                     if NetworkProxySettings.Kind.allCases.contains(where: { $0.defaultPort == port }) { port = kind.defaultPort }
                 }
-                addressField("Host", text: $host, prompt: "proxy.example.com")
-                TextField("Port", text: $port, prompt: Text(kind.defaultPort))
+                addressField(String(localized: "settings.host"), text: $host, prompt: "proxy.example.com")
+                TextField("settings.port", text: $port, prompt: Text(kind.defaultPort))
                     #if os(iOS)
                     .keyboardType(.numberPad)
                     #endif
-                addressField("Username", text: $username, prompt: "Optional")
-                SecureField("Password", text: $password, prompt: Text("Optional"))
+                addressField(String(localized: "settings.username"), text: $username, prompt: String(localized: "settings.optional"))
+                SecureField("settings.password", text: $password, prompt: Text("settings.optional"))
                     .onChangeOf(password) { ProxyKeychain.save($0, account: NetworkProxySettings.passwordAccount) }
             }
         } header: {
-            Text("Proxy")
+            Text("settings.proxy")
         } footer: {
             Text(enabled ? footer : Self.note)
         }
@@ -170,16 +173,16 @@ private struct ProxySections: View {
 
     private static var note: String {
         NetworkProxy.isSupported
-            ? "Sends app, module and web view requests through an HTTP CONNECT or SOCKS5 proxy. Not for video. Nothing goes out directly while it's down. Applies after a restart."
-            : "A proxy for all traffic needs iOS 17, macOS 14 or tvOS 17."
+            ? String(localized: "settings.sends_app_module_and_web")
+            : String(localized: "settings.a_proxy_for_all_traffic")
     }
 
     private var footer: String {
         let settings = NetworkProxySettings(enabled: true, kind: kind, host: host, port: port,
                                             username: username, password: password)
-        let explanation = "The password is kept in the Keychain."
+        let explanation = String(localized: "settings.the_password_is_kept_in")
         return settings.server == nil
-            ? "Needs a host and port, and a password with a username; off until then. " + explanation
+            ? String(localized: "settings.needs_a_host_and_port") + explanation
             : explanation
     }
 }
@@ -192,7 +195,7 @@ private struct UserAgentSections: View {
 
     var body: some View {
         Section {
-            Toggle("Custom User-Agent", isOn: $enabled)
+            Toggle("settings.custom_user_agent", isOn: $enabled)
                 .switchTint()
                 .onChangeOf(enabled) { isOn in
                     if isOn, userAgent.isEmpty { userAgent = NetworkUserAgent.standard }
@@ -200,17 +203,17 @@ private struct UserAgentSections: View {
             if enabled {
                 noteRow(Self.note)
                 addressField("User-Agent", text: $userAgent, prompt: NetworkUserAgent.standard)
-                Button("Use Shirox's Own") { userAgent = NetworkUserAgent.standard }
+                Button("settings.use_shiroxs_own") { userAgent = NetworkUserAgent.standard }
                     .disabled(userAgent == NetworkUserAgent.standard)
             }
         } header: {
-            Text("User-Agent")
+            Text("settings.user_agent")
         } footer: {
-            Text(enabled ? "Shirox's own: \(NetworkUserAgent.standard)" : Self.note)
+            Text(enabled ? String(localized: "settings.shiroxs_own \(NetworkUserAgent.standard)") : Self.note)
         }
     }
 
-    private static let note = "The browser Shirox claims to be for modules, images and web views. Modules with their own, and solved Cloudflare checks, keep theirs."
+    private static let note = String(localized: "settings.the_browser_shirox_claims_to")
 }
 
 // MARK: - Test
@@ -223,7 +226,7 @@ private struct ConnectionTestSection: View {
         Section {
             Button(action: test) {
                 HStack {
-                    Text("Test Connection")
+                    Text("settings.test_connection")
                     Spacer()
                     if isTesting { ProgressView() }
                 }
@@ -242,7 +245,7 @@ private struct ConnectionTestSection: View {
                 }
             }
         } footer: {
-            Text("Checks TMDB's API and images, then encrypted DNS and the proxy if they're on, asking Cloudflare which address it sees. DNS and proxy changes apply after a restart.")
+            Text("settings.checks_tmdbs_api_and_images")
         }
     }
 
@@ -286,21 +289,21 @@ private struct NetworkResetSection: View {
                 confirm = true
             } label: {
                 HStack {
-                    Text(didReset ? "Network State Reset" : "Reset Network State")
+                    Text(didReset ? String(localized: "settings.network_state_reset") : String(localized: "settings.reset_network_state_2"))
                     Spacer()
                     if isResetting { ProgressView() }
                 }
             }
             .foregroundStyle(.red)
             .disabled(isResetting)
-            .confirmationDialog("Reset Network State?", isPresented: $confirm, titleVisibility: .visible) {
-                Button("Reset", role: .destructive, action: reset)
-                Button("Cancel", role: .cancel) {}
+            .confirmationDialog("settings.reset_network_state", isPresented: $confirm, titleVisibility: .visible) {
+                Button("common.reset", role: .destructive, action: reset)
+                Button("common.cancel", role: .cancel) {}
             } message: {
-                Text("Signs Shirox out of websites and forgets solved Cloudflare checks; modules may ask you to verify again.")
+                Text("settings.signs_shirox_out_of_websites")
             }
         } footer: {
-            Text("Clears cookies, website data, the web cache, solved Cloudflare checks and the remembered TMDB host. Settings here stay.")
+            Text("settings.clears_cookies_website_data_the")
         }
     }
 

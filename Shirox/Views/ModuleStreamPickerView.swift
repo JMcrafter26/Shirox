@@ -64,13 +64,13 @@ struct ModuleStreamPickerView: View {
                 }
             }
 
-            .navigationTitle("Watch Episode \(episodeNumber)")
+            .navigationTitle("modules.watch_episode \(episodeNumber)")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { onDismiss() }
+                    Button("common.cancel") { onDismiss() }
                 }
             }
             .appTint()
@@ -237,7 +237,7 @@ private final class ModuleStreamRowViewModel: ObservableObject {
                 selectedEpisodeActualHref = matched.href
                 let streams = try await r.fetchStreams(episodeUrl: matched.href)
                 if streams.isEmpty {
-                    settle(.error("No streams found for episode \(targetEpisodeNumber)"))
+                    settle(.error(String(localized: "downloads.no_streams_found_for_episode \(targetEpisodeNumber)")))
                 } else {
                     readyStreams = streams
                 }
@@ -312,7 +312,7 @@ private final class ModuleStreamRowViewModel: ObservableObject {
                 selectedEpisodeActualHref = matched.href
                 let streams = try await r.fetchStreams(episodeUrl: matched.href)
                 if streams.isEmpty {
-                    settle(.error("No streams found for episode \(targetEpisodeNumber)"))
+                    settle(.error(String(localized: "downloads.no_streams_found_for_episode \(targetEpisodeNumber)")))
                 } else {
                     readyStreams = streams
                 }
@@ -374,7 +374,7 @@ private final class ModuleStreamRowViewModel: ObservableObject {
         do {
             let streams = try await r.fetchStreams(episodeUrl: episode.href)
             if streams.isEmpty {
-                settle(.error("No streams found"))
+                settle(.error(String(localized: "common.no_streams_found")))
             } else {
                 // Use the current search result href if available (from manual episode selection)
                 if let href = currentSearchResultHref {
@@ -540,7 +540,7 @@ private struct ModuleStreamRow: View {
     private var actionButton: some View {
         switch rowVm.state {
         case .idle:
-            Button("Find") { rowVm.startFind() }
+            Button("common.find") { rowVm.startFind() }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
                 .foregroundStyle(.primary)
@@ -552,7 +552,7 @@ private struct ModuleStreamRow: View {
             .buttonStyle(.plain)
 
         case .searchResults, .selectingEpisode, .notFound, .error:
-            Button("Retry") { rowVm.reset(); rowVm.startFind() }
+            Button("common.retry") { rowVm.reset(); rowVm.startFind() }
                 .buttonStyle(.bordered)
                 .controlSize(.small)
                 .foregroundStyle(.primary)
@@ -568,7 +568,7 @@ private struct ModuleStreamRow: View {
             HStack(spacing: 8) {
                 titleField
                 if case .searchResults = rowVm.state {
-                    Button("Show All") { showAllResults = true }
+                    Button("downloads.show_all") { showAllResults = true }
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.primary)
                         .zoomSource("allResults", in: resultsZoom, cornerRadius: 8)
@@ -588,14 +588,14 @@ private struct ModuleStreamRow: View {
 
     private var statusText: String {
         switch rowVm.state {
-        case .idle: return "Search stopped"
-        case .loading: return "Searching \"\(rowVm.searchTitle)\"…"
-        case .loadingEpisodes(let item): return "Loading episodes for \"\(item.title)\"…"
-        case .loadingStreams: return "Fetching streams…"
+        case .idle: return String(localized: "downloads.search_stopped")
+        case .loading: return String(localized: "downloads.searching \(rowVm.searchTitle)")
+        case .loadingEpisodes(let item): return String(localized: "downloads.loading_episodes_for \(item.title)")
+        case .loadingStreams: return String(localized: "common.fetching_streams")
         case .searchResults(let items): return items.count == 1 ? "1 result" : "\(items.count) results"
-        case .selectingEpisode: return "Episode \(episodeNumber) wasn't matched — pick it:"
-        case .notFound: return rowVm.cloudflareURL != nil ? "Blocked by Cloudflare" : "No results"
-        case .error: return rowVm.cloudflareURL != nil ? "Blocked by Cloudflare" : "Couldn't load"
+        case .selectingEpisode: return String(localized: "downloads.episode_wasnt_matched_pick_it \(episodeNumber)")
+        case .notFound: return rowVm.cloudflareURL != nil ? String(localized: "downloads.blocked_by_cloudflare") : String(localized: "downloads.no_results")
+        case .error: return rowVm.cloudflareURL != nil ? String(localized: "downloads.blocked_by_cloudflare") : String(localized: "downloads.couldnt_load")
         }
     }
 
@@ -614,8 +614,8 @@ private struct ModuleStreamRow: View {
     private var strip: some View {
         switch rowVm.state {
         case .idle:
-            ModulePickerMessage(icon: "magnifyingglass", title: "Not searching",
-                                detail: "Tap Find to search this module.")
+            ModulePickerMessage(icon: "magnifyingglass", title: String(localized: "downloads.not_searching"),
+                                detail: String(localized: "downloads.tap_find_to_search_this"))
 
         case .loading, .loadingEpisodes, .loadingStreams:
             ModulePickerSkeletonStrip()
@@ -643,25 +643,25 @@ private struct ModuleStreamRow: View {
 
         case .notFound:
             if rowVm.cloudflareURL != nil {
-                ModulePickerMessage(icon: "shield.lefthalf.filled", title: "Blocked by Cloudflare",
+                ModulePickerMessage(icon: "shield.lefthalf.filled", title: String(localized: "downloads.blocked_by_cloudflare"),
                                     tint: .orange) {
                     CloudflareVerifyInlineButton { rowVm.verifyAndRetry() }
                 }
             } else {
-                ModulePickerMessage(icon: "questionmark.square.dashed", title: "Nothing found",
-                                    detail: "Try another title in the search field.")
+                ModulePickerMessage(icon: "questionmark.square.dashed", title: String(localized: "downloads.nothing_found"),
+                                    detail: String(localized: "downloads.try_another_title_in_the"))
             }
 
         case .error(let msg):
             if rowVm.cloudflareURL != nil {
                 // The module's real failure is the site's browser check, whatever it reported.
-                ModulePickerMessage(icon: "shield.lefthalf.filled", title: "Blocked by Cloudflare",
-                                    detail: "The site asked for a browser check. Verify, and this module tries again.",
+                ModulePickerMessage(icon: "shield.lefthalf.filled", title: String(localized: "downloads.blocked_by_cloudflare"),
+                                    detail: String(localized: "modules.the_site_asked_for_a"),
                                     tint: .orange) {
                     CloudflareVerifyInlineButton { rowVm.verifyAndRetry() }
                 }
             } else {
-                ModulePickerMessage(icon: "exclamationmark.triangle", title: "Couldn't load",
+                ModulePickerMessage(icon: "exclamationmark.triangle", title: String(localized: "downloads.couldnt_load"),
                                     detail: msg, tint: .orange)
             }
         }
@@ -671,7 +671,7 @@ private struct ModuleStreamRow: View {
         HStack(spacing: 6) {
             Image(systemName: "magnifyingglass")
                 .font(.caption).foregroundStyle(.secondary)
-            TextField("Search title…", text: $rowVm.searchTitle)
+            TextField("downloads.search_title", text: $rowVm.searchTitle)
                 // The rounded fill around it is its border.
                 .textFieldStyle(.plain)
                 .font(.caption)
@@ -798,9 +798,9 @@ private struct ModuleStreamSelectionView: View {
             Group {
                 if streams.isEmpty {
                     ContentUnavailableView(
-                        "No Streams Found",
+                        "detail.no_streams_found",
                         systemImage: "antenna.radiowaves.left.and.right.slash",
-                        description: Text("Could not find any playable streams for this episode.")
+                        description: Text("modules.could_not_find_any_playable")
                     )
                 } else {
                     List(streams, id: \.url) { stream in
@@ -827,13 +827,13 @@ private struct ModuleStreamSelectionView: View {
                     #endif
                 }
             }
-            .navigationTitle("Select Stream")
+            .navigationTitle("modules.select_stream")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel", action: onDismiss)
+                    Button("common.cancel", action: onDismiss)
                 }
             }
         }

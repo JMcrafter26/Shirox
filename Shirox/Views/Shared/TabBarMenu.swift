@@ -98,24 +98,24 @@ struct TabBarMenu: View {
 
             Divider().padding(.horizontal, 14)
 
-            sectionLabel("Browse")
+            sectionLabel(String(localized: "search.browse"))
             ForEach(tabs.filter { $0 != .settings }) { tab in
                 row(tab.title, systemImage: menuIcon(tab),
                     count: tab == .downloads ? completedDownloads : nil,
                     isCurrent: selectedTab == tab.rawValue) { pick(.tab(tab.rawValue)) }
                 // The calendar lives on Home.
                 if tab == .home {
-                    row("Calendar", systemImage: "calendar") { pick(.calendar) }
+                    row(String(localized: "shared.calendar"), systemImage: "calendar") { pick(.calendar) }
                 }
             }
 
             if !moduleManager.modules.isEmpty {
                 Divider().padding(.horizontal, 14).padding(.top, 8)
-                sectionLabel("Modules")
+                sectionLabel(String(localized: "common.modules"))
                 moduleList
             }
-            row("Manage Modules", systemImage: "square.stack.3d.up") { pick(.manageModules) }
-            row("Settings", systemImage: "gearshape", isCurrent: selectedTab == 3) { pick(.tab(3)) }
+            row(String(localized: "shared.manage_modules"), systemImage: "square.stack.3d.up") { pick(.manageModules) }
+            row(String(localized: "settings.settings"), systemImage: "gearshape", isCurrent: selectedTab == 3) { pick(.tab(3)) }
                 .padding(.bottom, 10)
         }
         .padding(.horizontal, 6)

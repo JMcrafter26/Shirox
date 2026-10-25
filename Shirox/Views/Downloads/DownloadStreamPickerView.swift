@@ -24,13 +24,13 @@ struct DownloadStreamPickerView: View {
             #else
             .listStyle(.inset)
             #endif
-            .navigationTitle("Select Stream Quality")
+            .navigationTitle("downloads.select_stream_quality")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("common.cancel") { dismiss() }
                 }
             }
             .appTint()

@@ -129,7 +129,7 @@ struct SimklBrowseView: View {
                 filters
 
                 if let message = vm.errorMessage, vm.titles.isEmpty {
-                    ContentUnavailableView("Couldn't Load", systemImage: "exclamationmark.triangle",
+                    ContentUnavailableView("common.couldnt_load", systemImage: "exclamationmark.triangle",
                                            description: Text(message))
                         .padding(.top, 40)
                 } else if vm.titles.isEmpty && vm.isLoading {
@@ -138,10 +138,10 @@ struct SimklBrowseView: View {
                         .padding(.top, 60)
                 } else if vm.titles.isEmpty {
                     ContentUnavailableView(
-                        "Nothing Here",
+                        "simkl.nothing_here",
                         systemImage: "square.stack.3d.up.slash",
-                        description: Text(vm.genre.map { "Nothing in \($0) on this list." }
-                                          ?? "Simkl has nothing on this list right now."))
+                        description: Text(vm.genre.map { String(localized: "simkl.nothing_in_on_this_list \($0)") }
+                                          ?? String(localized: "simkl.simkl_has_nothing_on_this")))
                         .padding(.top, 40)
                 } else {
                     LazyVGrid(columns: columns, spacing: 12) {
@@ -170,7 +170,7 @@ struct SimklBrowseView: View {
         return VStack(alignment: .leading, spacing: 10) {
             // The heading is the menu: every list Home has for the kind, and the three trending periods.
             Menu {
-                Picker("List", selection: Binding(get: { vm.list(for: kind) }, set: { vm.choose($0) })) {
+                Picker("library.list", selection: Binding(get: { vm.list(for: kind) }, set: { vm.choose($0) })) {
                     ForEach(SimklBrowse.lists(for: kind), id: \.self) { list in
                         Text(list.title).tag(list)
                     }
@@ -192,7 +192,7 @@ struct SimklBrowseView: View {
             if !vm.genres.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        FilterChip(title: "All", selected: vm.genre == nil) { vm.choose(genre: nil) }
+                        FilterChip(title: String(localized: "common.all"), selected: vm.genre == nil) { vm.choose(genre: nil) }
                         ForEach(vm.genres, id: \.self) { name in
                             FilterChip(title: name, selected: vm.genre == name) { vm.choose(genre: name) }
                         }

@@ -262,7 +262,7 @@ struct NetworkDiagnostics {
     // MARK: TMDB
 
     func checkTMDBAPI() async -> NetworkCheck {
-        let title = "TMDB API"
+        let title = String(localized: "settings.tmdb_api")
         // Answers 401 without a key: an answer is all this asks for.
         var request = URLRequest(url: URL(string: "https://api.themoviedb.org/3/configuration")!)
         request.cachePolicy = .reloadIgnoringLocalCacheData
@@ -270,22 +270,22 @@ struct NetworkDiagnostics {
         do {
             let (_, response) = try await hosts.send(request) { try await session.data(for: $0) }
             return NetworkCheck(title: title, outcome: .passed,
-                                detail: "\(response.url?.host ?? "?") answered in \(Self.milliseconds(since: start))")
+                                detail: String(localized: "settings.host_answered_in \(Self.host(response.url)) \(Self.milliseconds(since: start))"))
         } catch {
             return NetworkCheck(title: title, outcome: .failed, detail: Self.describe(error))
         }
     }
 
     func checkTMDBImages() async -> NetworkCheck {
-        let title = "TMDB Images"
+        let title = String(localized: "settings.tmdb_images")
         guard let url = hosts.rewritten(URL(string: "https://image.tmdb.org/t/p/w92/")!) else {
-            return NetworkCheck(title: title, outcome: .failed, detail: "No valid custom image address")
+            return NetworkCheck(title: title, outcome: .failed, detail: String(localized: "settings.no_valid_custom_image_address"))
         }
         let start = Date()
         do {
             _ = try await session.data(for: URLRequest(url: url))
             return NetworkCheck(title: title, outcome: .passed,
-                                detail: "\(url.host ?? "?") answered in \(Self.milliseconds(since: start))")
+                                detail: String(localized: "settings.host_answered_in \(Self.host(url)) \(Self.milliseconds(since: start))"))
         } catch {
             return NetworkCheck(title: title, outcome: .failed, detail: Self.describe(error))
         }
@@ -294,16 +294,16 @@ struct NetworkDiagnostics {
     // MARK: DNS
 
     func checkDNS() async -> NetworkCheck {
-        let title = "Encrypted DNS"
-        guard dns.enabled else { return NetworkCheck(title: title, outcome: .skipped, detail: "Off") }
+        let title = String(localized: "settings.encrypted_dns")
+        guard dns.enabled else { return NetworkCheck(title: title, outcome: .skipped, detail: String(localized: "settings.off")) }
         guard let resolver = dns.resolver else {
-            return NetworkCheck(title: title, outcome: .failed, detail: "Needs an https URL and at least one IP address")
+            return NetworkCheck(title: title, outcome: .failed, detail: String(localized: "settings.needs_an_https_url_and"))
         }
         guard var components = URLComponents(url: resolver.url, resolvingAgainstBaseURL: false) else {
-            return NetworkCheck(title: title, outcome: .failed, detail: "Not a URL")
+            return NetworkCheck(title: title, outcome: .failed, detail: String(localized: "settings.not_a_url"))
         }
         components.queryItems = (components.queryItems ?? []) + [URLQueryItem(name: "dns", value: Self.dnsQuery(for: "example.com"))]
-        guard let url = components.url else { return NetworkCheck(title: title, outcome: .failed, detail: "Not a URL") }
+        guard let url = components.url else { return NetworkCheck(title: title, outcome: .failed, detail: String(localized: "settings.not_a_url")) }
         var request = URLRequest(url: url)
         request.setValue("application/dns-message", forHTTPHeaderField: "Accept")
         let start = Date()
@@ -313,11 +313,11 @@ struct NetworkDiagnostics {
             let type = http?.value(forHTTPHeaderField: "Content-Type")?.lowercased() ?? ""
             guard http?.statusCode == 200, type.hasPrefix("application/dns-message"), data.count >= 12 else {
                 return NetworkCheck(title: title, outcome: .failed,
-                                    detail: "\(resolver.url.host ?? "?") answered HTTP \(http?.statusCode ?? 0), not DNS")
+                                    detail: String(localized: "settings.host_answered_http_not_dns \(Self.host(resolver.url)) \(http?.statusCode ?? 0)"))
             }
-            let use = dnsInUse == resolver ? "in use" : "in use from the next start"
-            return NetworkCheck(title: title, outcome: .passed,
-                                detail: "\(resolver.url.host ?? "?") answered in \(Self.milliseconds(since: start)), \(use)")
+            let answered = String(localized: "settings.host_answered_in \(Self.host(resolver.url)) \(Self.milliseconds(since: start))")
+            let use = dnsInUse == resolver ? String(localized: "settings.in_use") : String(localized: "settings.in_use_from_the_next")
+            return NetworkCheck(title: title, outcome: .passed, detail: "\(answered), \(use)")
         } catch {
             return NetworkCheck(title: title, outcome: .failed, detail: Self.describe(error))
         }
@@ -341,13 +341,13 @@ struct NetworkDiagnostics {
     // MARK: Proxy
 
     func checkProxy() async -> NetworkCheck {
-        let title = "Proxy"
-        guard proxy.enabled else { return NetworkCheck(title: title, outcome: .skipped, detail: "Off") }
+        let title = String(localized: "settings.proxy")
+        guard proxy.enabled else { return NetworkCheck(title: title, outcome: .skipped, detail: String(localized: "settings.off")) }
         guard proxySupported else {
-            return NetworkCheck(title: title, outcome: .failed, detail: "Needs iOS 17, macOS 14 or tvOS 17")
+            return NetworkCheck(title: title, outcome: .failed, detail: String(localized: "settings.needs_ios_17_macos_14"))
         }
         guard let server = proxy.server else {
-            return NetworkCheck(title: title, outcome: .failed, detail: "Needs a host and a port, and a password with a username")
+            return NetworkCheck(title: title, outcome: .failed, detail: String(localized: "settings.needs_a_host_and_a"))
         }
         let start = Date()
         do {
@@ -355,12 +355,12 @@ struct NetworkDiagnostics {
             let address = Self.traceAddress(String(bytes: data, encoding: .utf8) ?? "") ?? "?"
             guard proxyInUse == server else {
                 return NetworkCheck(title: title, outcome: .skipped,
-                                    detail: "In use from the next start. Without it, sites see \(address)")
+                                    detail: String(localized: "settings.in_use_from_the_next \(address)"))
             }
             return NetworkCheck(title: title, outcome: .passed,
-                                detail: "Sites see \(address), answered in \(Self.milliseconds(since: start))")
+                                detail: String(localized: "settings.sites_see_answered_in \(address) \(Self.milliseconds(since: start))"))
         } catch {
-            let through = proxyInUse == server ? "Through \(server.host):\(server.port): " : ""
+            let through = proxyInUse == server ? String(localized: "settings.through \(server.host) \(server.port)") : ""
             return NetworkCheck(title: title, outcome: .failed, detail: through + Self.describe(error))
         }
     }
@@ -375,8 +375,11 @@ struct NetworkDiagnostics {
     // MARK: Helpers
 
     private static func milliseconds(since start: Date) -> String {
-        "\(Int(Date().timeIntervalSince(start) * 1_000)) ms"
+        String(localized: "settings.milliseconds \(Int(Date().timeIntervalSince(start) * 1_000))")
     }
+
+    /// The host a check reached, for its line.
+    private static func host(_ url: URL?) -> String { url?.host ?? "?" }
 
     private static func describe(_ error: Error) -> String {
         if let error = error as? URLError, error.code == .badURL, let message = error.userInfo[NSLocalizedDescriptionKey] as? String {

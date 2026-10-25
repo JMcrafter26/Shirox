@@ -126,7 +126,7 @@ struct LibraryEntryEditSheet: View {
             } catch {
                 Logger.shared.log("[Library] Couldn't save entry details: \(error)", type: "Error")
                 #if !os(tvOS)
-                ToastManager.shared.show(message: "Couldn't save rewatches, dates or lists", type: .error)
+                ToastManager.shared.show(message: String(localized: "library.couldnt_save_rewatches_dates_or"), type: .error)
                 #endif
             }
         }
@@ -137,23 +137,23 @@ struct LibraryEntryEditSheet: View {
     private var detailsSections: some View {
         if extrasService != nil {
             if loadedExtras == nil {
-                Section("Details") {
+                Section("library.details") {
                     if extrasFailed {
-                        Text("Couldn't load rewatches and dates.")
+                        Text("library.couldnt_load_rewatches_and_dates")
                             .foregroundStyle(.secondary)
                     } else {
                         HStack {
                             ProgressView().controlSize(.small)
-                            Text("Loading…").foregroundStyle(.secondary)
+                            Text("common.loading").foregroundStyle(.secondary)
                         }
                     }
                 }
             } else {
-                Section("Details") {
+                Section("library.details") {
                     #if !os(tvOS)
                     Stepper(value: $extras.repeats, in: 0...999) {
                         HStack {
-                            Text(isManga ? "Total Rereads" : "Total Rewatches")
+                            Text(isManga ? String(localized: "library.total_rereads") : String(localized: "library.total_rewatches"))
                             Spacer()
                             Text("\(extras.repeats)")
                                 .monospacedDigit()
@@ -161,8 +161,8 @@ struct LibraryEntryEditSheet: View {
                         }
                     }
                     #endif
-                    dateRow("Started", date: $extras.startedAt)
-                    dateRow("Finished", date: $extras.completedAt)
+                    dateRow(String(localized: "library.started"), date: $extras.startedAt)
+                    dateRow(String(localized: "shared.finished"), date: $extras.completedAt)
                 }
                 if !extras.customLists.isEmpty {
                     Section {
@@ -182,9 +182,9 @@ struct LibraryEntryEditSheet: View {
                             .buttonStyle(.plain)
                         }
                     } header: {
-                        Text("Custom Lists")
+                        Text("library.custom_lists")
                     } footer: {
-                        Text("Make new lists in your list settings on AniList.")
+                        Text("library.make_new_lists_in_your")
                     }
                 }
             }
@@ -207,7 +207,7 @@ struct LibraryEntryEditSheet: View {
             set: { date.wrappedValue = $0 ? Calendar.current.startOfDay(for: .now) : nil }))
             .switchTint()
         if let day = date.wrappedValue {
-            DatePicker("\(title) On", selection: Binding(get: { day }, set: { date.wrappedValue = $0 }),
+            DatePicker(String(localized: "library.on \(title)"), selection: Binding(get: { day }, set: { date.wrappedValue = $0 }),
                        in: ...Date.now, displayedComponents: .date)
         }
         #endif
@@ -239,9 +239,9 @@ struct LibraryEntryEditSheet: View {
     private var privacySection: some View {
         if showsPrivacyToggle {
             Section {
-                Toggle("Private", isOn: $isPrivate)
+                Toggle("library.private", isOn: $isPrivate)
                     .switchTint()
-                Text("Hides this entry from your public AniList profile and activity feed. You can still see it here.")
+                Text("library.hides_this_entry_from_your")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -251,20 +251,20 @@ struct LibraryEntryEditSheet: View {
     @ViewBuilder
     private var notesSection: some View {
         if showsNotes {
-            Section("Notes") {
+            Section("library.notes") {
                 // The growing multi-line field is iOS 16 / macOS 13; this still ships to
                 // iOS 15, where a plain single-line field takes the same text perfectly well.
                 #if os(tvOS)
-                TextField("Add a note", text: $notes)
+                TextField("library.add_a_note", text: $notes)
                 #else
                 if #available(iOS 16.0, macOS 13.0, *) {
-                    TextField("Add a note", text: $notes, axis: .vertical)
+                    TextField("library.add_a_note", text: $notes, axis: .vertical)
                         .lineLimit(3...8)
                 } else {
-                    TextField("Add a note", text: $notes)
+                    TextField("library.add_a_note", text: $notes)
                 }
                 #endif
-                Text("Saved to this entry on AniList, visible only to you.")
+                Text("library.saved_to_this_entry_on")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -278,8 +278,8 @@ struct LibraryEntryEditSheet: View {
     @ViewBuilder private var sheetBody: some View {
         NavigationStack {
             Form {
-                Section("Status") {
-                    Picker("Status", selection: $status) {
+                Section("library.status") {
+                    Picker("library.status", selection: $status) {
                         ForEach(Self.statuses(for: media.provider)) { s in
                             Text(s.displayName).tag(s)
                         }
@@ -288,7 +288,7 @@ struct LibraryEntryEditSheet: View {
                 }
 
                 if status != .completed {
-                    Section("Progress") {
+                    Section("settings.progress") {
                         #if !os(tvOS)
                         HStack {
                             // Typed as well as stepped: stepping through 200 episodes was 200 taps.
@@ -302,29 +302,31 @@ struct LibraryEntryEditSheet: View {
                                 .textFieldStyle(.roundedBorder)
                                 .multilineTextAlignment(.center)
                                 .frame(width: 72)
-                            Text("\(progressUnit)\(progress == 1 ? "" : "s") \(progressUnit == "chapter" ? "read" : "watched")")
+                            progressUnit == "chapter"
+                                ? Text(LocalizedStringKey(progress == 1 ? "library.chapter_read" : "library.chapters_read"))
+                                : Text(LocalizedStringKey(progress == 1 ? "library.episode_watched" : "library.episodes_watched"))
                             Spacer()
-                            Stepper("Progress", value: $progress, in: 0...maxProgress)
+                            Stepper("settings.progress", value: $progress, in: 0...maxProgress)
                                 .labelsHidden()
                         }
                         #endif
                         if let total = media.episodes {
-                            Text("of \(total) total")
+                            Text("library.of_total \(total)")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
                     }
                 }
 
-                Section("Score") {
+                Section("library.score") {
                     ScoreInputView(score: $score, format: scoreFormat)
                 }
 
                 if progressUnit == "episode", AniListMappingManager.shared.canToggleAutomaticTracking(for: media) {
-                    Section("Tracking") {
-                        Toggle("Automatically Track", isOn: $automaticTracking)
+                    Section("library.tracking") {
+                        Toggle("library.automatically_track", isOn: $automaticTracking)
                             .switchTint()
-                        Text("Update online progress as you watch. Turn off to update this anime manually.")
+                        Text("library.update_online_progress_as_you")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -335,7 +337,7 @@ struct LibraryEntryEditSheet: View {
                 notesSection
 
                 if scoreFormatOverride != nil {
-                    Section("Collections") {
+                    Section("library.collections") {
                         ForEach(local.collections) { collection in
                             Button {
                                 let member = collection.mediaUniqueIds.contains(media.uniqueId)
@@ -355,7 +357,7 @@ struct LibraryEntryEditSheet: View {
                                 Button(role: .destructive) {
                                     editor.requestDelete(collection)
                                 } label: {
-                                    Label("Delete", systemImage: "trash")
+                                    Label("common.delete", systemImage: "trash")
                                 }
                                 .tint(.red)
                             }
@@ -363,7 +365,7 @@ struct LibraryEntryEditSheet: View {
                                 Button {
                                     editor.beginRename(collection)
                                 } label: {
-                                    Label("Rename", systemImage: "pencil")
+                                    Label("library.rename", systemImage: "pencil")
                                 }
                                 .tint(.blue)
                             }
@@ -372,19 +374,19 @@ struct LibraryEntryEditSheet: View {
                                 Button {
                                     editor.beginRename(collection)
                                 } label: {
-                                    Label("Rename", systemImage: "pencil")
+                                    Label("library.rename", systemImage: "pencil")
                                 }
                                 Button(role: .destructive) {
                                     editor.requestDelete(collection)
                                 } label: {
-                                    Label("Delete", systemImage: "trash")
+                                    Label("common.delete", systemImage: "trash")
                                 }
                             }
                         }
                         Button {
                             showNewCollection = true
                         } label: {
-                            Label("New Collection", systemImage: "plus")
+                            Label("library.new_collection", systemImage: "plus")
                         }
                     }
                 }
@@ -394,22 +396,22 @@ struct LibraryEntryEditSheet: View {
                         Button(role: .destructive) {
                             showDeleteConfirmation = true
                         } label: {
-                            Label("Remove from Library", systemImage: "trash")
+                            Label("library.remove_from_library", systemImage: "trash")
                         }
                     }
                 }
             }
             .softScrollEdges()
-            .navigationTitle(entry == nil ? "Add to Library" : "Edit Entry")
+            .navigationTitle(entry == nil ? String(localized: "library.add_to_library") : String(localized: "library.edit_entry"))
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("common.cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button("common.save") {
                         if progressUnit == "episode", AniListMappingManager.shared.canToggleAutomaticTracking(for: media) {
                             AniListMappingManager.shared.setAutomaticTracking(automaticTracking, for: media)
                         }
@@ -429,7 +431,7 @@ struct LibraryEntryEditSheet: View {
                                 } catch {
                                     Logger.shared.log("[AniList] Could not save entry notes: \(error)", type: "Error")
                                     #if os(iOS)
-                                    ToastManager.shared.show(message: "Couldn't save note on AniList", type: .error)
+                                    ToastManager.shared.show(message: String(localized: "library.couldnt_save_note_on_anilist"), type: .error)
                                     #endif
                                 }
                             }
@@ -444,7 +446,7 @@ struct LibraryEntryEditSheet: View {
                                 } catch {
                                     Logger.shared.log("[AniList] Could not change entry privacy: \(error)", type: "Error")
                                     #if os(iOS)
-                                    ToastManager.shared.show(message: "Couldn't change privacy on AniList", type: .error)
+                                    ToastManager.shared.show(message: String(localized: "library.couldnt_change_privacy_on_anilist"), type: .error)
                                     #endif
                                 }
                             }
@@ -465,18 +467,18 @@ struct LibraryEntryEditSheet: View {
                     extras.completedAt = Calendar.current.startOfDay(for: .now)
                 }
             }
-            .alert("Remove from Library", isPresented: $showDeleteConfirmation) {
-                Button("Remove", role: .destructive) {
+            .alert("library.remove_from_library", isPresented: $showDeleteConfirmation) {
+                Button("common.remove", role: .destructive) {
                     onDelete?()
                     dismiss()
                 }
-                Button("Cancel", role: .cancel) {}
+                Button("common.cancel", role: .cancel) {}
             } message: {
-                Text("This will remove \(media.title.displayTitle) from your library.")
+                Text("library.this_will_remove_from_your \(media.title.displayTitle)")
             }
-            .alert("New Collection", isPresented: $showNewCollection) {
-                TextField("Name", text: $newCollectionName)
-                Button("Create") {
+            .alert("library.new_collection", isPresented: $showNewCollection) {
+                TextField("common.name", text: $newCollectionName)
+                Button("library.create") {
                     let trimmed = newCollectionName.trimmingCharacters(in: .whitespacesAndNewlines)
                     newCollectionName = ""
                     guard !trimmed.isEmpty else { return }
@@ -484,9 +486,9 @@ struct LibraryEntryEditSheet: View {
                     local.setMembership(uniqueId: media.uniqueId, media: media,
                                         inCollection: collection.id, member: true)
                 }
-                Button("Cancel", role: .cancel) { newCollectionName = "" }
+                Button("common.cancel", role: .cancel) { newCollectionName = "" }
             } message: {
-                Text("Group this title under a custom collection.")
+                Text("library.group_this_title_under_a")
             }
             .collectionEditorAlerts(editor)
         }

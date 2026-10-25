@@ -80,13 +80,13 @@ struct ActivityDetailView: View {
                 .padding(14)
                 .padding(.bottom, 12)
         }
-        .navigationTitle("Activity")
+        .navigationTitle("shared.activity")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
-                Button("Done") { dismiss() }
+                Button("common.done") { dismiss() }
             }
         }
         .task {
@@ -96,7 +96,7 @@ struct ActivityDetailView: View {
             _ = await (replies, likes, full)
         }
         .adaptiveSheet(item: $targetUserId) { uid in
-            ProfileView(userId: uid, username: targetUsername ?? "Profile", avatarURL: nil)
+            ProfileView(userId: uid, username: targetUsername ?? String(localized: "common.profile"), avatarURL: nil)
         }
         .adaptiveSheet(item: $targetMediaId) { mid in
             AniListDetailView(mediaId: mid)
@@ -104,26 +104,26 @@ struct ActivityDetailView: View {
         #if !os(iOS)
         .macSheetFrame()
         #endif
-        .alert("Delete Activity?", isPresented: $confirmDeleteActivity) {
-            Button("Delete", role: .destructive) {
+        .alert("profile.delete_activity", isPresented: $confirmDeleteActivity) {
+            Button("common.delete", role: .destructive) {
                 Task { await performDeleteActivity() }
             }
-            Button("Cancel", role: .cancel) {}
+            Button("common.cancel", role: .cancel) {}
         } message: {
-            Text("This cannot be undone.")
+            Text("profile.this_cannot_be_undone")
         }
-        .alert("Delete Reply?", isPresented: Binding(
+        .alert("profile.delete_reply", isPresented: Binding(
             get: { replyToDelete != nil },
             set: { if !$0 { replyToDelete = nil } }
         )) {
-            Button("Delete", role: .destructive) {
+            Button("common.delete", role: .destructive) {
                 if let reply = replyToDelete {
                     Task { await performDeleteReply(reply) }
                 }
             }
-            Button("Cancel", role: .cancel) { replyToDelete = nil }
+            Button("common.cancel", role: .cancel) { replyToDelete = nil }
         } message: {
-            Text("This cannot be undone.")
+            Text("profile.this_cannot_be_undone")
         }
         .adaptiveSheet(isPresented: $showActivityLikes) {
             LikesSheetView(id: activity.id, type: .activity)
@@ -164,7 +164,7 @@ struct ActivityDetailView: View {
                         }
                 }
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(activity.user?.name ?? "Unknown")
+                    Text(activity.user?.name ?? String(localized: "shared.unknown"))
                         .font(.subheadline.weight(.semibold))
                         .onTapGesture {
                             targetUsername = activity.user?.name
@@ -191,7 +191,7 @@ struct ActivityDetailView: View {
                         VStack(alignment: .leading, spacing: 4) {
                             Text(a.media?.displayTitle ?? "").font(.subheadline.weight(.semibold))
                                 .multilineTextAlignment(.leading)
-                            Text("\(a.status?.capitalized ?? "") \(a.progress ?? "")")
+                            Text(verbatim: "\(a.status?.capitalized ?? "") \(a.progress ?? "")")
                                 .font(.callout).foregroundStyle(.secondary)
                         }
                     }
@@ -218,7 +218,7 @@ struct ActivityDetailView: View {
                 Button(role: .destructive) {
                     confirmDeleteActivity = true
                 } label: {
-                    Label("Delete", systemImage: "trash")
+                    Label("common.delete", systemImage: "trash")
                 }
             }
         }
@@ -249,7 +249,7 @@ struct ActivityDetailView: View {
                         .foregroundStyle(.secondary)
                         .padding(.leading, 12)
                 } else if likeCount > 0 && !likePreviewUsers.isEmpty {
-                    Text("liked this")
+                    Text("profile.liked_this")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                         .padding(.leading, 12)
@@ -289,7 +289,7 @@ struct ActivityDetailView: View {
 
     private var repliesSection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Comments")
+            Text("profile.comments")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.secondary)
                 .padding(.bottom, 4)
@@ -297,7 +297,7 @@ struct ActivityDetailView: View {
             if isLoadingReplies {
                 ProgressView().frame(maxWidth: .infinity, alignment: .center).padding(.vertical, 20)
             } else if replies.isEmpty {
-                Text("No comments yet").font(.subheadline).foregroundStyle(.tertiary)
+                Text("profile.no_comments_yet").font(.subheadline).foregroundStyle(.tertiary)
                     .frame(maxWidth: .infinity, alignment: .center).padding(.vertical, 20)
             } else {
                 VStack(spacing: 0) {
@@ -328,7 +328,7 @@ struct ActivityDetailView: View {
             }
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
-                    Text(reply.user?.name ?? "Unknown")
+                    Text(reply.user?.name ?? String(localized: "shared.unknown"))
                         .font(.caption.weight(.semibold))
                         .onTapGesture {
                             targetUsername = reply.user?.name
@@ -366,7 +366,7 @@ struct ActivityDetailView: View {
                 Button(role: .destructive) {
                     replyToDelete = reply
                 } label: {
-                    Label("Delete Reply", systemImage: "trash")
+                    Label("profile.delete_reply_2", systemImage: "trash")
                 }
             }
         }
@@ -378,7 +378,7 @@ struct ActivityDetailView: View {
         VStack(spacing: 8) {
             Divider()
             HStack(alignment: .bottom, spacing: 10) {
-                TextField("Add a comment…", text: $replyText)
+                TextField("profile.add_a_comment", text: $replyText)
                     .font(.callout)
                     .lineLimit(5)
                     .padding(.vertical, 6)
@@ -476,7 +476,7 @@ struct ActivityDetailView: View {
             // the user just tapped Delete again. The reply path already restores + reports.
             Logger.shared.log("[Social] Delete activity failed: \(error.localizedDescription)", type: "Error")
             #if os(iOS)
-            ToastManager.shared.show(message: "Couldn't delete activity", type: .error)
+            ToastManager.shared.show(message: String(localized: "profile.couldnt_delete_activity"), type: .error)
             #endif
         }
     }
@@ -493,7 +493,7 @@ struct ActivityDetailView: View {
             Logger.shared.log("[Social] Delete reply failed: \(error.localizedDescription)", type: "Error")
             withAnimation { replies = backup }
             #if os(iOS)
-            ToastManager.shared.show(message: "Couldn't delete reply", type: .error)
+            ToastManager.shared.show(message: String(localized: "profile.couldnt_delete_reply"), type: .error)
             #endif
         }
     }

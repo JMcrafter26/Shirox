@@ -59,7 +59,8 @@ final class RefreshLimiter {
     }
 
     static func message(retryIn wait: TimeInterval) -> String {
-        "Rate limited — try again in \(max(1, Int(wait.rounded(.up)))) s"
+        let seconds = max(1, Int(wait.rounded(.up)))
+        return String(localized: "shared.rate_limited_try_again_in \(seconds)")
     }
 
     static func announce(_ message: String) {

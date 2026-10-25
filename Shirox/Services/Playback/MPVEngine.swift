@@ -648,7 +648,7 @@ final class MPVEngine: PlaybackEngine {
     private func trackTitle(at index: Int, id: Int64) -> String {
         getString("track-list/\(index)/title")
             ?? getString("track-list/\(index)/lang").map { Locale.current.localizedString(forLanguageCode: $0) ?? $0 }
-            ?? "Track \(id)"
+            ?? String(localized: "shared.track \(id)")
     }
 
     // MARK: - PlaybackEngine

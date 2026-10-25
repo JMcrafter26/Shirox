@@ -454,7 +454,7 @@ struct LibrarySyncSummary: Equatable {
     var sentence: String {
         if changed == 0 && leftDiffering == 0 && deleted == 0
             && keptUnverified == 0 && unmatched.isEmpty && failed == 0 {
-            return "Everything was already up to date."
+            return String(localized: "shared.everything_was_already_up_to")
         }
         var parts: [String] = []
         if created > 0 { parts.append("\(created) added") }

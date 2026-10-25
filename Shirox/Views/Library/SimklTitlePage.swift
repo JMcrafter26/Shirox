@@ -63,8 +63,8 @@ struct SimklTitlePage: View {
                             .padding(.top, 16)
                     } else if detailsFailed {
                         HStack {
-                            Text("Couldn't load the details.").foregroundStyle(.secondary)
-                            Button("Retry") { Task { await load() } }
+                            Text("library.couldnt_load_the_details").foregroundStyle(.secondary)
+                            Button("common.retry") { Task { await load() } }
                         }
                         .font(.subheadline)
                         .padding(.horizontal, 16)
@@ -273,24 +273,24 @@ struct SimklTitlePage: View {
         .contextMenu {
             if kind == .movie || target != nil {
                 Button { play(target) } label: {
-                    Label("Change Stream", systemImage: "arrow.triangle.2.circlepath")
+                    Label("detail.change_stream", systemImage: "arrow.triangle.2.circlepath")
                 }
             }
             if let target {
                 if watched.contains(target) {
                     Button { Task { await mark(target, watched: false) } } label: {
-                        Label("Mark as Unwatched", systemImage: "xmark.circle")
+                        Label("detail.mark_as_unwatched", systemImage: "xmark.circle")
                     }
                 } else {
                     Button { Task { await mark(target, watched: true) } } label: {
-                        Label("Mark as Watched", systemImage: "checkmark.circle")
+                        Label("detail.mark_as_watched", systemImage: "checkmark.circle")
                     }
                 }
             }
             if resuming, let item = resumeItem {
                 Divider()
                 Button(role: .destructive) { ContinueWatchingManager.shared.remove(item) } label: {
-                    Label("Reset Progress", systemImage: "arrow.counterclockwise")
+                    Label("detail.reset_progress", systemImage: "arrow.counterclockwise")
                 }
             }
         }
@@ -315,7 +315,8 @@ struct SimklTitlePage: View {
         VStack(alignment: .leading, spacing: 4) {
             if let entry {
                 let progress = kind == .movie ? SimklTitleLabels.movieLine(entry.media) : SimklTitleLabels.showProgress(entry)
-                Text("\(entry.status.displayName) · \(progress)\(entry.score > 0 ? " · \(Int(entry.score))/10" : "")")
+                Text(verbatim: [entry.status.displayName, progress, entry.score > 0 ? "\(Int(entry.score))/10" : nil]
+                        .compactMap { $0 }.joined(separator: " · "))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -323,7 +324,7 @@ struct SimklTitlePage: View {
                 Text(message).font(.footnote).foregroundStyle(.secondary)
             }
             Link(destination: simklURL) {
-                Label("Open on Simkl", systemImage: "safari")
+                Label("library.open_on_simkl", systemImage: "safari")
             }
             .font(.subheadline)
         }
@@ -341,23 +342,23 @@ struct SimklTitlePage: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ForEach(seasons, id: \.self) { number in
-                            seasonPill("Season \(number)", selected: !showsSpecials && season == number) {
+                            seasonPill(String(localized: "library.season_2 \(number)"), selected: !showsSpecials && season == number) {
                                 showsSpecials = false
                                 season = number
                             }
                         }
                         if !specials.isEmpty {
-                            seasonPill("Specials", selected: showsSpecials) { showsSpecials = true }
+                            seasonPill(String(localized: "library.specials"), selected: showsSpecials) { showsSpecials = true }
                         }
                     }
                     .padding(.horizontal, 16)
                 }
                 if showsSpecials {
-                    Text("Simkl gives specials no season or episode number, so they can't be played or marked from here.")
+                    Text("library.simkl_gives_specials_no_season")
                         .font(.footnote).foregroundStyle(.secondary)
                         .padding(.horizontal, 16)
                     ForEach(specials) { special in
-                        Text(special.title ?? "Special")
+                        Text(special.title ?? String(localized: "library.special"))
                             .font(.subheadline.weight(.semibold))
                             .padding(.horizontal, 16)
                     }
@@ -401,11 +402,11 @@ struct SimklTitlePage: View {
 
     private func seasonHeader(_ number: Int) -> some View {
         HStack {
-            Text("Season \(number)").font(.title3.weight(.bold))
+            Text("library.season_2 \(number)").font(.title3.weight(.bold))
             Spacer()
             Menu {
-                Button("Mark season watched") { Task { await changeSeason(number, marking: true) } }
-                Button("Un-mark season", role: .destructive) { Task { await changeSeason(number, marking: false) } }
+                Button("library.mark_season_watched") { Task { await changeSeason(number, marking: true) } }
+                Button("library.un_mark_season", role: .destructive) { Task { await changeSeason(number, marking: false) } }
             } label: {
                 Image(systemName: "ellipsis.circle").font(.title3)
             }
@@ -566,7 +567,7 @@ struct SimklTitlePage: View {
             if SimklAuthManager.shared.needsReauthorization {
                 message = SimklError.readOnly.localizedDescription
             } else {
-                message = delivered ? nil : "Simkl couldn't be reached — this is saved and will be sent later."
+                message = delivered ? nil : String(localized: "library.simkl_couldnt_be_reached_this")
             }
         } catch {
             message = error.localizedDescription

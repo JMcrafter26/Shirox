@@ -181,7 +181,7 @@ final class ProfileManager: ObservableObject {
         } catch {
             Logger.shared.log("[Profiles] Couldn't switch to \(incoming.name): \(error)", type: "Error")
             #if os(iOS)
-            ToastManager.shared.show(message: "Couldn't switch profiles. Unlock your device and try again.", type: .error)
+            ToastManager.shared.show(message: String(localized: "shared.couldnt_switch_profiles_unlock_your"), type: .error)
             #endif
             return
         }
@@ -304,7 +304,7 @@ final class ProfileManager: ObservableObject {
 
     private static func cleaned(_ name: String) -> String {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? "Profile" : String(trimmed.prefix(30))
+        return trimmed.isEmpty ? String(localized: "common.profile") : String(trimmed.prefix(30))
     }
 
     /// The profile everyone already has is named after their account, when they're signed in.

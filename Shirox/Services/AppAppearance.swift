@@ -31,13 +31,13 @@ enum AppTint: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .monochrome: return "Monochrome"
-        case .blue:       return "Blue"
-        case .purple:     return "Purple"
-        case .pink:       return "Pink"
-        case .orange:     return "Orange"
-        case .green:      return "Green"
-        case .brown:      return "Brown"
+        case .monochrome: return String(localized: "settings.monochrome")
+        case .blue:       return String(localized: "settings.blue")
+        case .purple:     return String(localized: "settings.purple")
+        case .pink:       return String(localized: "settings.pink")
+        case .orange:     return String(localized: "settings.orange")
+        case .green:      return String(localized: "settings.green")
+        case .brown:      return String(localized: "settings.brown")
         }
     }
 
@@ -85,9 +85,9 @@ enum AppColorScheme: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .system: return "System"
-        case .light:  return "Light"
-        case .dark:   return "Dark"
+        case .system: return String(localized: "settings.system")
+        case .light:  return String(localized: "settings.light")
+        case .dark:   return String(localized: "settings.dark")
         }
     }
 
@@ -174,7 +174,7 @@ struct AppIconOption: Identifiable, Hashable {
     var id: String { name ?? "default" }
 
     var title: String {
-        guard let name else { return "Default" }
+        guard let name else { return String(localized: "settings.default") }
         return name.replacingOccurrences(of: "-", with: " ").replacingOccurrences(of: "_", with: " ")
     }
 
@@ -246,11 +246,11 @@ enum AppTab: Int, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .home:      return "Home"
-        case .library:   return "Library"
-        case .downloads: return "Downloads"
-        case .settings:  return "Settings"
-        case .search:    return "Search"
+        case .home:      return String(localized: "settings.home")
+        case .library:   return String(localized: "common.library")
+        case .downloads: return String(localized: "common.downloads")
+        case .settings:  return String(localized: "settings.settings")
+        case .search:    return String(localized: "common.search")
         }
     }
 

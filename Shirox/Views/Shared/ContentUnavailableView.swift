@@ -36,7 +36,7 @@ struct ContentUnavailableView: View {
 
     static func search(text: String) -> ContentUnavailableView {
         ContentUnavailableView(
-            "No Results for \"\(text)\"",
+            "shared.no_results_for \(text)",
             systemImage: "magnifyingglass"
         )
     }

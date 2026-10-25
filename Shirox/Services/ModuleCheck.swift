@@ -24,10 +24,10 @@ enum ModuleCheckStep: String, Codable {
 
     var label: String {
         switch self {
-        case .load: return "Loading the script"
-        case .search: return "Search"
-        case .episodes: return "Episodes"
-        case .streams: return "Streams"
+        case .load: return String(localized: "modules.loading_the_script")
+        case .search: return String(localized: "common.search")
+        case .episodes: return String(localized: "common.episodes")
+        case .streams: return String(localized: "modules.streams")
         }
     }
 }
@@ -43,15 +43,15 @@ enum ModuleCheck {
     static let timeout: TimeInterval = 90
 
     static func check(_ module: ModuleDefinition) async -> ModuleCheckResult {
-        if module.isManga { return .skipped("Manga modules aren't checked yet") }
-        if module.isLocalPlayback || module.isJellyfin { return .skipped("Not a streaming site") }
+        if module.isManga { return .skipped(String(localized: "modules.manga_modules_arent_checked_yet")) }
+        if module.isLocalPlayback || module.isJellyfin { return .skipped(String(localized: "modules.not_a_streaming_site")) }
         return await withTaskGroup(of: ModuleCheckResult.self) { group in
             group.addTask { await run(module) }
             group.addTask {
                 try? await Task.sleep(nanoseconds: UInt64(timeout * 1_000_000_000))
-                return .failed(step: .streams, reason: "Didn't reach a stream in \(Int(timeout)) seconds")
+                return .failed(step: .streams, reason: String(localized: "modules.didnt_reach_a_stream_in \(Int(timeout))"))
             }
-            let first = await group.next() ?? .failed(step: .load, reason: "Didn't run")
+            let first = await group.next() ?? .failed(step: .load, reason: String(localized: "modules.didnt_run"))
             group.cancelAll()
             return first
         }
@@ -71,7 +71,8 @@ enum ModuleCheck {
         // Any title reaching a stream passes: one title's episode can be missing on a site that
         // works, so only every title failing counts against the module.
         var lastStep = ModuleCheckStep.search
-        var lastReason = "No results for \(queries.map { "\"\($0)\"" }.joined(separator: ", "))"
+        let quoted = queries.map { "“" + $0 + "”" }.formatted(.list(type: .or))
+        var lastReason = String(localized: "modules.no_results_for \(quoted)")
         for query in (module.seanime != nil ? [queries[0]] : queries) {
             guard !Task.isCancelled else { break }
             let results: [SearchItem]
@@ -97,14 +98,14 @@ enum ModuleCheck {
                 guard let episode = episodes.first(where: { $0.number == 1 })
                         ?? episodes.filter({ $0.number > 0 }).min(by: { $0.number < $1.number })
                         ?? episodes.first else {
-                    if lastStep != .streams { (lastStep, lastReason) = (.episodes, "No episodes for \"\(item.title)\"") }
+                    if lastStep != .streams { (lastStep, lastReason) = (.episodes, String(localized: "modules.no_episodes_for \(item.title)")) }
                     continue
                 }
                 do {
                     let streams = try await runner.fetchStreams(episodeUrl: episode.href)
                     if verdict(streams) { return .passed }
                     if let walled = runner.lastTurnstileURL { return .needsVerification(host: walled.host ?? walled.absoluteString) }
-                    (lastStep, lastReason) = (.streams, "No playable stream for \"\(item.title)\"")
+                    (lastStep, lastReason) = (.streams, String(localized: "modules.no_playable_stream_for \(item.title)"))
                 } catch {
                     (lastStep, lastReason) = (.streams, error.localizedDescription)
                 }

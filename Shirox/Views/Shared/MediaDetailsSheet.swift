@@ -43,7 +43,7 @@ struct MediaDetailsSheet: View {
                         followingSection(following)
                     }
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Synopsis").font(.title3.weight(.bold))
+                        Text("detail.synopsis").font(.title3.weight(.bold))
                         Text(synopsis)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
@@ -55,7 +55,7 @@ struct MediaDetailsSheet: View {
                     }
                     if let trailer = extras?.trailer {
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("Trailer").font(.title3.weight(.bold))
+                            Text("detail.trailer").font(.title3.weight(.bold))
                             trailerView(trailer)
                         }
                     }
@@ -64,13 +64,13 @@ struct MediaDetailsSheet: View {
                 .padding(.vertical, 12)
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .navigationTitle("Details")
+            .navigationTitle("library.details")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                    Button("common.done") { dismiss() }
                 }
             }
         }
@@ -87,7 +87,7 @@ struct MediaDetailsSheet: View {
 
     private func followingSection(_ following: [MediaDetailsExtras.Follower]) -> some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Following").font(.title3.weight(.bold))
+            Text("common.following").font(.title3.weight(.bold))
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 20) {
                     ForEach(following) { follower in
@@ -143,7 +143,7 @@ struct MediaDetailsSheet: View {
                 .frame(maxWidth: .infinity)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Watch the trailer")
+            .accessibilityLabel("detail.watch_the_trailer")
         }
     }
 }

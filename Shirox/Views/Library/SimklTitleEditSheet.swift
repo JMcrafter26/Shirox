@@ -43,8 +43,8 @@ struct SimklTitleEditSheet: View {
     @ViewBuilder private var sheetBody: some View {
         NavigationStack {
             Form {
-                Section("Status") {
-                    Picker("Status", selection: $status) {
+                Section("library.status") {
+                    Picker("library.status", selection: $status) {
                         ForEach(LibrarySource.simkl.statuses(in: MediaListStatus.allCases, for: kind)) { option in
                             Text(option.displayName).tag(option)
                         }
@@ -54,11 +54,11 @@ struct SimklTitleEditSheet: View {
                 if kind.hasSimklEpisodes, status != .completed {
                     progressSection
                 }
-                Section("Score") {
+                Section("library.score") {
                     ScoreInputView(score: $score, format: .point10)
                 }
                 Section {
-                    Button("Remove from Simkl", role: .destructive) { confirmRemove = true }
+                    Button("library.remove_from_simkl", role: .destructive) { confirmRemove = true }
                 } footer: {
                     if let errorMessage {
                         Text(errorMessage).foregroundStyle(.red)
@@ -71,18 +71,18 @@ struct SimklTitleEditSheet: View {
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("common.cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") { Task { await save() } }
+                    Button("common.save") { Task { await save() } }
                         .disabled(isSaving)
                 }
             }
-            .alert("Remove from Simkl", isPresented: $confirmRemove) {
-                Button("Remove", role: .destructive) { Task { await remove() } }
-                Button("Cancel", role: .cancel) {}
+            .alert("library.remove_from_simkl", isPresented: $confirmRemove) {
+                Button("common.remove", role: .destructive) { Task { await remove() } }
+                Button("common.cancel", role: .cancel) {}
             } message: {
-                Text("This removes \(entry.media.title.displayTitle) from your Simkl library, with its watch history and score.")
+                Text("library.this_removes_from_your_simkl \(entry.media.title.displayTitle)")
             }
             .task { await loadEpisodes() }
         }
@@ -90,22 +90,22 @@ struct SimklTitleEditSheet: View {
 
     @ViewBuilder
     private var progressSection: some View {
-        Section("Watched up to") {
+        Section("library.watched_up_to") {
             switch episodesState {
             case .loading:
                 ProgressView()
             case .failed:
-                Text("Couldn't load the episode list, so progress can't be changed right now.")
+                Text("library.couldnt_load_the_episode_list")
                     .foregroundStyle(.secondary)
             case .loaded:
-                Picker("Season", selection: $season) {
-                    Text("Nothing yet").tag(Int?.none)
+                Picker("library.season", selection: $season) {
+                    Text("library.nothing_yet").tag(Int?.none)
                     ForEach(SimklEpisodePlanner.regularSeasons(in: episodes), id: \.self) { number in
-                        Text("Season \(number)").tag(Int?.some(number))
+                        Text("library.season_2 \(number)").tag(Int?.some(number))
                     }
                 }
                 if let season {
-                    Picker("Episode", selection: $upTo) {
+                    Picker("library.episode", selection: $upTo) {
                         ForEach(airedEpisodes(in: season)) { episode in
                             Text(label(episode)).tag(episode.ref)
                         }
@@ -129,7 +129,7 @@ struct SimklTitleEditSheet: View {
     }
 
     private func label(_ episode: SimklEpisode) -> String {
-        let number = "Episode \(episode.episode ?? 0)"
+        let number = String(localized: "library.episode_2 \(episode.episode ?? 0)")
         guard let title = episode.title, !title.isEmpty else { return number }
         return "\(number) · \(title)"
     }

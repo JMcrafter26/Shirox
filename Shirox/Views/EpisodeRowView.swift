@@ -69,7 +69,7 @@ struct EpisodeRowView: View {
                                 radius: 4, y: 2)
                     }
 
-                    Text("Episode \(episode.displayNumber)")
+                    Text("detail.episode \(episode.displayNumber)")
                         .font(.callout.weight(.medium))
                         .foregroundStyle(.primary)
 
@@ -83,12 +83,12 @@ struct EpisodeRowView: View {
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.caption)
                                 .foregroundStyle(.green)
-                                .accessibilityLabel("Watched")
+                                .accessibilityLabel("detail.watched")
                         } else if let p = progress, p > 0 {
                             Text("\(Int(p * 100))%")
                                 .font(.caption2.weight(.semibold))
                                 .foregroundStyle(.secondary)
-                                .accessibilityLabel("\(Int(p * 100)) percent watched")
+                                .accessibilityLabel("detail.percent_watched \(Int(p * 100))")
                         }
                     }
 
@@ -159,29 +159,29 @@ struct EpisodeRowView: View {
             if !isSelectionMode {
                 if isComplete {
                     Button { onMarkUnwatched?() } label: {
-                        Label("Mark as Unwatched", systemImage: "xmark.circle")
+                        Label("detail.mark_as_unwatched", systemImage: "xmark.circle")
                     }
                 } else {
                     Button { onMarkWatched?() } label: {
-                        Label("Mark as Watched", systemImage: "checkmark.circle")
+                        Label("detail.mark_as_watched", systemImage: "checkmark.circle")
                     }
                 }
                 if let onTryOtherStream {
                     Divider()
                     Button { onTryOtherStream() } label: {
-                        Label("Try Other Stream", systemImage: "arrow.triangle.2.circlepath")
+                        Label("detail.try_other_stream", systemImage: "arrow.triangle.2.circlepath")
                     }
                 }
                 if let onResetProgress, progress != nil {
                     Divider()
                     Button(role: .destructive) { onResetProgress() } label: {
-                        Label("Reset Progress", systemImage: "arrow.counterclockwise")
+                        Label("detail.reset_progress", systemImage: "arrow.counterclockwise")
                     }
                 }
                 if let onDownload {
                     Divider()
                     Button { onDownload() } label: {
-                        Label("Download Episode", systemImage: "arrow.down.circle")
+                        Label("detail.download_episode", systemImage: "arrow.down.circle")
                     }
                     .disabled(downloadState == .completed || downloadState == .downloading || downloadState == .pending)
                 }
@@ -194,7 +194,7 @@ struct EpisodeRowView: View {
                 if let onDeleteDownload {
                     Divider()
                     Button(role: .destructive) { onDeleteDownload() } label: {
-                        Label("Delete Download", systemImage: "trash")
+                        Label("detail.delete_download", systemImage: "trash")
                     }
                 }
             }

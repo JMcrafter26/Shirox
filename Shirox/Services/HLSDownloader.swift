@@ -10,8 +10,8 @@ actor HLSDownloader {
 
         var errorDescription: String? {
             switch self {
-            case .invalidManifest: return "Invalid HLS manifest"
-            case .downloadFailed(let m): return "Download failed: \(m)"
+            case .invalidManifest: return String(localized: "shared.invalid_hls_manifest")
+            case .downloadFailed(let m): return String(localized: "shared.download_failed_2 \(m)")
             }
         }
     }
@@ -155,10 +155,10 @@ actor HLSDownloader {
         var reference = Data()
         if let initSegment = videoPlan.initSegment {
             reference = try await fetchResource(url: initSegment.url, byteRange: initSegment.byteRange, key: initSegment.key,
-                                                mediaSequence: 0, headers: headers, label: "video init segment")
+                                                mediaSequence: 0, headers: headers, label: String(localized: "shared.video_init_segment"))
         }
         reference += try await fetchResource(url: first.url, byteRange: first.byteRange, key: first.key,
-                                             mediaSequence: first.mediaSequence, headers: headers, label: "first video segment")
+                                             mediaSequence: first.mediaSequence, headers: headers, label: String(localized: "shared.first_video_segment"))
         let referenceURL = folder.appendingPathComponent(videoPlan.isFMP4 ? "video_first.mp4" : "video_first.ts")
         try reference.write(to: referenceURL, options: .atomic)
 
@@ -213,7 +213,7 @@ actor HLSDownloader {
         if let initSeg = plan.initSegment {
             let initData = try await fetchResource(
                 url: initSeg.url, byteRange: initSeg.byteRange, key: initSeg.key,
-                mediaSequence: 0, headers: headers, label: "\(prefix)init segment"
+                mediaSequence: 0, headers: headers, label: String(localized: "shared.init_segment \(prefix)")
             )
             initFileName = "\(prefix)init.mp4"
             try initData.write(to: folder.appendingPathComponent(initFileName!), options: .atomic)
@@ -287,7 +287,7 @@ actor HLSDownloader {
         }
         let data = try await fetchResource(
             url: segment.url, byteRange: segment.byteRange, key: segment.key,
-            mediaSequence: segment.mediaSequence, headers: headers, label: "segment \(index)"
+            mediaSequence: segment.mediaSequence, headers: headers, label: String(localized: "shared.segment \(index)")
         )
         try data.write(to: path, options: .atomic)
         return index
@@ -328,7 +328,7 @@ actor HLSDownloader {
         let keyData = try await keyBytes(url: keyURL, headers: headers)
         let iv = Data(key.iv ?? HLSManifestParser.defaultIV(forMediaSequence: mediaSequence))
         guard let decrypted = HLSManifestParser.decryptAES128CBC(data, key: keyData, iv: iv) else {
-            throw HLSError.downloadFailed("AES-128 decryption failed for \(label)")
+            throw HLSError.downloadFailed(String(localized: "shared.aes_128_decryption_failed_for \(label)"))
         }
         return decrypted
     }
@@ -336,7 +336,7 @@ actor HLSDownloader {
     /// Fetches (and caches) the AES-128 key payload. Must be exactly 16 bytes.
     private func keyBytes(url: URL, headers: [String: String]) async throws -> Data {
         if let cached = keyCache[url] { return cached }
-        let data = try await fetchData(url: url, headers: headers, label: "encryption key")
+        let data = try await fetchData(url: url, headers: headers, label: String(localized: "shared.encryption_key"))
         guard data.count == kCCKeySizeAES128 else {
             throw HLSError.downloadFailed("encryption key was \(data.count) bytes, expected 16")
         }
@@ -404,7 +404,7 @@ actor HLSDownloader {
                 continue
             }
 
-            throw HLSError.downloadFailed("HTTP \(status) downloading \(label)")
+            throw HLSError.downloadFailed(String(localized: "shared.http_downloading \(status) \(label)"))
         }
     }
 }

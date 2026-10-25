@@ -30,9 +30,9 @@ enum PullToRefreshStyle: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .gooey: return "Gooey"
-        case .glass: return "Glass"
-        case .none:  return "None"
+        case .gooey: return String(localized: "settings.gooey")
+        case .glass: return String(localized: "settings.glass")
+        case .none:  return String(localized: "settings.none")
         }
     }
 

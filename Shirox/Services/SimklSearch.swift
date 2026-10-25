@@ -73,7 +73,7 @@ enum SimklSearch {
         }
         return Media(
             id: simklID, idMal: nil, provider: .simkl,
-            title: MediaTitle(romaji: nil, english: item.title ?? "Untitled", native: nil),
+            title: MediaTitle(romaji: nil, english: item.title ?? String(localized: "search.untitled"), native: nil),
             coverImage: MediaCoverImage(large: item.poster.map(SimklDiscoverMedia.posterURL), extraLarge: nil),
             bannerImage: nil, description: nil, episodes: nil, status: nil, averageScore: nil, genres: nil,
             season: nil, seasonYear: item.year, nextAiringEpisode: nil, relations: nil, type: type, format: nil)

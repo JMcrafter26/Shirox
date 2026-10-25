@@ -73,7 +73,7 @@ struct PlayerTopBar: View {
                             .contentShape(Circle())
                     }
                     .buttonStyle(.plain)
-                    .help("Close (Esc)")
+                    .help("player.close_esc")
                 }
             }
             .frame(height: rowHeight)
@@ -147,7 +147,7 @@ struct PlayerTopBar: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)
-        .accessibilityHint(showsFullTitle ? "" : "Shows the whole title")
+        .accessibilityHint(showsFullTitle ? "" : String(localized: "player.shows_the_whole_title"))
     }
 
     @ViewBuilder
@@ -163,9 +163,9 @@ struct PlayerTopBar: View {
                     .frame(width: frameSize, height: frameSize)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Video Details")
+            .accessibilityLabel("player.video_details")
             #if os(macOS)
-            .help("Video Details (I)")
+            .help("player.video_details_i")
             #endif
         }
         #if os(iOS)
@@ -198,9 +198,9 @@ struct PlayerTopBar: View {
                 .frame(width: frameSize, height: frameSize)
         }
         .buttonStyle(.plain)
-        .help(isPictureInPicture ? "Back to the full window (P)" : "Picture in Picture (P)")
+        .help(isPictureInPicture ? String(localized: "player.back_to_the_full_window") : String(localized: "player.picture_in_picture_p"))
         muteButton(iconSize: iconSize, frameSize: frameSize)
-            .help(isMuted ? "Unmute (M)" : "Mute (M)")
+            .help(isMuted ? String(localized: "player.unmute_m") : String(localized: "player.mute_m"))
         #else
         muteButton(iconSize: iconSize, frameSize: frameSize)
         Button {
@@ -225,7 +225,7 @@ struct PlayerTopBar: View {
                 .frame(width: frameSize, height: frameSize)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(isMuted ? "Unmute" : "Mute")
+        .accessibilityLabel(isMuted ? String(localized: "player.unmute") : String(localized: "player.mute"))
     }
 }
 

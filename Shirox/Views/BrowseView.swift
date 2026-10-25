@@ -33,13 +33,13 @@ struct BrowseView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if vm.items.isEmpty, let error = vm.error {
                 ContentUnavailableView(
-                    "Couldn't Load",
+                    "common.couldnt_load",
                     systemImage: "wifi.slash",
                     description: Text(error)
                 )
                 .toolbar {
                     ToolbarItem(placement: .primaryAction) {
-                        Button("Retry") { Task { await vm.retry() } }
+                        Button("common.retry") { Task { await vm.retry() } }
                     }
                 }
             } else {

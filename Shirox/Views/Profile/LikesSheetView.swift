@@ -21,7 +21,7 @@ struct LikesSheetView: View {
                     ProgressView()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if users.isEmpty {
-                    ContentUnavailableView("No Likes Yet", systemImage: "heart")
+                    ContentUnavailableView("profile.no_likes_yet", systemImage: "heart")
                 } else {
                     List {
                         ForEach(users) { user in
@@ -54,7 +54,7 @@ struct LikesSheetView: View {
                                     if isLoading {
                                         ProgressView().controlSize(.small)
                                     } else {
-                                        Text("Load More").font(.subheadline.weight(.medium))
+                                        Text("profile.load_more").font(.subheadline.weight(.medium))
                                     }
                                     Spacer()
                                 }
@@ -69,18 +69,18 @@ struct LikesSheetView: View {
                 }
             }
         }
-        .navigationTitle("Likes")
+        .navigationTitle("profile.likes")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
         .toolbar {
             ToolbarItem(placement: .confirmationAction) {
-                Button("Done") { dismiss() }
+                Button("common.done") { dismiss() }
             }
         }
         .task { await load() }
         .adaptiveSheet(item: $selectedUserId) { uid in
-            ProfileView(userId: uid, username: selectedUsername ?? "Profile", avatarURL: nil)
+            ProfileView(userId: uid, username: selectedUsername ?? String(localized: "common.profile"), avatarURL: nil)
         }
     }
 

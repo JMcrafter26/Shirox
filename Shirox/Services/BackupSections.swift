@@ -329,7 +329,7 @@ struct ModulesBackupSection: BackupSection {
         // rest of the modules did install, and the user can add the missing one by URL.
         return failedUrls.map { url in
             let name = payload.modules.first { $0.jsonUrl == url }?.sourceName ?? url
-            return "Couldn't reinstall \(name) — \(url)"
+            return String(localized: "settings.couldnt_reinstall \(name) \(url)")
         }
     }
 }

@@ -144,8 +144,8 @@ struct ToastView: View {
         .contentShape(Rectangle())
         .onTapGesture { isExpanded = true }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(manager.toasts.count) notifications")
-        .accessibilityHint("Double tap to show all")
+        .accessibilityLabel("shared.notifications \(manager.toasts.count)")
+        .accessibilityHint("shared.double_tap_to_show_all")
     }
 
     // MARK: - Card

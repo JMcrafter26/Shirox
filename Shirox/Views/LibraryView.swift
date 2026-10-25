@@ -8,6 +8,16 @@ enum LibrarySortOrder: String, CaseIterable, Identifiable {
     case title      = "Title"
 
     var id: String { rawValue }
+
+    /// The raw value is what's stored; this is what the menu shows.
+    var title: String {
+        switch self {
+        case .score:    return String(localized: "library.my_rating")
+        case .updated:  return String(localized: "library.last_updated")
+        case .progress: return String(localized: "library.progress")
+        case .title:    return String(localized: "library.title")
+        }
+    }
 }
 
 struct LibraryView: View {
@@ -122,9 +132,9 @@ struct LibraryView: View {
     private var displayUsername: String {
         let name: String
         switch activeProviderType {
-        case .mal:   name = malAuth.username ?? "Profile"
+        case .mal:   name = malAuth.username ?? String(localized: "common.profile")
         case .simkl: name = simklAuth.username ?? "Simkl"
-        default:     name = anilistAuth.username ?? "Profile"
+        default:     name = anilistAuth.username ?? String(localized: "common.profile")
         }
         return name.count > 15 ? String(name.prefix(15)) + "…" : name
     }
@@ -223,14 +233,14 @@ struct LibraryView: View {
 
     private var sortMenu: some View {
         Menu {
-            Section("Sort by") {
+            Section("library.sort_by") {
                 ForEach(LibrarySortOrder.allCases) { order in
                     Button {
                         if sortOrder == order { sortAscending.toggle() }
                         else { sortOrderRaw = order.rawValue; sortAscending = false }
                     } label: {
                         HStack {
-                            Text(order.rawValue)
+                            Text(order.title)
                             if sortOrder == order {
                                 Image(systemName: sortAscending ? "chevron.up" : "chevron.down")
                             }
@@ -240,13 +250,13 @@ struct LibraryView: View {
             }
             Section {
                 Toggle(isOn: $newEpisodesFirst) {
-                    Label("New Episodes First", systemImage: "sparkles.tv")
+                    Label("library.new_episodes_first", systemImage: "sparkles.tv")
                 }
             }
-            Section("Layout") {
-                Picker("Layout", selection: $gridLayout) {
-                    Label("List", systemImage: "list.bullet").tag(false)
-                    Label("Grid", systemImage: "square.grid.3x2").tag(true)
+            Section("settings.layout") {
+                Picker("settings.layout", selection: $gridLayout) {
+                    Label("library.list", systemImage: "list.bullet").tag(false)
+                    Label("library.grid", systemImage: "square.grid.3x2").tag(true)
                 }
                 .pickerStyle(.inline)
             }
@@ -273,14 +283,14 @@ struct LibraryView: View {
             Image(systemName: "person.crop.circle.badge.exclamationmark")
                 .font(.system(size: 48))
                 .foregroundStyle(.secondary)
-            Text("Profile unavailable")
+            Text("library.profile_unavailable")
                 .font(.headline)
-            Text("You're signed in, but \(activeProviderType.displayName) hasn't sent your profile yet. This usually means its API is down — your account is fine, and it'll fill in once the service is reachable.")
+            Text("library.youre_signed_in_but_hasnt \(activeProviderType.displayName)")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
-            Button("Try Again") {
+            Button("library.try_again") {
                 Task { await AniListAuthManager.shared.fetchViewer() }
             }
             .font(.subheadline.weight(.semibold))
@@ -305,7 +315,7 @@ struct LibraryView: View {
                 // An account that's already connected stays listed, so the menu always shows
                 // both — but says so, rather than offering a sign-in that would do nothing.
                 if isSignedIn(type) {
-                    Label("\(type.displayName) — signed in", systemImage: "checkmark")
+                    Label("library.signed_in \(type.displayName)", systemImage: "checkmark")
                 } else {
                     Text(type.displayName)
                 }
@@ -364,10 +374,10 @@ struct LibraryView: View {
                 .foregroundStyle(.primary)
             // Neutral wording now that the button below offers both: naming one service here
             // while the menu lists two read as though the choice had already been made.
-            Text("Track your anime")
+            Text("library.track_your_anime")
                 .font(.title3.weight(.semibold))
                 .multilineTextAlignment(.center)
-            Text("Sign in to view and manage your anime library.")
+            Text("library.sign_in_to_view_and")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -376,7 +386,7 @@ struct LibraryView: View {
                 signInMenuItems
             } label: {
                 HStack(spacing: 6) {
-                    Text("Sign In")
+                    Text("library.sign_in")
                     Image(systemName: "chevron.down").font(.subheadline)
                 }
                 .font(.headline)
@@ -394,7 +404,7 @@ struct LibraryView: View {
             .buttonStyle(.plain)
             Spacer()
         }
-        .navigationTitle("Library")
+        .navigationTitle("common.library")
         #if os(iOS)
         .onAppear {
             presentationWindow = UIApplication.shared.connectedScenes
@@ -415,7 +425,7 @@ struct LibraryView: View {
     /// The status / custom-list picker items (shared by the macOS capsule and the iOS toolbar button).
     @ViewBuilder
     private var statusMenuContent: some View {
-        Section("Lists") {
+        Section("library.lists") {
             ForEach(orderedStatuses) { status in
                 Button {
                     vm.selectStatus(status)
@@ -430,7 +440,7 @@ struct LibraryView: View {
             }
         }
         if !vm.customListNames.isEmpty {
-            Section("Custom Lists") {
+            Section("library.custom_lists") {
                 ForEach(vm.customListNames, id: \.self) { name in
                     Button {
                         vm.selectCustomList(vm.selectedCustomList == name ? nil : name)
@@ -447,7 +457,7 @@ struct LibraryView: View {
                     Button {
                         showManageCollections = true
                     } label: {
-                        Label("Manage Collections…", systemImage: "folder.badge.gearshape")
+                        Label("library.manage_collections", systemImage: "folder.badge.gearshape")
                     }
                 }
             }
@@ -457,12 +467,12 @@ struct LibraryView: View {
     /// The genre picker items (shared by the macOS capsule and the iOS toolbar button).
     @ViewBuilder
     private var genreMenuContent: some View {
-        Section("Genres") {
+        Section("library.genres") {
             if !selectedGenres.isEmpty {
                 Button(role: .destructive) {
                     selectedGenres.removeAll()
                 } label: {
-                    Label("Clear All Filters", systemImage: "xmark.circle")
+                    Label("library.clear_all_filters", systemImage: "xmark.circle")
                 }
             }
             ForEach(availableGenres, id: \.self) { genre in
@@ -505,7 +515,7 @@ struct LibraryView: View {
         Menu { genreMenuContent } label: {
             LibraryFilterLabel(
                 systemImage: "tag",
-                text: selectedGenres.isEmpty ? "All Genres" : "\(selectedGenres.count) selected",
+                text: selectedGenres.isEmpty ? String(localized: "library.all_genres") : "\(selectedGenres.count) selected",
                 isActive: !selectedGenres.isEmpty,
                 collapsed: false
             )
@@ -640,7 +650,7 @@ struct LibraryView: View {
             Menu {
                 signInMenuItems
             } label: {
-                Text("Sign In")
+                Text("library.sign_in")
                     .font(.subheadline.weight(.semibold))
             }
         }
@@ -649,7 +659,7 @@ struct LibraryView: View {
     // MARK: - Empty state
 
     private var emptyStateTitle: LocalizedStringKey {
-        searchText.isEmpty ? "Nothing here yet" : "No Results"
+        searchText.isEmpty ? "library.nothing_here_yet" : "detail.no_results"
     }
 
     private var emptyStateIcon: String {
@@ -659,13 +669,13 @@ struct LibraryView: View {
     private var emptyStateDescription: String {
         let noun = vm.mediaType.noun
         if !searchText.isEmpty {
-            return "No \(noun) matching \"\(searchText)\"."
+            return String(localized: "library.no_matching \(noun) \(searchText)")
         }
         let listName = vm.selectedCustomList ?? vm.selectedStatus.displayName(for: vm.mediaType)
         if vm.isLocal {
-            return "Add \(noun) to \(listName) from any title's detail screen."
+            return String(localized: "library.add_to_from_any_titles \(noun) \(listName)")
         }
-        return "Add \(noun) to \(listName) on \(activeProviderType.displayName)."
+        return String(localized: "library.add_to_on \(noun) \(listName) \(activeProviderType.displayName)")
     }
 
     // MARK: - Entries list
@@ -707,7 +717,7 @@ struct LibraryView: View {
     private func quickProgress(_ entry: LibraryEntry) -> (title: String, icon: String, run: () async -> Void)? {
         if entry.media.simklTitleKind == .movie {
             guard entry.status != .completed else { return nil }
-            return ("Watched", "checkmark.circle.fill", {
+            return (String(localized: "detail.watched"), "checkmark.circle.fill", {
                 await vm.update(entry: entry, status: .completed, progress: entry.progress, score: entry.score)
             })
         }
@@ -787,7 +797,7 @@ struct LibraryView: View {
         if let url = LocalPlaybackCoordinator.shared.resolveImport(name: name) {
             LocalPlaybackCoordinator.shared.launch(videoURL: url, subtitle: nil, resumeFrom: 0)
         } else {
-            ToastManager.shared.show(message: "File moved or unavailable — remove this item", type: .error)
+            ToastManager.shared.show(message: String(localized: "shared.file_moved_or_unavailable_remove"), type: .error)
         }
         #endif
     }
@@ -803,7 +813,7 @@ struct LibraryView: View {
             let watched = SimklEpisodePlanner.watched(status: entry.status, recorded: entry.watchedEpisodes,
                                                       episodes: episodes)
             guard let next = SimklEpisodePlanner.next(after: watched, in: episodes) else {
-                SimklNotice.info("No aired episode after the last one watched.")
+                SimklNotice.info(String(localized: "library.no_aired_episode_after_the"))
                 return
             }
             var newWatched = watched
@@ -856,7 +866,7 @@ struct LibraryView: View {
                 Button {
                     simklSearch = request
                 } label: {
-                    Label("Search Simkl for “\(request.query)”", systemImage: "magnifyingglass")
+                    Label("library.search_simkl_for \(request.query)", systemImage: "magnifyingglass")
                 }
                 #if !os(tvOS)
                 .listRowSeparator(.hidden)
@@ -868,7 +878,7 @@ struct LibraryView: View {
                 Button {
                     simklSearch = request
                 } label: {
-                    Label("Search Simkl for “\(request.query)”", systemImage: "magnifyingglass")
+                    Label("library.search_simkl_for \(request.query)", systemImage: "magnifyingglass")
                 }
                 #if !os(tvOS)
                 .listRowSeparator(.hidden)
@@ -946,7 +956,7 @@ struct LibraryView: View {
                     Button {
                         simklSearch = request
                     } label: {
-                        Label("Search Simkl for “\(request.query)”", systemImage: "magnifyingglass")
+                        Label("library.search_simkl_for \(request.query)", systemImage: "magnifyingglass")
                     }
                     .padding(.top, 16)
                 }
@@ -976,7 +986,7 @@ struct LibraryView: View {
                         .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Edit \(entry.media.title.displayTitle)")
+                .accessibilityLabel("library.edit \(entry.media.title.displayTitle)")
                 // Bottom-right of the 2:3 poster, above the progress bar on its edge.
                 .position(x: geo.size.width - 20, y: geo.size.width * 1.5 - 30)
             }
@@ -985,8 +995,8 @@ struct LibraryView: View {
         .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 12))
         .contextMenu {
             FullTitleMenuItems(entry.media.title.displayTitle)
-            Button { openFromGrid(entry) } label: { Label("Open", systemImage: "arrow.up.right") }
-            Button { editEntry(entry) } label: { Label("Edit", systemImage: "pencil") }
+            Button { openFromGrid(entry) } label: { Label("library.open", systemImage: "arrow.up.right") }
+            Button { editEntry(entry) } label: { Label("library.edit_2", systemImage: "pencil") }
             if let quick = quickProgress(entry) {
                 Button { Task { await quick.run() } } label: { Label(quick.title, systemImage: quick.icon) }
             }
@@ -1010,8 +1020,8 @@ struct LibraryView: View {
                         .onTapGesture { openFromGrid(entry) }
                         .contextMenu {
                             FullTitleMenuItems(entry.media.title.displayTitle)
-                            Button { openFromGrid(entry) } label: { Label("Open", systemImage: "arrow.up.right") }
-                            Button { editEntry(entry) } label: { Label("Edit", systemImage: "pencil") }
+                            Button { openFromGrid(entry) } label: { Label("library.open", systemImage: "arrow.up.right") }
+                            Button { editEntry(entry) } label: { Label("library.edit_2", systemImage: "pencil") }
                             if let quick = quickProgress(entry) {
                                 Button { Task { await quick.run() } } label: { Label(quick.title, systemImage: quick.icon) }
                             }
@@ -1058,11 +1068,11 @@ struct LibraryView: View {
             ProgressView()
         } else if let error = vm.error {
             ContentUnavailableView {
-                Label("Couldn't Load", systemImage: "wifi.slash")
+                Label("common.couldnt_load", systemImage: "wifi.slash")
             } description: {
                 Text(error)
             } actions: {
-                Button("Retry") { Task { await vm.refresh() } }
+                Button("common.retry") { Task { await vm.refresh() } }
             }
         } else {
             ContentUnavailableView(
@@ -1098,7 +1108,7 @@ struct LibraryView: View {
                 statusContent
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 if let request = simklSearchRequest {
-                    Button("Search Simkl for “\(request.query)”") { simklSearch = request }
+                    Button("library.search_simkl_for \(request.query)") { simklSearch = request }
                         .padding(.bottom, 16)
                 }
             } else {
@@ -1121,7 +1131,7 @@ struct LibraryView: View {
         // A page like Notifications, not a sheet: the profile's tabs and feeds want the room.
         .navigationDestinationCompat(isPresented: $showProfile) {
             if activeProviderType == .mal, let uid = malAuth.userId {
-                ProfileView(userId: uid, username: malAuth.username ?? "Profile",
+                ProfileView(userId: uid, username: malAuth.username ?? String(localized: "common.profile"),
                             avatarURL: malAuth.avatarURL, isPushed: true)
             } else if let uid = anilistAuth.userId, let username = anilistAuth.username {
                 ProfileView(userId: uid, username: username, avatarURL: anilistAuth.avatarURL, isPushed: true)
@@ -1164,12 +1174,12 @@ struct LibraryView: View {
             Task { await vm.refresh() }
         }
         #if os(iOS)
-        .navigationTitle("Library")
+        .navigationTitle("common.library")
         .navigationBarTitleDisplayMode(.large)
-        .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search library")
+        .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: String(localized: "library.search_library"))
         #else
-        .navigationTitle("Library")
-        .searchable(text: $searchText, prompt: "Search library")
+        .navigationTitle("common.library")
+        .searchable(text: $searchText, prompt: String(localized: "library.search_library"))
         #endif
     }
 
@@ -1249,8 +1259,8 @@ struct LibraryView: View {
         .adaptiveSheet(item: $simklSearch) { request in
             SimklSearchSheet(kind: request.kind, query: request.query) { Task { await vm.load() } }
         }
-        .confirmationDialog("Edit on which service?", isPresented: $showProviderPicker, titleVisibility: .visible) {
-            Button("Edit on AniList") {
+        .confirmationDialog("library.edit_on_which_service", isPresented: $showProviderPicker, titleVisibility: .visible) {
+            Button("detail.edit_on_anilist") {
                 guard let entry = pendingEntry else { return }
                 if activeProviderType == .anilist {
                     selectedEntry = entry
@@ -1275,7 +1285,7 @@ struct LibraryView: View {
                     }
                 }
             }
-            Button("Edit on MyAnimeList") {
+            Button("detail.edit_on_myanimelist") {
                 guard let entry = pendingEntry else { return }
                 if activeProviderType == .mal {
                     selectedEntry = entry
@@ -1299,7 +1309,7 @@ struct LibraryView: View {
                     }
                 }
             }
-            Button("Cancel", role: .cancel) { pendingEntry = nil }
+            Button("common.cancel", role: .cancel) { pendingEntry = nil }
         }
         .adaptiveSheet(isPresented: $showOtherSheet) {
             if let media = otherMedia {
@@ -1348,10 +1358,10 @@ private struct SimklSearchRequest: Identifiable {
 private extension MediaKind {
     var pillTitle: String {
         switch self {
-        case .anime: return "Anime"
-        case .manga: return "Manga"
-        case .tv:    return "Shows"
-        case .movie: return "Movies"
+        case .anime: return String(localized: "common.anime")
+        case .manga: return String(localized: "common.manga")
+        case .tv:    return String(localized: "library.shows")
+        case .movie: return String(localized: "library.movies")
         }
     }
 
@@ -1387,7 +1397,7 @@ private struct LibraryGridCard: View {
         if let kind = entry.media.simklTitleKind {
             return kind == .movie ? SimklTitleLabels.movieLine(entry.media) : SimklTitleLabels.showProgress(entry)
         }
-        let unit = entry.media.isManga ? "Ch" : "Ep"
+        let unit = entry.media.isManga ? String(localized: "library.ch") : String(localized: "downloads.ep")
         if let total = entry.media.episodes, total > 0 { return "\(unit) \(entry.progress) of \(total)" }
         return "\(unit) \(entry.progress)"
     }
@@ -1453,7 +1463,7 @@ private struct LibraryGridCard: View {
             VStack(alignment: .leading, spacing: 2) {
                 // Two lines' room whatever the title, so a row's cards line up below.
                 ZStack(alignment: .topLeading) {
-                    Text("A\nA").hidden().accessibilityHidden(true)
+                    Text("library.a_na").hidden().accessibilityHidden(true)
                     CardTitle(entry.media.title.displayTitle)
                         .multilineTextAlignment(.leading)
                 }

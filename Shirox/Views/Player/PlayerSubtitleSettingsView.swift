@@ -27,13 +27,13 @@ struct PlayerSubtitleSettingsView: View {
         NavigationStack {
             Form {
                 Section {
-                    Toggle("Show Subtitles", isOn: $settings.enabled)
+                    Toggle("player.show_subtitles", isOn: $settings.enabled)
                         .switchTint()
                 }
 
                 if let tracks = availableTracks, !tracks.isEmpty {
-                    Section("Subtitle Track") {
-                        trackRow(title: "Default", isActive: selectedTrack == nil && selectedEmbedded == nil) {
+                    Section("settings.subtitle_track") {
+                        trackRow(title: String(localized: "settings.default"), isActive: selectedTrack == nil && selectedEmbedded == nil) {
                             selectedTrack = nil
                         }
                         ForEach(tracks) { track in
@@ -45,7 +45,7 @@ struct PlayerSubtitleSettingsView: View {
                 }
 
                 if !embeddedTracks.isEmpty {
-                    Section("In This Video") {
+                    Section("settings.in_this_video") {
                         ForEach(embeddedTracks) { option in
                             trackRow(title: option.title, isActive: selectedEmbedded == option.id) {
                                 onSelectEmbedded?(option.id)
@@ -59,18 +59,18 @@ struct PlayerSubtitleSettingsView: View {
                         Button {
                             showImporter = true
                         } label: {
-                            Label("Import subtitle file…", systemImage: "square.and.arrow.down")
+                            Label("settings.import_subtitle_file", systemImage: "square.and.arrow.down")
                         }
                     }
                 }
 
                 Section {
                     #if !os(tvOS)
-                    ColorPicker("Text Color", selection: $settings.foregroundColor)
+                    ColorPicker("settings.text_color", selection: $settings.foregroundColor)
 
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
-                            Text("Font Size")
+                            Text("settings.font_size")
                             Spacer()
                             Text("\(Int(settings.fontSize))")
                                 .foregroundStyle(.secondary)
@@ -80,7 +80,7 @@ struct PlayerSubtitleSettingsView: View {
 
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
-                            Text("Shadow")
+                            Text("settings.shadow")
                             Spacer()
                             Text(String(format: "%.1f", settings.shadowRadius))
                                 .foregroundStyle(.secondary)
@@ -89,23 +89,23 @@ struct PlayerSubtitleSettingsView: View {
                     }
                     #endif
 
-                    Toggle("Background", isOn: $settings.backgroundEnabled)
+                    Toggle("settings.background", isOn: $settings.backgroundEnabled)
                         .switchTint()
                 } header: {
-                    Text("Appearance")
+                    Text("settings.appearance")
                 } footer: {
                     if showsStyledNote {
-                        Text("Styled (.ass) subtitles keep their own fonts and colours; size and delay still apply.")
+                        Text("settings.styled_ass_subtitles_keep_their")
                     }
                 }
 
-                Section("Position") {
+                Section("settings.position") {
                     #if !os(tvOS)
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {
-                            Text("Bottom Padding")
+                            Text("settings.bottom_padding")
                             Spacer()
-                            Text("\(Int(settings.bottomPadding))pt")
+                            Text("settings.pt \(Int(settings.bottomPadding))")
                                 .foregroundStyle(.secondary)
                         }
                         Slider(value: $settings.bottomPadding, in: 20...200, step: 5)
@@ -116,7 +116,7 @@ struct PlayerSubtitleSettingsView: View {
                 #if !os(tvOS)
                 Section {
                     HStack {
-                        Text("Delay")
+                        Text("player.delay")
                         Spacer()
                         Text(PlayerSubtitleMenu.delayLabel(settings.delaySeconds))
                             .monospacedDigit()
@@ -139,13 +139,13 @@ struct PlayerSubtitleSettingsView: View {
                     .controlSize(.small)
 
                     HStack {
-                        TextField("Exact value, e.g. −83.5", text: $exactDelay)
+                        TextField("settings.exact_value_e_g_83", text: $exactDelay)
                             .numbersAndPunctuationKeyboard()
                             .onSubmit(applyExactDelay)
-                        Button("Set", action: applyExactDelay)
+                        Button("settings.set", action: applyExactDelay)
                             .disabled(PlayerSubtitleMenu.parseDelay(exactDelay) == nil)
                             .foregroundStyle(Color.accentColor)
-                        Button("Reset") {
+                        Button("common.reset") {
                             settings.delaySeconds = 0
                             exactDelay = ""
                         }
@@ -154,17 +154,17 @@ struct PlayerSubtitleSettingsView: View {
                     .buttonStyle(.bordered)
                     .controlSize(.small)
                 } header: {
-                    Text("Sync")
+                    Text("shared.sync")
                 } footer: {
-                    Text("A positive delay shows subtitles sooner, a negative one later.")
+                    Text("settings.a_positive_delay_shows_subtitles")
                 }
                 #endif
             }
             .softScrollEdges()
-            .navigationTitle("Subtitle Settings")
+            .navigationTitle("settings.subtitle_settings")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                    Button("common.done") { dismiss() }
                 }
             }
             // tvOS has no document picker, nor files to pick.

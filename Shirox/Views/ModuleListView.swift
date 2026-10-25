@@ -27,9 +27,9 @@ struct ModuleListView: View {
 
     private static var localFilesBlurb: String {
         #if os(macOS) || targetEnvironment(macCatalyst)
-        "Watch video files from your Mac — subtitles, Picture in Picture, and Continue Watching included."
+        String(localized: "modules.watch_video_files_from_your")
         #else
-        "Watch videos from your device's Files app — subtitles, AirPlay, PiP, and Continue Watching included."
+        String(localized: "modules.watch_videos_from_your_devices")
         #endif
     }
 
@@ -114,31 +114,31 @@ struct ModuleListView: View {
                                     Button {
                                         editingScriptOf = module
                                     } label: {
-                                        Label("Edit Script", systemImage: "chevron.left.forwardslash.chevron.right")
+                                        Label("modules.edit_script", systemImage: "chevron.left.forwardslash.chevron.right")
                                     }
                                     if #available(iOS 16.0, macOS 13.0, *), let files = ModuleShareFiles.urls(for: module) {
                                         ShareLink(items: files) {
-                                            Label("Share as Files", systemImage: "doc.on.doc")
+                                            Label("modules.share_as_files", systemImage: "doc.on.doc")
                                         }
                                     }
                                     #endif
                                     Button {
                                         Task { await moduleManager.check(module) }
                                     } label: {
-                                        Label("Check Again", systemImage: "checkmark.shield")
+                                        Label("modules.check_again", systemImage: "checkmark.shield")
                                     }
                                     .disabled(moduleManager.checking.contains(module.id))
                                     Button(role: .destructive) {
                                         removeModule(module)
                                     } label: {
-                                        Label("Remove", systemImage: "trash")
+                                        Label("common.remove", systemImage: "trash")
                                     }
                                 }
                         }
                         .onMove(perform: moduleManager.moveModules)
                     }
                 } header: {
-                    Text("Sources")
+                    Text("modules.sources")
                         .font(.footnote.weight(.semibold))
                         .foregroundStyle(.secondary)
                         .textCase(.uppercase)
@@ -161,7 +161,7 @@ struct ModuleListView: View {
             #else
             .background(Color(NSColor.windowBackgroundColor))
             #endif
-            .navigationTitle("Modules")
+            .navigationTitle("common.modules")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -200,7 +200,7 @@ struct ModuleListView: View {
                                 .font(.system(size: 14, weight: .medium))
                         }
                     }
-                    .accessibilityLabel("Check All Modules")
+                    .accessibilityLabel("modules.check_all_modules")
                     .disabled(moduleManager.modules.isEmpty || isCheckingAll)
                 }
                 #if os(iOS)
@@ -215,22 +215,22 @@ struct ModuleListView: View {
                 isPresented: $offerRemovingBroken,
                 titleVisibility: .visible
             ) {
-                Button("Remove \(moduleManager.brokenModules.count == 1 ? "It" : "Them")", role: .destructive) {
+                Button(moduleManager.brokenModules.count == 1 ? String(localized: "modules.remove_it") : String(localized: "modules.remove_them"), role: .destructive) {
                     moduleManager.brokenModules.forEach(removeModule)
                 }
-                Button("Keep", role: .cancel) {}
+                Button("modules.keep", role: .cancel) {}
             } message: {
                 Text(moduleManager.brokenModules.map(\.sourceName).joined(separator: ", "))
             }
             .alert(
-                "This module may not work",
+                String(localized: "modules.this_module_may_not_work"),
                 isPresented: Binding(get: { failedNewModule != nil }, set: { if !$0 { failedNewModule = nil } }),
                 presenting: failedNewModule
             ) { failed in
-                Button("Remove", role: .destructive) { removeModule(failed.module) }
-                Button("Keep", role: .cancel) {}
+                Button("common.remove", role: .destructive) { removeModule(failed.module) }
+                Button("modules.keep", role: .cancel) {}
             } message: { failed in
-                Text("\(failed.module.sourceName) was added, but a test run failed at \(failed.step.label.lowercased()): \(failed.reason). It may be broken or made for another app.")
+                Text("modules.was_added_but_a_test \(failed.module.sourceName) \(failed.step.label.lowercased()) \(failed.reason)")
             }
         .onChangeOf(moduleURL) { _ in
             addModuleError = nil
@@ -282,23 +282,23 @@ struct ModuleListView: View {
         if moduleManager.checking.contains(module.id) {
             HStack(spacing: 4) {
                 ProgressView().controlSize(.mini)
-                Text("Checking…")
+                Text("modules.checking")
             }
             .font(.caption)
             .foregroundStyle(.secondary)
         } else {
             switch moduleManager.checkResults[module.id] {
             case .passed:
-                Label("Works", systemImage: "checkmark.seal.fill")
+                Label("modules.works", systemImage: "checkmark.seal.fill")
                     .font(.caption)
                     .foregroundStyle(.green)
             case .failed(let step, let reason):
-                Label("\(step.label) failed: \(reason)", systemImage: "exclamationmark.triangle.fill")
+                Label("modules.failed \(step.label) \(reason)", systemImage: "exclamationmark.triangle.fill")
                     .font(.caption)
                     .foregroundStyle(.orange)
                     .lineLimit(2)
             case .needsVerification:
-                Label("Asks for a Cloudflare check", systemImage: "shield.lefthalf.filled")
+                Label("modules.asks_for_a_cloudflare_check", systemImage: "shield.lefthalf.filled")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             case .skipped, .none:
@@ -315,7 +315,7 @@ struct ModuleListView: View {
                 Image(systemName: "link")
                     .foregroundStyle(.secondary)
                     .frame(width: 22)
-                TextField("Module JSON URL", text: $moduleURL)
+                TextField("modules.module_json_url", text: $moduleURL)
                     .textContentType(.URL)
                     .autocorrectionDisabled()
                     #if os(iOS)
@@ -329,7 +329,7 @@ struct ModuleListView: View {
                 if isAddingModule {
                     ProgressView()
                 } else if !moduleURL.isEmpty {
-                    Button("Add", action: addModule)
+                    Button("modules.add", action: addModule)
                         .font(.body.weight(.semibold))
                         .buttonStyle(.borderless)
                 } else {
@@ -339,7 +339,7 @@ struct ModuleListView: View {
                         Image(systemName: "doc.on.clipboard")
                     }
                     .buttonStyle(.borderless)
-                    .accessibilityLabel("Paste Link")
+                    .accessibilityLabel("modules.paste_link")
                 }
             }
             #if !os(tvOS)
@@ -347,16 +347,16 @@ struct ModuleListView: View {
                 showModuleImport = true
             } label: {
                 Label {
-                    Text("Import from Files…").foregroundStyle(Color.primary)
+                    Text("modules.import_from_files").foregroundStyle(Color.primary)
                 } icon: {
                     Image(systemName: "doc.badge.plus").foregroundStyle(.secondary)
                 }
             }
             #endif
         } header: {
-            Text("Add Module")
+            Text("modules.add_module")
         } footer: {
-            Text("Paste a module's .json link, a Stremio addon, or a Nuvio, Vega, SkyStream or Mana repo, or import a module's .js file (and its .json, if you have it).")
+            Text("modules.paste_a_modules_json_link")
         }
     }
 
@@ -375,7 +375,7 @@ struct ModuleListView: View {
                     .background(Color.primary.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
 
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Play Local Files")
+                    Text("modules.play_local_files")
                         .font(.headline)
                     Text(Self.localFilesBlurb)
                         .font(.caption)
@@ -409,7 +409,7 @@ struct ModuleListView: View {
                     if isAddingLocalModule {
                         ProgressView().scaleEffect(0.8)
                     } else {
-                        Label("Add Module", systemImage: "plus.circle.fill")
+                        Label("modules.add_module", systemImage: "plus.circle.fill")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(Color.primary)
                     }
@@ -442,9 +442,9 @@ struct ModuleListView: View {
                     .background(Color.primary.opacity(0.1), in: RoundedRectangle(cornerRadius: 10))
 
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Connect Jellyfin")
+                    Text("modules.connect_jellyfin")
                         .font(.headline)
-                    Text("Stream your own Jellyfin server — browse your library, resume where you left off, and sync watch state back.")
+                    Text("modules.stream_your_own_jellyfin_server")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -476,7 +476,7 @@ struct ModuleListView: View {
                     if isAddingJellyfinModule {
                         ProgressView().scaleEffect(0.8)
                     } else {
-                        Label("Add Module", systemImage: "plus.circle.fill")
+                        Label("modules.add_module", systemImage: "plus.circle.fill")
                             .font(.subheadline.weight(.semibold))
                             .foregroundStyle(Color.primary)
                     }
@@ -563,11 +563,11 @@ struct ModuleListView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(type.displayName).font(.headline)
                     HStack(spacing: 6) {
-                        Text(type == .simkl ? "Built-in · anime, shows and movies" : "Built-in · anime metadata")
+                        Text(type == .simkl ? String(localized: "modules.built_in_anime_shows_and") : String(localized: "modules.built_in_anime_metadata"))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         if isDown {
-                            Text("Unavailable")
+                            Text("modules.unavailable")
                                 .font(.caption2.weight(.semibold))
                                 .foregroundStyle(.red)
                                 .padding(.horizontal, 6).padding(.vertical, 2)
@@ -626,7 +626,7 @@ struct ModuleListView: View {
                             Text(author.name).font(.caption).foregroundStyle(.secondary)
                         }
                         if module.isFromFile || module.isScriptEdited {
-                            Text(module.isFromFile ? "File" : "Edited")
+                            Text(module.isFromFile ? String(localized: "modules.file") : String(localized: "modules.edited"))
                                 .font(.caption2.weight(.semibold))
                                 .padding(.horizontal, 5).padding(.vertical, 1)
                                 .background(Color.secondary.opacity(0.15), in: Capsule())
@@ -664,10 +664,10 @@ struct ModuleListView: View {
             Image(systemName: "puzzlepiece.extension")
                 .font(.system(size: 32))
                 .foregroundStyle(.tertiary)
-            Text("No modules installed")
+            Text("modules.no_modules_installed")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
-            Text("Paste a module JSON URL above to get started.")
+            Text("modules.paste_a_module_json_url")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
                 .multilineTextAlignment(.center)
@@ -689,7 +689,7 @@ struct ModuleListView: View {
                 SeanimeProviderSettings.setDub(!dub, for: module.id)
                 if moduleManager.activeModule?.id == module.id { moduleManager.selectModule(module) }
             } label: {
-                if dub { Label("Dub", systemImage: "checkmark") } else { Text("Dub") }
+                if dub { Label("modules.dub", systemImage: "checkmark") } else { Text("modules.dub") }
             }
         }
     }
@@ -709,14 +709,14 @@ struct ModuleListView: View {
             Button {
                 Clipboard.copy(link)
                 #if os(iOS)
-                ToastManager.shared.show(message: "Module link copied", type: .info)
+                ToastManager.shared.show(message: String(localized: "modules.module_link_copied"), type: .info)
                 #endif
             } label: {
-                Label("Copy Link", systemImage: "link")
+                Label("modules.copy_link", systemImage: "link")
             }
             if #available(iOS 16.0, macOS 13.0, *), let url = URL(string: link) {
                 ShareLink(item: url) {
-                    Label("Share Module", systemImage: "square.and.arrow.up")
+                    Label("modules.share_module", systemImage: "square.and.arrow.up")
                 }
             }
         }
@@ -726,7 +726,7 @@ struct ModuleListView: View {
     private func addModule() {
         let trimmedURL = moduleURL.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedURL.isEmpty, let url = URL(string: trimmedURL) else {
-            addModuleError = "Invalid URL"
+            addModuleError = String(localized: "modules.invalid_url")
             #if os(iOS)
             UINotificationFeedbackGenerator().notificationOccurred(.error)
             #endif
@@ -786,7 +786,7 @@ struct ModuleListView: View {
 
     private func addLocalFilesModule() {
         guard let url = URL(string: localFilesModuleURL) else {
-            addModuleError = "Invalid URL"
+            addModuleError = String(localized: "modules.invalid_url")
             return
         }
         withAnimation {
@@ -827,7 +827,7 @@ struct ModuleListView: View {
 
     private func addJellyfinModule() {
         guard let url = URL(string: jellyfinModuleURL) else {
-            addModuleError = "Invalid URL"
+            addModuleError = String(localized: "modules.invalid_url")
             return
         }
         withAnimation {
@@ -875,7 +875,7 @@ private struct DoneItem: ViewModifier {
         if #available(iOS 16, *) {
             content.toolbar {
                 if isShown {
-                    ToolbarItem(placement: .confirmationAction) { Button("Done", action: done) }
+                    ToolbarItem(placement: .confirmationAction) { Button("common.done", action: done) }
                 }
             }
         } else {
@@ -883,7 +883,7 @@ private struct DoneItem: ViewModifier {
             // inside the item.
             content.toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    if isShown { Button("Done", action: done) }
+                    if isShown { Button("common.done", action: done) }
                 }
             }
         }

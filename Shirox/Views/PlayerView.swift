@@ -474,7 +474,7 @@ struct PlayerView: View {
         }
         .ignoresSafeArea()
         #if os(iOS)
-        .alert("Save Frame", isPresented: $showFrameSaveAlert) {
+        .alert("app.save_frame", isPresented: $showFrameSaveAlert) {
             Button("OK", role: .cancel) { }
         } message: {
             Text(frameSaveMessage)
@@ -988,7 +988,7 @@ struct PlayerView: View {
                     .font(.title3.weight(.semibold)).foregroundStyle(.white)
                     .multilineTextAlignment(.center).lineLimit(2)
                 if let ep = currentContext?.episodeNumber {
-                    Text("Episode \(ep)").font(.subheadline).foregroundStyle(.white.opacity(0.65))
+                    Text("player.episode \(ep)").font(.subheadline).foregroundStyle(.white.opacity(0.65))
                 }
 
                 ClockReader(clock: clock) { clock in
@@ -1007,7 +1007,7 @@ struct PlayerView: View {
                 .padding(.top, 8)
 
                 if isOpeningSlowly {
-                    Text("Still loading. This source is slow to start.")
+                    Text("player.still_loading_this_source_is")
                         .font(.caption).foregroundStyle(.white.opacity(0.6))
                         .multilineTextAlignment(.center)
                         .transition(.opacity)
@@ -1119,7 +1119,7 @@ struct PlayerView: View {
         VStack {
             HStack(spacing: 4) {
                 Image(systemName: "forward.fill").font(.system(size: 12, weight: .semibold))
-                Text("2× Speed").font(.caption.weight(.semibold))
+                Text("player.2_speed").font(.caption.weight(.semibold))
             }
             .foregroundStyle(.white).padding(.horizontal, 12).padding(.vertical, 6)
             .mediaGlassChrome(Capsule(), enabled: playerLiquidGlass, off: .ultraThinMaterial)
@@ -1138,7 +1138,7 @@ struct PlayerView: View {
         let finish: @MainActor (PlatformImage?) -> Void = { image in
             guard let image, let tiff = image.tiffRepresentation,
                   let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) else {
-                ToastManager.shared.show(message: "The frame isn't available yet — try again while it plays.", type: .error)
+                ToastManager.shared.show(message: String(localized: "player.the_frame_isnt_available_yet"), type: .error)
                 return
             }
             let folder = FileManager.default.urls(for: .picturesDirectory, in: .userDomainMask)[0]
@@ -1150,9 +1150,9 @@ struct PlayerView: View {
                 try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
                 let file = folder.appendingPathComponent(name)
                 try png.write(to: file)
-                ToastManager.shared.show(message: "Frame saved to Pictures › Shirox", type: .success)
+                ToastManager.shared.show(message: String(localized: "player.frame_saved_to_pictures_shirox"), type: .success)
             } catch {
-                ToastManager.shared.show(message: "Couldn't save the frame: \(error.localizedDescription)", type: .error)
+                ToastManager.shared.show(message: String(localized: "player.couldnt_save_the_frame \(error.localizedDescription)"), type: .error)
             }
         }
         if let mpv = engine as? MPVEngine {
@@ -1174,7 +1174,7 @@ struct PlayerView: View {
 
     private func saveFrameImage(_ image: UIImage?) {
         guard let image else {
-            frameSaveMessage = "The current video frame is unavailable. Try again while the video is playing."
+            frameSaveMessage = String(localized: "player.the_current_video_frame_is")
             showFrameSaveAlert = true
             return
         }
@@ -1182,13 +1182,13 @@ struct PlayerView: View {
         PhotoLibrarySaver.save(image) { outcome in
             switch outcome {
             case .savedToAlbum:
-                frameSaveMessage = "Frame saved to the Shirox album in Photos."
+                frameSaveMessage = String(localized: "player.frame_saved_to_the_shirox")
             case .savedToLibrary:
-                frameSaveMessage = "Frame saved to Photos. Allow Full Access in Settings to use the Shirox album."
+                frameSaveMessage = String(localized: "player.frame_saved_to_photos_allow")
             case .denied:
-                frameSaveMessage = "Allow Photos access in Settings to save video frames."
+                frameSaveMessage = String(localized: "player.allow_photos_access_in_settings")
             case .failed(let error):
-                frameSaveMessage = "Could not save the frame: \(error.localizedDescription)"
+                frameSaveMessage = String(localized: "player.could_not_save_the_frame \(error.localizedDescription)")
             }
             showFrameSaveAlert = true
         }
@@ -1332,10 +1332,10 @@ struct PlayerView: View {
 
     private var videoInfoSubtitle: (name: String, source: String)? {
         if let id = shownEmbeddedSubtitle {
-            return (embeddedSubtitles.first { $0.id == id }?.title ?? "Track \(id)", "Embedded")
+            return (embeddedSubtitles.first { $0.id == id }?.title ?? String(localized: "shared.track \(id)"), String(localized: "player.embedded"))
         }
         if let track = shownSubtitleTrack {
-            return (track.title, track.url.isFileURL ? "File" : "Downloaded")
+            return (track.title, track.url.isFileURL ? String(localized: "modules.file") : String(localized: "player.downloaded"))
         }
         return nil
     }
@@ -1585,13 +1585,13 @@ struct PlayerView: View {
                 Image(systemName: "wifi.exclamationmark")
                     .font(.system(size: 44, weight: .regular))
                     .foregroundStyle(.white.opacity(0.85))
-                Text("Playback stalled")
+                Text("player.playback_stalled")
                     .font(.headline).foregroundStyle(.white)
-                Text("Couldn't keep buffering this stream.")
+                Text("player.couldnt_keep_buffering_this_stream")
                     .font(.subheadline).foregroundStyle(.white.opacity(0.65))
                     .multilineTextAlignment(.center)
                 Button(action: manualStallRetry) {
-                    Text("Retry")
+                    Text("common.retry")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.black)
                         .padding(.horizontal, 28).padding(.vertical, 10)
@@ -1636,7 +1636,7 @@ struct PlayerView: View {
                         loadingOpacity = 0.2
                     }
                 }
-            Text("Loading…").font(.subheadline).foregroundStyle(.white.opacity(0.5))
+            Text("common.loading").font(.subheadline).foregroundStyle(.white.opacity(0.5))
         }
     }
 
@@ -2171,7 +2171,7 @@ struct PlayerView: View {
                 let subtitles = withSubtitles ? airPlaySubtitleCues() : nil
                 let subtitlesID = subtitles.map {
                     CastProxyServer.shared.registerSubtitles(
-                        cues: $0.cues, name: selectedSubtitleTrack?.title ?? "Subtitles",
+                        cues: $0.cues, name: selectedSubtitleTrack?.title ?? String(localized: "settings.subtitles"),
                         duration: duration > 0 ? duration : ($0.cues.last?.end ?? 0) + 60)
                 }
                 if let proxied = CastProxyServer.shared.proxyURL(for: stream.url, playlistKey: stream.playlistKey,
@@ -2969,8 +2969,8 @@ struct PlayerView: View {
         let epTitle = tvdbEpisodeTitle ?? currentContext?.episodeTitle
         let subtitleString: String
         if let n = epNumber {
-            if let t = epTitle { subtitleString = "Episode \(n) - \(t)" }
-            else { subtitleString = "Episode \(n)" }
+            if let t = epTitle { subtitleString = String(localized: "player.episode_2 \(n) \(t)") }
+            else { subtitleString = String(localized: "player.episode \(n)") }
         } else {
             subtitleString = epTitle ?? ""
         }
@@ -3764,7 +3764,7 @@ struct PlayerView: View {
     // Rebuilt on every open by PlayerMenuButton's deferred element, so state stays fresh.
 
     private func qualityMenuItems() -> [PlayerMenuItem] {
-        var items = [PlayerMenuItem(title: "Auto", isOn: selectedQualityBandwidth == nil) { selectQuality(nil) }]
+        var items = [PlayerMenuItem(title: String(localized: "player.auto"), isOn: selectedQualityBandwidth == nil) { selectQuality(nil) }]
         items += hlsQualities.map { quality in
             PlayerMenuItem(title: quality.label, isOn: selectedQualityBandwidth == quality.bandwidth) {
                 selectQuality(quality.bandwidth)
@@ -4008,7 +4008,7 @@ enum MacDisplaySleep {
     static func prevent() {
         guard activity == nil else { return }
         activity = ProcessInfo.processInfo.beginActivity(
-            options: [.idleDisplaySleepDisabled, .userInitiated], reason: "Playing video")
+            options: [.idleDisplaySleepDisabled, .userInitiated], reason: String(localized: "player.playing_video"))
     }
 
     static func allow() {
@@ -5197,9 +5197,9 @@ private struct MPVOnExternalDisplayPlaceholder: View {
             VStack(spacing: 12) {
                 Image(systemName: "tv")
                     .font(.system(size: 44, weight: .light))
-                Text("Playing on the TV")
+                Text("player.playing_on_the_tv")
                     .font(.headline)
-                Text("Screen Mirroring")
+                Text("player.screen_mirroring")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }

@@ -4,10 +4,10 @@ extension MediaKind {
     /// Its name on Simkl's Home, Search and Upcoming.
     var simklKindTitle: String {
         switch self {
-        case .anime: return "Anime"
-        case .manga: return "Manga"
-        case .tv:    return "Shows"
-        case .movie: return "Movies"
+        case .anime: return String(localized: "common.anime")
+        case .manga: return String(localized: "common.manga")
+        case .tv:    return String(localized: "library.shows")
+        case .movie: return String(localized: "library.movies")
         }
     }
 
@@ -27,7 +27,7 @@ struct SimklKindPicker: View {
     @Binding var kind: MediaKind
 
     var body: some View {
-        Picker("Kind", selection: $kind) {
+        Picker("shared.kind", selection: $kind) {
             ForEach(MediaKind.simklKinds, id: \.self) { kind in
                 Text(kind.simklKindTitle).tag(kind)
             }
@@ -47,7 +47,7 @@ struct SimklKindMenu: View {
 
     var body: some View {
         Menu {
-            Picker("Kind", selection: $kind) {
+            Picker("shared.kind", selection: $kind) {
                 ForEach(MediaKind.simklKinds, id: \.self) { kind in
                     Label(kind.simklKindTitle, systemImage: kind.simklKindSymbol).tag(kind)
                 }

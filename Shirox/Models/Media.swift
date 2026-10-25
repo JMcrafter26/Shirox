@@ -17,7 +17,7 @@ enum ProviderType: String, Codable, CaseIterable, Hashable {
         case .anilist: return "AniList"
         case .mal: return "MyAnimeList"
         case .simkl: return "Simkl"
-        case .local: return "Local"
+        case .local: return String(localized: "shared.local")
         }
     }
 
@@ -80,11 +80,11 @@ struct Media: Identifiable, Codable, Equatable, Hashable, Sendable {
 
     var statusDisplay: String? {
         switch status {
-        case "RELEASING", "currently_airing": return "Airing"
-        case "FINISHED", "finished_airing": return "Finished"
-        case "NOT_YET_RELEASED", "not_yet_aired": return "Upcoming"
-        case "CANCELLED": return "Cancelled"
-        case "HIATUS": return "Hiatus"
+        case "RELEASING", "currently_airing": return String(localized: "shared.airing")
+        case "FINISHED", "finished_airing": return String(localized: "shared.finished")
+        case "NOT_YET_RELEASED", "not_yet_aired": return String(localized: "shared.upcoming")
+        case "CANCELLED": return String(localized: "shared.cancelled")
+        case "HIATUS": return String(localized: "shared.hiatus")
         default: return status
         }
     }
@@ -189,7 +189,7 @@ struct MediaTitle: Codable, Equatable, Hashable {
             default: break
             }
         }
-        return english ?? romaji ?? native ?? "Unknown"
+        return english ?? romaji ?? native ?? String(localized: "shared.unknown")
     }
 
     var searchTitle: String {

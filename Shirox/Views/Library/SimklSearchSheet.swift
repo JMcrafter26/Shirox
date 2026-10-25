@@ -22,7 +22,7 @@ struct SimklSearchSheet: View {
                 #endif
                 .toolbar {
                     ToolbarItem(placement: .confirmationAction) {
-                        Button("Done") { dismiss() }
+                        Button("common.done") { dismiss() }
                     }
                 }
         }
@@ -36,17 +36,19 @@ struct SimklSearchSheet: View {
             ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
         case .failed:
             ContentUnavailableView {
-                Label("Couldn't Search", systemImage: "wifi.slash")
+                Label("library.couldnt_search", systemImage: "wifi.slash")
             } description: {
                 Text(errorMessage ?? "")
             } actions: {
-                Button("Retry") { Task { await search() } }
+                Button("common.retry") { Task { await search() } }
             }
         case .loaded:
             if results.isEmpty {
                 ContentUnavailableView(
-                    "No Results", systemImage: "magnifyingglass",
-                    description: Text("Simkl has no \(kind == .movie ? "movie" : kind == .anime ? "anime" : "show") matching “\(query)”."))
+                    "detail.no_results", systemImage: "magnifyingglass",
+                    description: kind == .movie ? Text("library.simkl_has_no_movie_matching \(query)")
+                                 : kind == .anime ? Text("library.simkl_has_no_anime_matching \(query)")
+                                 : Text("library.simkl_has_no_show_matching \(query)"))
             } else {
                 List(results, id: \.simklID) { item in
                     row(item)
@@ -65,7 +67,7 @@ struct SimklSearchSheet: View {
                         .frame(width: 46, height: 69)
                         .clipShape(RoundedRectangle(cornerRadius: 6))
                     VStack(alignment: .leading, spacing: 4) {
-                        CardTitle(item.title ?? "Untitled")
+                        CardTitle(item.title ?? String(localized: "search.untitled"))
                             .font(.subheadline.weight(.semibold))
                         HStack(spacing: 6) {
                             if let year = item.year {

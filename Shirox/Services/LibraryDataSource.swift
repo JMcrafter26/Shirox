@@ -170,7 +170,7 @@ extension LibrarySource {
 /// in the list.
 enum SimklNotice {
     @MainActor static func queued() {
-        info("Simkl couldn't be reached — your change is saved and will be sent later.", warning: true)
+        info(String(localized: "shared.simkl_couldnt_be_reached_your"), warning: true)
     }
 
     @MainActor static func failed(_ error: Error) {

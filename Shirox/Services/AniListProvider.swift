@@ -7,7 +7,7 @@ import AuthenticationServices
 enum AniListUnreachable: LocalizedError {
     case viewerUnresolved
     var errorDescription: String? {
-        "AniList didn't respond. It may be rate-limiting — try again in a minute."
+        String(localized: "shared.anilist_didnt_respond_it_may")
     }
 }
 
