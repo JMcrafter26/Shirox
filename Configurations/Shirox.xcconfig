@@ -7,6 +7,11 @@ GITHUB_REPO = xibrox/Shirox
 // Swift concurrency checking level: minimal | targeted | complete
 SWIFT_STRICT_CONCURRENCY = targeted
 
+// The compiler hands the build every localized string it finds, so Xcode keeps
+// Localizable.xcstrings in step with the code (see scripts/i18n/i18n.py).
+SWIFT_EMIT_LOC_STRINGS = YES
+LOCALIZATION_PREFERS_STRING_CATALOGS = YES
+
 // TMDB's API key, for title logos TVDB doesn't have. Set it in Shirox.local.xcconfig, never
 // here — this file is committed. Left empty, the app uses TVDB's logos alone.
 TMDB_API_KEY =
