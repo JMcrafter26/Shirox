@@ -174,8 +174,14 @@ struct AppIconOption: Identifiable, Hashable {
     var id: String { name ?? "default" }
 
     var title: String {
-        guard let name else { return String(localized: "settings.default") }
-        return name.replacingOccurrences(of: "-", with: " ").replacingOccurrences(of: "_", with: " ")
+        switch name {
+        case nil:         return String(localized: "settings.default")
+        case "realistic": return String(localized: "settings.app_icon_realistic")
+        case "pride":     return String(localized: "settings.app_icon_pride")
+        case let name?:
+            return name.replacingOccurrences(of: "-", with: " ").replacingOccurrences(of: "_", with: " ")
+                .localizedCapitalized
+        }
     }
 
     static var all: [AppIconOption] {
