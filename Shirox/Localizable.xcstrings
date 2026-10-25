@@ -13002,6 +13002,23 @@
         }
       }
     },
+    "settings.add_icon_pack" : {
+      "comment" : "GeneralSettingsView, Icon Packs",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbolpaket hinzufügen"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Icon Pack"
+          }
+        }
+      }
+    },
     "settings.add_to %@" : {
       "comment" : "SettingsView",
       "localizations" : {
@@ -13474,6 +13491,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Brown"
+          }
+        }
+      }
+    },
+    "settings.built_in" : {
+      "comment" : "GeneralSettingsView, Icon Packs",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eingebaut"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Built in"
           }
         }
       }
@@ -14851,6 +14885,74 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "How far your finger may drift before a hold is recognized. Raise it if the hold action keeps cancelling."
+          }
+        }
+      }
+    },
+    "settings.icon_pack_link" : {
+      "comment" : "GeneralSettingsView, Icon Packs",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Link zum Symbolpaket"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Icon pack link"
+          }
+        }
+      }
+    },
+    "settings.icon_packs" : {
+      "comment" : "GeneralSettingsView, Icon Packs",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Symbolpakete"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Icon Packs"
+          }
+        }
+      }
+    },
+    "settings.icon_packs_coming_soon" : {
+      "comment" : "GeneralSettingsView, Icon Packs",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kommt bald: Pakete werden noch nicht geladen oder angewendet, und hier hinzugefügte verschwinden, wenn du die Seite verlässt."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Coming soon: packs aren't downloaded or applied yet, and ones added here are gone when you leave this page."
+          }
+        }
+      }
+    },
+    "settings.icon_packs_note" : {
+      "comment" : "GeneralSettingsView, Icon Packs",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Symbole, mit denen Shirox seine Tasten und Zeilen zeichnet. SF Symbols ist eingebaut und lässt sich nicht entfernen, per Link hinzugefügte Pakete schon."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The symbols Shirox draws its buttons and rows with. SF Symbols is built in and can't be removed; packs added by link can."
           }
         }
       }
@@ -17384,6 +17486,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Settings"
+          }
+        }
+      }
+    },
+    "settings.sf_symbols" : {
+      "comment" : "GeneralSettingsView, Icon Packs",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SF Symbols"
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "SF Symbols"
           }
         }
       }

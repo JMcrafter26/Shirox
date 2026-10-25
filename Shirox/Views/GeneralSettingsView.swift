@@ -61,6 +61,15 @@ struct GeneralSettingsView: View {
 
                 TintColorRow(tint: $tint)
                 note(String(localized: "settings.buttons_switches_and_highlights_monochrome"))
+
+                NavigationLink {
+                    IconPacksSettingsView()
+                } label: {
+                    LabeledContent("settings.icon_packs") {
+                        Text("settings.sf_symbols")
+                            .foregroundStyle(.secondary)
+                    }
+                }
             } header: {
                 Text("settings.appearance")
             }
@@ -225,6 +234,105 @@ private extension View {
     /// accent colour changed until the page was opened again. A new identity per colour redraws it.
     func retinted(_ tint: String) -> some View {
         id(tint)
+    }
+}
+
+// MARK: - Icon Packs
+
+/// The icon packs Shirox can draw its symbols from: SF Symbols, built in, and packs added by
+/// link. A placeholder for now: nothing is downloaded, kept or applied, and a pack added here
+/// lasts only while the page is open.
+struct IconPacksSettingsView: View {
+    private struct Pack: Identifiable, Hashable {
+        let id = UUID()
+        let name: String
+        let source: String?
+    }
+
+    private static let builtIn = Pack(name: String(localized: "settings.sf_symbols"), source: nil)
+
+    @State private var packs: [Pack] = [Self.builtIn]
+    @State private var selected = Self.builtIn.id
+    @State private var link = ""
+
+    var body: some View {
+        SettingsList {
+            Section {
+                ForEach(packs) { pack in
+                    row(pack)
+                }
+                .onDelete { offsets in
+                    let removed = offsets.map { packs[$0] }.filter { $0.source != nil }
+                    packs.removeAll { pack in removed.contains(pack) }
+                    if !packs.contains(where: { $0.id == selected }) { selected = Self.builtIn.id }
+                }
+            } header: {
+                Text("settings.icon_packs")
+            } footer: {
+                Text("settings.icon_packs_note")
+            }
+
+            Section {
+                TextField("settings.icon_pack_link", text: $link)
+                    #if os(iOS)
+                    .keyboardType(.URL)
+                    .textInputAutocapitalization(.never)
+                    #endif
+                    .autocorrectionDisabled()
+                Button("settings.add_icon_pack") {
+                    let url = URL(string: link.trimmingCharacters(in: .whitespaces))
+                    packs.append(Pack(name: url?.host ?? link, source: link))
+                    link = ""
+                }
+                .disabled(URL(string: link)?.host == nil)
+            } header: {
+                Text("settings.add_icon_pack")
+            } footer: {
+                Text("settings.icon_packs_coming_soon")
+            }
+        }
+        .softScrollEdges()
+        .navigationTitle("settings.icon_packs")
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.inline)
+        #endif
+    }
+
+    private func row(_ pack: Pack) -> some View {
+        let isSelected = pack.id == selected
+        return Button {
+            selected = pack.id
+        } label: {
+            HStack {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(pack.name)
+                        .foregroundStyle(.primary)
+                    Text(pack.source ?? String(localized: "settings.built_in"))
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                }
+                Spacer()
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(.tint)
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        // SF Symbols is always there; only added packs can go.
+        .deleteDisabled(pack.source == nil)
+        .contextMenu {
+            if pack.source != nil {
+                Button("common.remove", role: .destructive) {
+                    packs.removeAll { $0.id == pack.id }
+                    if selected == pack.id { selected = Self.builtIn.id }
+                }
+            }
+        }
     }
 }
 
