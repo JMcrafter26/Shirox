@@ -1104,11 +1104,9 @@ final class MPVEngine: PlaybackEngine {
         }
         return status >= 0
     }
-}
 
-// MARK: - Picture in Picture through mpv's software renderer
+    // MARK: - Picture in Picture through mpv's software renderer
 
-extension MPVEngine {
     /// Moves mpv's picture off the Metal layer into `onFrame`, as pixel buffers drawn on the CPU.
     /// Nil if mpv wouldn't make a software render context.
     func beginSoftwareOutput(_ onFrame: @escaping (CVPixelBuffer) -> Void) -> MPVSoftwareOutput? {

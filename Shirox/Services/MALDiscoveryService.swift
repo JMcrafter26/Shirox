@@ -170,15 +170,15 @@ final class MALDiscoveryService {
         throw ProviderError.serverError(0)
     }
 
-    /// - Parameter emptyIsFailure: pass `true` for a listing that can never legitimately come
-    ///   back empty — the ranked charts and the current season always have entries. One host
-    ///   answers `200` with an empty array instead of an error, and without this the Home screen
-    ///   rendered that as simply having no content, silently and with nothing to retry.
     /// A listing that can never legitimately be empty. See `fetchList(_:queryItems:emptyIsFailure:)`.
     private func fetchListNeverEmpty(_ path: String, queryItems: [URLQueryItem] = []) async throws -> [JikanAnime] {
         try await fetchList(path, queryItems: queryItems, emptyIsFailure: true)
     }
 
+    /// - Parameter emptyIsFailure: pass `true` for a listing that can never legitimately come
+    ///   back empty — the ranked charts and the current season always have entries. One host
+    ///   answers `200` with an empty array instead of an error, and without this the Home screen
+    ///   rendered that as simply having no content, silently and with nothing to retry.
     private func fetchList(
         _ path: String,
         queryItems: [URLQueryItem] = [],
@@ -186,15 +186,18 @@ final class MALDiscoveryService {
     ) async throws -> [JikanAnime] {
         try await withFailover(isAcceptable: { (items: [JikanAnime]) in
             !emptyIsFailure || !items.isEmpty
-        }) { host in
+        }, { host in
             try await fetchList(host: host, path: path, queryItems: queryItems)
-        }
+        })
     }
 
     private func fetchList(host: URL, path: String, queryItems: [URLQueryItem] = [], attempt: Int = 1) async throws -> [JikanAnime] {
-        var components = URLComponents(url: host.appendingPathComponent(path), resolvingAgainstBaseURL: false)!
+        guard var components = URLComponents(url: host.appendingPathComponent(path), resolvingAgainstBaseURL: false) else {
+            throw URLError(.badURL)
+        }
         components.queryItems = [URLQueryItem(name: "sfw", value: "true")] + queryItems
-        let (data, response) = try await session.data(from: components.url!)
+        guard let url = components.url else { throw URLError(.badURL) }
+        let (data, response) = try await session.data(from: url)
         if let http = response as? HTTPURLResponse, http.statusCode >= 400 {
             let status = http.statusCode
             if Self.isRetryable(status), attempt < Self.maxAttempts {
@@ -279,9 +282,9 @@ final class MALDiscoveryService {
     private func rankedPage(sort: DiscoverSort, page: Int) async throws -> [JikanAnime] {
         // The catalogue's first page is never legitimately empty, so an empty answer there means
         // the host is unwell — try the next one rather than showing an empty grid.
-        try await withFailover(isAcceptable: { (items: [JikanAnime]) in page > 1 || !items.isEmpty }) { host in
+        try await withFailover(isAcceptable: { (items: [JikanAnime]) in page > 1 || !items.isEmpty }, { host in
             try await rankedPage(host: host, sort: sort, page: page)
-        }
+        })
     }
 
     private func rankedPage(host: URL, sort: DiscoverSort, page: Int) async throws -> [JikanAnime] {
@@ -361,9 +364,11 @@ final class MALDiscoveryService {
 
     /// Fetches episode titles from Jikan (up to 100 per page).
     func episodes(malId: Int, page: Int = 1) async throws -> [JikanEpisode] {
-        var components = URLComponents(url: base.appendingPathComponent("anime/\(malId)/episodes"), resolvingAgainstBaseURL: false)!
+        guard var components = URLComponents(url: base.appendingPathComponent("anime/\(malId)/episodes"),
+                                             resolvingAgainstBaseURL: false) else { throw URLError(.badURL) }
         components.queryItems = [URLQueryItem(name: "page", value: "\(page)")]
-        let (data, response) = try await session.data(from: components.url!)
+        guard let url = components.url else { throw URLError(.badURL) }
+        let (data, response) = try await session.data(from: url)
         if let http = response as? HTTPURLResponse, http.statusCode == 429 { throw ProviderError.serverError(429) }
         return try JSONDecoder().decode(JikanPage<JikanEpisode>.self, from: data).data
     }

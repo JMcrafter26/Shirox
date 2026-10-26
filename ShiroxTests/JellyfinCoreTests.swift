@@ -56,7 +56,7 @@ final class JellyfinCoreTests: XCTestCase {
 
     func testHlsMasterURL() {
         let base = URL(string: "https://jf.example.com")!
-        let url = JellyfinURLBuilder.hlsMasterURL(base: base, itemId: "ID1", mediaSourceId: "MS1",
+        let url = JellyfinURLBuilder.hlsMultivariantURL(base: base, itemId: "ID1", mediaSourceId: "MS1",
                                                   apiKey: "K", deviceId: "D")
         let s = url!.absoluteString
         XCTAssertTrue(s.hasPrefix("https://jf.example.com/Videos/ID1/master.m3u8?"))

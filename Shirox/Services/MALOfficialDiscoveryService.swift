@@ -36,32 +36,33 @@ final class MALOfficialDiscoveryService {
     // MARK: - Wire format
 
     private struct Page: Decodable {
-        struct Item: Decodable { let node: Node }
-        let data: [Item]
+        let data: [PageItem]
     }
 
-    struct Node: Decodable {
-        struct Picture: Decodable { let medium: String?; let large: String? }
-        struct Named: Decodable { let name: String }
-        struct AlternativeTitles: Decodable { let en: String?; let ja: String? }
-        struct Season: Decodable { let year: Int?; let season: String? }
+    private struct PageItem: Decodable { let node: Node }
 
+    struct Node: Decodable {
         let id: Int
         let title: String
-        let main_picture: Picture?
+        let main_picture: NodePicture?
         let synopsis: String?
         let mean: Double?
-        let genres: [Named]?
+        let genres: [NodeNamed]?
         let num_episodes: Int?
         let status: String?
-        let start_season: Season?
-        let alternative_titles: AlternativeTitles?
-        let broadcast: Broadcast?
+        let start_season: NodeSeason?
+        let alternative_titles: NodeAlternativeTitles?
+        let broadcast: NodeBroadcast?
+    }
 
-        struct Broadcast: Decodable {
-            let day_of_the_week: String?
-            let start_time: String?
-        }
+    struct NodePicture: Decodable { let medium: String?; let large: String? }
+    struct NodeNamed: Decodable { let name: String }
+    struct NodeAlternativeTitles: Decodable { let en: String?; let ja: String? }
+    struct NodeSeason: Decodable { let year: Int?; let season: String? }
+
+    struct NodeBroadcast: Decodable {
+        let day_of_the_week: String?
+        let start_time: String?
     }
 
     // MARK: - Requests
@@ -72,9 +73,12 @@ final class MALOfficialDiscoveryService {
     /// `MALDiscoveryService`); reused here rather than duplicated so both hosts back off the
     /// same way instead of one of them failing hard on the first rate limit.
     private func get(_ path: String, query: [URLQueryItem], attempt: Int = 1) async throws -> [Node] {
-        var components = URLComponents(url: base.appendingPathComponent(path), resolvingAgainstBaseURL: false)!
+        guard var components = URLComponents(url: base.appendingPathComponent(path), resolvingAgainstBaseURL: false) else {
+            throw URLError(.badURL)
+        }
         components.queryItems = query + [URLQueryItem(name: "fields", value: Self.fields)]
-        var request = URLRequest(url: components.url!)
+        guard let url = components.url else { throw URLError(.badURL) }
+        var request = URLRequest(url: url)
         // The public client id is enough for discovery; a user token is only needed for a
         // library. Sending it unconditionally keeps these rows working signed out.
         request.setValue(MALAuthManager.clientId, forHTTPHeaderField: "X-MAL-CLIENT-ID")

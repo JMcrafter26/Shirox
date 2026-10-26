@@ -50,7 +50,7 @@ struct PlaybackStats: Equatable {
     /// A codec's name from its four-character code: "avc1" is H.264, "aac " AAC.
     static func codecName(fourCC: FourCharCode) -> String {
         let bytes = [24, 16, 8, 0].map { UInt8((fourCC >> $0) & 0xFF) }
-        let code = String(decoding: bytes, as: UTF8.self)
+        let code = String(repairingUTF8: bytes)
         return codecName(code.trimmingCharacters(in: .whitespaces))
     }
 

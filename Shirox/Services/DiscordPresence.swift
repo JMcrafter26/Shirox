@@ -11,7 +11,7 @@ import Foundation
 /// Player- and reader-agnostic: the player's Now Playing update and the readers call
 /// `updateMedia` / `updateManga`, and `clear` when they close.
 @MainActor
-final class DiscordPresence: NSObject, ObservableObject {
+final class DiscordPresence: NSObject, ObservableObject, ASWebAuthenticationPresentationContextProviding {
     static let shared = DiscordPresence()
 
     static let enabledKey = "discordPresenceEnabled"
@@ -176,7 +176,7 @@ final class DiscordPresence: NSObject, ObservableObject {
     func signIn(presentationAnchor: ASPresentationAnchor) {
         guard let verifier = SimklOAuth.makeCodeVerifier() else { return }
         let state = UUID().uuidString
-        var components = URLComponents(string: "https://discord.com/oauth2/authorize")!
+        guard var components = URLComponents(string: "https://discord.com/oauth2/authorize") else { return }
         components.queryItems = [
             URLQueryItem(name: "client_id", value: applicationID),
             URLQueryItem(name: "response_type", value: "code"),
@@ -339,9 +339,9 @@ final class DiscordPresence: NSObject, ObservableObject {
         let query: [CFString: Any] = [kSecClass: kSecClassGenericPassword, kSecAttrAccount: key]
         SecItemDelete(query as CFDictionary)
     }
-}
 
-extension DiscordPresence: ASWebAuthenticationPresentationContextProviding {
+    // MARK: - ASWebAuthenticationPresentationContextProviding
+
     nonisolated func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
         MainActor.assumeIsolated { anchor ?? ASPresentationAnchor() }
     }

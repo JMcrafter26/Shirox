@@ -81,7 +81,8 @@ struct ProfileActivityView: View {
                         #if os(iOS)
                         .foregroundStyle(Color(UIColor.systemBackground))
                         #elseif os(tvOS)
-                        // TODO: add back foreground color
+                        // tvOS has no system background color to invert the button's fill with,
+                        // so the icon keeps its default color.
                         #else
                         .foregroundStyle(Color(NSColor.windowBackgroundColor))
                         #endif

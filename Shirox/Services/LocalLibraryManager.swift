@@ -244,11 +244,10 @@ import Foundation
             : nil
 
         let media: Media
-        if match.aniListID != nil || match.malID != nil {
+        if let id = match.aniListID ?? match.malID {
             // Provider-matched → manga-tagged provider Media (uniqueId "anilist-<id>"/"mal-<id>",
             // so the same manga collapses onto one entry). Prefer AniList id, like lightweightMedia.
             let provider: ProviderType = match.aniListID != nil ? .anilist : .mal
-            let id = match.aniListID ?? match.malID!
             media = Media(
                 id: id, idMal: match.malID, provider: provider,
                 title: MediaTitle(romaji: nil, english: title, native: nil),
@@ -256,9 +255,12 @@ import Foundation
                 bannerImage: nil, description: nil, episodes: match.totalChapters,
                 status: nil, averageScore: nil, genres: nil, season: nil, seasonYear: nil,
                 nextAiringEpisode: nil, relations: nil, type: "MANGA", format: nil)
-        } else {
-            media = Media.localManga(source: source!, title: title, imageUrl: coverImage,
+        } else if let source {
+            media = Media.localManga(source: source, title: title, imageUrl: coverImage,
                                      chapters: match.totalChapters)
+        } else {
+            // Not reached: `source` is set whenever the match has neither id.
+            return
         }
 
         let existing = entry(forUniqueId: media.uniqueId)

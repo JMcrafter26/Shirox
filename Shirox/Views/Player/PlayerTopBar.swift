@@ -227,6 +227,19 @@ struct PlayerTopBar: View {
         .buttonStyle(.plain)
         .accessibilityLabel(isMuted ? String(localized: "player.unmute") : String(localized: "player.mute"))
     }
+
+    /// The Mac's own top-bar buttons: AirPlay for the native engine's player, and Picture in
+    /// Picture. Nothing elsewhere.
+    #if os(macOS)
+    func macPlayerControls(airPlay: AVPlayer?, isPictureInPicture: Bool) -> PlayerTopBar {
+        var bar = self
+        bar.airPlayPlayer = airPlay
+        bar.isPictureInPicture = isPictureInPicture
+        return bar
+    }
+    #else
+    func macPlayerControls(airPlay: Never?, isPictureInPicture: Bool) -> PlayerTopBar { self }
+    #endif
 }
 
 #if os(macOS)
@@ -247,18 +260,3 @@ private struct MacAirPlayButton: NSViewRepresentable {
     }
 }
 #endif
-
-extension PlayerTopBar {
-    /// The Mac's own top-bar buttons: AirPlay for the native engine's player, and Picture in
-    /// Picture. Nothing elsewhere.
-    #if os(macOS)
-    func macPlayerControls(airPlay: AVPlayer?, isPictureInPicture: Bool) -> PlayerTopBar {
-        var bar = self
-        bar.airPlayPlayer = airPlay
-        bar.isPictureInPicture = isPictureInPicture
-        return bar
-    }
-    #else
-    func macPlayerControls(airPlay: Never?, isPictureInPicture: Bool) -> PlayerTopBar { self }
-    #endif
-}

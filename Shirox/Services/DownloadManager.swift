@@ -22,7 +22,7 @@ struct DownloadContext {
 }
 
 @MainActor
-final class DownloadManager: NSObject, ObservableObject {
+final class DownloadManager: NSObject, ObservableObject, URLSessionDownloadDelegate {
     static let shared = DownloadManager()
     
     @Published private(set) var items: [DownloadItem] = []
@@ -1347,22 +1347,21 @@ final class DownloadManager: NSObject, ObservableObject {
             }
         }
     }
-}
 
-// MARK: - Finished files
+    // MARK: - Finished files
 
-/// A finished download is one ordinary file named after the episode, in a folder for its show and
-/// source, with the show's poster and its subtitles beside it:
-///
-///     Frieren - Re ANIME/
-///       poster.jpg
-///       Frieren - E05 - Phantom Superstition.mp4
-///       Frieren - E05 - Phantom Superstition.English.vtt
-///
-/// so the Downloads folder reads well in the Files app and Finder, and other players (Infuse, VLC)
-/// pick up the artwork and subtitles. An HLS download used to stay a `<id>/` folder of playlists
-/// and hundreds of segments, and a direct one `<id>.mp4` whatever it really was.
-extension DownloadManager {
+    // A finished download is one ordinary file named after the episode, in a folder for its show and
+    // source, with the show's poster and its subtitles beside it:
+    //
+    //     Frieren - Re ANIME/
+    //       poster.jpg
+    //       Frieren - E05 - Phantom Superstition.mp4
+    //       Frieren - E05 - Phantom Superstition.English.vtt
+    //
+    // so the Downloads folder reads well in the Files app and Finder, and other players (Infuse, VLC)
+    // pick up the artwork and subtitles. An HLS download used to stay a `<id>/` folder of playlists
+    // and hundreds of segments, and a direct one `<id>.mp4` whatever it really was.
+
     /// The name a download's files share, before their extensions. The episode's title is added
     /// when the source gives a real one, not "Episode 5".
     nonisolated static func fileStem(mediaTitle: String, episodeNumber: Int, episodeTitle: String? = nil) -> String {
@@ -1606,9 +1605,7 @@ extension DownloadManager {
             }
         }
     }
-}
 
-extension DownloadManager {
     /// Downloads made into MP4s before the AAC config was written from the audio itself: some
     /// (AnimePahe's) say "AAC Main", which the native player can't decode, and played silent.
     /// Each is checked once, in the background, and rewritten in place when it needs it.
@@ -1648,9 +1645,7 @@ extension DownloadManager {
             }
         }
     }
-}
 
-extension DownloadManager {
     /// Downloads saved before separately delivered audio was fetched (before 2026-10-03) are
     /// video only. Each finished file with no audio track gets its stream's audio downloaded and
     /// added, in the background, one at a time. The saved stream link is tried first, then a
@@ -1748,9 +1743,9 @@ extension DownloadManager {
             return .failed
         }
     }
-}
 
-extension DownloadManager: URLSessionDownloadDelegate {
+    // MARK: - URLSessionDownloadDelegate
+
     nonisolated func urlSession(_ session: URLSession, downloadTask: URLSessionDownloadTask, didWriteData bytesWritten: Int64, totalBytesWritten: Int64, totalBytesExpectedToWrite: Int64) {
         Task { @MainActor in
             if let idx = items.firstIndex(where: { $0.taskIdentifier == downloadTask.taskIdentifier }) {

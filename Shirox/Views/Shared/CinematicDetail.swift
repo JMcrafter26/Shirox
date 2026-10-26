@@ -138,9 +138,7 @@ struct CinematicPage<Backdrop: View, Hero: View, Rows: View>: View {
         // The bottom too: what showed below the page there was the light system background.
         .ignoresSafeArea(edges: [.top, .leading, .bottom])
     }
-}
 
-extension CinematicPage {
     /// Black behind the rows, fading in above them: as they scroll up they cover the artwork
     /// until none of it is left. Part of the scrolling content, so it can't fall behind the
     /// scroll the way a dim measured from the offset did.

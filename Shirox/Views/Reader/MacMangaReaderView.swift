@@ -453,8 +453,10 @@ struct MacMangaReaderView: View {
     private func click(atX x: CGFloat) {
         switch ReaderTapZone.zone(atX: x, mode: mode, enabled: tapZones, reversed: tapZonesReversed) {
         case .middle: toggleChrome()
-        case .forward: mode == .vertical ? clickScroll(down: true) : turn(1)
-        case .back: mode == .vertical ? clickScroll(down: false) : turn(-1)
+        case .forward:
+            if mode == .vertical { clickScroll(down: true) } else { turn(1) }
+        case .back:
+            if mode == .vertical { clickScroll(down: false) } else { turn(-1) }
         }
     }
 

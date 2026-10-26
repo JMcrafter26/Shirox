@@ -113,10 +113,10 @@ actor HLSDownloader {
                                                 isDefault: entry.rendition.url == choice.audio))
             }
             try videoPlaylist.write(to: episodeFolder.appendingPathComponent(videoName), atomically: true, encoding: .utf8)
-            let master = HLSManifestParser.localMasterManifest(
+            let multivariant = HLSManifestParser.localMultivariantManifest(
                 videoPlaylist: videoName, audio: localAudio,
                 bandwidth: choice.bandwidth, codecs: choice.codecs)
-            try master.write(to: episodeFolder.appendingPathComponent(manifestName), atomically: true, encoding: .utf8)
+            try multivariant.write(to: episodeFolder.appendingPathComponent(manifestName), atomically: true, encoding: .utf8)
         } else {
             try videoPlaylist.write(to: episodeFolder.appendingPathComponent(manifestName), atomically: true, encoding: .utf8)
         }
@@ -125,27 +125,29 @@ actor HLSDownloader {
         return "\(id.uuidString)/\(manifestName)"
     }
 
+    /// One downloaded audio rendition of a `SeparateAudio`.
+    struct SeparateAudioTrack {
+        var playlist: URL
+        var name: String
+        var language: String?
+        var isDefault: Bool
+    }
+
     /// A stream's separately delivered audio, downloaded on its own, for a file saved without it.
     struct SeparateAudio {
-        struct Track {
-            var playlist: URL
-            var name: String
-            var language: String?
-            var isDefault: Bool
-        }
-        var tracks: [Track]
+        var tracks: [SeparateAudioTrack]
         /// The variant's first video segment, whose clock the audio's is measured against.
         var videoReference: URL
     }
 
-    /// Downloads every audio rendition of `url`'s master playlist into `folder`, and the first
+    /// Downloads every audio rendition of `url`'s multivariant playlist into `folder`, and the first
     /// video segment to line the audio up with the video already on disk. Nil when the stream's
     /// audio isn't separate: then no audio was ever missing from its downloads.
     func downloadSeparateAudio(url: URL, headers: [String: String], playlistKey: String?,
                                folder: URL) async throws -> SeparateAudio? {
-        let master = try await fetchManifest(url: url, headers: headers, playlistKey: playlistKey)
-        guard master.contains("#EXT-X-STREAM-INF"),
-              let choice = HLSManifestParser.selectBestVariantChoice(master, baseURL: url, quality: "lowest"),
+        let multivariant = try await fetchManifest(url: url, headers: headers, playlistKey: playlistKey)
+        guard multivariant.contains("#EXT-X-STREAM-INF"),
+              let choice = HLSManifestParser.selectBestVariantChoice(multivariant, baseURL: url, quality: "lowest"),
               !choice.audioRenditions.isEmpty else { return nil }
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
 
@@ -174,7 +176,7 @@ actor HLSDownloader {
         }
         guard !plans.isEmpty else { throw HLSError.invalidManifest }
         let counter = ProgressCounter(total: plans.reduce(0) { $0 + $1.1.segments.count }) { _ in }
-        var tracks: [SeparateAudio.Track] = []
+        var tracks: [SeparateAudioTrack] = []
         for (index, (rendition, plan)) in plans.enumerated() {
             let playlist = try await downloadRendition(plan, prefix: "a\(index)_", folder: folder,
                                                        headers: headers, counter: counter)
@@ -215,8 +217,9 @@ actor HLSDownloader {
                 url: initSeg.url, byteRange: initSeg.byteRange, key: initSeg.key,
                 mediaSequence: 0, headers: headers, label: String(localized: "shared.init_segment \(prefix)")
             )
-            initFileName = "\(prefix)init.mp4"
-            try initData.write(to: folder.appendingPathComponent(initFileName!), options: .atomic)
+            let name = "\(prefix)init.mp4"
+            initFileName = name
+            try initData.write(to: folder.appendingPathComponent(name), options: .atomic)
         }
 
         let segments = plan.segments

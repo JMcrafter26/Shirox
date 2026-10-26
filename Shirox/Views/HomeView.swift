@@ -188,9 +188,7 @@ struct HomeView: View {
                     // In a ZStack so a switch's leaving and arriving pages overlap.
                     ZStack {
                         CinematicHome(items: heroItems, leadingInset: leadingInset,
-                                      onRefresh: { await performRefresh() }) {
-                            rows
-                        }
+                                      onRefresh: { await performRefresh() }, rows: { rows })
                         .id(homePage)
                         .transition(.pageTurn(step: pageStep))
                     }
@@ -450,9 +448,9 @@ private struct PageTurnEffect: ViewModifier {
     }
 }
 
-private extension AnyTransition {
+extension AnyTransition {
     /// `step` is which way the switch went through the menus' order: 1 onward, -1 back.
-    static func pageTurn(step: Int) -> AnyTransition {
+    fileprivate static func pageTurn(step: Int) -> AnyTransition {
         .asymmetric(
             insertion: .modifier(active: PageTurnEffect(offset: CGFloat(step) * 56, hidden: true),
                                  identity: PageTurnEffect()),

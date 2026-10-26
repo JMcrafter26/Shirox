@@ -157,7 +157,7 @@ struct ModuleListView: View {
             #if os(iOS)
             .background(Color(.systemBackground))
             #elseif os(tvOS)
-            // TODO: add back background color
+            // tvOS has no system background color, so the list sits on the system's own backdrop.
             #else
             .background(Color(NSColor.windowBackgroundColor))
             #endif
@@ -509,7 +509,7 @@ struct ModuleListView: View {
         #if os(iOS)
         .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 12))
         #elseif os(tvOS)
-        // TODO: add back background color
+        // tvOS has no grouped background color; the row sits on the screen's own backdrop.
         #else
         .background(Color(.controlBackgroundColor), in: RoundedRectangle(cornerRadius: 12))
         #endif

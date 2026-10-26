@@ -26,7 +26,10 @@ enum SimklOAuth {
 
     static func authorizeURL(clientId: String, redirectURI: String,
                              codeChallenge: String, state: String) -> URL {
-        var components = URLComponents(url: authorizeEndpoint, resolvingAgainstBaseURL: false)!
+        // The endpoint is a fixed, well-formed URL, so neither fallback is ever taken.
+        guard var components = URLComponents(url: authorizeEndpoint, resolvingAgainstBaseURL: false) else {
+            return authorizeEndpoint
+        }
         components.queryItems = [
             URLQueryItem(name: "response_type", value: "code"),
             URLQueryItem(name: "client_id", value: clientId),
@@ -36,7 +39,7 @@ enum SimklOAuth {
             URLQueryItem(name: "code_challenge", value: codeChallenge),
             URLQueryItem(name: "code_challenge_method", value: "S256")
         ]
-        return components.url!
+        return components.url ?? authorizeEndpoint
     }
 
     enum Callback: Equatable {

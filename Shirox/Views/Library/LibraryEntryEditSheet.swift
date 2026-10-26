@@ -302,9 +302,9 @@ struct LibraryEntryEditSheet: View {
                                 .textFieldStyle(.roundedBorder)
                                 .multilineTextAlignment(.center)
                                 .frame(width: 72)
-                            progressUnit == "chapter"
-                                ? Text(LocalizedStringKey(progress == 1 ? "library.chapter_read" : "library.chapters_read"))
-                                : Text(LocalizedStringKey(progress == 1 ? "library.episode_watched" : "library.episodes_watched"))
+                            Text(LocalizedStringKey(progressUnit == "chapter"
+                                ? (progress == 1 ? "library.chapter_read" : "library.chapters_read")
+                                : (progress == 1 ? "library.episode_watched" : "library.episodes_watched")))
                             Spacer()
                             Stepper("common.progress", value: $progress, in: 0...maxProgress)
                                 .labelsHidden()

@@ -500,9 +500,9 @@ struct DetailView: View {
             } else {
                 vm.cancelStreamLoading()
             }
-        }) {
+        }, content: {
             StreamPickerView(vm: vm)
-        }
+        })
         .onReceive(NotificationCenter.default.publisher(for: AniListEntryExtrasChange.notification)) { note in
             guard let change = note.object as? AniListEntryExtrasChange else { return }
             existingEntry = change.apply(to: existingEntry)
@@ -699,7 +699,7 @@ struct DetailView: View {
     private func watchButton(detail: MediaDetail) -> some View {
         let item = continueWatchingItem(for: detail)
         let nextEp = item?.episodeNumber ?? 1
-        let continuing = item != nil && !item!.streamUrl.isEmpty
+        let continuing = item.map { !$0.streamUrl.isEmpty } ?? false
         let label = isSingleEpisode(detail)
             ? (continuing ? String(localized: "shared.continue") : String(localized: "home.watch"))
             : continuing ? String(localized: "detail.continue_ep \(nextEp)") : String(localized: "detail.watch_ep \(nextEp)")

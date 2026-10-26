@@ -60,10 +60,10 @@ enum AirPlaySubtitles {
         "hin": "hi", "dut": "nl", "nld": "nl", "swe": "sv", "fil": "fil", "heb": "he", "ukr": "uk"
     ]
 
-    /// `master` with the subtitle rendition added and every variant pointed at it. A
-    /// `SUBTITLES` group a variant already names is replaced: a variant takes one.
-    static func inject(into master: String, mediaTag: String) -> String {
-        var lines = master.components(separatedBy: .newlines)
+    /// `playlist` (a multivariant playlist) with the subtitle rendition added and every variant
+    /// pointed at it. A `SUBTITLES` group a variant already names is replaced: a variant takes one.
+    static func inject(into playlist: String, mediaTag: String) -> String {
+        var lines = playlist.components(separatedBy: .newlines)
         for i in lines.indices where lines[i].hasPrefix("#EXT-X-STREAM-INF:") {
             var line = lines[i]
             if let range = line.range(of: "(?<=[:,])SUBTITLES=\"[^\"]*\"", options: .regularExpression) {

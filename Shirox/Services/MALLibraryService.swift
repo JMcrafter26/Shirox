@@ -62,7 +62,7 @@ final class MALLibraryService {
 
     func fetchLibrary() async throws -> [MALListEntry] {
         var allEntries: [MALListEntry] = []
-        var nextURL: URL? = makeLibraryURL()
+        var nextURL: URL? = try makeLibraryURL()
         while let url = nextURL {
             let (data, response) = try await MALAuthManager.shared.send(url: url)
             try validateResponse(response)
@@ -73,15 +73,16 @@ final class MALLibraryService {
         return allEntries
     }
 
-    private func makeLibraryURL() -> URL {
-        var components = URLComponents(url: base.appendingPathComponent("users/@me/animelist"),
-                                       resolvingAgainstBaseURL: false)!
+    private func makeLibraryURL() throws -> URL {
+        guard var components = URLComponents(url: base.appendingPathComponent("users/@me/animelist"),
+                                             resolvingAgainstBaseURL: false) else { throw URLError(.badURL) }
         components.queryItems = [
             URLQueryItem(name: "fields", value: "list_status,num_episodes,status,mean,genres,synopsis,start_season,media_type,main_picture"),
             URLQueryItem(name: "limit", value: "500"),
             URLQueryItem(name: "nsfw", value: "false")
         ]
-        return components.url!
+        guard let url = components.url else { throw URLError(.badURL) }
+        return url
     }
 
     // MARK: - Fetch single entry
@@ -91,10 +92,11 @@ final class MALLibraryService {
     static let entryFields = "my_list_status{status,score,num_episodes_watched,num_times_rewatched,is_rewatching,updated_at},num_episodes,status,mean,genres,synopsis,start_season,media_type,main_picture"
 
     func fetchEntry(malId: Int) async throws -> MALListEntry? {
-        var components = URLComponents(url: base.appendingPathComponent("anime/\(malId)"),
-                                       resolvingAgainstBaseURL: false)!
+        guard var components = URLComponents(url: base.appendingPathComponent("anime/\(malId)"),
+                                             resolvingAgainstBaseURL: false) else { throw URLError(.badURL) }
         components.queryItems = [URLQueryItem(name: "fields", value: Self.entryFields)]
-        let (data, response) = try await MALAuthManager.shared.send(url: components.url!)
+        guard let url = components.url else { throw URLError(.badURL) }
+        let (data, response) = try await MALAuthManager.shared.send(url: url)
         if response.statusCode == 404 { return nil }
         try validateResponse(response)
 
@@ -145,20 +147,21 @@ final class MALLibraryService {
     /// the start and finish dates. nil when it isn't on the list.
     func fetchExtras(malId: Int, manga: Bool) async throws -> LibraryEntryExtras? {
         let repeatField = manga ? "num_times_reread" : "num_times_rewatched"
-        var components = URLComponents(url: base.appendingPathComponent("\(manga ? "manga" : "anime")/\(malId)"),
-                                       resolvingAgainstBaseURL: false)!
+        guard var components = URLComponents(url: base.appendingPathComponent("\(manga ? "manga" : "anime")/\(malId)"),
+                                             resolvingAgainstBaseURL: false) else { throw URLError(.badURL) }
         components.queryItems = [URLQueryItem(name: "fields",
                                               value: "my_list_status{\(repeatField),start_date,finish_date}")]
-        let (data, response) = try await MALAuthManager.shared.send(url: components.url!)
+        guard let url = components.url else { throw URLError(.badURL) }
+        let (data, response) = try await MALAuthManager.shared.send(url: url)
         if response.statusCode == 404 { return nil }
         try validateResponse(response)
+        struct Status: Decodable {
+            let num_times_rewatched: Int?
+            let num_times_reread: Int?
+            let start_date: String?
+            let finish_date: String?
+        }
         struct Node: Decodable {
-            struct Status: Decodable {
-                let num_times_rewatched: Int?
-                let num_times_reread: Int?
-                let start_date: String?
-                let finish_date: String?
-            }
             let my_list_status: Status?
         }
         guard let status = try JSONDecoder().decode(Node.self, from: data).my_list_status else { return nil }

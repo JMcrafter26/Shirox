@@ -42,7 +42,7 @@ enum SeasonChainMath {
             // The last tvdb_season's total is never needed for a base, so don't require its count.
             if idx < seasonsAsc.count - 1 {
                 // total of a tvdb_season = max over its cours of (epoffset + count)
-                let totals = bySeason[s]!.compactMap { c in c.episodeCount.map { $0 + c.tvdbEpoffset } }
+                let totals = bySeason[s, default: []].compactMap { c in c.episodeCount.map { $0 + c.tvdbEpoffset } }
                 guard let total = totals.max() else { return nil } // missing count -> cannot sum
                 running += total
             }
@@ -112,7 +112,7 @@ enum SeasonChainMath {
         for (idx, s) in seasonsAsc.enumerated() {
             base[s] = running
             if idx < seasonsAsc.count - 1 {
-                let totals = bySeason[s]!.compactMap { c in c.episodeCount.map { $0 + c.tvdbEpoffset } }
+                let totals = bySeason[s, default: []].compactMap { c in c.episodeCount.map { $0 + c.tvdbEpoffset } }
                 guard let total = totals.max() else { return nil } // missing count -> can't sum
                 running += total
             }

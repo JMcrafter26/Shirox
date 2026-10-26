@@ -38,7 +38,7 @@ enum ModuleLinkError: LocalizedError, Equatable {
         if let status = (response as? HTTPURLResponse)?.statusCode, status >= 400 { return .unreachable(status) }
         if isImage(data) || response?.mimeType?.hasPrefix("image/") == true { return .image }
 
-        let text = String(decoding: data.prefix(4_096), as: UTF8.self)
+        let text = String(repairingUTF8: data.prefix(4_096))
         let start = text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         if start.hasPrefix("<svg") || (start.hasPrefix("<?xml") && start.contains("<svg")) { return .image }
         if start.hasPrefix("<") { return .webPage }

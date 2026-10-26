@@ -85,14 +85,6 @@ enum ScoreFormat: String, Codable {
 }
 
 /// Distinguishes anime vs manga for library/UI branching (progress unit, labels).
-extension LibraryEntry {
-    /// A progress bar says something only for a title under way: none with nothing watched yet,
-    /// and none on a finished or planned one, where it would be full or empty anyway.
-    var showsProgressBar: Bool {
-        progress > 0 && status != .completed && status != .planning
-    }
-}
-
 enum MediaKind: String, Codable {
     case anime, manga
     /// Simkl's TV shows and movies — only the Simkl list has them.
@@ -164,6 +156,12 @@ struct LibraryEntry: Identifiable, Codable, Sendable {
     func displayScore(in format: ScoreFormat) -> Double {
         if let scoreCanonical { return format.fromCanonical(scoreCanonical) }
         return score
+    }
+
+    /// A progress bar says something only for a title under way: none with nothing watched yet,
+    /// and none on a finished or planned one, where it would be full or empty anyway.
+    var showsProgressBar: Bool {
+        progress > 0 && status != .completed && status != .planning
     }
 }
 

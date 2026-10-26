@@ -982,9 +982,9 @@ struct MangaReaderView: View {
         case .middle:
             withAnimation(.easeInOut(duration: 0.2)) { chromeVisible.toggle() }
         case .forward:
-            mode == .vertical ? tapScroll(down: true) : tapTurn(1)
+            if mode == .vertical { tapScroll(down: true) } else { tapTurn(1) }
         case .back:
-            mode == .vertical ? tapScroll(down: false) : tapTurn(-1)
+            if mode == .vertical { tapScroll(down: false) } else { tapTurn(-1) }
         }
     }
 
@@ -1226,8 +1226,8 @@ struct MangaReaderView: View {
 
 // MARK: - Safe indexing
 
-private extension Array {
-    subscript(safe index: Int) -> Element? {
+extension Array {
+    fileprivate subscript(safe index: Int) -> Element? {
         indices.contains(index) ? self[index] : nil
     }
 }

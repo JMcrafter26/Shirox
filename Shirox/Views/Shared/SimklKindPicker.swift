@@ -67,10 +67,10 @@ struct SimklKindMenu: View {
     }
 }
 
-private extension View {
+extension View {
     /// One symbol morphs into the next, from iOS 17; before that it just changes.
     @ViewBuilder
-    func symbolReplaceTransition() -> some View {
+    fileprivate func symbolReplaceTransition() -> some View {
         if #available(iOS 17, macOS 14, tvOS 17, *) {
             contentTransition(.symbolEffect(.replace))
         } else {

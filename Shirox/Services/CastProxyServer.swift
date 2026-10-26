@@ -544,7 +544,7 @@ final class CastProxyServer: @unchecked Sendable {
         guard digits.count % 2 == 0 else { return nil }
         var out = Data(capacity: digits.count / 2)
         for i in stride(from: 0, to: digits.count, by: 2) {
-            guard let byte = UInt8(String(decoding: digits[i..<i + 2], as: UTF8.self), radix: 16) else { return nil }
+            guard let pair = String(bytes: digits[i..<i + 2], encoding: .utf8), let byte = UInt8(pair, radix: 16) else { return nil }
             out.append(byte)
         }
         return out
@@ -784,8 +784,7 @@ private final class ProxyConnection: @unchecked Sendable {
     // MARK: Reading
 
     private func receive() {
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 16 * 1_024) {
-            [weak self] data, _, isComplete, error in
+        connection.receive(minimumIncompleteLength: 1, maximumLength: 16 * 1_024) { [weak self] data, _, isComplete, error in
             guard let self else { return }
             if error != nil || (isComplete && data == nil) { self.close(); return }
             guard let data, !data.isEmpty else {

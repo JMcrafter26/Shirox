@@ -107,14 +107,14 @@ final class AniListService {
         ]
         let data = try await post(query: query, variables: variables)
 
+        struct Feed: Decodable {
+            let trending: PageContent?
+            let seasonal: PageContent?
+            let lastSeason: PageContent?
+            let popular: PageContent?
+            let topRated: PageContent?
+        }
         struct Response: Decodable {
-            struct Feed: Decodable {
-                let trending: PageContent?
-                let seasonal: PageContent?
-                let lastSeason: PageContent?
-                let popular: PageContent?
-                let topRated: PageContent?
-            }
             let data: Feed?
             let errors: [GraphQLError]?
         }
@@ -326,18 +326,18 @@ final class AniListService {
         ]
         let data = try await post(query: query, variables: variables)
 
+        struct SchedulePage: Decodable {
+            let airingSchedules: [Schedule]
+        }
+        struct ResponseData: Decodable {
+            let Page: SchedulePage
+        }
+        struct Schedule: Decodable {
+            let episode: Int
+            let airingAt: Int
+            let media: AniListMedia?
+        }
         struct Response: Decodable {
-            struct ResponseData: Decodable {
-                struct PageData: Decodable {
-                    let airingSchedules: [Schedule]
-                }
-                let Page: PageData
-            }
-            struct Schedule: Decodable {
-                let episode: Int
-                let airingAt: Int
-                let media: AniListMedia?
-            }
             let data: ResponseData?
         }
 
@@ -521,12 +521,12 @@ final class AniListService {
     /// by: its page read "Episode count not available" and it synced as 0/0. AniList usually
     /// knows both.
     func episodeCounts(forMalId malId: Int) async -> (episodes: Int?, nextAiringEpisode: Int?)? {
+        struct Airing: Decodable { let episode: Int }
+        struct Node: Decodable {
+            let episodes: Int?
+            let nextAiringEpisode: Airing?
+        }
         struct Payload: Decodable {
-            struct Node: Decodable {
-                struct Airing: Decodable { let episode: Int }
-                let episodes: Int?
-                let nextAiringEpisode: Airing?
-            }
             let Media: Node?
         }
         let query = """
@@ -548,19 +548,19 @@ final class AniListService {
     /// the airing schedule, so MyAnimeList, Simkl and on-device lists ask for it here. Fifty
     /// titles a request; a show between seasons or finished isn't in the answer.
     func airedEpisodes(aniListIDs: [Int], malIDs: [Int]) async -> (byAniList: [Int: Int], byMal: [Int: Int]) {
+        struct Airing: Decodable { let episode: Int }
+        struct Node: Decodable {
+            let id: Int
+            let idMal: Int?
+            let nextAiringEpisode: Airing?
+        }
+        struct Results: Decodable { let media: [Node] }
         struct Payload: Decodable {
-            struct Results: Decodable { let media: [Node] }
-            struct Node: Decodable {
-                struct Airing: Decodable { let episode: Int }
-                let id: Int
-                let idMal: Int?
-                let nextAiringEpisode: Airing?
-            }
             let Page: Results?
         }
         var byAniList: [Int: Int] = [:]
         var byMal: [Int: Int] = [:]
-        func run(_ field: String, _ ids: [Int]) async -> [Payload.Node] {
+        func run(_ field: String, _ ids: [Int]) async -> [Node] {
             let query = """
             query ($ids: [Int]) {
               Page(perPage: 50) {
@@ -759,11 +759,9 @@ final class AniListService {
             }
         }
     }
-}
 
-// MARK: - Errors
+    // MARK: - Errors
 
-extension AniListService {
     /// Whether AniList's own error wording says the API is deliberately switched off, rather
     /// than that this app asked for too much.
     ///
@@ -1063,17 +1061,25 @@ enum BrowseCategory: String, CaseIterable, Hashable {
         }
     }
 
+    struct AniraSkip: Decodable {
+        let type: String
+        let start: Double
+        let end: Double
+    }
+
     struct AniraEpisodeResponse: Decodable {
-        struct Skip: Decodable {
-            let type: String
-            let start: Double
-            let end: Double
-        }
         let episode: Int
         let title: String?
         let description: String?
         let thumbnail: String?
-        let skips: [Skip]?
+        let skips: [AniraSkip]?
+    }
+
+    /// The ids an Anira entry maps to on other databases.
+    struct AniraMappings: Decodable {
+        let anilist_id: Int?
+        let mal_id: Int?
+        let media_type: String?
     }
 
     /// One entry from Anira's `/watch_order` (and identically-shaped `/similar`) response.
@@ -1081,13 +1087,7 @@ enum BrowseCategory: String, CaseIterable, Hashable {
     struct AniraMediaEntry: Decodable, Identifiable {
         let title: String?
         let cover: String?
-        let mappings: Mappings
-
-        struct Mappings: Decodable {
-            let anilist_id: Int?
-            let mal_id: Int?
-            let media_type: String?
-        }
+        let mappings: AniraMappings
 
         /// Stable list identity — prefers AniList id, then MAL id, then title.
         var id: String { "\(mappings.anilist_id ?? mappings.mal_id ?? 0)-\(title ?? "")" }
@@ -1125,12 +1125,13 @@ enum BrowseCategory: String, CaseIterable, Hashable {
             return t
         }
 
+        struct LoginData: Decodable { let token: String }
         struct LoginResponse: Decodable {
-            struct Data: Decodable { let token: String }
-            let data: Data
+            let data: LoginData
         }
 
-        var request = URLRequest(url: URL(string: "\(tvdbEndpoint)/login")!)
+        guard let loginURL = URL(string: "\(tvdbEndpoint)/login") else { throw URLError(.badURL) }
+        var request = URLRequest(url: loginURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: ["apikey": apiKey])
@@ -1172,7 +1173,7 @@ enum BrowseCategory: String, CaseIterable, Hashable {
                                         posterPath: cached?.posterPath, fanartPath: cached?.fanartPath,
                                         logoPath: cached?.logoPath, textlessPosterPath: cached?.textlessPosterPath),
                              id: id, provider: provider)
-                provider == .mal ? saveMALCache() : saveCache()
+                if provider == .mal { saveMALCache() } else { saveCache() }
                 return (tid, m.tvdb_season)
             }
             // Present in the snapshot but no TVDB id → definitively no TVDB mapping.
@@ -1180,7 +1181,7 @@ enum BrowseCategory: String, CaseIterable, Hashable {
                                     posterPath: cached?.posterPath, fanartPath: cached?.fanartPath,
                                     logoPath: cached?.logoPath, textlessPosterPath: cached?.textlessPosterPath),
                          id: id, provider: provider)
-            provider == .mal ? saveMALCache() : saveCache()
+            if provider == .mal { saveMALCache() } else { saveCache() }
             return nil
         }
 
@@ -1196,14 +1197,14 @@ enum BrowseCategory: String, CaseIterable, Hashable {
                                         posterPath: cached?.posterPath, fanartPath: cached?.fanartPath,
                                         logoPath: cached?.logoPath, textlessPosterPath: cached?.textlessPosterPath),
                              id: id, provider: provider)
-                provider == .mal ? saveMALCache() : saveCache()
+                if provider == .mal { saveMALCache() } else { saveCache() }
                 return (tid, first.tvdb_season)
             } else {
                 setTVDBCache(CachedData(tid: -1, season: nil, epOffsetFetched: true,
                                         posterPath: cached?.posterPath, fanartPath: cached?.fanartPath,
                                         logoPath: cached?.logoPath, textlessPosterPath: cached?.textlessPosterPath),
                              id: id, provider: provider)
-                provider == .mal ? saveMALCache() : saveCache()
+                if provider == .mal { saveMALCache() } else { saveCache() }
             }
         } catch where (error as? URLError)?.code == .cancelled || error is CancellationError {
         } catch {
@@ -1637,13 +1638,13 @@ enum BrowseCategory: String, CaseIterable, Hashable {
             let name: String?
             let overview: String?
         }
+        struct TVDBExtendedData: Decodable { let episodes: [TVDBEpisode]? }
         struct TVDBExtendedResponse: Decodable {
-            struct Data: Decodable { let episodes: [TVDBEpisode]? }
-            let data: Data
+            let data: TVDBExtendedData
         }
         do {
             let token = try await authenticate()
-            let url = URL(string: "\(tvdbEndpoint)/series/\(tid)/extended")!
+            guard let url = URL(string: "\(tvdbEndpoint)/series/\(tid)/extended") else { return [] }
             var req = URLRequest(url: url)
             req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
             let (data, _) = try await Self.session.data(for: req)
@@ -1801,15 +1802,16 @@ enum BrowseCategory: String, CaseIterable, Hashable {
     }
 
     private func lookUpTitleLogo(tvdbID: Int, record: TitleRecord, key: String) async -> String? {
+        struct ExtendedData: Decodable {
+            let artworks: [TVDBArtwork]?; let originalLanguage: String?; let remoteIds: [TVDBRemoteID]?
+        }
         struct Extended: Decodable {
-            struct Data: Decodable {
-                let artworks: [TVDBArtwork]?; let originalLanguage: String?; let remoteIds: [TVDBRemoteID]?
-            }
-            let data: Data
+            let data: ExtendedData
         }
         do {
             let token = try await authenticate()
-            var request = URLRequest(url: URL(string: "\(tvdbEndpoint)/\(record.tvdbPath)/\(tvdbID)/extended")!)
+            guard let url = URL(string: "\(tvdbEndpoint)/\(record.tvdbPath)/\(tvdbID)/extended") else { return nil }
+            var request = URLRequest(url: url)
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
             let (data, response) = try await Self.session.data(for: request)
             let status = (response as? HTTPURLResponse)?.statusCode ?? 0
@@ -1840,13 +1842,14 @@ enum BrowseCategory: String, CaseIterable, Hashable {
     func tmdbID(forTVDB tvdbID: Int, record: TitleRecord) async -> Int? {
         let key = LogoCacheEntry.tvdbKey(tvdbID, record: record)
         if let known = tmdbIDsByTVDB[key] { return known > 0 ? known : nil }
+        struct ShortData: Decodable { let remoteIds: [TVDBRemoteID]? }
         struct Short: Decodable {
-            struct Data: Decodable { let remoteIds: [TVDBRemoteID]? }
-            let data: Data
+            let data: ShortData
         }
         do {
             let token = try await authenticate()
-            var request = URLRequest(url: URL(string: "\(tvdbEndpoint)/\(record.tvdbPath)/\(tvdbID)/extended?short=true")!)
+            guard let url = URL(string: "\(tvdbEndpoint)/\(record.tvdbPath)/\(tvdbID)/extended?short=true") else { return nil }
+            var request = URLRequest(url: url)
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
             let (data, response) = try await Self.session.data(for: request)
             let status = (response as? HTTPURLResponse)?.statusCode ?? 0
@@ -1900,22 +1903,22 @@ enum BrowseCategory: String, CaseIterable, Hashable {
         typealias Artwork = TVDBArtwork
         struct SeasonType: Decodable { let id: Int; let type: String? }
         struct Season: Decodable { let id: Int; let number: Int; let type: SeasonType? }
-        struct SeriesExtended: Decodable {
-            struct Data: Decodable {
-                let artworks: [Artwork]?; let seasons: [Season]?; let originalLanguage: String?
-                let remoteIds: [TVDBRemoteID]?
-            }
-            let data: Data
+        struct SeriesExtendedData: Decodable {
+            let artworks: [Artwork]?; let seasons: [Season]?; let originalLanguage: String?
+            let remoteIds: [TVDBRemoteID]?
         }
+        struct SeriesExtended: Decodable {
+            let data: SeriesExtendedData
+        }
+        struct SeasonExtendedData: Decodable { let artwork: [Artwork]? }
         struct SeasonExtended: Decodable {
-            struct Data: Decodable { let artwork: [Artwork]? }
-            let data: Data
+            let data: SeasonExtendedData
         }
         do {
             let token = try await authenticate()
 
-            func fetchSeriesExtended() async -> SeriesExtended.Data? {
-                let url = URL(string: "\(tvdbEndpoint)/series/\(tid)/extended")!
+            func fetchSeriesExtended() async -> SeriesExtendedData? {
+                guard let url = URL(string: "\(tvdbEndpoint)/series/\(tid)/extended") else { return nil }
                 var req = URLRequest(url: url)
                 req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
                 guard let (data, _) = try? await Self.session.data(for: req),
@@ -1923,7 +1926,7 @@ enum BrowseCategory: String, CaseIterable, Hashable {
                 return res.data
             }
             func fetchSeasonArtwork(seasonId: Int) async -> [Artwork] {
-                let url = URL(string: "\(tvdbEndpoint)/seasons/\(seasonId)/extended")!
+                guard let url = URL(string: "\(tvdbEndpoint)/seasons/\(seasonId)/extended") else { return [] }
                 var req = URLRequest(url: url)
                 req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
                 guard let (data, _) = try? await Self.session.data(for: req),

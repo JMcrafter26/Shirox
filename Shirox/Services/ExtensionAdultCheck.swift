@@ -29,8 +29,9 @@ enum ExtensionAdultCheck {
         if texts.contains(where: AdultModuleCheck.hasAdultName) { return true }
         for catalog in raw["catalogs"] as? [[String: Any]] ?? [] {
             if let name = catalog["name"] as? String, AdultModuleCheck.hasAdultName(name) { return true }
-            for extra in catalog["extra"] as? [[String: Any]] ?? [] {
-                if (extra["options"] as? [String] ?? []).contains(where: AdultModuleCheck.hasAdultName) { return true }
+            for extra in catalog["extra"] as? [[String: Any]] ?? []
+            where (extra["options"] as? [String] ?? []).contains(where: AdultModuleCheck.hasAdultName) {
+                return true
             }
             if (catalog["genres"] as? [String] ?? []).contains(where: AdultModuleCheck.hasAdultName) { return true }
         }

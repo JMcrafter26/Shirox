@@ -61,8 +61,8 @@ enum JellyfinURLBuilder {
 
     /// Asks Jellyfin to remux/transcode to an AVPlayer-friendly HLS (TS · h264/aac) stream.
     /// Used when the source can't direct-play and the server didn't hand back a transcode URL.
-    static func hlsMasterURL(base: URL, itemId: String, mediaSourceId: String,
-                             apiKey: String, deviceId: String) -> URL? {
+    static func hlsMultivariantURL(base: URL, itemId: String, mediaSourceId: String,
+                                   apiKey: String, deviceId: String) -> URL? {
         var comps = URLComponents(url: base.appendingPathComponent("Videos/\(itemId)/master.m3u8"),
                                   resolvingAgainstBaseURL: false)
         comps?.queryItems = [
@@ -108,7 +108,7 @@ enum JellyfinStreamResolution {
             return direct
         }
         // 3. Defensive fallback: have the server remux to HLS we can actually play.
-        return JellyfinURLBuilder.hlsMasterURL(base: base, itemId: itemId,
+        return JellyfinURLBuilder.hlsMultivariantURL(base: base, itemId: itemId,
                                                mediaSourceId: mediaSourceId,
                                                apiKey: apiKey, deviceId: deviceId)
     }

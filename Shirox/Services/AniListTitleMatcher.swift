@@ -29,7 +29,7 @@ enum AniListTitleMatcher {
             guard titles.contains(where: { sameSeason(wanted, sequelNumbers(in: $0)) }) else { continue }
             if firstOfSameSeason == nil { firstOfSameSeason = candidate.id }
             guard score >= 0.5 else { continue }
-            if best == nil || score > best!.score { best = (candidate.id, score) }
+            if score > (best?.score ?? -1) { best = (candidate.id, score) }
         }
         if let best { return best.id }
         // A title in another script shares no words with AniList's romaji and English ones;

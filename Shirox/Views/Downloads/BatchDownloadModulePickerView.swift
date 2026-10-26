@@ -82,13 +82,13 @@ struct BatchDownloadModulePickerView: View {
                 }
                 
                 onDismiss()
-            }) { pickerItem in
+            }, content: { pickerItem in
                 DownloadStreamPickerView(streams: pickerItem.streams) { stream in
                     chosenStreamTitle = stream.title
                     chosenPickerItem = pickerItem
                     streamPickerItem = nil
                 }
-            }
+            })
         }
         #if os(iOS)
         .adaptivePresentationDetents([.medium, .large])

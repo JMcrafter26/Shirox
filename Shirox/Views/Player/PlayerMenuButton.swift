@@ -33,7 +33,44 @@ enum PlayerMenuLabel {
     case text(String, size: CGFloat, weight: PlayerMenuWeight)
 }
 
-enum PlayerMenuWeight { case medium, semibold, heavy }
+enum PlayerMenuWeight {
+    case medium, semibold, heavy
+
+    // Each platform's menu button maps the weight onto its own font type.
+    #if os(iOS)
+    fileprivate var symbolWeight: UIImage.SymbolWeight {
+        switch self {
+        case .medium: return .medium
+        case .semibold: return .semibold
+        case .heavy: return .heavy
+        }
+    }
+
+    fileprivate var fontWeight: UIFont.Weight {
+        switch self {
+        case .medium: return .medium
+        case .semibold: return .semibold
+        case .heavy: return .heavy
+        }
+    }
+    #elseif os(macOS)
+    fileprivate var nsWeight: NSFont.Weight {
+        switch self {
+        case .medium: return .medium
+        case .semibold: return .semibold
+        case .heavy: return .heavy
+        }
+    }
+    #else
+    fileprivate var font: Font.Weight {
+        switch self {
+        case .medium: return .medium
+        case .semibold: return .semibold
+        case .heavy: return .heavy
+        }
+    }
+    #endif
+}
 
 // MARK: - iOS: UIKit-backed native menu
 //
@@ -167,15 +204,6 @@ struct PlayerMenuButton: UIViewRepresentable {
                 button.titleLabel?.font = .systemFont(ofSize: size, weight: weight.fontWeight)
             }
         }
-    }
-}
-
-private extension PlayerMenuWeight {
-    var symbolWeight: UIImage.SymbolWeight {
-        switch self { case .medium: return .medium; case .semibold: return .semibold; case .heavy: return .heavy }
-    }
-    var fontWeight: UIFont.Weight {
-        switch self { case .medium: return .medium; case .semibold: return .semibold; case .heavy: return .heavy }
     }
 }
 
@@ -326,12 +354,6 @@ struct PlayerMenuButton: NSViewRepresentable {
     }
 }
 
-private extension PlayerMenuWeight {
-    var nsWeight: NSFont.Weight {
-        switch self { case .medium: return .medium; case .semibold: return .semibold; case .heavy: return .heavy }
-    }
-}
-
 // MARK: - tvOS: SwiftUI Menu
 
 #else
@@ -401,12 +423,6 @@ private struct PlayerMenuContent: View {
                 }
             }
         }
-    }
-}
-
-private extension PlayerMenuWeight {
-    var font: Font.Weight {
-        switch self { case .medium: return .medium; case .semibold: return .semibold; case .heavy: return .heavy }
     }
 }
 

@@ -32,7 +32,7 @@ struct SimklTitlePage: View {
     private var service: SimklLibraryService { .shared }
     private var title: String { details?.title ?? seedTitle }
     private var posterURL: String? { details?.posterURL ?? seedPosterURL }
-    private var simklURL: URL { URL(string: "https://simkl.com/\(kind == .movie ? "movies" : kind == .anime ? "anime" : "tv")/\(simklID)")! }
+    private var simklURL: URL? { URL(string: "https://simkl.com/\(kind == .movie ? "movies" : kind == .anime ? "anime" : "tv")/\(simklID)") }
 
     private var watched: Set<SimklEpisodeRef> {
         SimklEpisodePlanner.watched(status: entry?.status ?? .planning, recorded: entry?.watchedEpisodes,
@@ -104,11 +104,12 @@ struct SimklTitlePage: View {
                 animeTitle: request.searchTitle,
                 episodeNumber: request.play.number,
                 seasonNumbering: request.play.seasonNumbering,
-                onDismiss: { picker = nil }
-            ) { streams, selected, showHref, count, episodeHref in
-                streamsLoaded(streams, selected: selected, request: request.play,
-                              href: showHref, episodeHref: episodeHref, count: count)
-            }
+                onDismiss: { picker = nil },
+                onStreamsLoaded: { streams, selected, showHref, count, episodeHref in
+                    streamsLoaded(streams, selected: selected, request: request.play,
+                                  href: showHref, episodeHref: episodeHref, count: count)
+                }
+            )
             .environmentObject(ModuleManager.shared)
         }
         .adaptiveSheet(item: $choice, onDismiss: presentPending) { choice in
@@ -323,10 +324,12 @@ struct SimklTitlePage: View {
             if let message {
                 Text(message).font(.footnote).foregroundStyle(.secondary)
             }
-            Link(destination: simklURL) {
-                Label("library.open_on_simkl", icon: "safari")
+            if let simklURL {
+                Link(destination: simklURL) {
+                    Label("library.open_on_simkl", icon: "safari")
+                }
+                .font(.subheadline)
             }
-            .font(.subheadline)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

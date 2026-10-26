@@ -422,9 +422,7 @@ struct ThumbnailEpisodeRow: View {
             }
         }
     }
-}
 
-extension ThumbnailEpisodeRow {
     /// Filler classifications we surface as a badge. Only `filler` and `mixed-manga`
     /// get badged; canon/unknown/nil are intentionally not shown.
     enum FillerBadge: Equatable {

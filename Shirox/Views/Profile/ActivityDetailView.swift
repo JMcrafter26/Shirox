@@ -237,7 +237,7 @@ struct ActivityDetailView: View {
                         #if os(iOS)
                         .overlay(Circle().stroke(Color(UIColor.systemBackground), lineWidth: 1.5))
                         #elseif os(tvOS)
-                        // TODO: add back overlay
+                        // tvOS has no system background color for the ring, so the avatar goes without one.
                         #else
                         .overlay(Circle().stroke(Color(NSColor.windowBackgroundColor), lineWidth: 1.5))
                         #endif

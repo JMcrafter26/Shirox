@@ -60,9 +60,7 @@ struct ContinueWatchingItem: Identifiable, Codable, Hashable {
     /// before, so resuming a scrambled stream (Re:ANIME) handed the player a playlist it couldn't
     /// read and the episode never loaded. Optional, so saved items still decode.
     var playlistKey: String?
-}
 
-extension ContinueWatchingItem {
     /// True when this item refers to the episode identified by `number`/`href`.
     ///
     /// On a flat multi-season list episode *numbers* repeat (S1 1…12, S2 1…12), so matching an

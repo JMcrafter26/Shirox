@@ -71,21 +71,21 @@ final class AniListSocialService {
     /// A title's trailer and, when signed in, where the people the user follows stand on it —
     /// for the detail page's Details sheet.
     func fetchDetailsExtras(mediaId: Int) async throws -> MediaDetailsExtras {
-        struct Response: Decodable {
-            struct Data: Decodable {
-                struct MediaPart: Decodable { let trailer: MediaDetailsExtras.Trailer? }
-                struct PagePart: Decodable { let mediaList: [ListEntry] }
-                let Media: MediaPart?
-                let Page: PagePart?
-            }
-            let data: Data
+        struct MediaPart: Decodable { let trailer: MediaDetailsExtras.Trailer? }
+        struct PagePart: Decodable { let mediaList: [ListEntry] }
+        struct ResponseData: Decodable {
+            let Media: MediaPart?
+            let Page: PagePart?
         }
+        struct Response: Decodable {
+            let data: ResponseData
+        }
+        struct ListEntryUser: Decodable { let id: Int; let name: String; let avatar: AniListUserAvatar? }
         struct ListEntry: Decodable {
-            struct User: Decodable { let id: Int; let name: String; let avatar: AniListUserAvatar? }
             let status: MediaListStatus?
             let score: Double?
             let progress: Int?
-            let user: User
+            let user: ListEntryUser
         }
         let signedIn = AniListAuthManager.shared.isLoggedIn
         // `isFollowing` is relative to the viewer, so it only means something signed in.
@@ -116,9 +116,9 @@ final class AniListSocialService {
     // MARK: - Profile
 
     func fetchProfile(userId: Int) async throws -> AniListUser {
+        struct ResponseData: Decodable { let User: AniListUser }
         struct Response: Decodable {
-            struct Data: Decodable { let User: AniListUser }
-            let data: Data
+            let data: ResponseData
         }
         let q = """
         query($id: Int) {
@@ -147,9 +147,9 @@ final class AniListSocialService {
     // MARK: - Activity
 
     func fetchActivity(feed: ActivityFeed, userId: Int, page: Int = 1) async throws -> (activities: [AniListActivity], hasNextPage: Bool) {
+        struct ResponseData: Decodable { let Page: PageData }
         struct Response: Decodable {
-            struct Data: Decodable { let Page: PageData }
-            let data: Data
+            let data: ResponseData
         }
         struct PageData: Decodable {
             let pageInfo: PageInfo
@@ -217,9 +217,9 @@ final class AniListSocialService {
     }
 
     func fetchActivityById(id: Int) async throws -> AniListActivity? {
+        struct ResponseData: Decodable { let Activity: ActivityUnion? }
         struct Response: Decodable {
-            struct Data: Decodable { let Activity: ActivityUnion? }
-            let data: Data
+            let data: ResponseData
         }
         struct ActivityUnion: Decodable {
             let __typename: String
@@ -263,9 +263,9 @@ final class AniListSocialService {
 
     func toggleActivityLike(id: Int) async throws -> (likeCount: Int, isLiked: Bool) {
         struct LikeResult: Decodable { let likeCount: Int?; let isLiked: Bool? }
+        struct ResponseData: Decodable { let ToggleLikeV2: LikeResult? }
         struct Response: Decodable {
-            struct Data: Decodable { let ToggleLikeV2: LikeResult? }
-            let data: Data?
+            let data: ResponseData?
         }
         let q = """
         mutation($id: Int) {
@@ -281,9 +281,9 @@ final class AniListSocialService {
 
     func toggleReplyLike(id: Int) async throws -> (likeCount: Int, isLiked: Bool) {
         struct LikeResult: Decodable { let likeCount: Int?; let isLiked: Bool? }
+        struct ResponseData: Decodable { let ToggleLikeV2: LikeResult? }
         struct Response: Decodable {
-            struct Data: Decodable { let ToggleLikeV2: LikeResult? }
-            let data: Data?
+            let data: ResponseData?
         }
         let q = """
         mutation($id: Int) {
@@ -297,9 +297,9 @@ final class AniListSocialService {
     }
 
     func fetchActivityReplies(activityId: Int) async throws -> [ActivityReply] {
+        struct ResponseData: Decodable { let Page: PageData }
         struct Response: Decodable {
-            struct Data: Decodable { let Page: PageData }
-            let data: Data
+            let data: ResponseData
         }
         struct PageData: Decodable { let activityReplies: [ActivityReply] }
         let q = """
@@ -319,9 +319,9 @@ final class AniListSocialService {
     // MARK: - Social
 
     func fetchFollowers(userId: Int, page: Int = 1) async throws -> (users: [AniListUser], hasNextPage: Bool) {
+        struct ResponseData: Decodable { let Page: PageData }
         struct Response: Decodable {
-            struct Data: Decodable { let Page: PageData }
-            let data: Data
+            let data: ResponseData
         }
         struct PageData: Decodable {
             let pageInfo: PageInfo
@@ -341,9 +341,9 @@ final class AniListSocialService {
     }
 
     func fetchFollowing(userId: Int, page: Int = 1) async throws -> (users: [AniListUser], hasNextPage: Bool) {
+        struct ResponseData: Decodable { let Page: PageData }
         struct Response: Decodable {
-            struct Data: Decodable { let Page: PageData }
-            let data: Data
+            let data: ResponseData
         }
         struct PageData: Decodable {
             let pageInfo: PageInfo
@@ -365,9 +365,9 @@ final class AniListSocialService {
     // MARK: - Notifications
 
     func fetchNotifications(filter: AniListNotificationFilter = .all) async throws -> [AniListNotification] {
+        struct ResponseData: Decodable { let Page: PageData }
         struct Response: Decodable {
-            struct Data: Decodable { let Page: PageData }
-            let data: Data
+            let data: ResponseData
         }
         struct PageData: Decodable { let notifications: [NotificationUnion] }
         struct NotificationUnion: Decodable {
@@ -477,19 +477,19 @@ final class AniListSocialService {
     // MARK: - Mutations
 
     func postStatus(text: String) async throws {
+        struct ResponseData: Decodable { let SaveTextActivity: TextActivity? }
         struct Response: Decodable {
-            struct Data: Decodable { let SaveTextActivity: TextActivity? }
-            let data: Data?
+            let data: ResponseData?
         }
         let q = "mutation($text: String) { SaveTextActivity(text: $text) { id } }"
         let _: Response = try await performQuery(query: q, variables: ["text": text], auth: true)
     }
 
     func toggleFollow(userId: Int) async throws -> Bool {
+        struct FollowResult: Decodable { let isFollowing: Bool }
+        struct ResponseData: Decodable { let ToggleFollow: FollowResult }
         struct Response: Decodable {
-            struct Data: Decodable { let ToggleFollow: FollowResult }
-            struct FollowResult: Decodable { let isFollowing: Bool }
-            let data: Data
+            let data: ResponseData
         }
         let q = "mutation($id: Int) { ToggleFollow(userId: $id) { isFollowing } }"
         let r: Response = try await performQuery(query: q, variables: ["id": userId], auth: true)
@@ -497,29 +497,29 @@ final class AniListSocialService {
     }
 
     func deleteActivity(id: Int) async throws {
+        struct Deleted: Decodable { let deleted: Bool? }
+        struct ResponseData: Decodable { let DeleteActivity: Deleted? }
         struct Response: Decodable {
-            struct Data: Decodable { let DeleteActivity: Deleted? }
-            struct Deleted: Decodable { let deleted: Bool? }
-            let data: Data?
+            let data: ResponseData?
         }
         let q = "mutation($id: Int) { DeleteActivity(id: $id) { deleted } }"
         let _: Response = try await performQuery(query: q, variables: ["id": id], auth: true)
     }
 
     func deleteReply(id: Int) async throws {
+        struct Deleted: Decodable { let deleted: Bool? }
+        struct ResponseData: Decodable { let DeleteActivityReply: Deleted? }
         struct Response: Decodable {
-            struct Data: Decodable { let DeleteActivityReply: Deleted? }
-            struct Deleted: Decodable { let deleted: Bool? }
-            let data: Data?
+            let data: ResponseData?
         }
         let q = "mutation($id: Int) { DeleteActivityReply(id: $id) { deleted } }"
         let _: Response = try await performQuery(query: q, variables: ["id": id], auth: true)
     }
 
     func fetchLikes(id: Int, type: LikeableType, page: Int = 1) async throws -> (users: [ActivityUser], hasNextPage: Bool) {
+        struct ResponseData: Decodable { let Page: PageData }
         struct Response: Decodable {
-            struct Data: Decodable { let Page: PageData }
-            let data: Data
+            let data: ResponseData
         }
         struct PageData: Decodable {
             let pageInfo: PageInfo
@@ -540,9 +540,9 @@ final class AniListSocialService {
     }
 
     func postReply(activityId: Int, text: String) async throws -> ActivityReply {
+        struct ResponseData: Decodable { let SaveActivityReply: ActivityReply }
         struct Response: Decodable {
-            struct Data: Decodable { let SaveActivityReply: ActivityReply }
-            let data: Data
+            let data: ResponseData
         }
         let q = """
         mutation($activityId: Int, $text: String) {

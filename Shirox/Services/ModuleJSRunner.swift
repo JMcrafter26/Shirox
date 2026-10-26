@@ -230,7 +230,7 @@ final class ModuleJSRunner {
         let warn: @convention(block) (JSValue) -> Void = {
             Logger.shared.log("[JS Warn] \($0.toString() ?? "")", type: "General")
         }
-        let console = JSValue(newObjectIn: ctx)!
+        guard let console = JSValue(newObjectIn: ctx) else { return }
         console.setObject(log, forKeyedSubscript: "log" as NSString)
         console.setObject(err, forKeyedSubscript: "error" as NSString)
         console.setObject(warn, forKeyedSubscript: "warn" as NSString)

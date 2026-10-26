@@ -224,7 +224,7 @@ final class ScrambledPlaylistTests: XCTestCase {
     }
 
     func testTheLocalMasterNamesEveryPlaylist() {
-        let master = HLSManifestParser.localMasterManifest(
+        let master = HLSManifestParser.localMultivariantManifest(
             videoPlaylist: "video.m3u8",
             audio: [HLSLocalAudio(playlist: "audio.m3u8", name: "Hindi", language: "hi", isDefault: false),
                     HLSLocalAudio(playlist: "audio_1.m3u8", name: "Japanese", language: "ja", isDefault: true)],

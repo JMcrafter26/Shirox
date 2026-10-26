@@ -3,36 +3,10 @@ import Foundation
 // Shared provider-agnostic activity model.
 // Reuses ActivityUser and ActivityMedia already defined in AniListActivity.swift.
 
-enum ActivityKind {
+enum ActivityKind: Codable {
     case text(String)
     case list(status: String, progress: String?, media: ActivityMedia?)
-}
 
-struct UserActivity: Identifiable, Codable {
-    let id: Int
-    let kind: ActivityKind
-    let createdAt: Int
-    let user: ActivityUser?
-    var likeCount: Int
-    let replyCount: Int
-    var isLiked: Bool
-}
-
-extension UserActivity {
-    var asAniListActivity: AniListActivity {
-        switch kind {
-        case .text(let t):
-            return .text(TextActivity(id: id, text: t, createdAt: createdAt,
-                user: user, likeCount: likeCount, replyCount: replyCount, isLiked: isLiked))
-        case .list(let status, let progress, let media):
-            return .list(ListActivity(id: id, status: status, progress: progress,
-                createdAt: createdAt, user: user, media: media,
-                likeCount: likeCount, replyCount: replyCount, isLiked: isLiked))
-        }
-    }
-}
-
-extension ActivityKind: Codable {
     private enum CodingKeys: String, CodingKey { case type, text, status, progress, media }
     private enum Kind: String, Codable { case text, list }
 
@@ -60,6 +34,28 @@ extension ActivityKind: Codable {
             try c.encode(status, forKey: .status)
             try c.encodeIfPresent(progress, forKey: .progress)
             try c.encodeIfPresent(media, forKey: .media)
+        }
+    }
+}
+
+struct UserActivity: Identifiable, Codable {
+    let id: Int
+    let kind: ActivityKind
+    let createdAt: Int
+    let user: ActivityUser?
+    var likeCount: Int
+    let replyCount: Int
+    var isLiked: Bool
+
+    var asAniListActivity: AniListActivity {
+        switch kind {
+        case .text(let t):
+            return .text(TextActivity(id: id, text: t, createdAt: createdAt,
+                user: user, likeCount: likeCount, replyCount: replyCount, isLiked: isLiked))
+        case .list(let status, let progress, let media):
+            return .list(ListActivity(id: id, status: status, progress: progress,
+                createdAt: createdAt, user: user, media: media,
+                likeCount: likeCount, replyCount: replyCount, isLiked: isLiked))
         }
     }
 }

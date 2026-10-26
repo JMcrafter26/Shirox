@@ -97,7 +97,7 @@ struct ContinueWatchingSection: View {
 
     @ViewBuilder
     private func contextMenuItems(for item: ContinueWatchingItem) -> some View {
-        if let _ = item.detailHref, let mid = item.moduleId {
+        if item.detailHref != nil, let mid = item.moduleId {
             Button {
                 if let module = ModuleManager.shared.modules.first(where: { $0.id == mid }) {
                     ModuleManager.shared.selectModule(module)
@@ -143,7 +143,7 @@ struct ContinueWatchingCardDisplay: View {
         let total = item.totalEpisodes
 
         if let avail {
-            let isOngoing = item.isAiring ?? (total == nil || avail < total!)
+            let isOngoing = item.isAiring ?? total.map { avail < $0 } ?? true
             // Clamp the shown episode number to the aired count so a caught-up card never
             // renders an out-of-range numerator (e.g. "Ep 9 / 8").
             let shownEp = min(item.episodeNumber, avail)

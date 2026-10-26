@@ -858,20 +858,21 @@ struct PlayerView: View {
             nextEpisodeStreams = []
             nextEpisodeNumber = 0
             nextEpisodeHref = nil
-        }) {
+        }, content: {
             PlayerNextEpisodePicker(streams: nextEpisodeStreams) { selected in
                 swapStream(selected, episodeNumber: nextEpisodeNumber, allStreams: nextEpisodeStreams, episodeHref: nextEpisodeHref)
             }
             .adaptivePresentationDetents([.height(nextEpisodePickerHeight)])
-        }
+        })
         .sheet(isPresented: $showSequelPicker, onDismiss: {
             sequelResults = []
             pendingSequelMediaID = nil
-        }) {
+        }, content: {
             PlayerSequelPickerSheet(results: sequelResults) { selected in
                 advanceToSequel(selected)
-            }            .adaptivePresentationDetents([.medium])
-        }
+            }
+            .adaptivePresentationDetents([.medium])
+        })
         .playerKeyboardShortcuts(
             togglePlayPause: togglePlayPause,
             skip: { skip(by: $0) },
@@ -3923,9 +3924,9 @@ struct PlayerView: View {
 
 // MARK: - Keyboard Shortcuts Helper
 
-private extension View {
+extension View {
     @ViewBuilder
-    func playerKeyboardShortcuts(
+    fileprivate func playerKeyboardShortcuts(
         togglePlayPause: @escaping () -> Void,
         skip: @escaping (Double) -> Void,
         scheduleHide: @escaping () -> Void,
@@ -4458,7 +4459,7 @@ final class MacPlayerWindowManager: NSObject, ObservableObject {
             }
             return true
         }
-        guard mods.intersection([.command, .control, .option]).isEmpty else { return false }
+        guard mods.isDisjoint(with: [.command, .control, .option]) else { return false }
         switch kind {
         case .reader:
             guard event.type == .keyDown, let key = MacReaderKey(event) else { return false }
@@ -4879,7 +4880,8 @@ private struct TwoFingerTapOverlay: UIViewRepresentable {
     }
 
     static func dismantleUIView(_ uiView: UIView, coordinator: Coordinator) {
-        coordinator.recognizer?.view?.removeGestureRecognizer(coordinator.recognizer!)
+        guard let recognizer = coordinator.recognizer else { return }
+        recognizer.view?.removeGestureRecognizer(recognizer)
     }
 
     final class Coordinator: NSObject, UIGestureRecognizerDelegate {
@@ -4980,7 +4982,8 @@ private struct SpeedBoostOverlay: UIViewRepresentable {
     }
 
     static func dismantleUIView(_ uiView: UIView, coordinator: Coordinator) {
-        coordinator.recognizer?.view?.removeGestureRecognizer(coordinator.recognizer!)
+        guard let recognizer = coordinator.recognizer else { return }
+        recognizer.view?.removeGestureRecognizer(recognizer)
     }
 
     final class Coordinator: NSObject, UIGestureRecognizerDelegate {
@@ -5075,7 +5078,7 @@ class PlayerHostingController<Content: View>: UIHostingController<Content> {
 
     private static func isPlainSpace(_ press: UIPress) -> Bool {
         guard let key = press.key else { return false }
-        return key.charactersIgnoringModifiers == " " && key.modifierFlags.intersection([.command, .control, .alternate]).isEmpty
+        return key.charactersIgnoringModifiers == " " && key.modifierFlags.isDisjoint(with: [.command, .control, .alternate])
     }
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {

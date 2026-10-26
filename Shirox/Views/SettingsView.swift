@@ -440,7 +440,7 @@ private enum Platform {
         if runsOnMac { return sysctlString("hw.model") }
         var info = utsname()
         uname(&info)
-        return withUnsafeBytes(of: &info.machine) { String(decoding: $0.prefix { $0 != 0 }, as: UTF8.self) }
+        return withUnsafeBytes(of: &info.machine) { String(bytes: $0.prefix { $0 != 0 }, encoding: .utf8) ?? "" }
         #endif
         #endif
     }
@@ -1764,7 +1764,7 @@ enum AppDirectories {
             guard fm.fileExists(atPath: from.path), !fm.fileExists(atPath: to.path) else { continue }
             if name == "modules.json" {
                 guard let data = try? Data(contentsOf: from),
-                      String(decoding: data.prefix(4_096), as: UTF8.self).contains("scriptContent") else { continue }
+                      data.prefix(4_096).range(of: Data("scriptContent".utf8)) != nil else { continue }
             }
             try? fm.moveItem(at: from, to: to)
         }

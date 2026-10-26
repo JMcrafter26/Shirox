@@ -321,7 +321,7 @@ class NetworkFetchSimpleManager: NSObject, ObservableObject {
 // MARK: - NetworkFetchSimpleMonitor
 
 @MainActor
-class NetworkFetchSimpleMonitor: NSObject, ObservableObject {
+class NetworkFetchSimpleMonitor: NSObject, ObservableObject, WKNavigationDelegate, WKScriptMessageHandler {
     private var webView: WKWebView?
     private var completionHandler: (([String: Any]) -> Void)?
     private var timer: Timer?
@@ -668,11 +668,11 @@ class NetworkFetchSimpleMonitor: NSObject, ObservableObject {
             networkRequests.append(urlString)
         }
     }
-}
 
-extension NetworkFetchSimpleMonitor: WKNavigationDelegate {
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {}
-    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {}
+    // MARK: - WKNavigationDelegate
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation?) {}
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation?, withError error: Error) {}
     @available(iOS 15.0, macOS 13.0, *)
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
         if let url = navigationAction.request.url {
@@ -681,9 +681,9 @@ extension NetworkFetchSimpleMonitor: WKNavigationDelegate {
         }
         return .allow
     }
-}
 
-extension NetworkFetchSimpleMonitor: WKScriptMessageHandler {
+    // MARK: - WKScriptMessageHandler
+
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         if message.name == "networkLogger",
            let body = message.body as? [String: Any],
@@ -732,7 +732,7 @@ class NetworkFetchManager: NSObject, ObservableObject {
 // MARK: - NetworkFetchMonitor
 
 @MainActor
-class NetworkFetchMonitor: NSObject, ObservableObject {
+class NetworkFetchMonitor: NSObject, ObservableObject, WKNavigationDelegate, WKScriptMessageHandler {
     private var webView: WKWebView?
     private var completionHandler: (([String: Any]) -> Void)?
     private var timer: Timer?
@@ -1337,11 +1337,11 @@ class NetworkFetchMonitor: NSObject, ObservableObject {
             }
         }
     }
-}
 
-extension NetworkFetchMonitor: WKNavigationDelegate {
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {}
-    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {}
+    // MARK: - WKNavigationDelegate
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation?) {}
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation?, withError error: Error) {}
     @available(iOS 15.0, macOS 13.0, *)
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
         if let url = navigationAction.request.url {
@@ -1350,9 +1350,9 @@ extension NetworkFetchMonitor: WKNavigationDelegate {
         }
         return .allow
     }
-}
 
-extension NetworkFetchMonitor: WKScriptMessageHandler {
+    // MARK: - WKScriptMessageHandler
+
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         guard message.name == "networkLogger",
               let body = message.body as? [String: Any] else { return }

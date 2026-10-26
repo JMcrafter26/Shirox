@@ -69,13 +69,13 @@ struct DownloadModulePickerView: View {
                 moduleManager.selectModule(pickerItem.module)
                 onDismiss()
                 onStreamsLoaded([stream], pickerItem.episodeHref)
-            }) { pickerItem in
+            }, content: { pickerItem in
                 DownloadStreamPickerView(streams: pickerItem.streams) { stream in
                     chosenStream = stream
                     chosenPickerItem = pickerItem
                     streamPickerItem = nil
                 }
-            }
+            })
         }
         #if os(iOS)
         .adaptivePresentationDetents([.medium, .large])

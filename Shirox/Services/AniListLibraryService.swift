@@ -90,30 +90,30 @@ final class AniListLibraryService {
         let variables: [String: Any] = ["userId": userId]
         let data = try await post(query: query, variables: variables)
 
+        struct ResponseData: Decodable {
+            let MediaListCollection: Collection
+        }
+        struct Collection: Decodable {
+            let lists: [MediaList]
+        }
+        struct MediaList: Decodable {
+            let name: String
+            let isCustomList: Bool
+            let entries: [RawEntry]
+        }
+        struct RawEntry: Decodable {
+            let id: Int
+            let status: MediaListStatus
+            let progress: Int
+            let score: Double
+            let updatedAt: Int?
+            let media: AniListMedia
+            /// `private` is a Swift keyword, so it needs backticks. Optional because
+            /// responses cached before this field was requested simply won't carry it.
+            let `private`: Bool?
+            let notes: String?
+        }
         struct Response: Decodable {
-            struct ResponseData: Decodable {
-                let MediaListCollection: Collection
-            }
-            struct Collection: Decodable {
-                let lists: [MediaList]
-            }
-            struct MediaList: Decodable {
-                let name: String
-                let isCustomList: Bool
-                let entries: [RawEntry]
-            }
-            struct RawEntry: Decodable {
-                let id: Int
-                let status: MediaListStatus
-                let progress: Int
-                let score: Double
-                let updatedAt: Int?
-                let media: AniListMedia
-                /// `private` is a Swift keyword, so it needs backticks. Optional because
-                /// responses cached before this field was requested simply won't carry it.
-                let `private`: Bool?
-                let notes: String?
-            }
             let data: ResponseData?
         }
 
@@ -197,21 +197,21 @@ final class AniListLibraryService {
             return nil
         }
 
+        struct ResponseData: Decodable {
+            let MediaList: RawEntry?
+        }
+        struct RawEntry: Decodable {
+            let id: Int
+            let status: MediaListStatus
+            let progress: Int
+            let score: Double
+            let `repeat`: Int
+            let updatedAt: Int?
+            let media: AniListMedia
+            let `private`: Bool?
+            let notes: String?
+        }
         struct Response: Decodable {
-            struct ResponseData: Decodable {
-                let MediaList: RawEntry?
-            }
-            struct RawEntry: Decodable {
-                let id: Int
-                let status: MediaListStatus
-                let progress: Int
-                let score: Double
-                let `repeat`: Int
-                let updatedAt: Int?
-                let media: AniListMedia
-                let `private`: Bool?
-                let notes: String?
-            }
             let data: ResponseData?
         }
 
@@ -338,14 +338,14 @@ final class AniListLibraryService {
           }
         }
         """
+        struct ResponseData: Decodable { let MediaList: Entry? }
+        struct Entry: Decodable {
+            let `repeat`: Int?
+            let startedAt: FuzzyDate?
+            let completedAt: FuzzyDate?
+            let customLists: [CustomListFlag]?
+        }
         struct Response: Decodable {
-            struct ResponseData: Decodable { let MediaList: Entry? }
-            struct Entry: Decodable {
-                let `repeat`: Int?
-                let startedAt: FuzzyDate?
-                let completedAt: FuzzyDate?
-                let customLists: [CustomListFlag]?
-            }
             let data: ResponseData?
         }
         do {
@@ -370,11 +370,11 @@ final class AniListLibraryService {
           User(id: $userId) { mediaListOptions { \(list) { customLists } } }
         }
         """
+        struct ResponseData: Decodable { let User: User? }
+        struct User: Decodable { let mediaListOptions: Options? }
+        struct Options: Decodable { let animeList: Lists?; let mangaList: Lists? }
+        struct Lists: Decodable { let customLists: [String]? }
         struct Response: Decodable {
-            struct ResponseData: Decodable { let User: User? }
-            struct User: Decodable { let mediaListOptions: Options? }
-            struct Options: Decodable { let animeList: Lists?; let mangaList: Lists? }
-            struct Lists: Decodable { let customLists: [String]? }
             let data: ResponseData?
         }
         let data = try await post(query: query, variables: ["userId": userId])

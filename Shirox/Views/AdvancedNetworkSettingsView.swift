@@ -1,7 +1,7 @@
 import SwiftUI
 
-// TODO: Custom base URLs for other blocked services (AniList, Jikan, MyAnimeList), through the
-// same kind of rewrite `TMDBHosts` does for TMDB.
+// Only TMDB can be pointed at a custom base URL so far. AniList, Jikan and MyAnimeList are
+// blocked in some regions too and could get the same kind of rewrite `TMDBHosts` does.
 
 /// Expert settings for regions where TMDB, DNS or more is blocked, kept out of the way at the
 /// end of Settings: custom TMDB proxies (`TMDBHosts`), encrypted DNS (`SecureDNS`), a proxy for

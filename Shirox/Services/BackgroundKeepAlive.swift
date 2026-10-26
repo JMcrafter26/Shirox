@@ -93,7 +93,7 @@ final class BackgroundKeepAlive {
         let blockAlign = channels * bitsPerSample / 8
 
         var d = Data()
-        func ascii(_ s: String) { d.append(s.data(using: .ascii)!) }
+        func ascii(_ s: String) { d.append(contentsOf: s.utf8) }
         func u32(_ v: UInt32) { var x = v.littleEndian; withUnsafeBytes(of: &x) { d.append(contentsOf: $0) } }
         func u16(_ v: UInt16) { var x = v.littleEndian; withUnsafeBytes(of: &x) { d.append(contentsOf: $0) } }
 

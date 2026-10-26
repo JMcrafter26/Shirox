@@ -159,7 +159,7 @@ final class MALAuthManager: NSObject, ObservableObject {
         let verifier = generateCodeVerifier()
         codeVerifier = verifier
 
-        var components = URLComponents(string: "https://myanimelist.net/v1/oauth2/authorize")!
+        guard var components = URLComponents(string: "https://myanimelist.net/v1/oauth2/authorize") else { return }
         components.queryItems = [
             URLQueryItem(name: "response_type", value: "code"),
             URLQueryItem(name: "client_id", value: Self.clientId),
@@ -167,9 +167,10 @@ final class MALAuthManager: NSObject, ObservableObject {
             URLQueryItem(name: "code_challenge_method", value: "plain"),
             URLQueryItem(name: "redirect_uri", value: "shirox://auth-mal")
         ]
+        guard let authorizeURL = components.url else { return }
 
         let session = ASWebAuthenticationSession(
-            url: components.url!,
+            url: authorizeURL,
             callbackURLScheme: "shirox"
         ) { [weak self] callbackURL, error in
             guard let self, let url = callbackURL, error == nil else { return }
@@ -334,11 +335,3 @@ final class MALAuthManager: NSObject, ObservableObject {
         return (data, http)
     }
 }
-
-#if !os(tvOS)
-extension MALAuthManager: ASWebAuthenticationPresentationContextProviding {
-    nonisolated func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
-        MainActor.assumeIsolated { presentationAnchorWindow ?? ASPresentationAnchor() }
-    }
-}
-#endif

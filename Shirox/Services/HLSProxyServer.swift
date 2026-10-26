@@ -132,11 +132,9 @@ final class HLSProxyServer: @unchecked Sendable {
             }
             
             var range: String?
-            for line in lines {
-                if line.lowercased().hasPrefix("range:") {
-                    range = line.components(separatedBy: ":").last?.trimmingCharacters(in: .whitespaces)
-                    break
-                }
+            for line in lines where line.lowercased().hasPrefix("range:") {
+                range = line.components(separatedBy: ":").last?.trimmingCharacters(in: .whitespaces)
+                break
             }
             
             Task {
@@ -251,7 +249,7 @@ final class HLSProxyServer: @unchecked Sendable {
 
     private func sendData(_ data: Data, contentType: String, connection: NWConnection) {
         let h = "HTTP/1.1 200 OK\r\nContent-Type: \(contentType)\r\nContent-Length: \(data.count)\r\nAccess-Control-Allow-Origin: *\r\n\r\n"
-        var resp = h.data(using: .utf8)!
+        var resp = Data(h.utf8)
         resp.append(data)
         connection.send(content: resp, completion: .contentProcessed({ _ in }))
     }
@@ -264,7 +262,9 @@ final class HLSProxyServer: @unchecked Sendable {
     private func parseRange(_ r: String, size: Int64) -> (Int64, Int64)? {
         let val = r.replacingOccurrences(of: "bytes=", with: "").components(separatedBy: "-")
         guard let s = Int64(val[0]) else { return nil }
-        let e = val.count > 1 && !val[1].isEmpty ? Int64(val[1])! : size - 1
+        // An end that isn't a number makes the whole header unusable, like a bad start.
+        guard val.count > 1 && !val[1].isEmpty else { return (s, size - 1) }
+        guard let e = Int64(val[1]) else { return nil }
         return (s, e)
     }
 

@@ -141,12 +141,25 @@ final class SimklAuthManager: NSObject, ObservableObject {
          URLQueryItem(name: "app-version", value: Self.appVersion)]
     }
 
+    /// The endpoint with the identification parameters added after any of its own. The paths
+    /// are written in the app, so nil only ever means a programming error, which callers report
+    /// as `badURL` (or send to the bare host) rather than crash on.
+    private func identifiedURL(_ components: URLComponents?, extraQuery: [URLQueryItem] = []) -> URL? {
+        guard var components else { return nil }
+        components.queryItems = extraQuery + identificationQuery
+        return components.url
+    }
+
+    private static let apiHost = URL(string: "https://api.simkl.com")!
+    private static let dataHost = URL(string: "https://data.simkl.in")!
+
     func authorizedRequest(path: String, method: String = "GET",
                            query: [URLQueryItem] = [],
                            body: [String: Any]? = nil) throws -> URLRequest {
-        var components = URLComponents(string: "https://api.simkl.com\(path)")!
-        components.queryItems = query + identificationQuery
-        var request = URLRequest(url: components.url!)
+        guard let url = identifiedURL(URLComponents(string: "https://api.simkl.com\(path)"), extraQuery: query) else {
+            throw URLError(.badURL)
+        }
+        var request = URLRequest(url: url)
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(Self.userAgent, forHTTPHeaderField: "User-Agent")
@@ -160,7 +173,7 @@ final class SimklAuthManager: NSObject, ObservableObject {
         if !Self.loggedSampleURL {
             Self.loggedSampleURL = true
             Logger.shared.log(
-                "[Simkl] request url: \(components.url?.absoluteString ?? "-") ua=\(Self.userAgent)",
+                "[Simkl] request url: \(url.absoluteString) ua=\(Self.userAgent)",
                 type: "Provider")
         }
         return request
@@ -172,9 +185,7 @@ final class SimklAuthManager: NSObject, ObservableObject {
     /// deliberately **no** Authorization — Simkl asks for it to be left off so the edge can serve
     /// the response, and these calls don't count against the user's allowance.
     func catalogRequest(path: String) -> URLRequest {
-        var components = URLComponents(string: "https://api.simkl.com\(path)")!
-        components.queryItems = identificationQuery
-        var request = URLRequest(url: components.url!)
+        var request = URLRequest(url: identifiedURL(URLComponents(string: "https://api.simkl.com\(path)")) ?? Self.apiHost)
         request.setValue(Self.userAgent, forHTTPHeaderField: "User-Agent")
         return request
     }
@@ -182,9 +193,7 @@ final class SimklAuthManager: NSObject, ObservableObject {
     /// A request for one of Simkl's CDN files on data.simkl.in — the trending, DVD and calendar
     /// files. They're public and cost no one any allowance, so no token goes with them.
     func dataRequest(path: String) -> URLRequest {
-        var components = URLComponents(string: "https://data.simkl.in\(path)")!
-        components.queryItems = identificationQuery
-        var request = URLRequest(url: components.url!)
+        var request = URLRequest(url: identifiedURL(URLComponents(string: "https://data.simkl.in\(path)")) ?? Self.dataHost)
         request.setValue(Self.userAgent, forHTTPHeaderField: "User-Agent")
         return request
     }
@@ -293,10 +302,11 @@ final class SimklAuthManager: NSObject, ObservableObject {
     }
 
     /// Form-encoded, per the V2 examples, with the same identification as every other call.
-    private func tokenRequest(_ endpoint: URL, body: Data) -> URLRequest {
-        var components = URLComponents(url: endpoint, resolvingAgainstBaseURL: false)!
-        components.queryItems = identificationQuery
-        var request = URLRequest(url: components.url!)
+    private func tokenRequest(_ endpoint: URL, body: Data) throws -> URLRequest {
+        guard let url = identifiedURL(URLComponents(url: endpoint, resolvingAgainstBaseURL: false)) else {
+            throw URLError(.badURL)
+        }
+        var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         request.setValue(Self.userAgent, forHTTPHeaderField: "User-Agent")
@@ -391,12 +401,7 @@ final class SimklAuthManager: NSObject, ObservableObject {
     func fetchCurrentUser() async {
         do {
             let (data, _) = try await send { try self.authorizedRequest(path: "/users/settings", method: "POST") }
-            struct Settings: Decodable {
-                struct User: Decodable { let name: String?; let avatar: String? }
-                struct Account: Decodable { let id: Int?; let type: String? }
-                let user: User?; let account: Account?
-            }
-            let settings = try JSONDecoder().decode(Settings.self, from: data)
+            let settings = try JSONDecoder().decode(SimklUserSettings.self, from: data)
             username = settings.user?.name
             avatarURL = settings.user?.avatar
             userId = settings.account?.id
@@ -465,10 +470,11 @@ final class SimklAuthManager: NSObject, ObservableObject {
     }
 }
 
-#if !os(tvOS)
-extension SimklAuthManager: ASWebAuthenticationPresentationContextProviding {
-    nonisolated func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
-        MainActor.assumeIsolated { presentationAnchorWindow ?? ASPresentationAnchor() }
-    }
+/// The parts of `/users/settings` the profile uses.
+private struct SimklUserSettings: Decodable {
+    let user: SimklUserSettingsUser?; let account: SimklUserSettingsAccount?
 }
-#endif
+
+private struct SimklUserSettingsUser: Decodable { let name: String?; let avatar: String? }
+
+private struct SimklUserSettingsAccount: Decodable { let id: Int?; let type: String? }

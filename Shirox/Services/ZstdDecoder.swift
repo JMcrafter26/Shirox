@@ -41,7 +41,9 @@ enum ZstdDecoder {
                     if ZSTD_isError(result) != 0 {
                         throw Failure.corrupt(String(cString: ZSTD_getErrorName(result)))
                     }
-                    output.append(target.baseAddress!.assumingMemoryBound(to: UInt8.self), count: out.pos)
+                    if let base = target.baseAddress {
+                        output.append(base.assumingMemoryBound(to: UInt8.self), count: out.pos)
+                    }
                     pending = result
                     return out.pos == out.size
                 }

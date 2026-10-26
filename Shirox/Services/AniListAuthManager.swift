@@ -68,18 +68,16 @@ final class AniListAuthManager: NSObject, ObservableObject {
     // MARK: - Token
 
     var accessToken: String? {
-        get {
-            let query: [CFString: Any] = [
-                kSecClass: kSecClassGenericPassword,
-                kSecAttrAccount: keychainKey,
-                kSecReturnData: true,
-                kSecMatchLimit: kSecMatchLimitOne
-            ]
-            var result: AnyObject?
-            guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
-                  let data = result as? Data else { return nil }
-            return String(data: data, encoding: .utf8)
-        }
+        let query: [CFString: Any] = [
+            kSecClass: kSecClassGenericPassword,
+            kSecAttrAccount: keychainKey,
+            kSecReturnData: true,
+            kSecMatchLimit: kSecMatchLimitOne
+        ]
+        var result: AnyObject?
+        guard SecItemCopyMatching(query as CFDictionary, &result) == errSecSuccess,
+              let data = result as? Data else { return nil }
+        return String(data: data, encoding: .utf8)
     }
 
     private func saveToken(_ token: String) {
@@ -276,23 +274,23 @@ final class AniListAuthManager: NSObject, ObservableObject {
             }
         }
 
+        struct ResponseData: Decodable {
+            let Viewer: Viewer
+        }
+        struct Viewer: Decodable {
+            let id: Int
+            let name: String
+            let avatar: Avatar
+            let unreadNotificationCount: Int?
+            let mediaListOptions: MediaListOptions?
+        }
+        struct Avatar: Decodable {
+            let large: String?
+        }
+        struct MediaListOptions: Decodable {
+            let scoreFormat: String?
+        }
         struct ViewerResponse: Decodable {
-            struct ResponseData: Decodable {
-                let Viewer: Viewer
-            }
-            struct Viewer: Decodable {
-                let id: Int
-                let name: String
-                let avatar: Avatar
-                let unreadNotificationCount: Int?
-                let mediaListOptions: MediaListOptions?
-            }
-            struct Avatar: Decodable {
-                let large: String?
-            }
-            struct MediaListOptions: Decodable {
-                let scoreFormat: String?
-            }
             let data: ResponseData?
         }
         if let response = try? JSONDecoder().decode(ViewerResponse.self, from: data),
@@ -345,9 +343,9 @@ final class AniListAuthManager: NSObject, ObservableObject {
         await AniListThrottle.shared.reportSuccess()
         noteTokenAccepted()
 
+        struct ResponseData: Decodable { let Viewer: Viewer }
+        struct Viewer: Decodable { let unreadNotificationCount: Int? }
         struct CountResponse: Decodable {
-            struct ResponseData: Decodable { let Viewer: Viewer }
-            struct Viewer: Decodable { let unreadNotificationCount: Int? }
             let data: ResponseData?
         }
         if let decoded = try? JSONDecoder().decode(CountResponse.self, from: data),
@@ -356,11 +354,3 @@ final class AniListAuthManager: NSObject, ObservableObject {
         }
     }
 }
-
-#if !os(tvOS)
-extension AniListAuthManager: ASWebAuthenticationPresentationContextProviding {
-    nonisolated func presentationAnchor(for session: ASWebAuthenticationSession) -> ASPresentationAnchor {
-        MainActor.assumeIsolated { presentationAnchorWindow ?? ASPresentationAnchor() }
-    }
-}
-#endif

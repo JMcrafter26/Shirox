@@ -392,7 +392,8 @@ struct LibraryView: View {
                 #if os(iOS)
                     .foregroundStyle(Color(.systemBackground))
                 #else
-                    // TODO: fix missing color ( XCAssets )
+                    // UIKit's system background isn't available here to invert the capsule's
+                    // primary fill, so the label falls back to the secondary color.
                     .foregroundStyle(Color.secondary)
                 #endif
                 .frame(maxWidth: .infinity)
@@ -1355,8 +1356,8 @@ private struct SimklSearchRequest: Identifiable {
     var id: String { "\(kind.rawValue)|\(query)" }
 }
 
-private extension MediaKind {
-    var pillTitle: String {
+extension MediaKind {
+    fileprivate var pillTitle: String {
         switch self {
         case .anime: return String(localized: "common.anime")
         case .manga: return String(localized: "common.manga")
@@ -1365,7 +1366,7 @@ private extension MediaKind {
         }
     }
 
-    var pillIcon: String {
+    fileprivate var pillIcon: String {
         switch self {
         case .anime: return "tv"
         case .manga: return "book"
@@ -1375,7 +1376,7 @@ private extension MediaKind {
     }
 
     /// "Add shows to Watching on Simkl."
-    var noun: String {
+    fileprivate var noun: String {
         switch self {
         case .anime: return "anime"
         case .manga: return "manga"

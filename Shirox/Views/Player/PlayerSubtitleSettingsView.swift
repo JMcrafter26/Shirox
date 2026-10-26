@@ -219,10 +219,10 @@ struct PlayerSubtitleSettingsView: View {
     }
 }
 
-private extension View {
+extension View {
     /// The keyboard with a minus key. `.decimalPad` has none, and a delay can be negative.
     @ViewBuilder
-    func numbersAndPunctuationKeyboard() -> some View {
+    fileprivate func numbersAndPunctuationKeyboard() -> some View {
         #if os(iOS)
         keyboardType(.numbersAndPunctuation)
         #else

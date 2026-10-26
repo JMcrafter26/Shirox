@@ -745,9 +745,7 @@ private struct RootTabView: View {
         .overlay {
             if let source = tabBarMenuSource {
                 TabBarMenu(source: source, selectedTab: selectedTab, tabs: visibleTabs, onPick: openFromTabBarMenu,
-                           onHidesBar: { hidesTabBar = $0 }) {
-                    tabBarMenuSource = nil
-                }
+                           onHidesBar: { hidesTabBar = $0 }, onDismiss: { tabBarMenuSource = nil })
             }
         }
         .adaptiveSheet(isPresented: $showsModuleList) {

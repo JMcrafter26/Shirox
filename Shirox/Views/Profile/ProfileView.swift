@@ -308,7 +308,7 @@ struct ProfileView: View {
         #if os(iOS)
         .overlay(Circle().strokeBorder(Color(UIColor.systemBackground), lineWidth: 4))
         #elseif os(tvOS)
-        // TODO: add back overlay
+        // tvOS has no system background color for the ring, so the avatar goes without one.
         #else
         .overlay(Circle().strokeBorder(Color(NSColor.windowBackgroundColor), lineWidth: 4))
         #endif

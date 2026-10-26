@@ -40,9 +40,7 @@ enum JSONValue: Codable, Equatable {
         case .object(let v): try c.encode(v)
         }
     }
-}
 
-extension JSONValue {
     /// Decodes a typed section payload out of this value.
     func decoded<T: Decodable>(as type: T.Type, using decoder: JSONDecoder) throws -> T {
         let data = try JSONEncoder().encode(self)
@@ -112,6 +110,22 @@ struct BackupEnvelope: Codable, Equatable {
         let version: String
         let build: String
         let platform: String
+
+        static var current: BackupEnvelope.AppInfo {
+            let info = Bundle.main.infoDictionary
+            #if targetEnvironment(macCatalyst)
+            let platform = "macCatalyst"
+            #elseif os(iOS)
+            let platform = "iOS"
+            #elseif os(macOS)
+            let platform = "macOS"
+            #else
+            let platform = "tvOS"
+            #endif
+            return .init(version: info?["CFBundleShortVersionString"] as? String ?? "0",
+                         build: info?["CFBundleVersion"] as? String ?? "0",
+                         platform: platform)
+        }
     }
 
     var formatVersion: Int
@@ -131,23 +145,5 @@ struct BackupEnvelope: Codable, Equatable {
                                                     appVersion: currentFormatVersion)
         }
         return envelope
-    }
-}
-
-extension BackupEnvelope.AppInfo {
-    static var current: BackupEnvelope.AppInfo {
-        let info = Bundle.main.infoDictionary
-        #if targetEnvironment(macCatalyst)
-        let platform = "macCatalyst"
-        #elseif os(iOS)
-        let platform = "iOS"
-        #elseif os(macOS)
-        let platform = "macOS"
-        #else
-        let platform = "tvOS"
-        #endif
-        return .init(version: info?["CFBundleShortVersionString"] as? String ?? "0",
-                     build: info?["CFBundleVersion"] as? String ?? "0",
-                     platform: platform)
     }
 }

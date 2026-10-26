@@ -11,6 +11,36 @@ enum NotificationKind {
     case threadLike(threadTitle: String?, threadURL: String?, userName: String?, context: String?, avatarURL: String?)
     case mediaChange(title: String?, context: String?, coverURL: String?, mediaId: Int?)
     case unknown(context: String?)
+
+    enum IconImage {
+        case avatar(String)
+        case cover(String)
+    }
+
+    var iconImage: IconImage? {
+        switch self {
+        case .airing(_, _, _, let url): return url.map { .cover($0) }
+        case .following(_, _, let url): return url.map { .avatar($0) }
+        case .activityMessage(_, _, _, let url): return url.map { .avatar($0) }
+        case .activityReply(_, _, _, let url): return url.map { .avatar($0) }
+        case .activityMention(_, _, _, let url): return url.map { .avatar($0) }
+        case .activityLike(_, _, _, let url): return url.map { .avatar($0) }
+        case .threadComment(_, _, _, _, let url): return url.map { .avatar($0) }
+        case .threadLike(_, _, _, _, let url): return url.map { .avatar($0) }
+        case .mediaChange(_, _, let url, _): return url.map { .cover($0) }
+        default: return nil
+        }
+    }
+
+    /// Shirox has no forum screen, so thread notifications link out to AniList.
+    var externalURL: URL? {
+        switch self {
+        case .threadComment(_, let url, _, _, _), .threadLike(_, let url, _, _, _):
+            return url.flatMap(URL.init(string:))
+        default:
+            return nil
+        }
+    }
 }
 
 /// AniList hands notifications to clients as a context string written to sit
@@ -36,42 +66,8 @@ struct NotificationSentence: Equatable {
     }
 }
 
-extension NotificationKind {
-    enum IconImage {
-        case avatar(String)
-        case cover(String)
-    }
-
-    var iconImage: IconImage? {
-        switch self {
-        case .airing(_, _, _, let url): return url.map { .cover($0) }
-        case .following(_, _, let url): return url.map { .avatar($0) }
-        case .activityMessage(_, _, _, let url): return url.map { .avatar($0) }
-        case .activityReply(_, _, _, let url): return url.map { .avatar($0) }
-        case .activityMention(_, _, _, let url): return url.map { .avatar($0) }
-        case .activityLike(_, _, _, let url): return url.map { .avatar($0) }
-        case .threadComment(_, _, _, _, let url): return url.map { .avatar($0) }
-        case .threadLike(_, _, _, _, let url): return url.map { .avatar($0) }
-        case .mediaChange(_, _, let url, _): return url.map { .cover($0) }
-        default: return nil
-        }
-    }
-}
-
 struct ProviderNotification: Identifiable {
     let id: Int
     let kind: NotificationKind
     let createdAt: Int
-}
-
-extension NotificationKind {
-    /// Shirox has no forum screen, so thread notifications link out to AniList.
-    var externalURL: URL? {
-        switch self {
-        case .threadComment(_, let url, _, _, _), .threadLike(_, let url, _, _, _):
-            return url.flatMap(URL.init(string:))
-        default:
-            return nil
-        }
-    }
 }
