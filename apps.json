@@ -27,6 +27,15 @@
       },
       "versions": [
         {
+          "version": "1.0.7",
+          "buildVersion": "124",
+          "date": "2026-10-26",
+          "localizedDescription": "Settings has a new General page: light, dark or system appearance, an accent color (Monochrome, Blue, Purple, Pink, Orange, Green or Brown) for buttons, switches and highlights, two new app icons (Realistic and Pride), and the tab to open on. Customize Tabs reorders or hides tabs on iPhone, iPad and Mac (Settings always stays); on iPhone the labels can be hidden and, on iOS 26, the tab bar shrinks while you scroll. Pull to refresh can be Gooey, Glass or None. The main Settings page has section titles, and tapping Platform or Version copies it.\n\nShirox speaks 13 languages: English, German, Spanish, Brazilian Portuguese, French, Italian, Indonesian, Turkish, Vietnamese, Polish, Russian, Simplified Chinese and Japanese. Pick one in Settings › General › Change Language, or request another there.\n\nIcon packs: swap the app's icons for Font Awesome, Iconoir or any pack published by link, in Settings › General › Icon Packs. Packs update from the same link.\n\nDiscord: show what you watch and read as your Discord status, with the title, the episode or chapter and the cover. Sign in with Discord in Settings › Providers › Discord; no token to paste, nothing to install. A test button shows a sample status.\n\nSubtitles: pick any font on your device for text subtitles, in Settings › Subtitles and the player's subtitle sheet.\n\nMac: the search field sits in the toolbar on Search and Library, and the bars fade softly over scrolling content on Mac and iPad. Also: the Contributors page lists developers, contributors and inspirations, and its links open; the bookmark button sits over the search tab on detail pages; and the app download is about 2 MB smaller.",
+          "downloadURL": "https://github.com/xibrox/Shirox/releases/download/latest/Shirox.ipa",
+          "size": 26650085,
+          "minOSVersion": "15.0"
+        },
+        {
           "version": "1.0.6",
           "buildVersion": "123",
           "date": "2026-10-23",
