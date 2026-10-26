@@ -10,6 +10,7 @@ final class SubtitleSettingsManager: ObservableObject {
     private enum Keys {
         static let enabled           = "subtitle.enabled"
         static let fontSize          = "subtitle.fontSize"
+        static let fontFamily        = "subtitle.fontFamily"
         static let shadowRadius      = "subtitle.shadowRadius"
         static let backgroundEnabled = "subtitle.backgroundEnabled"
         static let backgroundOpacity = "subtitle.backgroundOpacity"
@@ -37,6 +38,16 @@ final class SubtitleSettingsManager: ObservableObject {
 
     @Published var fontSize: Double {
         didSet { UserDefaults.standard.set(fontSize, forKey: Keys.fontSize) }
+    }
+
+    /// A font family installed on the device; empty for the system font.
+    @Published var fontFamily: String {
+        didSet { UserDefaults.standard.set(fontFamily, forKey: Keys.fontFamily) }
+    }
+
+    /// The subtitle font at a size: the chosen family, or the system font.
+    func font(size: Double) -> Font {
+        fontFamily.isEmpty ? .system(size: size) : .custom(fontFamily, fixedSize: size)
     }
 
     @Published var shadowRadius: Double {
@@ -90,6 +101,7 @@ final class SubtitleSettingsManager: ObservableObject {
         let d = UserDefaults.standard
         enabled           = d.bool(forKey: Keys.enabled)
         fontSize          = d.double(forKey: Keys.fontSize)
+        fontFamily        = d.string(forKey: Keys.fontFamily) ?? ""
         shadowRadius      = d.double(forKey: Keys.shadowRadius)
         backgroundEnabled = d.bool(forKey: Keys.backgroundEnabled)
         backgroundColor   = SubtitleSettingsManager.loadBackgroundColorFromDefaults()
@@ -105,6 +117,7 @@ final class SubtitleSettingsManager: ObservableObject {
         let d = UserDefaults.standard
         enabled           = d.bool(forKey: Keys.enabled)
         fontSize          = d.double(forKey: Keys.fontSize)
+        fontFamily        = d.string(forKey: Keys.fontFamily) ?? ""
         shadowRadius      = d.double(forKey: Keys.shadowRadius)
         backgroundEnabled = d.bool(forKey: Keys.backgroundEnabled)
         backgroundColor   = SubtitleSettingsManager.loadBackgroundColorFromDefaults()
@@ -119,6 +132,7 @@ final class SubtitleSettingsManager: ObservableObject {
     func restoreDefaults() {
         enabled = true
         fontSize = 24
+        fontFamily = ""
         shadowRadius = 2
         backgroundEnabled = false
         backgroundColor = .black

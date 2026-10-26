@@ -928,6 +928,7 @@ struct SubtitleSettingsPage: View {
                 #if !os(tvOS)
                 ColorPicker("settings.text_color", selection: $settings.foregroundColor, supportsOpacity: false)
                 #endif
+                SubtitleFontRow(settings: settings)
                 Picker("player.size", selection: sizeSelection) {
                     ForEach(PlayerSubtitleMenu.sizes, id: \.points) { size in
                         Text(size.name).tag(size.points)
@@ -1029,7 +1030,7 @@ struct SubtitleSettingsPage: View {
 
     private var subtitleLine: some View {
         Text("settings.did_he_give_you_any")
-            .font(.system(size: min(settings.fontSize, 32)))
+            .font(settings.font(size: min(settings.fontSize, 32)))
             .foregroundStyle(settings.foregroundColor)
             .shadow(color: .black, radius: 0, x: -1, y: 0)
             .shadow(color: .black, radius: 0, x: 1, y: 0)

@@ -877,8 +877,10 @@ final class MPVEngine: PlaybackEngine {
     }
 
     /// The viewer's subtitle settings, applied to what mpv draws.
-    func applySubtitleSettings(visible: Bool, delay: Double, fontSize: Double) {
+    func applySubtitleSettings(visible: Bool, delay: Double, fontSize: Double, fontFamily: String) {
         setProperty("sub-visibility", visible ? "yes" : "no")
+        // For text subtitles; styled (ASS) ones keep the fonts their script names.
+        setProperty("sub-font", fontFamily.isEmpty ? "sans-serif" : fontFamily)
         setDouble("sub-delay", MPVOptions.subDelay(fromOverlayDelay: delay))
         setDouble("sub-scale", MPVOptions.subScale(fontSize: fontSize))
     }

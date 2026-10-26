@@ -531,6 +531,7 @@
 		351D3707B7A8748F53D6E0AC /* SimklBudgetRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7335469D7BA4B6F59269FB0 /* SimklBudgetRow.swift */; };
 		35378FA4A34045311BC88C90 /* SeanimeJSHarness.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D2FC0A9D0A969258C961440 /* SeanimeJSHarness.swift */; };
 		35DE9D632316EFAC32E8DAA0 /* AdvancedNetworkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A30FC88F37974F65C8D08EC /* AdvancedNetworkTests.swift */; };
+		35FE90486B4D0AE97FC8C789 /* SubtitleFontPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D5822B8F4448E3D0BD701B1 /* SubtitleFontPicker.swift */; };
 		3609A7C41B43B3CEB239EEC0 /* SimklOnlyAnimeStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = E40320ED82E9CC8506F18D47 /* SimklOnlyAnimeStore.swift */; };
 		36552AE2839ED8E98A8F611F /* HostBlocklist.swift in Sources */ = {isa = PBXBuildFile; fileRef = 810CED9585EB8327C0CF0AE2 /* HostBlocklist.swift */; };
 		36A3C3C2A8D3B8D144A22113 /* SimklTitleEditSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 301F5C306717CC5992FDB32A /* SimklTitleEditSheet.swift */; };
@@ -579,6 +580,7 @@
 		43913EE44C731C3FEB93573B /* SimklFeedStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22C368EBCB67CA0FCB2B7714 /* SimklFeedStore.swift */; };
 		4393E6EA3E0E0240702A0192 /* SimklEpisodePlanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED7B709D7B1CC0F49AA736E6 /* SimklEpisodePlanner.swift */; };
 		43B2879B2F0E8F8951F228D6 /* ContinueReadingCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 260EB4F88FB4092DF0B4EC76 /* ContinueReadingCard.swift */; };
+		43B90D3ECA7769138F4ECA90 /* SubtitleFontPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D5822B8F4448E3D0BD701B1 /* SubtitleFontPicker.swift */; };
 		4405364F748FFD176A906E38 /* UpcomingCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30AD37FF3D0361891996A82 /* UpcomingCalendarView.swift */; };
 		441417D1121387DAC1B91C07 /* PlayerMenuButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3F3726264F1BB3C79BD4B966 /* PlayerMenuButton.swift */; };
 		443B4FB1B6F071DDCBBC41DF /* MangaModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44010E61F429972277F10D2F /* MangaModels.swift */; };
@@ -1016,6 +1018,7 @@
 		BAEE9A1A2FCB000000000004 /* BackgroundKeepAlive.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAEE9A1A2FCB000000000001 /* BackgroundKeepAlive.swift */; };
 		BBC12BC7B6C8F50AE4BBF23A /* MediaDetailsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 994DF732D9DE948DA9C01ABA /* MediaDetailsSheet.swift */; };
 		BC63B786CA62D1E8CD00D85B /* SeanimeInstallerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1BDE2205F4D477E87B91207 /* SeanimeInstallerTests.swift */; };
+		BC6A40E470ABC6B9E992CCD7 /* SubtitleFontPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D5822B8F4448E3D0BD701B1 /* SubtitleFontPicker.swift */; };
 		BE7949CAC00052852009B90F /* DiscordPresence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3E73471E59E7AEA5DEF84E5E /* DiscordPresence.swift */; };
 		BEE99B47439329A3F2CBC578 /* HostBlocklist.swift in Sources */ = {isa = PBXBuildFile; fileRef = 810CED9585EB8327C0CF0AE2 /* HostBlocklist.swift */; };
 		BFC9D9488DE729D337E64025 /* AniListMarkdownTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EAE328685F1F95E826AA0C1 /* AniListMarkdownTests.swift */; };
@@ -1446,6 +1449,7 @@
 		3B9960DBEE30D6498247A133 /* BackupProgressSectionTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BackupProgressSectionTests.swift; sourceTree = "<group>"; };
 		3C3EAE5B294CD3826CD76E5F /* ScrambledStreamPlaybackTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScrambledStreamPlaybackTests.swift; sourceTree = "<group>"; };
 		3CB5F43A448079ACC600D906 /* MangaProgressManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MangaProgressManager.swift; sourceTree = "<group>"; };
+		3D5822B8F4448E3D0BD701B1 /* SubtitleFontPicker.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SubtitleFontPicker.swift; sourceTree = "<group>"; };
 		3D6742C550B97293CCFDC834 /* LibraryCollapsingHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryCollapsingHeader.swift; sourceTree = "<group>"; };
 		3E73471E59E7AEA5DEF84E5E /* DiscordPresence.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiscordPresence.swift; sourceTree = "<group>"; };
 		3F3726264F1BB3C79BD4B966 /* PlayerMenuButton.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PlayerMenuButton.swift; sourceTree = "<group>"; };
@@ -2118,6 +2122,7 @@
 				D543E2A2D8BF2A3E8FE21B10 /* MPVVideoView.swift */,
 				0A08E27B4A688BE98644F700 /* PlayerAssOverlay.swift */,
 				A4F322436530D1C8DAD505F3 /* PlayerVideoInfoPanel.swift */,
+				3D5822B8F4448E3D0BD701B1 /* SubtitleFontPicker.swift */,
 			);
 			path = Player;
 			sourceTree = "<group>";
@@ -3319,6 +3324,7 @@
 				DF9F55C7DDCC34914F89D68B /* IconManifest.swift in Sources */,
 				DF79459BE59DD61E9A3A145E /* DiscordPresence.swift in Sources */,
 				5668E0169DA2E8967417CFCB /* DiscordSettingsView.swift in Sources */,
+				BC6A40E470ABC6B9E992CCD7 /* SubtitleFontPicker.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3651,6 +3657,7 @@
 				C9F5DBB95FB9F695DC721466 /* IconManifest.swift in Sources */,
 				DBCCD80611AE9857DFC1BE8D /* DiscordPresence.swift in Sources */,
 				963A72839A5E1D2B027D6AC3 /* DiscordSettingsView.swift in Sources */,
+				43B90D3ECA7769138F4ECA90 /* SubtitleFontPicker.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -3984,6 +3991,7 @@
 				4BE00A6EE00E138ED5FF0D38 /* IconManifest.swift in Sources */,
 				BE7949CAC00052852009B90F /* DiscordPresence.swift in Sources */,
 				D02D089EEC777AE1E249E801 /* DiscordSettingsView.swift in Sources */,
+				35FE90486B4D0AE97FC8C789 /* SubtitleFontPicker.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

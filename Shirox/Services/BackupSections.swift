@@ -109,6 +109,8 @@ struct LocalLibraryBackupSection: BackupSection {
 struct SubtitleBackupPayload: Codable {
     var enabled: Bool
     var fontSize: Double
+    /// Absent from backups made before it existed.
+    var fontFamily: String? = nil
     var shadowRadius: Double
     var backgroundEnabled: Bool
     /// Nil in backups from before the background could be styled.
@@ -211,6 +213,7 @@ struct SettingsBackupSection: BackupSection {
             subtitles: SubtitleBackupPayload(
                 enabled: subtitles.enabled,
                 fontSize: subtitles.fontSize,
+                fontFamily: subtitles.fontFamily,
                 shadowRadius: subtitles.shadowRadius,
                 backgroundEnabled: subtitles.backgroundEnabled,
                 backgroundRGB: [background.0, background.1, background.2],
@@ -245,6 +248,10 @@ struct SettingsBackupSection: BackupSection {
             let manager = SubtitleSettingsManager.shared
             manager.enabled = s.enabled
             manager.fontSize = s.fontSize
+            // Only a family this device has; otherwise the system font stays.
+            if let family = s.fontFamily, family.isEmpty || SubtitleFonts.families.contains(family) {
+                manager.fontFamily = family
+            }
             manager.shadowRadius = s.shadowRadius
             manager.backgroundEnabled = s.backgroundEnabled
             if let c = s.backgroundRGB, c.count == 3 {

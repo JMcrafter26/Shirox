@@ -67,6 +67,7 @@ struct PlayerSubtitleSettingsView: View {
                 Section {
                     #if !os(tvOS)
                     ColorPicker("settings.text_color", selection: $settings.foregroundColor)
+                    SubtitleFontRow(settings: settings)
 
                     VStack(alignment: .leading, spacing: 4) {
                         HStack {

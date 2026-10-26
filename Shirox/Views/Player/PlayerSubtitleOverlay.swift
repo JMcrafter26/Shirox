@@ -56,7 +56,7 @@ struct PlayerSubtitleOverlay: View {
 
             if settings.enabled, let cue = activeCue {
                 Text(cue.text)
-                    .font(.system(size: settings.fontSize))
+                    .font(settings.font(size: settings.fontSize))
                     .foregroundStyle(settings.foregroundColor)
                     // 4-directional outline
                     .shadow(color: outlineColor, radius: 0, x: -1, y:  0)

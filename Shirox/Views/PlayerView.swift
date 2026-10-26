@@ -853,6 +853,7 @@ struct PlayerView: View {
         .onChangeOf(subtitleSettings.enabled) { _ in applySubtitlesToMPV() }
         .onChangeOf(subtitleSettings.delaySeconds) { _ in applySubtitlesToMPV() }
         .onChangeOf(subtitleSettings.fontSize) { _ in applySubtitlesToMPV() }
+        .onChangeOf(subtitleSettings.fontFamily) { _ in applySubtitlesToMPV() }
         .sheet(isPresented: $showNextEpisodePicker, onDismiss: {
             nextEpisodeStreams = []
             nextEpisodeNumber = 0
@@ -3906,7 +3907,7 @@ struct PlayerView: View {
         case .none, .cues, .assOverlay: mpv.showSubtitles(.none)
         }
         mpv.applySubtitleSettings(visible: subtitleSettings.enabled, delay: subtitleSettings.delaySeconds,
-                                  fontSize: subtitleSettings.fontSize)
+                                  fontSize: subtitleSettings.fontSize, fontFamily: subtitleSettings.fontFamily)
     }
 
     private func sourceMenuItems() -> [PlayerMenuItem] {
