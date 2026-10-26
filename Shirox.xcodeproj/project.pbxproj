@@ -11,6 +11,7 @@
 		00A9C2D1D8A98E34D126CD06 /* ZstdDecoderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8C220528D41F9BA2258478A7 /* ZstdDecoderTests.swift */; };
 		00C715F7D131B580D7ACA5E3 /* adult_hosts.txt in Resources */ = {isa = PBXBuildFile; fileRef = E1C750867F19DF886AA2D7E8 /* adult_hosts.txt */; };
 		01B98E834D51E54F3EEB9C99 /* FreshInstallKeychainPurgeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9EC3ED0C2D6F7589559C879E /* FreshInstallKeychainPurgeTests.swift */; };
+		01C046B4AAC9A7DA8AAA3471 /* manga.icon in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB1A517156CF847ED73915 /* manga.icon */; };
 		01F3122EB1433A2760331D14 /* TMDBLogoService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06CCD3C16F73166AFC6E89C6 /* TMDBLogoService.swift */; };
 		025046386122DBD97BDEBCE3 /* SimklAnimeOpener.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7496DED830909E3851C4653D /* SimklAnimeOpener.swift */; };
 		028A7BFC6F1AE04C6B995A5B /* PlayerAssOverlayTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E508610E714E87932D182B3 /* PlayerAssOverlayTests.swift */; };
@@ -601,6 +602,7 @@
 		4901D0B3725A729C1ACC215A /* TrackingIDInput.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D86F9ECC723417E1CFE1019 /* TrackingIDInput.swift */; };
 		49405686E3A7A09037D3891E /* SimklSyncPlanTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D76D661EDB11E936A894C15B /* SimklSyncPlanTests.swift */; };
 		49945AAE0868AF20636E8A0B /* LibraryDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1659CAEADDD8118DA5FF4FFF /* LibraryDataSource.swift */; };
+		4A2232B46F40B6D1B5862D17 /* manga.icon in Resources */ = {isa = PBXBuildFile; fileRef = 2BFB1A517156CF847ED73915 /* manga.icon */; };
 		4A3FB3E3D839EB6C4116A186 /* BookmarkButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEFA93DA5617959381E10D85 /* BookmarkButton.swift */; };
 		4B292E9C9B997D9CF75FB80B /* MangaProgressManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CB5F43A448079ACC600D906 /* MangaProgressManager.swift */; };
 		4B83CA001513C5586B4DA164 /* PlaybackEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = D60B798231DDDA4482EFD7DF /* PlaybackEngine.swift */; };
@@ -1426,6 +1428,7 @@
 		2AD85596DDDE2969C940A38C /* TrackingLinks.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TrackingLinks.swift; sourceTree = "<group>"; };
 		2B66C463943ED240E736D2D5 /* SimklAutomaticRequestTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklAutomaticRequestTests.swift; sourceTree = "<group>"; };
 		2BBF394BB32529338B9F3C13 /* LibraryCacheStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LibraryCacheStore.swift; sourceTree = "<group>"; };
+		2BFB1A517156CF847ED73915 /* manga.icon */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = folder.iconcomposer.icon; path = manga.icon; sourceTree = "<group>"; };
 		2C4A4D717CED7197DBAD4A83 /* JellyfinModels.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = JellyfinModels.swift; sourceTree = "<group>"; };
 		2D27CE239EB1FB6F910EF415 /* CastProxyStreamingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CastProxyStreamingTests.swift; sourceTree = "<group>"; };
 		2D2FC0A9D0A969258C961440 /* SeanimeJSHarness.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SeanimeJSHarness.swift; sourceTree = "<group>"; };
@@ -2247,6 +2250,7 @@
 				4774A640D5D4477765CAEF00 /* Resources */,
 				DE2E2EEC12DA73A04F1181AE /* Info-macOS.plist */,
 				DA68943EB0621FEE8F6ADA50 /* Localizable.xcstrings */,
+				2BFB1A517156CF847ED73915 /* manga.icon */,
 			);
 			path = Shirox;
 			sourceTree = "<group>";
@@ -2752,6 +2756,7 @@
 				40B24A0864D764C080CF4171 /* SeanimeInstall.js in Resources */,
 				864C300F1E47DB2105661644 /* ExtensionRuntime.js in Resources */,
 				A72DD4633E5DB0EC71B9EB98 /* Localizable.xcstrings in Resources */,
+				01C046B4AAC9A7DA8AAA3471 /* manga.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2766,6 +2771,7 @@
 				F5F09B5AEE05E5CB69F486A6 /* SeanimeInstall.js in Resources */,
 				C10F42DA684E7AF85A2EB0BF /* ExtensionRuntime.js in Resources */,
 				56CE3B31B9DDE9D8587B9443 /* Localizable.xcstrings in Resources */,
+				4A2232B46F40B6D1B5862D17 /* manga.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
