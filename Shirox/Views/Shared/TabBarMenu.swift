@@ -319,21 +319,24 @@ struct TabBarHoldProbe: UIViewRepresentable {
         var onHold: ((CGRect) -> Void)?
         private weak var bar: UITabBar?
         private var barHidden = false
-        /// The capsule hidden for the menu. Restored by name, not looked up again: search can
+        /// The capsules hidden for the menu. Restored by name, not looked up again: search can
         /// rebuild the bar meanwhile, and a lookup then found a different view and left this
         /// one invisible — the tab bar gone.
-        private weak var hiddenCapsule: UIView?
+        private let hiddenCapsules = NSHashTable<UIView>.weakObjects()
 
         /// The capsule holding the tabs. Since iOS 26 it's one of the bar's own subviews,
         /// apart from the search button's circle (which sits inside another view); before
         /// that the whole bar is the tabs.
+        ///
+        /// With the bar set to minimize on scroll there are two: the full one and the small
+        /// one the bar shrinks to, kept invisible until then. The first in the list was the
+        /// small one, sized to the selected tab, so a hold anywhere else never began. The
+        /// one showing is the one held; while both do, the wider.
         private var tabsCapsule: UIView? {
             guard let bar else { return nil }
-            return bar.subviews.first { String(describing: type(of: $0)).contains("PlatterView") } ?? bar
-        }
-
-        private var allCapsules: [UIView] {
-            bar?.subviews.filter { String(describing: type(of: $0)).contains("PlatterView") } ?? []
+            let platters = bar.subviews.filter { String(describing: type(of: $0)).contains("PlatterView") }
+            let showing = platters.filter { !$0.isHidden && $0.alpha > 0.01 }
+            return (showing.isEmpty ? platters : showing).max { $0.bounds.width < $1.bounds.width } ?? bar
         }
 
         func attach(to bar: UITabBar) {
@@ -343,9 +346,9 @@ struct TabBarHoldProbe: UIViewRepresentable {
             hold.minimumPressDuration = 0.4
             hold.delegate = self
             bar.addGestureRecognizer(hold)
-            if barHidden {
-                hiddenCapsule = tabsCapsule
-                hiddenCapsule?.alpha = 0
+            if barHidden, let capsule = tabsCapsule {
+                hiddenCapsules.add(capsule)
+                capsule.alpha = 0
             }
         }
 
@@ -354,11 +357,13 @@ struct TabBarHoldProbe: UIViewRepresentable {
             barHidden = hidden
             // Under the menu's glass either way, so a quick fade is enough.
             if hidden {
-                hiddenCapsule = tabsCapsule
-                UIView.animate(withDuration: 0.12) { self.hiddenCapsule?.alpha = 0 }
+                guard let capsule = tabsCapsule else { return }
+                hiddenCapsules.add(capsule)
+                UIView.animate(withDuration: 0.12) { capsule.alpha = 0 }
             } else {
-                let capsules = [hiddenCapsule].compactMap { $0 } + allCapsules
-                hiddenCapsule = nil
+                // Only the ones hidden here: the bar keeps its minimized capsule invisible itself.
+                let capsules = hiddenCapsules.allObjects
+                hiddenCapsules.removeAllObjects()
                 UIView.animate(withDuration: 0.2) { capsules.forEach { $0.alpha = 1 } }
             }
         }
