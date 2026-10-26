@@ -80,13 +80,13 @@ final class JikanEndpointChoiceTests: XCTestCase {
     /// expressible, which is why this is `.some(nil)` rather than `nil`.
     func testTopRatedUsesTheDefaultRanking() {
         let filter = DiscoverSort.topRated.jikanTopFilter
-        XCTAssertNotNil(filter, "Top Rated must be expressible on /top/anime")
+        XCTAssertTrue(filter != nil, "Top Rated must be expressible on /top/anime")
         XCTAssertEqual(filter, .some(nil))
     }
 
     /// Newest has no ranked equivalent, so it has to fall back to the search endpoint.
     func testNewestHasNoRankedEquivalent() {
-        XCTAssertNil(DiscoverSort.newest.jikanTopFilter)
+        XCTAssertTrue(DiscoverSort.newest.jikanTopFilter == nil)
     }
 
     /// Popularity is ranked ascending on MAL — rank 1 is the most popular — and getting this

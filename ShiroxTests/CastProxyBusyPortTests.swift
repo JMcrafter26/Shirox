@@ -15,16 +15,8 @@ final class CastProxyBusyPortTests: XCTestCase {
     override func setUp() async throws {
         savedPort = proxy.port
         blocker = try NWListener(using: .tcp, on: 18767)
-        await withCheckedContinuation { (ready: CheckedContinuation<Void, Never>) in
-            var resumed = false
-            blocker.stateUpdateHandler = { state in
-                guard case .ready = state, !resumed else { return }
-                resumed = true
-                ready.resume()
-            }
-            blocker.newConnectionHandler = { $0.cancel() }
-            blocker.start(queue: .global())
-        }
+        blocker.newConnectionHandler = { $0.cancel() }
+        await blocker.startWhenReady(queue: .global())
         proxy.port = 18767
     }
 

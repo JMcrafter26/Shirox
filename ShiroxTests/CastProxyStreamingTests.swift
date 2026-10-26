@@ -71,8 +71,9 @@ final class CastProxyStreamingTests: XCTestCase {
     }
 }
 
-/// An upstream that sends its body a chunk at a time, `interval` apart.
-final class DribblingServer {
+/// An upstream that sends its body a chunk at a time, `interval` apart. Unchecked Sendable: its
+/// state is only touched on `queue`.
+final class DribblingServer: @unchecked Sendable {
     private let listener: NWListener
     private let queue = DispatchQueue(label: "test.dribbling-server")
     private let chunks: Int
@@ -90,16 +91,8 @@ final class DribblingServer {
     static func start(chunks: Int, chunkSize: Int, interval: TimeInterval) async throws -> DribblingServer {
         let server = DribblingServer(listener: try NWListener(using: .tcp, on: .any),
                                      chunks: chunks, chunkSize: chunkSize, interval: interval)
-        await withCheckedContinuation { (ready: CheckedContinuation<Void, Never>) in
-            var resumed = false
-            server.listener.stateUpdateHandler = { state in
-                guard case .ready = state, !resumed else { return }
-                resumed = true
-                ready.resume()
-            }
-            server.listener.newConnectionHandler = { [weak server] in server?.serve($0) }
-            server.listener.start(queue: server.queue)
-        }
+        server.listener.newConnectionHandler = { [weak server] in server?.serve($0) }
+        await server.listener.startWhenReady(queue: server.queue)
         server.url = URL(string: "http://127.0.0.1:\(server.listener.port!.rawValue)/episode.mkv")
         return server
     }

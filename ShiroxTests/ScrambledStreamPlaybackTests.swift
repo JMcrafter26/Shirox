@@ -236,8 +236,8 @@ final class ScrambledStreamPlaybackTests: XCTestCase {
     func testADownloadKeepsEverySubtitleTrack() async throws {
         server.routes["/subs/en.vtt"] = (Data("WEBVTT\n\n00:00:00.500 --> 00:00:02.000\nHello\n".utf8), "text/vtt")
         server.routes["/subs/es.vtt"] = (Data("WEBVTT\n\n00:00:00.500 --> 00:00:02.000\nHola\n".utf8), "text/vtt")
-        let english = SubtitleTrack(title: "English", url: server.url("/subs/en.vtt"), headers: Self.moduleHeaders)
-        let spanish = SubtitleTrack(title: "Español", url: server.url("/subs/es.vtt"), headers: Self.moduleHeaders)
+        let english = SubtitleTrack(title: "English", url: server.url("/subs/en.vtt"), headers: Self.moduleHeaders) // i18n-ignore: test fixture
+        let spanish = SubtitleTrack(title: "Español", url: server.url("/subs/es.vtt"), headers: Self.moduleHeaders) // i18n-ignore: test fixture
         let stream = StreamResult(title: "1080p", url: masterURL, headers: Self.moduleHeaders,
                                   subtitle: english.url.absoluteString, subtitleHeaders: Self.moduleHeaders,
                                   allSubtitles: [english, spanish], playlistKey: ScrambledPlaylistTests.keyString)
@@ -433,16 +433,8 @@ final class FixtureHTTPServer: @unchecked Sendable {
 
     static func start(requiredHeaders: [String: String]) async throws -> FixtureHTTPServer {
         let server = FixtureHTTPServer(listener: try NWListener(using: .tcp, on: .any), requiredHeaders: requiredHeaders)
-        await withCheckedContinuation { (ready: CheckedContinuation<Void, Never>) in
-            var resumed = false
-            server.listener.stateUpdateHandler = { state in
-                guard case .ready = state, !resumed else { return }
-                resumed = true
-                ready.resume()
-            }
-            server.listener.newConnectionHandler = { [weak server] in server?.accept($0) }
-            server.listener.start(queue: server.queue)
-        }
+        server.listener.newConnectionHandler = { [weak server] in server?.accept($0) }
+        await server.listener.startWhenReady(queue: server.queue)
         return server
     }
 

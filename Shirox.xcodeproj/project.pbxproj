@@ -944,6 +944,7 @@
 		A68477759081A14E92BD2E63 /* JellyfinSeriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F8C802FC011BC97C71DB79A /* JellyfinSeriesView.swift */; };
 		A68F1B886076049F59CA7355 /* PendingWriteQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = BE39C4F1F663C90A50947045 /* PendingWriteQueue.swift */; };
 		A72DD4633E5DB0EC71B9EB98 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = DA68943EB0621FEE8F6ADA50 /* Localizable.xcstrings */; };
+		A7395CC47E1D1989BB80DD2A /* NWListenerReady.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6552C97EFF65DCD9E62EBC1 /* NWListenerReady.swift */; };
 		A7A516D320255046F7FABAF7 /* SimklFeedStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9986AD464FE67DB3FF7B1F21 /* SimklFeedStoreTests.swift */; };
 		A813E1B95B6777ABA75FF6D5 /* SimklCatalogCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28400498ED297A076CD0BFBB /* SimklCatalogCache.swift */; };
 		A82D7118DD30609EB02B926C /* SimklPlayback.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8921729D681B60AFBD21EAC4 /* SimklPlayback.swift */; };
@@ -1709,6 +1710,7 @@
 		D543E2A2D8BF2A3E8FE21B10 /* MPVVideoView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MPVVideoView.swift; sourceTree = "<group>"; };
 		D60B798231DDDA4482EFD7DF /* PlaybackEngine.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PlaybackEngine.swift; sourceTree = "<group>"; };
 		D636588E15C783D1A453E0F7 /* SimklDiscoverTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklDiscoverTests.swift; sourceTree = "<group>"; };
+		D6552C97EFF65DCD9E62EBC1 /* NWListenerReady.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = NWListenerReady.swift; sourceTree = "<group>"; };
 		D6C25C93B56EBA2E868ADE43 /* BackupAccountsSectionTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BackupAccountsSectionTests.swift; sourceTree = "<group>"; };
 		D76D661EDB11E936A894C15B /* SimklSyncPlanTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklSyncPlanTests.swift; sourceTree = "<group>"; };
 		D8BE6D07A3760D7A3A5F471E /* SimklPlayContextTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklPlayContextTests.swift; sourceTree = "<group>"; };
@@ -2489,6 +2491,7 @@
 				5C82B3E2D2FAEAA0D47DC0C1 /* JSTMDBRewriteTests.swift */,
 				0A30FC88F37974F65C8D08EC /* AdvancedNetworkTests.swift */,
 				CC394382AD78405AC31B9814 /* ManaExtensionTests.swift */,
+				D6552C97EFF65DCD9E62EBC1 /* NWListenerReady.swift */,
 			);
 			path = ShiroxTests;
 			sourceTree = SOURCE_ROOT;
@@ -3010,6 +3013,7 @@
 				3FD078CDB4F4ADF0CDE4B0E2 /* JSTMDBRewriteTests.swift in Sources */,
 				35DE9D632316EFAC32E8DAA0 /* AdvancedNetworkTests.swift in Sources */,
 				4DC87C1BED621B8E56B9B73B /* ManaExtensionTests.swift in Sources */,
+				A7395CC47E1D1989BB80DD2A /* NWListenerReady.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4108,7 +4112,7 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGNING_ALLOWED = NO;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.shirox.ShiroxTests;
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = NO;
@@ -4223,7 +4227,7 @@
 				CLANG_ENABLE_OBJC_WEAK = NO;
 				CODE_SIGNING_ALLOWED = NO;
 				GENERATE_INFOPLIST_FILE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.shirox.ShiroxTests;
 				SDKROOT = iphoneos;
 				SWIFT_EMIT_LOC_STRINGS = NO;
