@@ -10,23 +10,31 @@ permissions:
   contents: read
 
 jobs:
-  autocorrect:
-    name: Check SwiftLint autocorrections
+  swiftlint:
+    name: Check SwiftLint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
+      # Same version as the local install, pinned by digest. Every finding fails the check.
+      - name: Run swiftlint lint
+        run: >
+          docker run --rm -v "$PWD:/work" -w /work
+          ghcr.io/realm/swiftlint@sha256:f47e083201e47a136cda5ae847595bfe00226c444ca226fa74fa5dc648a9b057
+          swiftlint lint --strict --quiet --reporter github-actions-logging
+
       # The code is kept as `swiftlint --fix` leaves it, so this fails when it would still change
-      # something. The other ~1,300 findings are fixed in changes of their own and don't fail it.
-      # Same version as the local install, pinned by digest.
+      # something. Runs even when the lint failed, to show the corrections.
       - name: Run swiftlint --fix
+        if: ${{ !cancelled() }}
         run: >
           docker run --rm -v "$PWD:/work" -w /work
           ghcr.io/realm/swiftlint@sha256:f47e083201e47a136cda5ae847595bfe00226c444ca226fa74fa5dc648a9b057
           swiftlint --fix --quiet
 
       - name: Fail on uncorrected code
+        if: ${{ !cancelled() }}
         run: |
           if ! git diff --exit-code --stat; then
             echo "::error::Run 'swiftlint --fix' and commit the result."
