@@ -73,14 +73,15 @@ library with tracking (AniList, MyAnimeList, Simkl), Jellyfin, and playback/read
   `scripts/check-commit-msg.sh`.
 - Commit messages: no em dashes, no emoji, no hidden characters, no Co-Authored-By or "Generated
   with" lines. A short subject ("Area: what changed"), then why in plain sentences.
-- CI: commit messages, Semgrep, Strings and icons (`i18n.py check`, `icons.py check`), and the
-  nightly build that publishes the IPA and updates `apps.json`.
+- CI: commit messages, Semgrep, Strings and icons (`i18n.py check`, `icons.py check`), SwiftLint
+  (fails when `swiftlint --fix` would still change something), and the nightly build that publishes the IPA and updates `apps.json`.
 
 ## Code style
 
 - Match the surrounding code: comments say why, in plain sentences; `#if os(…)` per platform;
   no new warnings, and fix the ones you come across.
-- SwiftLint (`.swiftlint.yml`) currently reports about 2,100 existing issues. They're to be fixed in
-  their own change, not mixed into feature work; new code shouldn't add more.
+- SwiftLint (`.swiftlint.yml`): run `swiftlint --fix` before committing; CI fails on anything it
+  would still correct. It reports about 1,350 other existing issues. They're to be fixed in their
+  own change, not mixed into feature work; new code shouldn't add more.
 - Concurrency: shared services are `@MainActor` singletons; constants read off the main actor are
   `nonisolated`; don't hold an `NSLock` across `await`.
