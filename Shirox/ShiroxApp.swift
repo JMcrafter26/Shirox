@@ -637,6 +637,9 @@ private struct RootTabView: View {
                     }
                 }
                 .tabViewStyle(.sidebarAdaptable)
+                // The tab bar keeps the items it built from the labels, so a change to Hide Tab
+                // Labels only showed after a relaunch; building the TabView again applies it.
+                .id(hidesTabLabels)
                 .tabBarMinimizes(minimizesTabBar && UIDevice.current.userInterfaceIdiom == .phone)
                 .searchTabOpensWithoutKeyboard(selectedTab: selectedTab)
                 .toolbarBackgroundHidden()
@@ -672,6 +675,7 @@ private struct RootTabView: View {
                             .tag(tab.rawValue)
                     }
                 }
+                .id(hidesTabLabels)
                 .appTint()
                 #endif
             }
