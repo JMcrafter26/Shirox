@@ -25,6 +25,9 @@ struct DiscordSettingsView: View {
                             Text(discord.username ?? String(localized: "settings.signed_in"))
                                 .foregroundStyle(.secondary)
                         }
+                        Button(LocalizedStringKey(discord.isShowingTest ? "settings.discord_clear_test" : "settings.discord_send_test")) {
+                            if discord.isShowingTest { discord.clear() } else { discord.showTest() }
+                        }
                         Button("settings.sign_out", role: .destructive) { discord.signOut() }
                     } else {
                         Button {

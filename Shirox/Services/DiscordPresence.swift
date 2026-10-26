@@ -32,6 +32,8 @@ final class DiscordPresence: NSObject, ObservableObject {
     @Published private(set) var username: String?
     @Published private(set) var isSigningIn = false
     @Published private(set) var lastError: String?
+    /// The test status from Settings is up.
+    @Published private(set) var isShowingTest = false
 
     var isSignedIn: Bool { keychainRead(Self.refreshTokenAccount) != nil }
 
@@ -94,8 +96,20 @@ final class DiscordPresence: NSObject, ObservableObject {
                       state: lines.joined(separator: " · "), cover: coverURL, coverText: title, start: Date()))
     }
 
+    /// A sample status with the Shirox icon, to try the setup without anything playing.
+    func showTest() {
+        updateMedia(title: "Shirox", subtitle: String(localized: "settings.discord_test_status"),
+                    season: 1, episode: 1, coverURL: Self.iconURL, isPlaying: true)
+        isShowingTest = true
+    }
+
+    /// Shirox's icon, as Discord serves it for the application.
+    private static let iconURL =
+        "https://cdn.discordapp.com/app-icons/1375525918696669305/a1d768656bd887068ec1103230785e52.png?size=512"
+
     /// Nothing open any more: the status goes.
     func clear() {
+        isShowingTest = false
         pending = nil
         sendTask?.cancel()
         renewTimer?.invalidate()
