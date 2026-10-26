@@ -560,12 +560,7 @@ struct AccountsSettingsView: View {
                 NavigationLink {
                     DiscordSettingsView()
                 } label: {
-                    LabeledContent("settings.discord") {
-                        Text(UserDefaults.standard.bool(forKey: DiscordPresence.enabledKey)
-                             ? (DiscordPresence.shared.username ?? String(localized: "settings.discord_on"))
-                             : String(localized: "settings.off"))
-                            .foregroundStyle(.secondary)
-                    }
+                    DiscordSettingsRow()
                 }
             } footer: {
                 Text("settings.discord_row_note")
@@ -2225,6 +2220,32 @@ class Logger: @unchecked Sendable {
 #endif
     }
 }
+
+#if !os(tvOS)
+/// The Discord row under the providers, with the logo at the providers' icon size and rounding.
+private struct DiscordSettingsRow: View {
+    private var status: String {
+        guard UserDefaults.standard.bool(forKey: DiscordPresence.enabledKey) else {
+            return String(localized: "settings.off")
+        }
+        return DiscordPresence.shared.username ?? String(localized: "settings.discord_on")
+    }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image("DiscordLogo")
+                .resizable()
+                .frame(width: 28, height: 28)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .accessibilityHidden(true)
+            Text("settings.discord")
+            Spacer()
+            Text(status)
+                .foregroundStyle(.secondary)
+        }
+    }
+}
+#endif
 
 // MARK: - Providers Settings Section
 

@@ -15,7 +15,10 @@ struct DiscordSettingsView: View {
                 Toggle("settings.discord_rich_presence", isOn: $enabled)
                     .switchTint()
             } footer: {
-                Text("settings.discord_rich_presence_note")
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("settings.discord_rich_presence_note")
+                    Text("settings.discord_account_disclaimer")
+                }
             }
 
             if enabled {

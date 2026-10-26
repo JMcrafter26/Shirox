@@ -70488,6 +70488,88 @@
         }
       }
     },
+    "settings.discord_account_disclaimer" : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shirox gehört nicht zu Discord und ist nicht verantwortlich für das, was mit deinem Discord-Konto passiert, etwa eine Sperre oder einen Bann. Die Nutzung erfolgt auf eigenes Risiko."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shirox isn't affiliated with Discord and isn't responsible for anything that happens to your Discord account, such as a suspension or ban. Use it at your own risk."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shirox no está afiliado a Discord y no se hace responsable de nada de lo que le ocurra a tu cuenta de Discord, como una suspensión o un baneo. Úsalo bajo tu propio riesgo."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shirox n’est pas affilié à Discord et n’est pas responsable de ce qui peut arriver à votre compte Discord, comme une suspension ou un bannissement. Utilisez-le à vos risques et périls."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shirox tidak berafiliasi dengan Discord dan tidak bertanggung jawab atas apa pun yang terjadi pada akun Discord-mu, seperti penangguhan atau pemblokiran. Gunakan dengan risiko sendiri."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shirox non è affiliato a Discord e non è responsabile di ciò che accade al tuo account Discord, come una sospensione o un ban. Usalo a tuo rischio."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ShiroxはDiscordとは無関係であり、アカウントの停止やBANなど、Discordアカウントに起こるいかなる事態についても責任を負いません。ご自身の責任でご利用ください。"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shirox nie jest powiązany z Discordem i nie ponosi odpowiedzialności za nic, co stanie się z Twoim kontem Discord, np. zawieszenie lub ban. Korzystasz na własne ryzyko."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "O Shirox não é afiliado ao Discord e não se responsabiliza por nada que aconteça com sua conta do Discord, como uma suspensão ou banimento. Use por sua conta e risco."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shirox не связан с Discord и не несёт ответственности за то, что может произойти с вашим аккаунтом Discord, например блокировку или бан. Используйте на свой страх и риск."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shirox, Discord ile bağlantılı değildir ve Discord hesabına olabilecek hiçbir şeyden, örneğin askıya alma veya yasaklamadan, sorumlu değildir. Kullanım riski sana aittir."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shirox không liên kết với Discord và không chịu trách nhiệm cho bất cứ điều gì xảy ra với tài khoản Discord của bạn, chẳng hạn như bị tạm khóa hoặc bị cấm. Bạn tự chịu rủi ro khi sử dụng."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Shirox 与 Discord 无关，不对你的 Discord 账号发生的任何情况（例如被停用或封禁）负责。使用风险由你自行承担。"
+          }
+        }
+      }
+    },
     "settings.discord_application_id" : {
       "localizations" : {
         "de" : {
