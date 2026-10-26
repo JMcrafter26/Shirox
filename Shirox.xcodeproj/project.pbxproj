@@ -1250,7 +1250,7 @@
 		08C78D7A64AA2920DC0EC39B /* QuickActionTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = QuickActionTests.swift; sourceTree = "<group>"; };
 		09066886375DDA99BCCF5C64 /* StreamProbe.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StreamProbe.swift; sourceTree = "<group>"; };
 		09C6B828F7625A21A7F9BC74 /* ProfilesView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProfilesView.swift; sourceTree = "<group>"; };
-		0A054FA711235A20E524B26C /* he-aac-v2-tone.aac */ = {isa = PBXFileReference; includeInIndex = 1; path = "he-aac-v2-tone.aac"; sourceTree = "<group>"; };
+		0A054FA711235A20E524B26C /* he-aac-v2-tone.aac */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = file; path = "he-aac-v2-tone.aac"; sourceTree = "<group>"; };
 		0A08E27B4A688BE98644F700 /* PlayerAssOverlay.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PlayerAssOverlay.swift; sourceTree = "<group>"; };
 		0A30FC88F37974F65C8D08EC /* AdvancedNetworkTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AdvancedNetworkTests.swift; sourceTree = "<group>"; };
 		0A914BFE01E257D7E5904F74 /* BackupLinksSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = BackupLinksSection.swift; sourceTree = "<group>"; };
@@ -1666,7 +1666,7 @@
 		BE5A8C83C41D5F2EDF68997C /* SyncRunTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SyncRunTests.swift; sourceTree = "<group>"; };
 		BF82534266F27EB783B12E03 /* DataSaverTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DataSaverTests.swift; sourceTree = "<group>"; };
 		BFAFAF6B81A3D63A485D868E /* DiscoverySource.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = DiscoverySource.swift; sourceTree = "<group>"; };
-		C050BE8CB634CB8373E369EF /* ExtensionRuntime.js */ = {isa = PBXFileReference; includeInIndex = 1; path = ExtensionRuntime.js; sourceTree = "<group>"; };
+		C050BE8CB634CB8373E369EF /* ExtensionRuntime.js */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.javascript; path = ExtensionRuntime.js; sourceTree = "<group>"; };
 		C0E6CAD08552A40849DB89CD /* AppProfile.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppProfile.swift; sourceTree = "<group>"; };
 		C33E435703AA1308538E7D59 /* MALOfficialDiscoveryTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MALOfficialDiscoveryTests.swift; sourceTree = "<group>"; };
 		C372736CDF3DAFB6621F4326 /* JellyfinCore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = JellyfinCore.swift; sourceTree = "<group>"; };
@@ -1702,7 +1702,7 @@
 		D76D661EDB11E936A894C15B /* SimklSyncPlanTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklSyncPlanTests.swift; sourceTree = "<group>"; };
 		D8BE6D07A3760D7A3A5F471E /* SimklPlayContextTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklPlayContextTests.swift; sourceTree = "<group>"; };
 		D9B1B1CBB14B25D4DA0C2DAE /* SimklPlayNumberingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklPlayNumberingTests.swift; sourceTree = "<group>"; };
-		DA68943EB0621FEE8F6ADA50 /* Localizable.xcstrings */ = {isa = PBXFileReference; includeInIndex = 1; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		DA68943EB0621FEE8F6ADA50 /* Localizable.xcstrings */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		DA8BBD389DB40AD3F56F5BCE /* SimklTitlePage.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SimklTitlePage.swift; sourceTree = "<group>"; };
 		DB3570B7715FA894013532F2 /* TMDBLogoTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = TMDBLogoTests.swift; sourceTree = "<group>"; };
 		DDE30B9763346F02AE6DEFBB /* AssRenderer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AssRenderer.swift; sourceTree = "<group>"; };
@@ -4031,7 +4031,7 @@
 					"@executable_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 1.0.7;
+				MARKETING_VERSION = 1.0.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.shirox.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = appletvos;
@@ -4065,7 +4065,7 @@
 					"@executable_path/Frameworks",
 				);
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
-				MARKETING_VERSION = 1.0.7;
+				MARKETING_VERSION = 1.0.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.shirox.app;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = appletvos;
@@ -4181,7 +4181,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.7;
+				MARKETING_VERSION = 1.0.6;
 				PRODUCT_NAME = Shirox;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
@@ -4226,7 +4226,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.7;
+				MARKETING_VERSION = 1.0.6;
 				PRODUCT_NAME = Shirox;
 				SDKROOT = macosx;
 				SUPPORTS_MACCATALYST = NO;
@@ -4251,7 +4251,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.7;
+				MARKETING_VERSION = 1.0.6;
 				PRODUCT_NAME = Shirox;
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = iphoneos;
@@ -4341,7 +4341,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.7;
+				MARKETING_VERSION = 1.0.6;
 				PRODUCT_NAME = Shirox;
 				SDKROOT = macosx;
 				SUPPORTS_MACCATALYST = NO;

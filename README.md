@@ -9,7 +9,7 @@ keep it in sync with AniList and MyAnimeList, and play it from the sources *you*
 
 <p align="center">
   <a href="https://github.com/xibrox/Shirox/releases"><img src="https://img.shields.io/badge/platform-iOS%2015%2B%20%7C%20iPadOS%20%7C%20macOS-black?style=flat-square&logo=apple&logoColor=white" alt="Platform" /></a>
-  <a href="https://github.com/xibrox/Shirox/releases"><img src="https://img.shields.io/badge/version-1.0.7-ef4444?style=flat-square" alt="Version" /></a>
+  <a href="https://github.com/xibrox/Shirox/releases"><img src="https://img.shields.io/badge/version-1.0.6-ef4444?style=flat-square" alt="Version" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-PolyForm%20NC%201.0.0-blue?style=flat-square" alt="License" /></a>
   <a href="https://discord.com/invite/b9tZSuJj73"><img src="https://img.shields.io/badge/discord-join-5865F2?style=flat-square&logo=discord&logoColor=white" alt="Discord" /></a>
 </p>
