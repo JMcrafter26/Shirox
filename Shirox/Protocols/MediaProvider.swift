@@ -77,7 +77,6 @@ enum ActivityFeed: String, CaseIterable, Identifiable {
     }
 }
 
-
 /// Sort orders offered by the Search tab's browse grid.
 ///
 /// A deliberately short list: these are the four questions people actually arrive with — what's
@@ -248,7 +247,6 @@ protocol MediaProvider: AnyObject {
     func fetchFollowers(userId: Int, page: Int) async throws -> [UserProfile]
     func fetchFollowing(userId: Int, page: Int) async throws -> [UserProfile]
 }
-
 
 extension MediaProvider {
     /// Providers serve notifications unless they opt out.

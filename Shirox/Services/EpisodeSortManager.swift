@@ -1,5 +1,5 @@
-import SwiftUI
 import Combine
+import SwiftUI
 
 final class EpisodeSortManager: ObservableObject {
     nonisolated(unsafe) static let shared = EpisodeSortManager()

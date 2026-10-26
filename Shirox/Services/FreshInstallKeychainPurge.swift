@@ -18,7 +18,6 @@ import Security
 /// genuine signed-in session is left completely alone.
 @MainActor
 enum FreshInstallKeychainPurge {
-
     /// Set on the first launch of an install and never read for anything else. Its absence is
     /// what identifies a fresh install.
     private static let marker = "com.shirox.hasLaunchedSinceInstall"
@@ -36,7 +35,7 @@ enum FreshInstallKeychainPurge {
         "jellyfin_user_id",
         NetworkProxySettings.passwordAccount,
         "discord_access_token",
-        "discord_refresh_token",
+        "discord_refresh_token"
     ]
 
     private static var hasRun = false

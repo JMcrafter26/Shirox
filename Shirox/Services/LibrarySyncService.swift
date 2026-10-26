@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 /// Reconciles a whole tracking library between AniList and MyAnimeList.
 ///
@@ -571,7 +571,6 @@ private extension LibrarySyncSummary {
 /// Two services needed seven cases; three would need nineteen. Naming both ends as values
 /// instead means the run list is generated from whoever is actually signed in.
 struct SyncRun: Identifiable, Equatable {
-
     enum Kind: String {
         /// Merge every side at once: per title, whichever account is further along wins.
         case merge
@@ -596,7 +595,7 @@ struct SyncRun: Identifiable, Equatable {
     ///
     /// Without it the merge title was built from `LibrarySide.allCases`, so somebody signed
     /// into two services was shown a confirmation naming a third they had never connected.
-    var sides: [LibrarySide]? = nil
+    var sides: [LibrarySide]?
 
     var id: String { "\(kind.rawValue)|\(source?.rawValue ?? "all")|\(target?.rawValue ?? "all")" }
 

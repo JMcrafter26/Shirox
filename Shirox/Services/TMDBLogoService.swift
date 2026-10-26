@@ -11,7 +11,6 @@ struct TMDBImage: Decodable, Equatable, Sendable {
 
 /// A title's logo among TMDB's.
 enum TMDBLogo {
-
     /// The most readable (`LogoLanguage`), then the best voted and largest. SVGs are passed over:
     /// TMDB serves them as SVG at every size, and the app's images can't draw one.
     static func pick(_ logos: [TMDBImage], originalLanguage: String?) -> String? {

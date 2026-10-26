@@ -242,8 +242,7 @@ struct ProfileView: View {
             // Banner
             Group {
                 if let banner = vm.user?.bannerImage {
-                    CachedAsyncImage(urlString: banner)
-                        .aspectRatio(contentMode: .fill)
+                    CachedAsyncImage(urlString: banner).scaledToFill()
                 } else {
                     LinearGradient(
                         colors: [Color.accentColor.opacity(0.35), Color.accentColor.opacity(0.10)],
@@ -374,5 +373,4 @@ struct ProfileView: View {
             }
         }
     }
-
 }

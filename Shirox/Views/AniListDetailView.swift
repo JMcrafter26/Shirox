@@ -1,5 +1,5 @@
-import SwiftUI
 import AVKit
+import SwiftUI
 
 #if !os(tvOS)
 private struct DownloadEpisodeItem: Identifiable {
@@ -26,17 +26,17 @@ struct AniListDetailView: View {
     /// AniList ↔ MyAnimeList mirroring — now one pair within `SyncTargets`.
     private var dualSync: Bool { SyncTargets.mirrors(.anilist, .mal, in: SyncTargets.decode(syncTargetsRaw)) }
     @State private var showLibraryEdit = false
-    @State private var existingEntry: LibraryEntry? = nil
-    @State private var existingMALEntry: LibraryEntry? = nil
+    @State private var existingEntry: LibraryEntry?
+    @State private var existingMALEntry: LibraryEntry?
     @State private var showMALEdit = false
-    @State private var linkedIDs: TrackingIDs? = nil
+    @State private var linkedIDs: TrackingIDs?
     /// The title's Simkl id from Simkl's id search, when no link or library entry gave one.
     @State private var lookedUpSimklID: Int?
     @State private var showTrackingLinks = false
     /// The buttons the edit, tracking-links and download sheets grow out of.
     @Namespace private var sheetZoom
     @State private var showAniListEdit = false
-    @State private var existingAniListCrossEntry: LibraryEntry? = nil
+    @State private var existingAniListCrossEntry: LibraryEntry?
     @State private var isLoadingEntry = false
     @ObservedObject private var simklAuth = SimklAuthManager.shared
     /// The Details sheet: following, full synopsis, trailer.
@@ -46,7 +46,7 @@ struct AniListDetailView: View {
     @State private var simklEdit: SimklEditTarget?
     #endif
     #if !os(tvOS)
-    @State private var pendingDownloadEpisodeNumber: DownloadEpisodeItem? = nil
+    @State private var pendingDownloadEpisodeNumber: DownloadEpisodeItem?
     @State private var isSelectionMode = false
     /// Which of the two download buttons the batch sheet grows out of.
     @State private var batchDownloadZoomID = "batchDownload"
@@ -70,7 +70,7 @@ struct AniListDetailView: View {
     }
     @State private var isReversed = false
     @State private var selectedTab = 0
-    @State private var sequelMediaId: Int? = nil
+    @State private var sequelMediaId: Int?
     @State private var watchOrder: [TVDBMappingService.AniraMediaEntry] = []
     @State private var leadingInset: CGFloat = 0
     @AppStorage(DetailLayoutSetting.cinematicKey) private var cinematicLayout = true
@@ -1840,7 +1840,7 @@ struct SynopsisSection: View {
         text.replacingOccurrences(of: #"\s*\n\s*"#, with: "\n", options: .regularExpression)
     }
     /// Opens the full details instead of expanding the text in place.
-    var onMore: (() -> Void)? = nil
+    var onMore: (() -> Void)?
     @State private var expanded = false
 
     var body: some View {
@@ -1889,10 +1889,10 @@ private struct AniListEpisodeRowContainer: View {
     let totalEpisodes: Int?
     let aniListProgress: Int?
     let aniListStatus: MediaListStatus?
-    var isAiring: Bool? = nil
+    var isAiring: Bool?
     let onTap: () -> Void
-    var onDownload: (() -> Void)? = nil
-    var onTryOtherStream: (() -> Void)? = nil
+    var onDownload: (() -> Void)?
+    var onTryOtherStream: (() -> Void)?
     var isSelectionMode: Bool = false
     var isSelected: Bool = false
     var style: ThumbnailEpisodeRow.Style = .row
@@ -1904,7 +1904,7 @@ private struct AniListEpisodeRowContainer: View {
 
     @State private var aniMapEpisode: AniMapEpisode?
     @State private var fallbackThumbnail: String?
-    @State private var pendingDowngrade: RemoteDowngrade? = nil
+    @State private var pendingDowngrade: RemoteDowngrade?
 
     private var markContext: MarkContext {
         MarkContext(
@@ -2065,7 +2065,7 @@ struct RelationCard: View {
 
     var body: some View {
         Color.clear
-            .aspectRatio(2/3, contentMode: .fit)
+            .aspectRatio(2 / 3, contentMode: .fit)
             .overlay(
                 ZStack {
                     TVDBPosterImage(media: edge.node)
@@ -2121,7 +2121,7 @@ struct AniListMatchingSearchView: View {
     var isLinked: Bool = false
     let onSelect: (Media?) -> Void
     /// Optional custom search (e.g. manga). Defaults to the provider's anime search.
-    var searchOverride: ((String) async throws -> [Media])? = nil
+    var searchOverride: ((String) async throws -> [Media])?
 
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
@@ -2208,7 +2208,7 @@ struct AniListMatchingSearchView: View {
                             HStack(spacing: 12) {
                                 AsyncImage(url: URL(string: media.coverImage.large ?? "")) { phase in
                                     if let image = phase.image {
-                                        image.resizable().aspectRatio(contentMode: .fill)
+                                        image.resizable().scaledToFill()
                                     } else {
                                         Rectangle().fill(Color.secondary.opacity(0.15))
                                     }

@@ -16,7 +16,6 @@ enum SubtitleRoute: Equatable {
 
 /// Picks the `SubtitleRoute` — apart from the view, so it can be tested.
 enum SubtitleRouting {
-
     /// What the chosen (or default) downloadable track turned out to be.
     enum Loaded: Equatable { case nothing, cues, ass }
 

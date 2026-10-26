@@ -57,7 +57,7 @@ enum AirPlaySubtitles {
         "eng": "en", "jpn": "ja", "spa": "es", "por": "pt", "fre": "fr", "fra": "fr", "ger": "de",
         "deu": "de", "ita": "it", "rus": "ru", "ara": "ar", "chi": "zh", "zho": "zh", "kor": "ko",
         "tha": "th", "vie": "vi", "ind": "id", "may": "ms", "msa": "ms", "tur": "tr", "pol": "pl",
-        "hin": "hi", "dut": "nl", "nld": "nl", "swe": "sv", "fil": "fil", "heb": "he", "ukr": "uk",
+        "hin": "hi", "dut": "nl", "nld": "nl", "swe": "sv", "fil": "fil", "heb": "he", "ukr": "uk"
     ]
 
     /// `master` with the subtitle rendition added and every variant pointed at it. A
@@ -126,8 +126,8 @@ enum AirPlaySubtitles {
     }
 
     private static func timestamp(_ seconds: Double) -> String {
-        let ms = Int((max(seconds, 0) * 1000).rounded())
-        return String(format: "%02d:%02d:%02d.%03d", ms / 3_600_000, ms / 60_000 % 60, ms / 1000 % 60, ms % 1000)
+        let ms = Int((max(seconds, 0) * 1_000).rounded())
+        return String(format: "%02d:%02d:%02d.%03d", ms / 3_600_000, ms / 60_000 % 60, ms / 1_000 % 60, ms % 1_000)
     }
 
     /// The dialogue of an ASS/SSA script as plain cues — what a receiver can show of it. Styling,
@@ -170,7 +170,7 @@ enum AirPlaySubtitles {
         let parts = field.trimmingCharacters(in: .whitespaces).split(separator: ":")
         guard parts.count == 3, let h = Double(parts[0]), let m = Double(parts[1]),
               let s = Double(parts[2]) else { return nil }
-        return h * 3600 + m * 60 + s
+        return h * 3_600 + m * 60 + s
     }
 
     /// The words of an ASS text field: override blocks dropped, line breaks made real. A line that

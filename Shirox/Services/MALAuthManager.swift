@@ -1,7 +1,7 @@
-import Foundation
 import AuthenticationServices
-import Security
 import Combine
+import Foundation
+import Security
 
 enum MALAuthError: Error {
     /// The refresh-token grant failed (e.g. invalid_grant). Caller should sign out.

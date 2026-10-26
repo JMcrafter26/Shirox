@@ -2,8 +2,8 @@ import Combine
 import Foundation
 
 #if os(tvOS)
-    import FakeWebKit
     import CoreGraphics
+    import FakeWebKit
 #else
     import WebKit
 #endif
@@ -23,12 +23,12 @@ final class CloudflareBypassManager: ObservableObject {
     private init() { loadPersistedCache() }
 
     /// Non-nil while a Turnstile challenge is in progress — drives the bypass sheet.
-    @Published var activeBypassWebView: WKWebView? = nil
+    @Published var activeBypassWebView: WKWebView?
 
     /// Set when a fetch hits a Turnstile wall but we have no cookie yet. Drives the
     /// "Verify Cloudflare" button in the stream picker instead of auto-popping the
     /// bypass window. Cleared at the start of each new stream load.
-    @Published var pendingVerificationURL: URL? = nil
+    @Published var pendingVerificationURL: URL?
 
     /// Records that `url`'s host needs verification. Called only after a request actually
     /// hit a Turnstile wall — which means any cookie we sent was rejected, so we drop the
@@ -109,7 +109,7 @@ final class CloudflareBypassManager: ObservableObject {
             value: cookie,
             cookieHeader: cookieHeader,
             userAgent: userAgent,
-            expires: Date().addingTimeInterval(3600)
+            expires: Date().addingTimeInterval(3_600)
         )
         persistCache()
     }

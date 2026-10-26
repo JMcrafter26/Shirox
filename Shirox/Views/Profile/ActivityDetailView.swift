@@ -277,7 +277,6 @@ struct ActivityDetailView: View {
             } label: {
                 Text("\(likeCount)")
                     .foregroundStyle(isLiked ? .pink : .secondary)
-                    
             }
             .buttonStyle(.plain)
             .zoomSource("likeCount", in: likesZoom, cornerRadius: 8)
@@ -353,7 +352,6 @@ struct ActivityDetailView: View {
                     } label: {
                         Text("\(count)")
                             .foregroundStyle(liked ? .pink : .secondary)
-                            
                     }
                     .buttonStyle(.plain)
                 }

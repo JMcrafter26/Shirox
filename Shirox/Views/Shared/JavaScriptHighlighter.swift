@@ -55,7 +55,7 @@ enum JavaScriptHighlighter {
         "async", "await", "break", "case", "catch", "class", "const", "continue", "default", "delete",
         "do", "else", "export", "extends", "false", "finally", "for", "function", "if", "import", "in",
         "instanceof", "let", "new", "null", "of", "return", "static", "super", "switch", "this",
-        "throw", "true", "try", "typeof", "undefined", "var", "void", "while", "yield",
+        "throw", "true", "try", "typeof", "undefined", "var", "void", "while", "yield"
     ].joined(separator: "|") + ")\\b")
     private static let numbers = try! NSRegularExpression(pattern: #"\b(?:0x[0-9a-fA-F]+|\d+(?:\.\d+)?)\b"#)
     private static let functions = try! NSRegularExpression(pattern: #"\b([A-Za-z_$][\w$]*)\s*(?=\()"#)

@@ -62,8 +62,7 @@ final class SimklHomeViewModel: ObservableObject {
         await withTaskGroup(of: (SimklFeedList, Result<[SimklDiscoverItem], Error>).self) { group in
             for list in lists {
                 group.addTask {
-                    do { return (list, .success(try await fetch(list, force))) }
-                    catch { return (list, .failure(error)) }
+                    do { return (list, .success(try await fetch(list, force))) } catch { return (list, .failure(error)) }
                 }
             }
             for await (list, result) in group {

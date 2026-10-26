@@ -1,7 +1,7 @@
 #if !os(tvOS)
-import Foundation
-import Combine
 import AVFoundation
+import Combine
+import Foundation
 import SwiftUI
 #if os(macOS)
 import AppKit
@@ -1363,7 +1363,6 @@ final class DownloadManager: NSObject, ObservableObject {
 /// pick up the artwork and subtitles. An HLS download used to stay a `<id>/` folder of playlists
 /// and hundreds of segments, and a direct one `<id>.mp4` whatever it really was.
 extension DownloadManager {
-
     /// The name a download's files share, before their extensions. The episode's title is added
     /// when the source gives a real one, not "Episode 5".
     nonisolated static func fileStem(mediaTitle: String, episodeNumber: Int, episodeTitle: String? = nil) -> String {

@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 #if os(iOS)
 import UIKit
@@ -175,7 +175,6 @@ final class LocalPlaybackCoordinator: ObservableObject {
             launch(videoURL: pickedURL, subtitle: subtitle, resumeFrom: nil)
         }
     }
-
 
     /// Builds a StreamResult + PlayerContext for a local video and presents the normal player.
     /// `videoURL` is a persistent imports-directory copy (from playPickedVideo/resolveImport) or,

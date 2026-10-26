@@ -1,5 +1,5 @@
-import SwiftUI
 import ImageIO
+import SwiftUI
 import UniformTypeIdentifiers
 #if canImport(PhotosUI)
 import PhotosUI
@@ -48,8 +48,7 @@ struct ProfileAvatarView: View {
                     .resizable()
                     .scaledToFill()
             } else if let url = profile.accountAvatarURL {
-                CachedAsyncImage(urlString: url)
-                    .aspectRatio(contentMode: .fill)
+                CachedAsyncImage(urlString: url).scaledToFill()
             } else {
                 Text(profile.initial)
                     .font(.system(size: size * 0.42, weight: .semibold, design: .rounded))

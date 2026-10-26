@@ -59,14 +59,13 @@ enum LogoLanguage {
         [
             { $0 == "eng" || $0 == "en" },
             { originalLanguage != nil && $0 == originalLanguage },
-            { $0 == nil },
+            { $0 == nil }
         ]
     }
 }
 
 /// A title's logo among its TVDB artwork.
 enum TVDBLogo {
-
     /// A ClearLogo, or failing that a ClearArt — the season's before the series'. Within each, the
     /// most readable (`LogoLanguage`), then the best scored and largest.
     static func pick(season: [TVDBArtwork] = [], record: [TVDBArtwork], kind: TitleRecord,

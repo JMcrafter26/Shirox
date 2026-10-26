@@ -11,9 +11,9 @@ struct BatchDownloadModulePickerView: View {
     let onDismiss: () -> Void
 
     @EnvironmentObject private var moduleManager: ModuleManager
-    @State private var streamPickerItem: StreamPickerItem? = nil
-    @State private var chosenStreamTitle: String? = nil
-    @State private var chosenPickerItem: StreamPickerItem? = nil
+    @State private var streamPickerItem: StreamPickerItem?
+    @State private var chosenStreamTitle: String?
+    @State private var chosenPickerItem: StreamPickerItem?
 
     struct StreamPickerItem: Identifiable {
         let id = UUID()
@@ -426,7 +426,7 @@ private struct BatchSearchResultCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Color.clear.aspectRatio(2/3, contentMode: .fit).frame(width: 72)
+            Color.clear.aspectRatio(2 / 3, contentMode: .fit).frame(width: 72)
                 .overlay(
                     ZStack {
                         CachedAsyncImage(urlString: item.image).frame(maxWidth: .infinity, maxHeight: .infinity).clipped()
@@ -471,7 +471,7 @@ private struct BatchSearchResultsPickerSheet: View {
                 LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(items) { item in
                         Button { onSelect(item) } label: {
-                            Color.clear.aspectRatio(2/3, contentMode: .fit)
+                            Color.clear.aspectRatio(2 / 3, contentMode: .fit)
                                 .overlay(
                                     ZStack {
                                         CachedAsyncImage(urlString: item.image).frame(maxWidth: .infinity, maxHeight: .infinity).clipped()

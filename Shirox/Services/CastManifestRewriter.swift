@@ -15,7 +15,6 @@ import Foundation
 /// Missing the second group is invisible in a master playlist and fatal in a media one: the
 /// key or init segment 403s and the receiver stalls on a manifest that otherwise looks fine.
 enum CastManifestRewriter {
-
     /// Tags whose `URI="…"` attribute addresses a resource the receiver must fetch.
     private static let uriAttributeTags = [
         "#EXT-X-KEY", "#EXT-X-SESSION-KEY", "#EXT-X-MAP",

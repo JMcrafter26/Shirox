@@ -20,7 +20,6 @@ struct SiblingSeason: Equatable, Codable {
 
 /// Pure boundary math — no app dependencies, fully unit-testable.
 enum SeasonChainMath {
-
     /// Maps a module episode number to the correct sibling season and its season-relative
     /// episode number. The number is interpreted relative to `anchor` — the season/cour the
     /// user matched and is watching — so a per-cour number lands on that cour while a

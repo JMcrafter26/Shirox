@@ -1,13 +1,12 @@
+import Combine
 import Foundation
 @preconcurrency import JavaScriptCore
-import Combine
 
 #if os(tvOS)
     import FakeWebKit
 #else
     import WebKit
 #endif
-
 
 @MainActor
 final class JSEngine: ObservableObject {
@@ -151,7 +150,7 @@ final class JSEngine: ObservableObject {
                 ? (headersVal.toDictionary() as? [String: String] ?? [:])
                 : [String: String]()
 
-            var impersonateTarget: BrowserTarget? = nil
+            var impersonateTarget: BrowserTarget?
             var useWebView = false
             // The body as Base64 rather than text: binary (an image, an encrypted page) intact.
             var base64Body = false
@@ -405,7 +404,7 @@ final class JSEngine: ObservableObject {
                 callback.call(withArguments: [])
             }
             timerMap[id] = item
-            DispatchQueue.main.asyncAfter(deadline: .now() + max(delay, 0) / 1000.0, execute: item)
+            DispatchQueue.main.asyncAfter(deadline: .now() + max(delay, 0) / 1_000.0, execute: item)
             return id
         }
 
@@ -417,7 +416,7 @@ final class JSEngine: ObservableObject {
         let setIntervalBlock: @convention(block) (JSValue, Double) -> Int = { callback, delay in
             let id = nextId
             nextId += 1
-            let interval = max(delay, 16) / 1000.0
+            let interval = max(delay, 16) / 1_000.0
             func schedule() {
                 guard timerMap[id] != nil else { return }
                 let item = DispatchWorkItem {
@@ -977,4 +976,3 @@ final class WebKitFetchEngine: NSObject, WKNavigationDelegate {
         return (resData, status, resHeaders, finalURL)
     }
 }
-

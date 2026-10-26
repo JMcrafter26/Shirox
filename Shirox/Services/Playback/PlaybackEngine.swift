@@ -110,7 +110,7 @@ struct PlaybackStats: Equatable {
     static func bitrateText(_ bitsPerSecond: Double?) -> String? {
         guard let bitsPerSecond, bitsPerSecond > 0 else { return nil }
         if bitsPerSecond >= 1_000_000 { return String(format: "%.1f Mbps", bitsPerSecond / 1_000_000) }
-        return String(format: "%.0f kbps", bitsPerSecond / 1000)
+        return String(format: "%.0f kbps", bitsPerSecond / 1_000)
     }
 }
 
@@ -123,7 +123,7 @@ struct PlaybackSource: Equatable {
     var prefersJapaneseAudio = false
     /// The key its playlists are scrambled with (see ``HLSPlaylistCipher``), when they are.
     /// Such a stream is only playable through the app's proxy, which unscrambles them.
-    var playlistKey: String? = nil
+    var playlistKey: String?
     /// Turn on the stream's own subtitle rendition — the one the proxy adds for AirPlay.
     var selectsSubtitles = false
 }

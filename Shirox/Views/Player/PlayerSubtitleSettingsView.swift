@@ -6,12 +6,12 @@ struct PlayerSubtitleSettingsView: View {
     var availableTracks: [SubtitleTrack]?
     @Binding var selectedTrack: SubtitleTrack?
     var allowLocalImport: Bool = false
-    var onImport: ((SubtitleTrack) -> Void)? = nil
+    var onImport: ((SubtitleTrack) -> Void)?
     /// The subtitle tracks inside the file, which only MPV draws.
     var embeddedTracks: [PlaybackSubtitleOption] = []
     /// The track inside the file on screen, if one is.
-    var selectedEmbedded: Int? = nil
-    var onSelectEmbedded: ((Int) -> Void)? = nil
+    var selectedEmbedded: Int?
+    var onSelectEmbedded: ((Int) -> Void)?
     /// The subtitles on screen are styled (ASS), so the appearance settings mostly don't apply.
     var showsStyledNote = false
     @Environment(\.dismiss) private var dismiss

@@ -1,6 +1,6 @@
 #if os(iOS)
-import Foundation
 import AVFoundation
+import Foundation
 
 /// The app's use of `AVAudioSession`, which is left alone on a Mac.
 ///

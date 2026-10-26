@@ -10,7 +10,6 @@ enum PlaybackEngineKind: String, CaseIterable {
 
 /// Which engine plays a stream, and what the player does when one fails — apart from the view.
 enum PlaybackFallback {
-
     /// Containers AVPlayer can't open at all, so they start on MPV whatever the setting says.
     static let mpvOnlyExtensions: Set<String> = ["mkv", "webm", "avi", "flv", "wmv", "ts", "m2ts", "ogv"]
 
@@ -27,7 +26,7 @@ enum PlaybackFallback {
             AVError.failedToParse.rawValue,
             AVError.decodeFailed.rawValue,
             AVError.decoderNotFound.rawValue,
-            AVError.formatUnsupported.rawValue,
+            AVError.formatUnsupported.rawValue
         ]
         var current = error.map { $0 as NSError }
         for _ in 0..<3 {

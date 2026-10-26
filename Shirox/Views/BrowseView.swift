@@ -90,4 +90,3 @@ private struct BrowseCardPressStyle: ButtonStyle {
             .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
     }
 }
-

@@ -1,7 +1,7 @@
-import Foundation
 import AuthenticationServices
-import Security
 import Combine
+import Foundation
+import Security
 
 @MainActor
 final class AniListAuthManager: NSObject, ObservableObject {

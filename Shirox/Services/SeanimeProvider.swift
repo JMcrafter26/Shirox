@@ -162,7 +162,7 @@ enum SeanimeInstaller {
 
         var object: [String: Any] = [
             "sourceName": manifest.name, "version": manifest.version, "scriptUrl": payload,
-            "type": kind == .manga ? "manga" : "anime",
+            "type": kind == .manga ? "manga" : "anime"
         ]
         if let lang = manifest.lang, !lang.isEmpty { object["language"] = lang }
         if let icon = manifest.icon, !icon.isEmpty { object["iconUrl"] = icon }

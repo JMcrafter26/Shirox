@@ -319,7 +319,7 @@ struct PlayerMenuButton: NSViewRepresentable {
                 button.imagePosition = .noImage
                 button.attributedTitle = NSAttributedString(string: text, attributes: [
                     .font: NSFont.systemFont(ofSize: size, weight: weight.nsWeight),
-                    .foregroundColor: NSColor.white,
+                    .foregroundColor: NSColor.white
                 ])
             }
         }

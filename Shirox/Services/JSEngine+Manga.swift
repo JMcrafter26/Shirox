@@ -10,7 +10,6 @@ import Foundation
 // JSON.stringifies on the JS side first.
 
 extension JSEngine {
-
     static let mangaBridgeJS = """
     function __shiroxCallJSON(fnName, args) {
         return Promise.resolve(globalThis[fnName].apply(null, args)).then(function(r) {

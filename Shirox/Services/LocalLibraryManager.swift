@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 /// On-device, account-free anime library. Stores entries (status/progress/score) and
 /// multi-membership collections in a JSON file under Application Support. Library-only:

@@ -543,7 +543,7 @@ struct ModuleListView: View {
                 AsyncImage(url: URL(string: type.iconURL)) { phase in
                     switch phase {
                     case .success(let image):
-                        image.resizable().aspectRatio(contentMode: .fit)
+                        image.resizable().scaledToFit()
                     case .failure, .empty:
                         IconView("list.bullet")
                             .font(.title2)

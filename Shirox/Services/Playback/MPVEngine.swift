@@ -1,8 +1,8 @@
-import Foundation
-import QuartzCore
-import CoreVideo
 import Accelerate
+import CoreVideo
+import Foundation
 import Libmpv
+import QuartzCore
 #if os(iOS) || os(tvOS)
 import UIKit
 #elseif os(macOS)
@@ -53,7 +53,6 @@ final class MPVMetalLayer: CAMetalLayer {
 /// state at once as well, as AVPlayer's do, so a pause reads as paused before mpv confirms it.
 @MainActor
 final class MPVEngine: PlaybackEngine {
-
     enum Output {
         /// Draws into `layer`.
         case metal
@@ -419,7 +418,7 @@ final class MPVEngine: PlaybackEngine {
               width > 0, height > 0, width <= 16_384, height <= 16_384 else { return nil }
         let rowBytes = width * 4
         let rowStride = abs(stride)
-        guard rowStride >= rowBytes, height <= (256 * 1024 * 1024) / rowBytes,
+        guard rowStride >= rowBytes, height <= (256 * 1_024 * 1_024) / rowBytes,
               Int(byteArray.size) >= rowStride * (height - 1) + rowBytes else { return nil }
         var data = Data(capacity: rowBytes * height)
         for row in 0..<height {
@@ -1029,7 +1028,7 @@ final class MPVEngine: PlaybackEngine {
                     self.setProperty("vid", "auto")
                     self.tellMetalShownAtLatestSoon()
                 }
-            },
+            }
         ]
         #endif
     }
@@ -1116,7 +1115,7 @@ extension MPVEngine {
         if let softwareOutput { return softwareOutput }
         guard let mpv = handle, let output = MPVSoftwareOutput(mpv: mpv, onFrame: onFrame) else { return nil }
         softwareOutput = output
-        let width = getInt64("video-params/dw") ?? 1920, height = getInt64("video-params/dh") ?? 1080
+        let width = getInt64("video-params/dw") ?? 1_920, height = getInt64("video-params/dh") ?? 1_080
         output.setVideoSize(CGSize(width: Int(width), height: Int(height)))
         // mpv seeks back to where it was by itself when its output changes; one more seek here
         // only flushed the sound and decoded from the keyframe a second time.
@@ -1171,7 +1170,7 @@ final class MPVSoftwareOutput: @unchecked Sendable {
     private let onFrame: (CVPixelBuffer) -> Void
     private var pool: CVPixelBufferPool?
     private var poolSize = CGSize.zero
-    private var videoSize = CGSize(width: 1920, height: 1080)
+    private var videoSize = CGSize(width: 1_920, height: 1_080)
     private var maxWidth: CGFloat = 960
     /// mpv won't blend subtitles onto a format with alpha ("Failed rendering OSD"), so "bgr0",
     /// whose fourth byte is padding, made opaque after each frame.
@@ -1234,7 +1233,7 @@ final class MPVSoftwareOutput: @unchecked Sendable {
                 kCVPixelBufferWidthKey: Int(size.width),
                 kCVPixelBufferHeightKey: Int(size.height),
                 kCVPixelBufferBytesPerRowAlignmentKey: 64,
-                kCVPixelBufferIOSurfacePropertiesKey: [:] as CFDictionary,
+                kCVPixelBufferIOSurfacePropertiesKey: [:] as CFDictionary
             ]
             var created: CVPixelBufferPool?
             CVPixelBufferPoolCreate(kCFAllocatorDefault, nil, attributes as CFDictionary, &created)
@@ -1265,7 +1264,7 @@ final class MPVSoftwareOutput: @unchecked Sendable {
                         mpv_render_param(type: MPV_RENDER_PARAM_SW_FORMAT, data: UnsafeMutableRawPointer(mutating: name)),
                         mpv_render_param(type: MPV_RENDER_PARAM_SW_STRIDE, data: UnsafeMutableRawPointer(stridePointer)),
                         mpv_render_param(type: MPV_RENDER_PARAM_SW_POINTER, data: pixels),
-                        mpv_render_param(type: MPV_RENDER_PARAM_INVALID, data: nil),
+                        mpv_render_param(type: MPV_RENDER_PARAM_INVALID, data: nil)
                     ]
                     return mpv_render_context_render(context, &params)
                 }

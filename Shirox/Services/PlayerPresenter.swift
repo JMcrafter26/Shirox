@@ -5,13 +5,13 @@
 //  Created by 686udjie on 05/03/2026.
 //
 
-import SwiftUI
 import AVFoundation
 import Combine
+import SwiftUI
 
 #if os(iOS)
-import UIKit
 import CoreMotion
+import UIKit
 #endif
 
 #if canImport(GoogleCast)
@@ -56,7 +56,6 @@ final class PlayerPresenter: ObservableObject {
     #endif
 
     nonisolated private init() {}
-
 
     #if !os(iOS)
 
@@ -478,7 +477,6 @@ final class PlayerPresenter: ObservableObject {
             }
         }
     }
-
 }
 
 // MARK: - Cast Manager

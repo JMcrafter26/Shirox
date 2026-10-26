@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 /// Whether a Simkl request is the user's own doing or something the app does by itself.
 ///

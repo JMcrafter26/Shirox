@@ -184,7 +184,7 @@ final class DiscordPresence: NSObject, ObservableObject {
             URLQueryItem(name: "scope", value: "openid sdk.social_layer_presence"),
             URLQueryItem(name: "code_challenge", value: SimklOAuth.codeChallenge(for: verifier)),
             URLQueryItem(name: "code_challenge_method", value: "S256"),
-            URLQueryItem(name: "state", value: state),
+            URLQueryItem(name: "state", value: state)
         ]
         guard let url = components.url else { return }
         anchor = presentationAnchor
@@ -210,7 +210,7 @@ final class DiscordPresence: NSObject, ObservableObject {
         do {
             let tokens = try await tokenRequest([
                 ("client_id", applicationID), ("grant_type", "authorization_code"), ("code", code),
-                ("redirect_uri", Self.redirectURI), ("code_verifier", verifier),
+                ("redirect_uri", Self.redirectURI), ("code_verifier", verifier)
             ])
             store(tokens)
             let data = try await request("users/@me", body: nil, token: tokens.access)
@@ -377,10 +377,10 @@ private struct Activity: Equatable {
             "platform": Self.platform,
             "details": String(details.prefix(128)),
             // The title, not "Shirox", in the member list.
-            "status_display_type": 2,
+            "status_display_type": 2
         ]
         if !state.isEmpty { json["state"] = String(state.prefix(128)) }
-        if let start { json["timestamps"] = ["start": Int(start.timeIntervalSince1970 * 1000)] }
+        if let start { json["timestamps"] = ["start": Int(start.timeIntervalSince1970 * 1_000)] }
         // Discord fetches outside images through its own proxy for headless sessions.
         if showsCover, let cover, cover.hasPrefix("https://") {
             json["assets"] = ["large_image": cover, "large_text": String(coverText.prefix(128))]

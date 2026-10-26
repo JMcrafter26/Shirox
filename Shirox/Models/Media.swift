@@ -50,12 +50,12 @@ struct Media: Identifiable, Codable, Equatable, Hashable, Sendable {
     let type: String?
     let format: String?
     /// Minutes. Simkl shows and movies only.
-    var runtime: Int? = nil
+    var runtime: Int?
     /// A Simkl show's TVDB series or movie's TVDB movie, for its logo. Anime reach TVDB through
     /// their AniList or MyAnimeList id instead.
-    var tvdbID: Int? = nil
+    var tvdbID: Int?
     /// A Simkl show's or movie's TMDB record, for a logo TVDB doesn't have.
-    var tmdbID: Int? = nil
+    var tmdbID: Int?
 
     var uniqueId: String {
         // A Simkl show or movie is keyed by Simkl id, and "simkl-52991" is already a Simkl anime
@@ -184,8 +184,8 @@ struct MediaTitle: Codable, Equatable, Hashable {
         for lang in priority.components(separatedBy: ",") {
             switch lang {
             case "english": if let e = english, !e.isEmpty { return e }
-            case "romaji":  if let r = romaji,  !r.isEmpty { return r }
-            case "native":  if let n = native,  !n.isEmpty { return n }
+            case "romaji":  if let r = romaji, !r.isEmpty { return r }
+            case "native":  if let n = native, !n.isEmpty { return n }
             default: break
             }
         }
@@ -197,8 +197,8 @@ struct MediaTitle: Codable, Equatable, Hashable {
         for lang in priority.components(separatedBy: ",") {
             switch lang {
             case "english": if let e = english, !e.isEmpty { return e }
-            case "romaji":  if let r = romaji,  !r.isEmpty { return r }
-            case "native":  if let n = native,  !n.isEmpty { return n }
+            case "romaji":  if let r = romaji, !r.isEmpty { return r }
+            case "native":  if let n = native, !n.isEmpty { return n }
             default: break
             }
         }

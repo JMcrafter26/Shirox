@@ -557,4 +557,3 @@ final class AniListSocialService {
         return r.data.SaveActivityReply
     }
 }
-

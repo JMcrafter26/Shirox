@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 extension Notification.Name {
     static let remoteLibraryProgressDidPush = Notification.Name("remoteLibraryProgressDidPush")
@@ -11,7 +11,7 @@ final class LibraryViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var error: String?
     @Published var selectedStatus: MediaListStatus = .current
-    @Published var selectedCustomList: String? = nil
+    @Published var selectedCustomList: String?
     @Published var mediaType: MediaKind = .anime
 
     @Published var source: LibrarySource = .provider(.anilist)

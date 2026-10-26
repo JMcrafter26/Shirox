@@ -306,7 +306,7 @@ struct ModuleImportView: View {
             "type": kind,
             "scriptUrl": scriptUrl ?? ModuleFileImport.fileScriptURL(named: scriptName ?? "module.js"),
             "asyncJS": asyncJS,
-            "softsub": softsub,
+            "softsub": softsub
         ]
         if let author = text(authorName) {
             var entry: [String: Any] = ["name": author]
@@ -338,7 +338,6 @@ struct ModuleImportView: View {
         }
     }
 }
-
 
 /// The import form's script, typed or pasted.
 private struct ScriptDraftView: View {

@@ -1,5 +1,5 @@
-import SwiftUI
 import Combine
+import SwiftUI
 
 // MARK: - Continue Watching context-menu navigation
 
@@ -190,7 +190,7 @@ struct ContinueWatchingCardDisplay: View {
         VStack(alignment: .leading, spacing: 6) {
             // Thumbnail (16:9)
             Color.clear
-                .aspectRatio(16/9, contentMode: .fit)
+                .aspectRatio(16 / 9, contentMode: .fit)
                 .overlay(
                     CachedAsyncImage(urlString: displayImageUrl)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -305,12 +305,10 @@ private struct CardThumbnail: View {
             if let platformImage {
                 #if os(iOS) || os(tvOS)
                 Image(uiImage: platformImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
+                    .resizable().scaledToFill()
                 #else
                 Image(nsImage: platformImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
+                    .resizable().scaledToFill()
                 #endif
             } else {
                 Color.gray.opacity(0.3)

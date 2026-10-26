@@ -39,7 +39,7 @@ final class SkipTimestampsService {
         var anira = SkipSegments()
         let aniraEp = await TVDBMappingService.shared.fetchAniraEpisode(id: aniListID, episodeNumber: aniListEpisode)
         for skip in aniraEp?.skips ?? [] {
-            let seg = SkipSegments.Segment(startMs: skip.start * 1000, endMs: skip.end * 1000)
+            let seg = SkipSegments.Segment(startMs: skip.start * 1_000, endMs: skip.end * 1_000)
             switch skip.type {
             case "op", "mixed-op": anira.intro = seg
             case "ed", "mixed-ed": anira.credits = seg

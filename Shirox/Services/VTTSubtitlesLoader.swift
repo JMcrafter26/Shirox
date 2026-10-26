@@ -20,7 +20,6 @@ enum LoadedSubtitles {
 // MARK: - VTTSubtitlesLoader
 
 enum VTTSubtitlesLoader {
-
     enum LoadError: Error, LocalizedError {
         case invalidURL
         case decodingFailed
@@ -240,7 +239,7 @@ enum VTTSubtitlesLoader {
             guard let hh = Double(colonParts[0]),
                   let mm = Double(colonParts[1]),
                   let ss = Double(colonParts[2]) else { return nil }
-            return hh * 3600 + mm * 60 + ss
+            return hh * 3_600 + mm * 60 + ss
 
         case 2:
             // MM:SS.mmm
@@ -267,11 +266,11 @@ enum VTTSubtitlesLoader {
 
         // Decode common HTML entities
         result = result
-            .replacingOccurrences(of: "&amp;",  with: "&")
-            .replacingOccurrences(of: "&lt;",   with: "<")
-            .replacingOccurrences(of: "&gt;",   with: ">")
+            .replacingOccurrences(of: "&amp;", with: "&")
+            .replacingOccurrences(of: "&lt;", with: "<")
+            .replacingOccurrences(of: "&gt;", with: ">")
             .replacingOccurrences(of: "&nbsp;", with: " ")
-            .replacingOccurrences(of: "&#39;",  with: "'")
+            .replacingOccurrences(of: "&#39;", with: "'")
             .replacingOccurrences(of: "&quot;", with: "\"")
 
         return result.trimmingCharacters(in: .whitespacesAndNewlines)

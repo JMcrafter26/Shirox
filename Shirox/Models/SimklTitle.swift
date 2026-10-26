@@ -38,7 +38,7 @@ struct SimklEpisode: Codable, Equatable, Sendable, Identifiable {
     let isSpecial: Bool
     let simklID: Int
     /// The episode's synopsis. Optional, so episode lists saved before it still decode.
-    var overview: String? = nil
+    var overview: String?
 
     var id: Int { simklID }
 

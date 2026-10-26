@@ -1,7 +1,7 @@
-import Foundation
 import AuthenticationServices
-import Security
 import Combine
+import Foundation
+import Security
 
 /// Simkl sign-in over AUTH V2: OAuth 2.0 with PKCE, scopes and refresh tokens.
 ///

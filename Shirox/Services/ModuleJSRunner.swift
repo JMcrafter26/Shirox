@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 #if os(tvOS)
     import FakeWebKit
@@ -13,7 +13,6 @@ import Combine
 /// Creates its own JSContext so it never interferes with JSEngine.shared.
 @MainActor
 final class ModuleJSRunner {
-
     private var context: JSContext?
     private var module: ModuleDefinition?
 
@@ -116,9 +115,7 @@ final class ModuleJSRunner {
         let links = array.compactMap { item -> EpisodeLink? in
             guard let href = item["href"] as? String else { return nil }
             let number: Double
-            if let n = item["number"] as? Double { number = n }
-            else if let n = item["number"] as? Int { number = Double(n) }
-            else { number = 0 }
+            if let n = item["number"] as? Double { number = n } else if let n = item["number"] as? Int { number = Double(n) } else { number = 0 }
             return EpisodeLink(number: number, href: href)
         }
         // Logged so episode-number mismatches (the usual cause of "only ep 1 downloads"
@@ -276,7 +273,7 @@ final class ModuleJSRunner {
                 }
             }
 
-            var impersonateTarget: BrowserTarget? = nil
+            var impersonateTarget: BrowserTarget?
             var useWebView = false
 
             if !extraVal.isUndefined && !extraVal.isNull {
@@ -525,7 +522,7 @@ final class ModuleJSRunner {
                 callback.call(withArguments: [])
             }
             timerMap[id] = item
-            DispatchQueue.main.asyncAfter(deadline: .now() + max(delay, 0) / 1000.0, execute: item)
+            DispatchQueue.main.asyncAfter(deadline: .now() + max(delay, 0) / 1_000.0, execute: item)
             return id
         }
 
@@ -537,7 +534,7 @@ final class ModuleJSRunner {
         let setIntervalBlock: @convention(block) (JSValue, Double) -> Int = { callback, delay in
             let id = nextId
             nextId += 1
-            let interval = max(delay, 16) / 1000.0
+            let interval = max(delay, 16) / 1_000.0
             func schedule() {
                 guard timerMap[id] != nil else { return }
                 let item = DispatchWorkItem {

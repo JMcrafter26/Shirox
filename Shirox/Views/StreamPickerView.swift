@@ -176,7 +176,7 @@ extension View {
 struct ModulePickerStatusLine: View {
     let text: String
     var isWorking = false
-    var accessory: AnyView? = nil
+    var accessory: AnyView?
 
     var body: some View {
         HStack(spacing: 6) {
@@ -239,7 +239,7 @@ struct ModulePickerSkeletonStrip: View {
 struct ModulePickerMessage<Accessory: View>: View {
     let icon: String
     let title: String
-    var detail: String? = nil
+    var detail: String?
     var tint: Color = .secondary
     @ViewBuilder var accessory: Accessory
 

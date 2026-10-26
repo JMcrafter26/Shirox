@@ -133,7 +133,7 @@ private struct JellyfinSetupGuide: View {
         Step(id: 3, title: String(localized: "jellyfin.find_the_server_address"),
              detail: Self.addressDetail),
         Step(id: 4, title: String(localized: "jellyfin.connect"),
-             detail: Self.connectDetail),
+             detail: Self.connectDetail)
     ]
 
     var body: some View {

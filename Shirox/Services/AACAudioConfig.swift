@@ -18,7 +18,7 @@ struct AACAudioConfig: Equatable {
     /// The output's rate, set when SBR doubles it.
     var extensionSampleRate: Int?
 
-    static let sampleRates = [96000, 88200, 64000, 48000, 44100, 32000, 24000, 22050, 16000, 12000, 11025, 8000, 7350]
+    static let sampleRates = [96_000, 88_200, 64_000, 48_000, 44_100, 32_000, 24_000, 22_050, 16_000, 12_000, 11_025, 8_000, 7_350]
 
     // MARK: Reading
 

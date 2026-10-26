@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 @MainActor
 final class MangaDetailViewModel: ObservableObject {
@@ -61,7 +61,7 @@ final class MangaDetailViewModel: ObservableObject {
             ("&#8217;", "'"), ("&#8216;", "'"),
             ("&#8220;", "\u{201C}"), ("&#8221;", "\u{201D}"),
             ("&#8230;", "…"), ("&hellip;", "…"),
-            ("&amp;", "&"),
+            ("&amp;", "&")
         ]
         var s = text
         for (entity, char) in replacements {

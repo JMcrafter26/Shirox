@@ -1,6 +1,6 @@
+import Combine
 import Foundation
 import SwiftUI
-import Combine
 
 /// Mirror of MangaModuleResolver's preference, for the anime side: keep the active
 /// module if it's an anime (non-manga) module, else fall back to the first anime
@@ -18,7 +18,7 @@ final class ModuleManager: ObservableObject {
 
     @Published var modules: [ModuleDefinition] = []
     @Published var activeModule: ModuleDefinition?
-    @Published var moduleReadyId: String? = nil
+    @Published var moduleReadyId: String?
     @Published var isLoading = false
     @Published var errorMessage: String?
     /// The last check of each module, by id (see ``ModuleCheck``).

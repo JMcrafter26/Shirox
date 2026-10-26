@@ -4,11 +4,11 @@ struct PlayerProgressSlider: View {
     @Binding var currentTime: Double
     let duration: Double
     var bufferProgress: Double = 0
-    var skipSegments: SkipSegments? = nil
+    var skipSegments: SkipSegments?
     var onSeek: (Double) -> Void
-    var onDragStart: (() -> Void)? = nil
-    var onDragChange: ((Double) -> Void)? = nil
-    var onDragEnd: (() -> Void)? = nil
+    var onDragStart: (() -> Void)?
+    var onDragChange: ((Double) -> Void)?
+    var onDragEnd: (() -> Void)?
 
     @AppStorage("playerLiquidGlass") private var playerLiquidGlass = true
 
@@ -87,8 +87,8 @@ struct PlayerProgressSlider: View {
         var times: [Double] = []
         for type in SkipSegmentType.allCases {
             guard let seg = segments.segment(for: type) else { continue }
-            times.append((seg.startMs ?? 0) / 1000.0)
-            times.append(seg.endMs / 1000.0)
+            times.append((seg.startMs ?? 0) / 1_000.0)
+            times.append(seg.endMs / 1_000.0)
         }
         return Array(Set(
             times.filter { $0 > 0 && $0 < duration }.map { $0 / duration }
@@ -141,7 +141,7 @@ struct PlayerProgressSlider_Previews: PreviewProvider {
             Color.black.ignoresSafeArea()
             PlayerProgressSlider(
                 currentTime: .constant(135),
-                duration: 1440,
+                duration: 1_440,
                 onSeek: { _ in }
             )
             .padding(.horizontal, 24)

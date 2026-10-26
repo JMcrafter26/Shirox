@@ -5,13 +5,12 @@ import Kingfisher
 /// per-request headers anime CDNs require (browser UA + Referer, plus
 /// Cloudflare cookie/UA when a host has been bypassed).
 enum KingfisherImageCache {
-
     static var defaultUserAgent: String { NetworkUserAgent.current() }
 
     /// Configure the shared Kingfisher cache. Call once at app launch.
     static func configure() {
         let cache = ImageCache.default
-        cache.diskStorage.config.sizeLimit = 500 * 1024 * 1024   // 500 MB
+        cache.diskStorage.config.sizeLimit = 500 * 1_024 * 1_024   // 500 MB
         cache.diskStorage.config.expiration = .days(7)
         // Keep original bytes on disk so `CachedAsyncImage.cachedImageData(for:)`
         // can hand decodable data to the snapshot store / provider banner.
@@ -43,7 +42,7 @@ enum KingfisherImageCache {
                         refererOverride: String? = nil) -> [String: String] {
         var h: [String: String] = [
             "User-Agent": bypassUserAgent ?? defaultUserAgent,
-            "Accept": "image/avif,image/webp,image/png,image/jpeg,*/*",
+            "Accept": "image/avif,image/webp,image/png,image/jpeg,*/*"
         ]
         if let refererOverride, !refererOverride.isEmpty {
             h["Referer"] = refererOverride

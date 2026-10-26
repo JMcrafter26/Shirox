@@ -2,7 +2,7 @@ import SwiftUI
 
 struct PlayerNextEpisodePicker: View {
     let streams: [StreamResult]
-    var title: String = String(localized: "player.choose_quality")
+    var title = String(localized: "player.choose_quality")
     let onSelect: (StreamResult) -> Void
     @Environment(\.dismiss) private var dismiss
 

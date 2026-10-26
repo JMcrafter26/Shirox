@@ -48,7 +48,6 @@ enum SimklTitleCopy {
 /// are sent at once, as anime's are, so a failure is reported rather than retried behind the
 /// user's back.
 extension SimklLibraryService {
-
     /// Saves a status, score and — for a show — episode changes, updating the saved copy first so
     /// the list and the page show it at once. Returns whether Simkl has it; false means queued.
     ///

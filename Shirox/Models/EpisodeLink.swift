@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 struct EpisodeLink: Identifiable, Equatable {
     let id = UUID()

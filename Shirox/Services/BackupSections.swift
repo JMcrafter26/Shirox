@@ -110,7 +110,7 @@ struct SubtitleBackupPayload: Codable {
     var enabled: Bool
     var fontSize: Double
     /// Absent from backups made before it existed.
-    var fontFamily: String? = nil
+    var fontFamily: String?
     var shadowRadius: Double
     var backgroundEnabled: Bool
     /// Nil in backups from before the background could be styled.
@@ -130,7 +130,7 @@ struct SettingsBackupPayload: Codable {
     var strings: [String: String]
     var subtitles: SubtitleBackupPayload?
     /// Absent from backups made before any list was backed up.
-    var stringLists: [String: [String]]? = nil
+    var stringLists: [String: [String]]?
 }
 
 /// Preferences, as an explicit allowlist rather than a dump of the UserDefaults domain —

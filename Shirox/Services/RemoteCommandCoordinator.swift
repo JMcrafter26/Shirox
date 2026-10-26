@@ -22,7 +22,6 @@ import MediaPlayer
 /// than poking an `AVPlayer` directly behind the app's back.
 @MainActor
 final class RemoteCommandCoordinator {
-
     private var targets: [(command: MPRemoteCommand, token: Any)] = []
     private var skipHandler: ((Double) -> Void)?
     private var skipInterval: Double = 10

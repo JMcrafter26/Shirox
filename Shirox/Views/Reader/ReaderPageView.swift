@@ -1,6 +1,6 @@
 #if os(iOS)
-import SwiftUI
 import Kingfisher
+import SwiftUI
 
 /// A single manga page: Kingfisher-loaded, aspect-fit, with a placeholder
 /// while loading, a few tries of its own (``ReaderPageRetry``), and then a tap-to-retry
@@ -13,7 +13,7 @@ struct ReaderPageView: View {
     /// The height this page occupied last time it was laid out, when known. Reserving it keeps
     /// a re-created page from briefly claiming the 2:3 placeholder size and shoving everything
     /// below it — the jump that made scrolling back up teleport between pages.
-    var knownHeight: CGFloat? = nil
+    var knownHeight: CGFloat?
 
     @State private var image: UIImage?
     @State private var failed = false
@@ -43,7 +43,7 @@ struct ReaderPageView: View {
             .processor(DownsamplingImageProcessor(size: target)),
             .scaleFactor(UIScreen.main.scale),
             .backgroundDecode,
-            .cacheOriginalImage,
+            .cacheOriginalImage
         ]
     }
 
@@ -164,7 +164,6 @@ struct ReaderPageView: View {
     }
 }
 
-
 /// Sizes a not-yet-decoded page: its remembered height when we have one, else the 2:3 guess.
 private struct ReaderPagePlaceholderSize: ViewModifier {
     let knownHeight: CGFloat?
@@ -173,7 +172,7 @@ private struct ReaderPagePlaceholderSize: ViewModifier {
         if let knownHeight, knownHeight > 1 {
             content.frame(height: knownHeight)
         } else {
-            content.aspectRatio(2/3, contentMode: .fit)
+            content.aspectRatio(2 / 3, contentMode: .fit)
         }
     }
 }

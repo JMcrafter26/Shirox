@@ -8,9 +8,9 @@ struct SimklDiscoverItem: Equatable, Sendable {
         let mal: Int?
         let anilist: Int?
         /// A show's TVDB series or a movie's TVDB movie, where its logo comes from.
-        var tvdb: Int? = nil
+        var tvdb: Int?
         /// Its TMDB show or movie, for a logo TVDB doesn't have.
-        var tmdb: Int? = nil
+        var tmdb: Int?
     }
 
     let title: String
@@ -32,13 +32,13 @@ struct SimklDiscoverItem: Equatable, Sendable {
     /// from v2's times, or the day as v1 lists it.
     var airDay: String?
     /// Calendar entries only: the episode airing — 1 for a new show or season.
-    var episode: Int? = nil
+    var episode: Int?
     /// When the title came out, "yyyy-MM-dd".
-    var released: String? = nil
+    var released: String?
     /// Calendar entries only: the moment it airs or releases, for the Upcoming calendar.
-    var airsAt: Date? = nil
+    var airsAt: Date?
     /// Calendar v2 shows only: the season the episode is in.
-    var season: Int? = nil
+    var season: Int?
 }
 
 extension SimklDiscoverItem: Decodable {
@@ -68,7 +68,7 @@ extension SimklDiscoverItem: Decodable {
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         func optional<T: Decodable>(_ type: T.Type, _ key: CodingKeys) -> T? {
-            (try? c.decodeIfPresent(type, forKey: key)) ?? nil
+            (try? c.decodeIfPresent(type, forKey: key))
         }
         // The files spell the id `simkl_id`; the detail records `simkl`.
         let raw = try c.decode(RawIDs.self, forKey: .ids)

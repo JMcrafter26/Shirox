@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 /// What a local Reset Progress holds back from the AniList and MyAnimeList syncs. They mark
 /// episodes 1…progress watched for every show on the Watching list, so a reset of such a show
@@ -376,7 +376,6 @@ struct SimklTrackWrite: Equatable {
             // Sort by date and keep unique
             items = Array(newItems.sorted { cwSortOrder($0, $1) }.prefix(maxItems))
             persist()
-            
         } catch {
             // No internet → expected silent failure; anything else is worth logging.
             if !ProviderManager.isOfflineError(error) {
@@ -854,10 +853,10 @@ struct SimklTrackWrite: Equatable {
                                   aniListUpdatedAt: Int? = nil,
                                   id: UUID = UUID()) -> ContinueWatchingItem? {
         let srcImageUrl   = [source?.imageUrl, imageUrl].compactMap { $0 }.first(where: { !$0.isEmpty }) ?? ""
-        let srcAniListID  = source?.aniListID     ?? aniListID
-        let srcModuleId   = source?.moduleId      ?? moduleId
-        let srcMediaTitle = source?.mediaTitle    ?? mediaTitle
-        let srcDetailHref = source?.detailHref    ?? detailHref
+        let srcAniListID  = source?.aniListID ?? aniListID
+        let srcModuleId   = source?.moduleId ?? moduleId
+        let srcMediaTitle = source?.mediaTitle ?? mediaTitle
+        let srcDetailHref = source?.detailHref ?? detailHref
 
         // Use the largest known totalEpisodes — stale module counts are often 1 and would
         // incorrectly cap a multi-episode show if we took the minimum or first-non-nil.
@@ -1120,7 +1119,6 @@ struct SimklTrackWrite: Equatable {
         currentStatus: MediaListStatus?, currentProgress: Int,
         watchedEpisode ep: Int, totalEpisodes: Int?, isCompleted: Bool,
         skipRewatch: Bool) -> RemoteTrackDecision {
-
         switch currentStatus {
         case .completed:
             if totalEpisodes == 1 { return .write(status: .completed, progress: ep, incrementRepeat: true) }
@@ -1334,7 +1332,7 @@ struct SimklTrackWrite: Equatable {
                                                  remoteStatus: rewatching ? .repeating : nil)
 
         let aniListWillWrite = aniListEnabled && AniListAuthManager.shared.isLoggedIn
-        let malWillWrite     = malEnabled     && MALAuthManager.shared.isLoggedIn
+        let malWillWrite     = malEnabled && MALAuthManager.shared.isLoggedIn
         if aniListWillWrite || malWillWrite {
             NotificationCenter.default.post(name: .remoteLibraryProgressDidPush, object: nil)
         }

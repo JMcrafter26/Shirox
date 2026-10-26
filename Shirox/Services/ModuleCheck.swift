@@ -115,8 +115,8 @@ enum ModuleCheck {
     }
 
     private static let frieren = SeanimeSearchMedia(
-        id: 154587, idMal: 52991, romajiTitle: "Sousou no Frieren", englishTitle: "Frieren: Beyond Journey's End",
-        synonyms: [], episodeCount: 28, format: "TV", status: "FINISHED", year: 2023, isAdult: false)
+        id: 154_587, idMal: 52_991, romajiTitle: "Sousou no Frieren", englishTitle: "Frieren: Beyond Journey's End",
+        synonyms: [], episodeCount: 28, format: "TV", status: "FINISHED", year: 2_023, isAdult: false)
 
     /// A stream counts when it's a real web address.
     nonisolated static func verdict(_ streams: [StreamResult]) -> Bool {

@@ -1,5 +1,5 @@
-import Foundation
 import CryptoKit
+import Foundation
 
 /// Identifies which source provided a saved poster or banner.
 /// Persisted so `enrichMedia` knows whether the current asset can be upgraded
@@ -31,8 +31,8 @@ struct DownloadedMediaSnapshot: Codable {
 
     /// Which source the saved file came from. `nil` means "no source recorded yet"
     /// — treated as upgradeable (anything > nothing).
-    var posterSource: AssetSource? = nil
-    var bannerSource: AssetSource? = nil
+    var posterSource: AssetSource?
+    var bannerSource: AssetSource?
 
     // AniList metadata (all optional — snapshots are still valid without them)
     var synopsis: String?
@@ -65,5 +65,5 @@ struct EpisodeSnapshot: Codable {
     var thumbnailFile: String?         // "thumbnails/ep_{n}.jpg" — or a shared sibling's path
     /// sha1 hex of the saved file's bytes. Used by `enrichEpisode` to skip writing
     /// a duplicate file when TVDB serves the same image under multiple URLs.
-    var thumbnailContentHash: String? = nil
+    var thumbnailContentHash: String?
 }

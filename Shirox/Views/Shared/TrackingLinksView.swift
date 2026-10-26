@@ -38,7 +38,7 @@ struct TrackingLinksView: View {
     /// Module pages: how many episodes the page lists, for a linked show's season guess.
     var moduleEpisodeCount: Int = 0
     /// Module pages only: the AniList match, which also drives page metadata. nil unlinks.
-    var onAniListMatch: ((Int?) -> Void)? = nil
+    var onAniListMatch: ((Int?) -> Void)?
     /// After any stored link changes, so the page can reload its entries.
     var onChange: () -> Void = {}
 
@@ -239,7 +239,7 @@ struct TrackingLinksView: View {
         HStack(spacing: 12) {
             AsyncImage(url: candidate.posterURL) { phase in
                 if let image = phase.image {
-                    image.resizable().aspectRatio(contentMode: .fill)
+                    image.resizable().scaledToFill()
                 } else {
                     Rectangle().fill(Color.secondary.opacity(0.15))
                 }
@@ -479,7 +479,6 @@ struct TrackingLinksView: View {
                 .nilIfEmpty
             posterURL = item.posterURL
         }
-
 
         init(details: SimklTitleDetails) {
             id = details.simklID

@@ -41,7 +41,7 @@ import Foundation
         // AniList.
         if AniListAuthManager.shared.isLoggedIn, let aid = effective.aniListID {
             let existing = try? await AniListLibraryService.shared.fetchEntry(mediaId: aid, type: .manga)?.progress
-            if let push = Self.remoteProgress(existing: existing ?? nil, chapter: chapter, total: effective.totalChapters) {
+            if let push = Self.remoteProgress(existing: existing, chapter: chapter, total: effective.totalChapters) {
                 try? await AniListLibraryService.shared.updateEntry(
                     mediaId: aid, status: push.status, progress: push.progress, score: nil, type: .manga)
             }
@@ -50,7 +50,7 @@ import Foundation
         // MAL.
         if MALAuthManager.shared.isLoggedIn, let mid = effective.malID {
             let existing = try? await MALMangaLibraryService.shared.fetchEntry(malId: mid)?.list_status.num_chapters_read
-            if let push = Self.remoteProgress(existing: existing ?? nil, chapter: chapter, total: effective.totalChapters) {
+            if let push = Self.remoteProgress(existing: existing, chapter: chapter, total: effective.totalChapters) {
                 do {
                     try await MALMangaLibraryService.shared.updateEntry(
                         malId: mid, status: push.status, progress: push.progress, score: nil)

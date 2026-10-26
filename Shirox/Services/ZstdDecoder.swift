@@ -5,7 +5,6 @@ import libzstd
 /// itself but not zstd, so a module that asked for zstd (fetchv2's Chrome and Firefox profiles do)
 /// got the compressed bytes back as its text.
 enum ZstdDecoder {
-
     enum Failure: Error, LocalizedError, Equatable {
         case corrupt(String)
         case truncated
@@ -58,7 +57,6 @@ enum ZstdDecoder {
 
 /// A response body the way a browser's fetch would hand it over.
 enum HTTPBodyDecoding {
-
     /// zstd's frame magic, 0xFD2FB528 little-endian.
     static let zstdMagic: [UInt8] = [0x28, 0xB5, 0x2F, 0xFD]
 

@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 // MARK: - Response wrappers with error handling
 
@@ -1052,8 +1052,8 @@ enum BrowseCategory: String, CaseIterable, Hashable {
         let tvdb_id: Int?
         let tvdb_season: Int?
         let tvdb_epoffset: Int?
-        var tmdb_show_id: Int? = nil
-        var tmdb_movie_id: Int? = nil
+        var tmdb_show_id: Int?
+        var tmdb_movie_id: Int?
 
         /// Where TMDB keeps the anime's logo: a film's own record, else the show a season is part of.
         var tmdbTitle: (id: Int, record: TitleRecord)? {
@@ -1138,7 +1138,7 @@ enum BrowseCategory: String, CaseIterable, Hashable {
         let (data, _) = try await Self.session.data(for: request)
         let res = try JSONDecoder().decode(LoginResponse.self, from: data)
         self.token = res.data.token
-        self.tokenExpiry = Date().addingTimeInterval(3600 * 24 * 25) // Token usually lasts 1 month
+        self.tokenExpiry = Date().addingTimeInterval(3_600 * 24 * 25) // Token usually lasts 1 month
         return res.data.token
     }
 
@@ -1542,7 +1542,6 @@ enum BrowseCategory: String, CaseIterable, Hashable {
         return (ownPoster ? formatURL(artwork.poster) : nil, formatURL(artwork.fanart), formatURL(resolvedLogo),
                 ownPoster ? formatURL(artwork.textlessPoster) : nil)
     }
-
 
     private func getEpisodesAniList(_ aniListId: Int) async -> [AniMapEpisode] {
         if let cached = episodeCache[aniListId] {

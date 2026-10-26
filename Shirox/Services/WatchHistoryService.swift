@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 struct WatchProgress: Codable, Identifiable {
     let mediaId: Int

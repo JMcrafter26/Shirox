@@ -1,7 +1,7 @@
 #if !os(tvOS)
-import Foundation
 import Combine
 import CryptoKit
+import Foundation
 
 @MainActor
 final class DownloadedMediaSnapshotStore: ObservableObject {
@@ -131,9 +131,9 @@ final class DownloadedMediaSnapshotStore: ObservableObject {
         // Poster: TVDB → AniList → module. Stop at first success.
         if snap.posterFile == nil || canUpgrade(snap.posterSource) {
             let candidates: [(AssetSource, String?)] = [
-                (.tvdb,    tvdbArt.poster),
+                (.tvdb, tvdbArt.poster),
                 (.anilist, aniListMedia?.coverImage.extraLarge ?? aniListMedia?.coverImage.large),
-                (.module,  moduleImageUrl)
+                (.module, moduleImageUrl)
             ]
             for (source, url) in candidates {
                 guard let u = url, !u.isEmpty else { continue }
@@ -149,9 +149,9 @@ final class DownloadedMediaSnapshotStore: ObservableObject {
         // *something* offline, even for shows with no banner art anywhere.
         if snap.bannerFile == nil || canUpgrade(snap.bannerSource) {
             let candidates: [(AssetSource, String?)] = [
-                (.tvdb,    tvdbArt.fanart),
+                (.tvdb, tvdbArt.fanart),
                 (.anilist, aniListMedia?.bannerImage),
-                (.module,  moduleImageUrl)
+                (.module, moduleImageUrl)
             ]
             for (source, url) in candidates {
                 guard let u = url, !u.isEmpty else { continue }
@@ -232,8 +232,7 @@ final class DownloadedMediaSnapshotStore: ObservableObject {
                     // that existing file instead of writing a duplicate.
                     if let existingPath = snap.episodes.values
                         .first(where: { $0.thumbnailContentHash == hash })?
-                        .thumbnailFile
-                    {
+                        .thumbnailFile {
                         ep.thumbnailFile = existingPath
                         ep.thumbnailContentHash = hash
                         Logger.shared.log(
@@ -478,12 +477,12 @@ final class DownloadedMediaSnapshotStore: ObservableObject {
     /// are not overwritten (so an enrichMedia retry can't blank them out).
     private func apply(aniList: Media?, to snap: inout DownloadedMediaSnapshot) {
         guard let media = aniList else { return }
-        if snap.synopsis == nil       { snap.synopsis = media.plainDescription }
-        if snap.genres == nil         { snap.genres = media.genres }
-        if snap.averageScore == nil   { snap.averageScore = media.averageScore }
-        if snap.statusDisplay == nil  { snap.statusDisplay = media.statusDisplay }
-        if snap.format == nil         { snap.format = media.format }
-        if snap.seasonYear == nil     { snap.seasonYear = media.seasonYear }
+        if snap.synopsis == nil { snap.synopsis = media.plainDescription }
+        if snap.genres == nil { snap.genres = media.genres }
+        if snap.averageScore == nil { snap.averageScore = media.averageScore }
+        if snap.statusDisplay == nil { snap.statusDisplay = media.statusDisplay }
+        if snap.format == nil { snap.format = media.format }
+        if snap.seasonYear == nil { snap.seasonYear = media.seasonYear }
     }
 
     /// Captures airdate + aliases from the module's `JSEngine.fetchDetails` if both

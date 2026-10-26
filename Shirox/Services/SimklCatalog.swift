@@ -112,7 +112,7 @@ enum SimklCatalog {
         let (data, http) = try await auth.send {
             try auth.authorizedRequest(path: searchPath(for: kind), query: [
                 URLQueryItem(name: "q", value: query),
-                URLQueryItem(name: "limit", value: "20"),
+                URLQueryItem(name: "limit", value: "20")
             ])
         }
         guard (200...299).contains(http.statusCode) else {

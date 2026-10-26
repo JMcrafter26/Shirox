@@ -1,7 +1,7 @@
 #if !os(tvOS)
 import Foundation
-import Libavformat
 import Libavcodec
+import Libavformat
 import Libavutil
 
 /// Turns a finished HLS download — a folder of playlists and hundreds of segments — into one
@@ -433,7 +433,7 @@ enum MediaRemuxer {
         guard let packet, let frame else { return [:] }
         // A dozen decoded frames settle SBR and PS; a few hundred packets is plenty to find them.
         var read = 0
-        while read < 2000, probes.values.contains(where: { $0.frames < 12 }) {
+        while read < 2_000, probes.values.contains(where: { $0.frames < 12 }) {
             guard av_read_frame(ctx, packet) >= 0 else { break }
             defer { av_packet_unref(packet) }
             read += 1

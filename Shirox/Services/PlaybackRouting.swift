@@ -50,7 +50,6 @@ struct NowPlayingSnapshot: Equatable {
 ///   and clock, which during a cast are 0 and frozen — Control Center drew a ▶ button over a
 ///   movie that was already playing, and its scrubber sat at 0:00.
 enum PlaybackRouting {
-
     /// Where a transport command (or a newly-loaded episode) must be sent.
     ///
     /// Casting wins unconditionally: during a cast the local player exists but is parked, so

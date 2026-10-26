@@ -2,7 +2,7 @@ import SwiftUI
 
 struct DetailView: View {
     let item: SearchItem
-    var offlineSnapshot: DownloadedMediaSnapshot? = nil
+    var offlineSnapshot: DownloadedMediaSnapshot?
     var resumeEpisodeNumber: Int?
     var resumeWatchedSeconds: Double?
     var moduleId: String?
@@ -41,17 +41,17 @@ struct DetailView: View {
     @ObservedObject private var malAuth = MALAuthManager.shared
     @ObservedObject private var simklAuth = SimklAuthManager.shared
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @State private var malID: Int? = nil
+    @State private var malID: Int?
     /// This page's linked Simkl id, if the user set one in Tracking Links.
-    @State private var simklID: Int? = nil
+    @State private var simklID: Int?
     /// The title's Simkl id from Simkl's id search, when no link or library entry gave one.
     @State private var lookedUpSimklID: Int?
-    @State private var existingMALEntry: LibraryEntry? = nil
+    @State private var existingMALEntry: LibraryEntry?
     @State private var isSynopsisExpanded = false
     @State private var selectedSeason = 0
     @State private var showResetConfirmation = false
     @State private var autoPlayOnLoad = false
-    @State private var existingEntry: LibraryEntry? = nil
+    @State private var existingEntry: LibraryEntry?
     @AppStorage(SyncTargets.key) private var syncTargetsRaw = ""
     /// AniList ↔ MyAnimeList mirroring — now one pair within `SyncTargets`.
     private var dualSync: Bool { SyncTargets.mirrors(.anilist, .mal, in: SyncTargets.decode(syncTargetsRaw)) }
@@ -86,7 +86,7 @@ struct DetailView: View {
     /// from the toolbar's menu or the "Link with AniList" button, whichever opened them.
     @Namespace private var sheetZoom
     @State private var linksZoomID = "edit"
-    @State private var sequelSearchItem: SearchItem? = nil
+    @State private var sequelSearchItem: SearchItem?
     @State private var watchOrder: [TVDBMappingService.AniraMediaEntry] = []
     @State private var leadingInset: CGFloat = 0
 
@@ -273,7 +273,7 @@ struct DetailView: View {
                     title: MediaTitle(romaji: detail.title, english: detail.title, native: nil),
                     coverImage: MediaCoverImage(large: detail.image, extraLarge: detail.image),
                     bannerImage: nil, description: detail.description,
-                    episodes: detail.episodes.count > 0 ? detail.episodes.count : nil,
+                    episodes: !detail.episodes.isEmpty ? detail.episodes.count : nil,
                     status: "FINISHED", averageScore: nil, genres: nil,
                     season: nil, seasonYear: nil, nextAiringEpisode: nil,
                     relations: nil, type: nil, format: nil
@@ -323,7 +323,7 @@ struct DetailView: View {
                     title: MediaTitle(romaji: detail.title, english: detail.title, native: nil),
                     coverImage: MediaCoverImage(large: detail.image, extraLarge: detail.image),
                     bannerImage: nil, description: detail.description,
-                    episodes: detail.episodes.count > 0 ? detail.episodes.count : nil,
+                    episodes: !detail.episodes.isEmpty ? detail.episodes.count : nil,
                     status: nil, averageScore: nil, genres: nil,
                     season: nil, seasonYear: nil, nextAiringEpisode: nil,
                     relations: nil, type: nil, format: nil
@@ -507,7 +507,6 @@ struct DetailView: View {
             guard let change = note.object as? AniListEntryExtrasChange else { return }
             existingEntry = change.apply(to: existingEntry)
         }
-
     }
 
     // MARK: - Continue Watching Helpers
@@ -634,7 +633,7 @@ struct DetailView: View {
             coverImage: MediaCoverImage(large: detail.image, extraLarge: detail.image),
             bannerImage: nil,
             description: detail.description,
-            episodes: detail.episodes.count > 0 ? detail.episodes.count : nil,
+            episodes: !detail.episodes.isEmpty ? detail.episodes.count : nil,
             status: "FINISHED",
             averageScore: nil,
             genres: nil,
@@ -1056,7 +1055,7 @@ struct DetailView: View {
 
     @ViewBuilder
     private var libraryEditSheet: some View {
-        if (vm.aniListID != nil || malID != nil), let detail = vm.detail {
+        if vm.aniListID != nil || malID != nil, let detail = vm.detail {
             let aid = vm.aniListID
             let mid = malID
             let sheetProvider: ProviderType = aid != nil ? .anilist : .mal
@@ -1066,7 +1065,7 @@ struct DetailView: View {
                 title: MediaTitle(romaji: detail.title, english: detail.title, native: nil),
                 coverImage: MediaCoverImage(large: detail.image, extraLarge: detail.image),
                 bannerImage: nil, description: detail.description,
-                episodes: detail.episodes.count > 0 ? detail.episodes.count : nil,
+                episodes: !detail.episodes.isEmpty ? detail.episodes.count : nil,
                 status: "FINISHED", averageScore: nil, genres: nil,
                 season: nil, seasonYear: nil, nextAiringEpisode: nil,
                 relations: nil, type: nil, format: nil
@@ -2273,16 +2272,16 @@ private struct ModuleEpisodeRowContainer: View {
     let aniListID: Int?
     let aniListProgress: Int?
     let aniListStatus: MediaListStatus?
-    var isAiring: Bool? = nil
+    var isAiring: Bool?
     /// True when this episode's number repeats elsewhere in the show (flat multi-season list).
     var numberIsAmbiguous: Bool = false
     /// True when the user has completed/marked any episode of this show in-app.
     var showUsesHrefTracking: Bool = false
     /// The episode's season run in the list (see `ContinueWatchingManager.episodeRuns`).
-    var seasonEpisodes: [EpisodeLink]? = nil
+    var seasonEpisodes: [EpisodeLink]?
     let onTap: () -> Void
-    var onDownload: (() -> Void)? = nil
-    var onTryOtherStream: (() -> Void)? = nil
+    var onDownload: (() -> Void)?
+    var onTryOtherStream: (() -> Void)?
     var isSelectionMode: Bool = false
     var isSelected: Bool = false
     @ObservedObject private var continueWatching = ContinueWatchingManager.shared
@@ -2292,7 +2291,7 @@ private struct ModuleEpisodeRowContainer: View {
     #endif
 
     @State private var aniMapEpisode: AniMapEpisode?
-    @State private var pendingDowngrade: RemoteDowngrade? = nil
+    @State private var pendingDowngrade: RemoteDowngrade?
 
     private var epNum: Int { Int(episode.number) }
 

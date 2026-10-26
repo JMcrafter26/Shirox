@@ -231,7 +231,7 @@ extension JSContext {
         let networkFetchSimpleNativeFunction: @convention(block) (String, JSValue?, JSValue, JSValue) -> Void = { urlString, optionsValue, resolve, reject in
             Task { @MainActor in
                 var timeoutSeconds = 5
-                var htmlContent: String? = nil
+                var htmlContent: String?
                 var headers: [String: String] = [:]
                 if let optionsDict = optionsValue?.toDictionary() {
                     timeoutSeconds = optionsDict["timeoutSeconds"] as? Int ?? 5
@@ -548,7 +548,7 @@ class NetworkFetchSimpleMonitor: NSObject, ObservableObject {
         config.userContentController.addUserScript(userScript)
         config.userContentController.add(self, name: "networkLogger")
 
-        webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 1920, height: 1080), configuration: config)
+        webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 1_920, height: 1_080), configuration: config)
         webView?.navigationDelegate = self
         webView?.customUserAgent = URLSession.randomUserAgent
     }
@@ -744,8 +744,8 @@ class NetworkFetchMonitor: NSObject, ObservableObject {
 
     @Published private(set) var networkRequests: [String] = []
     @Published private(set) var cutoffTriggered = false
-    @Published private(set) var cutoffUrl: String? = nil
-    @Published private(set) var htmlContent: String? = nil
+    @Published private(set) var cutoffUrl: String?
+    @Published private(set) var htmlContent: String?
     @Published private(set) var htmlCaptured = false
     @Published private(set) var cookiesCaptured = false
 
@@ -1132,7 +1132,7 @@ class NetworkFetchMonitor: NSObject, ObservableObject {
         config.userContentController.addUserScript(userScript)
         config.userContentController.add(self, name: "networkLogger")
 
-        webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 1920, height: 1080), configuration: config)
+        webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 1_920, height: 1_080), configuration: config)
         webView?.navigationDelegate = self
         webView?.customUserAgent = URLSession.randomUserAgent
     }

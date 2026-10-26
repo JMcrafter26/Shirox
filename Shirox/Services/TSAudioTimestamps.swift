@@ -94,7 +94,7 @@ enum TSAudioTimestamps {
         var framesBefore = 0
         var changed = false
         for (index, unit) in units.enumerated() {
-            let expected = (first + Int64(framesBefore) * 1024 * 90_000 / Int64(rate)) % wrap
+            let expected = (first + Int64(framesBefore) * 1_024 * 90_000 / Int64(rate)) % wrap
             let actual = readTimestamp(bytes, at: unit.ptsOffset)
             var drift = actual - expected
             if drift > wrap / 2 { drift -= wrap } else if drift < -wrap / 2 { drift += wrap }

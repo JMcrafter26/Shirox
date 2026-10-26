@@ -1,5 +1,5 @@
-import Foundation
 import CommonCrypto
+import Foundation
 
 // MARK: - Parsed model
 
@@ -78,7 +78,6 @@ struct HLSDownloadPlan: Equatable {
 // MARK: - Parser
 
 enum HLSManifestParser {
-
     /// In a master playlist, return the highest-`BANDWIDTH` variant's URL. Returns nil
     /// when the text is a media playlist (no `#EXT-X-STREAM-INF`).
     static func selectBestVariant(_ manifest: String, baseURL: URL) -> URL? {

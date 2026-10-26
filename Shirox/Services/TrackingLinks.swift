@@ -118,7 +118,6 @@ final class TrackingLinkStore {
 
 /// Applies the user's links to the ids a write starts from.
 enum TrackingLinkResolver {
-
     /// Field by field, first link wins. A show opened from both its AniList and its MAL page has a
     /// record under each key; merging means neither page's record can hide the other's.
     static func merged(_ records: [TrackingLinks?]) -> TrackingLinks {
@@ -152,7 +151,7 @@ enum TrackingLinkResolver {
         let record = merged([
             aniListID.flatMap { links(TrackingLinkStore.key(anilist: $0)) },
             malID.flatMap { links(TrackingLinkStore.key(mal: $0)) },
-            moduleKey.flatMap { links($0) },
+            moduleKey.flatMap { links($0) }
         ])
 
         var anilist = record.anilist ?? aniListID

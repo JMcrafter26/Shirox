@@ -9,16 +9,16 @@ struct PlayerTopBar: View {
     @Binding var isLocked: Bool
     /// The player's own mute, apart from the device's volume.
     @Binding var isMuted: Bool
-    var onPiP: (() -> Void)? = nil
+    var onPiP: (() -> Void)?
     /// Opens or closes the Video Details panel; nil hides the button.
-    var onInfo: (() -> Void)? = nil
+    var onInfo: (() -> Void)?
     var isInfoShown = false
     var topPadding: CGFloat = 24
     var isLandscape: Bool = true
     var showDismiss: Bool = true
     #if os(macOS)
     /// The native engine's player, which AirPlay can take to another screen. Nil on mpv.
-    var airPlayPlayer: AVPlayer? = nil
+    var airPlayPlayer: AVPlayer?
     /// Whether the window is the small floating one.
     var isPictureInPicture = false
     #endif

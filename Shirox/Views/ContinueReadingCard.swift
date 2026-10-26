@@ -116,7 +116,7 @@ struct ContinueReadingCardDisplay: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Color.clear
-                .aspectRatio(2/3, contentMode: .fit)
+                .aspectRatio(2 / 3, contentMode: .fit)
                 .overlay(
                     CachedAsyncImage(urlString: item.coverImage)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)

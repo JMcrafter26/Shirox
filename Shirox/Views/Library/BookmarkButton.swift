@@ -5,7 +5,7 @@ import SwiftUI
 /// fills when the title is already saved. Renders nothing when there is no trackable media.
 struct BookmarkButton: View {
     let media: Media?
-    var localSource: LocalSource? = nil
+    var localSource: LocalSource?
     var style: Style = .floating
 
     enum Style {
@@ -149,7 +149,7 @@ struct FloatingBatchButton: View {
 /// Sheet for toggling a title's collection membership and removing it from the library.
 private struct LocalCollectionPickerSheet: View {
     let media: Media
-    var localSource: LocalSource? = nil
+    var localSource: LocalSource?
     @ObservedObject private var local = LocalLibraryManager.shared
     @Environment(\.dismiss) private var dismiss
     @State private var showNewCollection = false

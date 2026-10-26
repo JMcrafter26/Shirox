@@ -4,8 +4,8 @@ struct LibraryEntryEditSheet: View {
     let entry: LibraryEntry?
     let media: Media
     let onSave: (MediaListStatus, Int, Double) -> Void
-    var onDelete: (() -> Void)? = nil
-    var scoreFormatOverride: ScoreFormat? = nil
+    var onDelete: (() -> Void)?
+    var scoreFormatOverride: ScoreFormat?
     var progressUnit: String = "episode"
 
     @Environment(\.dismiss) private var dismiss
@@ -16,7 +16,7 @@ struct LibraryEntryEditSheet: View {
     @State private var progress: Int
 
     /// The most progress this title can take — its episode or chapter count when known.
-    private var maxProgress: Int { media.episodes ?? 9999 }
+    private var maxProgress: Int { media.episodes ?? 9_999 }
 
     /// What typing into the progress field sets progress to: digits only, never past `max`.
     static func typedProgress(_ text: String, max: Int) -> Int {

@@ -16,7 +16,7 @@ struct ComposeStatusView: View {
                 Divider()
                 Text("\(text.count) / 2000")
                     .font(.caption)
-                    .foregroundStyle(text.count > 2000 ? .red : .secondary)
+                    .foregroundStyle(text.count > 2_000 ? .red : .secondary)
                     .padding(.horizontal)
                     .padding(.top, 6)
                 Spacer()
@@ -36,7 +36,7 @@ struct ComposeStatusView: View {
                             dismiss()
                         }
                     }
-                    .disabled(text.trimmingCharacters(in: .whitespaces).isEmpty || text.count > 2000 || profileVM.isLoadingActivity)
+                    .disabled(text.trimmingCharacters(in: .whitespaces).isEmpty || text.count > 2_000 || profileVM.isLoadingActivity)
                 }
             }
         }

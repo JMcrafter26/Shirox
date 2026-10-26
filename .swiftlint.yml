@@ -14,7 +14,6 @@ opt_in_rules:
   - force_unwrapping
   - implicitly_unwrapped_optional
   - last_where
-  - marker_comment
   - nimble_operator
   - no_extension_access_modifier
   - no_grouping_extension
@@ -46,8 +45,11 @@ excluded:
 
 # Rule configurations
 force_unwrapping: error
-force_cast: error
-force_try: error
+
+# Only collections' `.count`: a plain `count` is often an Int, and its autocorrect to
+# `isEmpty` broke the build.
+empty_count:
+  only_after_dot: true
 
 sorted_imports:
   severity: warning
@@ -64,10 +66,10 @@ type_body_length:
   warning: 200
   error: 400
 
-naming_convention:
-  variable_name:
-    min_length: 2
-    max_length: 40
-  type_name:
-    min_length: 3
-    max_length: 40
+identifier_name:
+  min_length: 2
+  max_length: 40
+
+type_name:
+  min_length: 3
+  max_length: 40

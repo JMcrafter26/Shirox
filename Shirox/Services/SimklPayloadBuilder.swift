@@ -20,14 +20,14 @@ struct SimklWrite: Codable, Equatable {
     let episodes: [Int]?
     /// Sent alongside the ids. Simkl resolves a title from ids "or via fuzzy title+year", so
     /// this is context for the matcher rather than the primary key.
-    var title: String? = nil
-    var year: Int? = nil
+    var title: String?
+    var year: Int?
     /// nil for anime — every write before TV and movies was one, and a queue saved on disk has no
     /// `kind`.
-    var kind: MediaKind? = nil
+    var kind: MediaKind?
     /// TV: the seasons to mark, a season with no `episodes` meaning all of it. Anime marks
     /// `episodes` in its single season instead.
-    var seasons: [SimklSeasonMark]? = nil
+    var seasons: [SimklSeasonMark]?
 }
 
 /// What moving a title from one progress to another takes on Simkl.
@@ -52,7 +52,6 @@ struct SimklRemoval: Equatable {
 /// of the app — Simkl suspends one for sustained write-hammering with no appeal. Both are cheap
 /// to assert here and expensive to discover against a live account.
 enum SimklPayloadBuilder {
-
     // MARK: - Status
 
     static func status(for status: MediaListStatus) -> SimklStatus {

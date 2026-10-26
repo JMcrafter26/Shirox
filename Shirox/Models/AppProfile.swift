@@ -17,7 +17,7 @@ struct AppProfile: Codable, Identifiable, Equatable, Hashable {
     var accountAvatarURL: String?
     /// Profiles with the same group share one set of modules.
     var moduleGroup: UUID
-    var createdAt: Date = Date()
+    var createdAt = Date()
 
     var initial: String {
         name.trimmingCharacters(in: .whitespacesAndNewlines).first.map { String($0).uppercased() } ?? "?"
@@ -38,7 +38,7 @@ struct ProfileRegistry: Codable, Equatable {
 enum ProfilePalette {
     static let colors = [
         "#E5484D", "#F76B15", "#FFC53D", "#46A758", "#12A594", "#00A2C7",
-        "#3E63DD", "#6E56CF", "#AB4ABA", "#D6409F", "#8D6E63", "#5B6B7A",
+        "#3E63DD", "#6E56CF", "#AB4ABA", "#D6409F", "#8D6E63", "#5B6B7A"
     ]
 
     /// A colour no existing profile has: a random unused one from the palette, and once all

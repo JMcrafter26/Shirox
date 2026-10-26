@@ -1,7 +1,7 @@
 #if !os(tvOS)
-import Foundation
 import AVFoundation
 import CommonCrypto
+import Foundation
 
 actor HLSDownloader {
     enum HLSError: LocalizedError {
@@ -387,7 +387,7 @@ actor HLSDownloader {
             }
 
             if status == 429 || status == 503 { await HostRequestGate.shared.throttled(host) }
-            if (status == 429 || status == 503), attempt < maxRetries {
+            if status == 429 || status == 503, attempt < maxRetries {
                 // Exponential backoff floor: 2, 4, 8, 16, 30, 30… seconds. We honor
                 // Retry-After only when it asks for MORE than the floor — these CDNs
                 // routinely return `Retry-After: 0` while still rate-limiting, so trusting

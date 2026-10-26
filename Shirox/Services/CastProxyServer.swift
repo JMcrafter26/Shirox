@@ -1,9 +1,9 @@
 import Combine
 
 #if !os(tvOS)
+import Darwin
 import Foundation
 import Network
-import Darwin
 #if os(iOS)
 import UIKit
 #endif
@@ -39,7 +39,7 @@ final class CastProxyServer: @unchecked Sendable {
 
     // `port` and `idleTimeout` change only while the proxy is down — tests move them, clear of
     // a copy of the app running in a simulator on the same Mac, which shares its ports.
-    var port: NWEndpoint.Port = 8766
+    var port: NWEndpoint.Port = 8_766
     /// How long a connection may go with nothing moving on it before it is reclaimed.
     var idleTimeout: TimeInterval = 60
     /// Backoff before re-arming a listener that failed.
@@ -101,7 +101,7 @@ final class CastProxyServer: @unchecked Sendable {
         config.httpMaximumConnectionsPerHost = 6
         config.requestCachePolicy = .reloadIgnoringLocalCacheData
         config.timeoutIntervalForRequest = 30
-        config.timeoutIntervalForResource = 3600
+        config.timeoutIntervalForResource = 3_600
         config.waitsForConnectivity = true
         let queue = OperationQueue()
         // Concurrent so one exchange blocking for backpressure can't stall the others.
@@ -742,7 +742,7 @@ final class CastProxyServer: @unchecked Sendable {
 
 /// One accepted TCP connection: reads request heads (across as many packets as it takes),
 /// hands each to the server, and reclaims itself when idle or broken.
-fileprivate final class ProxyConnection: @unchecked Sendable {
+private final class ProxyConnection: @unchecked Sendable {
     private let connection: NWConnection
     private let queue: DispatchQueue
     private let idleTimeout: TimeInterval
@@ -758,7 +758,7 @@ fileprivate final class ProxyConnection: @unchecked Sendable {
     private var lastActivity = DispatchTime.now()
 
     /// A head larger than this is not a real request — refuse it rather than buffer forever.
-    private static let maxHeadBytes = 64 * 1024
+    private static let maxHeadBytes = 64 * 1_024
 
     init(connection: NWConnection, queue: DispatchQueue, idleTimeout: TimeInterval, server: CastProxyServer) {
         self.connection = connection
@@ -784,7 +784,7 @@ fileprivate final class ProxyConnection: @unchecked Sendable {
     // MARK: Reading
 
     private func receive() {
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 16 * 1024) {
+        connection.receive(minimumIncompleteLength: 1, maximumLength: 16 * 1_024) {
             [weak self] data, _, isComplete, error in
             guard let self else { return }
             if error != nil || (isComplete && data == nil) { self.close(); return }
@@ -907,8 +907,7 @@ fileprivate final class ProxyConnection: @unchecked Sendable {
 ///
 /// Streams by default. Only a manifest is buffered — it has to be complete before its URLs
 /// can be rewritten — and manifests are kilobytes.
-fileprivate final class ProxyExchangeRegistry: NSObject, URLSessionDataDelegate, @unchecked Sendable {
-
+private final class ProxyExchangeRegistry: NSObject, URLSessionDataDelegate, @unchecked Sendable {
     private final class Exchange {
         let connection: ProxyConnection
         let wantsBody: Bool

@@ -5,8 +5,8 @@ extension Double {
     var playerTimeString: String {
         guard isFinite, self >= 0 else { return "0:00" }
         let total = Int(self)
-        let h = total / 3600
-        let m = (total % 3600) / 60
+        let h = total / 3_600
+        let m = (total % 3_600) / 60
         let s = total % 60
         return h > 0
             ? String(format: "%d:%02d:%02d", h, m, s)

@@ -249,7 +249,7 @@ private struct ConnectionTestSection: View {
         }
     }
 
-    private func test() {
+    func test() {
         isTesting = true
         checks = []
         Task {

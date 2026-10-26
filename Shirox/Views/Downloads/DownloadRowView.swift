@@ -11,7 +11,7 @@ struct DownloadRowView: View {
         HStack(spacing: 12) {
             // Minimal Cover
             CachedAsyncImage(urlString: item.imageUrl)
-                .aspectRatio(2/3, contentMode: .fit)
+                .aspectRatio(2 / 3, contentMode: .fit)
                 .frame(width: 50)
                 .clipShape(RoundedRectangle(cornerRadius: 6))
                 .shadow(radius: 2)

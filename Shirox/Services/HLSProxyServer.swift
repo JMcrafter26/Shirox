@@ -1,6 +1,6 @@
+import Darwin
 import Foundation
 import Network
-import Darwin
 
 final class HLSProxyServer: @unchecked Sendable {
     static let shared = HLSProxyServer()
@@ -8,7 +8,7 @@ final class HLSProxyServer: @unchecked Sendable {
     private var listener: NWListener?
     // Changes only while the proxy is down — tests move it, clear of a copy of the app running
     // in a simulator on the same Mac, which shares its ports.
-    var port: NWEndpoint.Port = 8765
+    var port: NWEndpoint.Port = 8_765
     private var proxyHeaders: [String: String] = [:]
     private(set) var isRunning = false
     private let listenerQueue = DispatchQueue(label: "com.shirox.hlsproxy", qos: .userInitiated)
@@ -110,7 +110,7 @@ final class HLSProxyServer: @unchecked Sendable {
     }
 
     private func receiveRequest(on connection: NWConnection) {
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 8192) { [weak self] data, _, _, _ in
+        connection.receive(minimumIncompleteLength: 1, maximumLength: 8_192) { [weak self] data, _, _, _ in
             guard let self = self, let data = data, let requestText = String(data: data, encoding: .utf8) else {
                 connection.cancel()
                 return
@@ -224,7 +224,7 @@ final class HLSProxyServer: @unchecked Sendable {
     private func streamFile(_ handle: FileHandle, connection: NWConnection, remaining: Int64) {
         final class StreamState: @unchecked Sendable { var left: Int64; init(_ v: Int64) { left = v } }
         let state = StreamState(remaining)
-        let chunk = Int64(128 * 1024)
+        let chunk = Int64(128 * 1_024)
         @Sendable func sendNext() {
             guard state.left > 0 else { try? handle.close(); return }
             let toRead = min(state.left, chunk)

@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 import ImageIO
 import UniformTypeIdentifiers
 #if os(iOS)
@@ -245,7 +245,7 @@ final class ProfileManager: ObservableObject {
               let image = CGImageSourceCreateThumbnailAtIndex(source, 0, [
                   kCGImageSourceCreateThumbnailFromImageAlways: true,
                   kCGImageSourceCreateThumbnailWithTransform: true,
-                  kCGImageSourceThumbnailMaxPixelSize: maxSide,
+                  kCGImageSourceThumbnailMaxPixelSize: maxSide
               ] as CFDictionary) else { return nil }
         let output = NSMutableData()
         guard let destination = CGImageDestinationCreateWithData(output, UTType.jpeg.identifier as CFString, 1, nil)

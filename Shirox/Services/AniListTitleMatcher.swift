@@ -63,7 +63,7 @@ enum AniListTitleMatcher {
         var named = numbers([
             #"(?:season|part|cour|arc|series|сезон|часть)\s*(\d{1,2})\b"#,
             #"\b(\d{1,2})(?:st|nd|rd|th)?\s+(?:season|part|cour|сезон|часть)"#,
-            #"\bs(\d{1,2})\b"#,
+            #"\bs(\d{1,2})\b"#
         ])
         let romans = ["ii": 2, "iii": 3, "iv": 4, "v": 5, "vi": 6]
         if let last = lower.split(whereSeparator: { !$0.isLetter && !$0.isNumber }).last,

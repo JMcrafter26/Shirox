@@ -45,7 +45,6 @@ enum CastSessionOutcome: Equatable {
 /// written `currentCastSession?.remoteMediaClient?.play()`, they all silently no-opped. The
 /// result was a cast overlay with dead buttons that only relaunching cleared.
 enum CastSessionRecovery {
-
     /// The app-level state each lifecycle event implies. Exhaustive over `CastSessionEvent`
     /// on purpose: a new event can't default to "still casting".
     static func outcome(for event: CastSessionEvent) -> CastSessionOutcome {

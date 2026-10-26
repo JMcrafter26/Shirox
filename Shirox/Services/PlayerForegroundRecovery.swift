@@ -9,7 +9,6 @@ import Foundation
 /// no trigger, so its resume-seek wedges to a black frame and an endless spinner. This decides
 /// when to skip that doomed seek and re-resolve the source instead.
 enum PlayerForegroundRecovery {
-
     /// How long suspended before the source is assumed dead. Local re-resolve is cheap (restart
     /// the proxy) so we act fast; a network re-extract is expensive and CDN URLs live longer, so
     /// we wait more before paying for it.

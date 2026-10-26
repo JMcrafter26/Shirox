@@ -92,8 +92,7 @@ struct MediaDetailsSheet: View {
                 HStack(spacing: 20) {
                     ForEach(following) { follower in
                         HStack(spacing: 10) {
-                            CachedAsyncImage(urlString: follower.avatar ?? "")
-                                .aspectRatio(contentMode: .fill)
+                            CachedAsyncImage(urlString: follower.avatar ?? "").scaledToFill()
                                 .frame(width: 44, height: 44)
                                 .background(Color.secondary.opacity(0.15))
                                 .clipShape(Circle())

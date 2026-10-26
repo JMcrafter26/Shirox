@@ -14,7 +14,6 @@ import Foundation
 /// LAN and injects the headers on every request — so the fix is to route external playback
 /// through it too.
 enum AirPlayRouting {
-
     /// Whether playback should run through the LAN proxy right now.
     ///
     /// - Parameters:

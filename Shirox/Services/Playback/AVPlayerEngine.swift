@@ -228,7 +228,7 @@ final class AVPlayerEngine: PlaybackEngine {
                     guard let self, self.player.currentItem === item else { return }
                     self.events.failedToPlayToEnd(error)
                 }
-            },
+            }
         ]
     }
 
