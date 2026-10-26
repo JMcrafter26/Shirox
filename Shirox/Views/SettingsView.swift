@@ -929,6 +929,8 @@ struct SubtitleSettingsPage: View {
                 ColorPicker("settings.text_color", selection: $settings.foregroundColor, supportsOpacity: false)
                 #endif
                 SubtitleFontRow(settings: settings)
+                #if os(tvOS)
+                // Apple TV has no slider, so its size comes from the presets.
                 Picker("player.size", selection: sizeSelection) {
                     ForEach(PlayerSubtitleMenu.sizes, id: \.points) { size in
                         Text(size.name).tag(size.points)
@@ -937,7 +939,7 @@ struct SubtitleSettingsPage: View {
                         Text("settings.points \(Int(settings.fontSize.rounded()))").tag(settings.fontSize)
                     }
                 }
-                #if !os(tvOS)
+                #else
                 sliderRow(String(localized: "settings.font_size"), value: $settings.fontSize, in: 12...40, step: 1,
                           text: "\(Int(settings.fontSize))")
                 sliderRow(String(localized: "settings.shadow"), value: $settings.shadowRadius, in: 0...8, step: 0.5,
