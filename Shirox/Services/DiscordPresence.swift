@@ -18,8 +18,8 @@ final class DiscordPresence: NSObject, ObservableObject {
     static let applicationIDKey = "discordApplicationID"
     static let showsCoverKey = "discordShowsCover"
     static let showsDetailsKey = "discordShowsDetails"
-    /// Shirox's Discord application. A placeholder until the app is registered with Discord.
-    static let defaultApplicationID = "123456789012345678"
+    /// Shirox's Discord application (Social SDK on, public client, redirect `shirox://discord`).
+    static let defaultApplicationID = "1375525918696669305"
     static let redirectURI = "shirox://discord"
     nonisolated static let accessTokenAccount = "discord_access_token"
     nonisolated static let refreshTokenAccount = "discord_refresh_token"
