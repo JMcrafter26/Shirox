@@ -38,10 +38,10 @@ struct AiringEpisode: Identifiable {
 
     /// What's airing, under the title.
     var caption: String {
-        if isRelease { return "Release" }
-        guard let episode else { return "Next episode" }
-        let episodes = lastEpisode.map { "Episodes \(episode)–\($0)" } ?? "Episode \(episode)"
-        return season.map { "Season \($0) · \(episodes)" } ?? episodes
+        if isRelease { return String(localized: "home.release") }
+        guard let episode else { return String(localized: "home.next_episode") }
+        let episodes = lastEpisode.map { String(localized: "home.episodes \(episode) \($0)") } ?? String(localized: "common.episode \(episode)")
+        return season.map { String(localized: "home.season \($0) \(episodes)") } ?? episodes
     }
 }
 
@@ -251,17 +251,17 @@ final class UpcomingCalendarViewModel: ObservableObject {
 
     /// What's empty, by what the schedule lists.
     var emptyTitle: String {
-        if libraryOnly { return "Nothing from your library" }
-        return source == .simkl(.movie) ? "No releases" : "Nothing scheduled"
+        if libraryOnly { return String(localized: "home.nothing_from_your_library") }
+        return source == .simkl(.movie) ? String(localized: "home.no_releases") : String(localized: "home.nothing_scheduled")
     }
 
     var emptyDescription: String {
         let movies = source == .simkl(.movie)
         if libraryOnly {
-            return movies ? "No movie you're following comes out in the next week."
-                          : "No show you're following airs in the next week."
+            return movies ? String(localized: "home.no_movie_youre_following_comes")
+                          : String(localized: "home.no_show_youre_following_airs")
         }
-        return movies ? "No movies come out in the next week." : "No episodes are scheduled in the next week."
+        return movies ? String(localized: "home.no_movies_come_out_in") : String(localized: "home.no_episodes_are_scheduled_in")
     }
 }
 
@@ -281,7 +281,7 @@ struct UpcomingCalendarView: View {
                 ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if let errorMessage = vm.errorMessage, vm.days.isEmpty {
                 ContentUnavailableView(
-                    "Couldn't Load",
+                    "common.couldnt_load",
                     systemImage: "exclamationmark.triangle",
                     description: Text(errorMessage)
                 )
@@ -295,7 +295,7 @@ struct UpcomingCalendarView: View {
                 list
             }
         }
-        .navigationTitle("Upcoming")
+        .navigationTitle("shared.upcoming")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -304,11 +304,11 @@ struct UpcomingCalendarView: View {
             // builder needs iOS 16 and this ships to 15.
             ToolbarItem(placement: .principal) {
                 if vm.usesSimkl {
-                    SimklKindMenu(kind: $vm.simklKind) { "Upcoming \($0.simklKindTitle)" }
+                    SimklKindMenu(kind: $vm.simklKind) { String(localized: "home.upcoming \($0.simklKindTitle)") }
                 } else {
                     // A Mac shows the navigation title already, at the toolbar's leading edge.
                     #if !os(macOS)
-                    Text("Upcoming").font(.headline)
+                    Text("shared.upcoming").font(.headline)
                     #endif
                 }
             }
@@ -317,7 +317,7 @@ struct UpcomingCalendarView: View {
                     Button {
                         vm.libraryOnly.toggle()
                     } label: {
-                        Label("My library", systemImage: vm.libraryOnly ? "bookmark.fill" : "bookmark")
+                        Label("common.my_library", icon: vm.libraryOnly ? "bookmark.fill" : "bookmark")
                     }
                 }
             }
@@ -378,9 +378,9 @@ struct UpcomingCalendarView: View {
     /// weekday, since a week never repeats one.
     static func dayLabel(for date: Date, now: Date = Date()) -> String {
         let calendar = Calendar.current
-        if calendar.isDate(date, inSameDayAs: now) { return "Today" }
+        if calendar.isDate(date, inSameDayAs: now) { return String(localized: "shared.today") }
         if let tomorrow = calendar.date(byAdding: .day, value: 1, to: now),
-           calendar.isDate(date, inSameDayAs: tomorrow) { return "Tomorrow" }
+           calendar.isDate(date, inSameDayAs: tomorrow) { return String(localized: "home.tomorrow") }
         let formatter = DateFormatter()
         formatter.dateFormat = "EEEE"
         return formatter.string(from: date)

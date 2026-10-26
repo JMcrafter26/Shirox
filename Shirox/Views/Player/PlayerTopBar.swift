@@ -64,7 +64,7 @@ struct PlayerTopBar: View {
                 }
                 if showDismiss {
                     Button(action: onDismiss) {
-                        Image(systemName: "xmark")
+                        IconView("xmark")
                             .font(.system(size: 11, weight: .bold))
                             .foregroundStyle(.white)
                             .frame(width: 26, height: 26)
@@ -73,14 +73,14 @@ struct PlayerTopBar: View {
                             .contentShape(Circle())
                     }
                     .buttonStyle(.plain)
-                    .help("Close (Esc)")
+                    .help("player.close_esc")
                 }
             }
             .frame(height: rowHeight)
             #else
             if showDismiss {
                 Button(action: onDismiss) {
-                    Image(systemName: "xmark")
+                    IconView("xmark")
                         .font(.system(size: isPad ? 24 : 18, weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(width: isPad ? 56 : 44, height: isPad ? 56 : 44)
@@ -147,7 +147,7 @@ struct PlayerTopBar: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)
-        .accessibilityHint(showsFullTitle ? "" : "Shows the whole title")
+        .accessibilityHint(showsFullTitle ? "" : String(localized: "player.shows_the_whole_title"))
     }
 
     @ViewBuilder
@@ -157,15 +157,15 @@ struct PlayerTopBar: View {
 
         if let onInfo {
             Button(action: onInfo) {
-                Image(systemName: isInfoShown ? "info.circle.fill" : "info.circle")
+                IconView(isInfoShown ? "info.circle.fill" : "info.circle")
                     .font(.system(size: iconSize, weight: .medium))
                     .foregroundStyle(.white)
                     .frame(width: frameSize, height: frameSize)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Video Details")
+            .accessibilityLabel("player.video_details")
             #if os(macOS)
-            .help("Video Details (I)")
+            .help("player.video_details_i")
             #endif
         }
         #if os(iOS)
@@ -177,7 +177,7 @@ struct PlayerTopBar: View {
             .frame(width: frameSize, height: frameSize)
         if onPiP != nil {
             Button { onPiP?() } label: {
-                Image(systemName: "pip.enter")
+                IconView("pip.enter")
                     .font(.system(size: iconSize, weight: .medium))
                     .foregroundStyle(.white)
                     .frame(width: frameSize, height: frameSize)
@@ -192,21 +192,21 @@ struct PlayerTopBar: View {
                 .help("AirPlay")
         }
         Button { onPiP?() } label: {
-            Image(systemName: isPictureInPicture ? "pip.exit" : "pip.enter")
+            IconView(isPictureInPicture ? "pip.exit" : "pip.enter")
                 .font(.system(size: iconSize, weight: .medium))
                 .foregroundStyle(.white)
                 .frame(width: frameSize, height: frameSize)
         }
         .buttonStyle(.plain)
-        .help(isPictureInPicture ? "Back to the full window (P)" : "Picture in Picture (P)")
+        .help(isPictureInPicture ? String(localized: "player.back_to_the_full_window") : String(localized: "player.picture_in_picture_p"))
         muteButton(iconSize: iconSize, frameSize: frameSize)
-            .help(isMuted ? "Unmute (M)" : "Mute (M)")
+            .help(isMuted ? String(localized: "player.unmute_m") : String(localized: "player.mute_m"))
         #else
         muteButton(iconSize: iconSize, frameSize: frameSize)
         Button {
             withAnimation(.easeInOut(duration: 0.2)) { isLocked.toggle() }
         } label: {
-            Image(systemName: isLocked ? "lock.fill" : "lock.open.fill")
+            IconView(isLocked ? "lock.fill" : "lock.open.fill")
                 .font(.system(size: iconSize, weight: .medium))
                 .foregroundStyle(.white)
                 .frame(width: frameSize, height: frameSize)
@@ -219,13 +219,13 @@ struct PlayerTopBar: View {
         Button {
             withAnimation(.easeInOut(duration: 0.2)) { isMuted.toggle() }
         } label: {
-            Image(systemName: isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+            IconView(isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
                 .font(.system(size: iconSize, weight: .medium))
                 .foregroundStyle(.white)
                 .frame(width: frameSize, height: frameSize)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(isMuted ? "Unmute" : "Mute")
+        .accessibilityLabel(isMuted ? String(localized: "player.unmute") : String(localized: "player.mute"))
     }
 }
 

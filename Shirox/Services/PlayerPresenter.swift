@@ -690,7 +690,7 @@ final class CastManager: NSObject, ObservableObject {
         // A receiver that hit an error goes idle with `.error`. Nothing looked at this, so a
         // failed stream presented as an ordinary pause that no button could undo.
         if status.playerState == .idle, status.idleReason == .error {
-            lastError = "The TV couldn't play this stream."
+            lastError = String(localized: "shared.the_tv_couldnt_play_this")
             Logger.shared.log("[Cast] Receiver reported a playback error", type: "Error")
             apply(.receiverError)
             return

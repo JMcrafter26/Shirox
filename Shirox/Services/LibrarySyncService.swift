@@ -37,14 +37,14 @@ final class LibrarySyncService: ObservableObject {
     func sync(_ run: SyncRun) async {
         guard !isRunning else { return }
         isRunning = true
-        statusText = "Reading libraries…"
+        statusText = String(localized: "shared.reading_libraries")
         defer { isRunning = false; statusText = "" }
 
         guard let entriesBySide = await readLibraries() else { return }
         let anilistEntries = entriesBySide[.anilist] ?? []
         let malEntries = entriesBySide[.mal] ?? []
 
-        statusText = "Matching titles…"
+        statusText = String(localized: "shared.matching_titles")
         // The reverse lookups only earn their keep when AniList entries may be written, or when a
         // mirror has to prove a MyAnimeList entry really is absent before deleting it.
         let needsReverseIds = run.writes(to: .anilist) || run.kind == .mirror
@@ -109,7 +109,7 @@ final class LibrarySyncService: ObservableObject {
         guard !isRunning, run.isDestructive else { return nil }
         guard let target = run.target, let source = run.source else { return nil }
         isRunning = true
-        statusText = "Checking…"
+        statusText = String(localized: "modules.checking")
         defer { isRunning = false; statusText = "" }
 
         guard let entriesBySide = await readLibraries() else { return nil }
@@ -202,7 +202,7 @@ final class LibrarySyncService: ObservableObject {
         }
 
         for (index, pair) in workable.enumerated() {
-            statusText = "Syncing \(index + 1) of \(workable.count)"
+            statusText = String(localized: "shared.syncing_of \(index + 1) \(workable.count)")
 
             // The one entry every other side should be brought up to, and which side it came
             // from. Ties keep the earlier side, matching `LibrarySyncPlanner.winner(among:)`.
@@ -280,7 +280,7 @@ final class LibrarySyncService: ObservableObject {
 
         let total = plan.writes.count + plan.deletions.count
         for (index, write) in plan.writes.enumerated() {
-            statusText = "Copying \(index + 1) of \(total)"
+            statusText = String(localized: "shared.copying_of \(index + 1) \(total)")
             summary.record(await performWrite(
                 to: write.side, id: write.id, title: write.title, hadEntry: !write.isNew,
                 status: write.status, progress: write.progress,
@@ -290,7 +290,7 @@ final class LibrarySyncService: ObservableObject {
         }
 
         for (index, deletion) in plan.deletions.enumerated() {
-            statusText = "Removing \(index + 1) of \(plan.deletions.count)"
+            statusText = String(localized: "shared.removing_of \(index + 1) \(plan.deletions.count)")
             summary.record(await remove(deletion))
         }
         return summary
@@ -473,7 +473,7 @@ final class LibrarySyncService: ObservableObject {
     /// failure. A rate limit, an outage or a dropped connection are not sign-in problems, and
     /// sending somebody to re-authenticate over one wastes their time and doesn't fix it.
     nonisolated static func readFailureMessage(side: LibrarySide, error: Error) -> String {
-        let prefix = "Couldn't read your \(side.name) library"
+        let prefix = String(localized: "shared.couldnt_read_your_library \(side.name)")
         guard let providerError = error as? ProviderError else {
             return "\(prefix): \(error.localizedDescription)"
         }
@@ -638,55 +638,48 @@ struct SyncRun: Identifiable, Equatable {
     /// about to be overwritten; an arrow isn't.
     var title: String {
         if let source, let target { return "\(source.name) → \(target.name)" }
-        guard let sides, sides.count >= 2 else { return "Sync All Ways" }
+        guard let sides, sides.count >= 2 else { return String(localized: "shared.sync_all_ways") }
         return sides.map(\.name).joined(separator: " ⇄ ")
     }
 
     /// Names the account that changes, so the arrow never has to be read twice.
     var subtitle: String {
         switch kind {
-        case .merge:       return "Merges all, keeping whichever is further along"
-        case .copyForward: return "Adds to and advances \(targetName)"
-        case .overwrite:   return "Overwrites \(targetName)"
-        case .mirror:      return "Overwrites \(targetName) and deletes its extras"
+        case .merge:       return String(localized: "shared.merges_all_keeping_whichever_is")
+        case .copyForward: return String(localized: "shared.adds_to_and_advances \(targetName)")
+        case .overwrite:   return String(localized: "shared.overwrites \(targetName)")
+        case .mirror:      return String(localized: "shared.overwrites_and_deletes_its_extras \(targetName)")
         }
     }
 
     var confirmationTitle: String {
         switch kind {
-        case .merge:       return "Sync All Ways"
-        case .copyForward: return "Copy to \(targetName)"
-        case .overwrite:   return "Overwrite \(targetName)?"
-        case .mirror:      return "Erase and Replace \(targetName)?"
+        case .merge:       return String(localized: "shared.sync_all_ways")
+        case .copyForward: return String(localized: "shared.copy_to \(targetName)")
+        case .overwrite:   return String(localized: "shared.overwrite_confirm \(targetName)")
+        case .mirror:      return String(localized: "shared.erase_and_replace_confirm \(targetName)")
         }
     }
 
     var confirmButtonTitle: String {
         switch kind {
-        case .merge:       return "Sync"
-        case .copyForward: return "Copy"
-        case .overwrite:   return "Overwrite \(targetName)"
-        case .mirror:      return "Erase and Replace"
+        case .merge:       return String(localized: "shared.sync")
+        case .copyForward: return String(localized: "shared.copy")
+        case .overwrite:   return String(localized: "shared.overwrite_target \(targetName)")
+        case .mirror:      return String(localized: "shared.erase_and_replace")
         }
     }
 
     var confirmationMessage: String {
         switch kind {
         case .merge:
-            return "Brings every signed-in account level with the others. For every title, "
-                 + "whichever account is further along wins — nothing is ever moved backwards."
+            return String(localized: "shared.sync_merge_explanation")
         case .copyForward:
-            return "Adds anything missing from \(targetName) and moves its progress forward "
-                 + "to match \(sourceName). Titles already further along on \(targetName) "
-                 + "are left untouched."
+            return String(localized: "shared.sync_copy_explanation \(targetName) \(sourceName)")
         case .overwrite:
-            return "Overwrites \(targetName) with \(sourceName) — progress, status, score and "
-                 + "rewatch count — including where \(targetName) is further along. Titles "
-                 + "only \(targetName) has are left alone. This can't be undone."
+            return String(localized: "shared.sync_overwrite_explanation \(targetName) \(sourceName)")
         case .mirror:
-            return "Makes \(targetName) an exact copy of \(sourceName), overwriting it and "
-                 + "deleting entries \(sourceName) doesn't have. Entries whose match can't be "
-                 + "confirmed are kept. This can't be undone."
+            return String(localized: "shared.sync_mirror_explanation \(targetName) \(sourceName)")
         }
     }
 }

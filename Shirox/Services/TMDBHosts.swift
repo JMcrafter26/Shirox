@@ -93,7 +93,8 @@ final class TMDBHosts: @unchecked Sendable {
         guard let url = request.url else { return try await perform(request) }
         let candidates = candidates(for: url)
         guard !candidates.isEmpty else {
-            throw URLError(.badURL, userInfo: [NSLocalizedDescriptionKey: "No valid custom TMDB proxy for \(url.host ?? "TMDB")"])
+            let host = url.host ?? "TMDB"
+            throw URLError(.badURL, userInfo: [NSLocalizedDescriptionKey: String(localized: "settings.no_valid_custom_tmdb_proxy \(host)")])
         }
         for (index, candidate) in candidates.enumerated() {
             var attempt = request

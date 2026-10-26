@@ -8,12 +8,12 @@ extension JSEngine {
 
         // Some modules return a raw URL string instead of JSON (e.g. animeheaven, animekai)
         if let url = URL(string: trimmed), url.scheme != nil, !trimmed.hasPrefix("{") {
-            return [StreamResult(title: "Play", url: url, headers: [:])]
+            return [StreamResult(title: String(localized: "shared.play"), url: url, headers: [:])]
         }
 
         guard let data = trimmed.data(using: .utf8),
               let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            throw JSEngineError.parseError("Could not parse stream result")
+            throw JSEngineError.parseError(String(localized: "shared.could_not_parse_stream_result"))
         }
 
         let streams = parseStreamResults(from: obj)
@@ -40,7 +40,7 @@ func parseStreamResults(from obj: [String: Any]) -> [StreamResult] {
             guard let urlStr = stream["streamUrl"] as? String ?? stream["url"] as? String,
                   let url = URL(string: urlStr) else { continue }
             guard seen.insert(urlStr).inserted else { continue }
-            let title = stream["title"] as? String ?? "Stream"
+            let title = stream["title"] as? String ?? String(localized: "shared.stream")
             let headers = stream["headers"] as? [String: String] ?? [:]
             var result = StreamResult(title: title, url: url, headers: headers,
                                       subtitle: subtitleUrl, subtitleHeaders: subtitleHeaders,
@@ -53,19 +53,19 @@ func parseStreamResults(from obj: [String: Any]) -> [StreamResult] {
         for (i, urlStr) in streams.enumerated() {
             guard let url = URL(string: urlStr) else { continue }
             guard seen.insert(urlStr).inserted else { continue }
-            results.append(StreamResult(title: "Stream \(i + 1)", url: url, headers: [:],
+            results.append(StreamResult(title: String(localized: "shared.stream_number \(i + 1)"), url: url, headers: [:],
                                         subtitle: subtitleUrl, subtitleHeaders: subtitleHeaders,
                                         allSubtitles: allSubtitles, playlistKey: sharedPlaylistKey))
         }
     } else if let stream = obj["stream"] as? String, let url = URL(string: stream) {
-        results.append(StreamResult(title: "Stream", url: url, headers: [:],
+        results.append(StreamResult(title: String(localized: "shared.stream"), url: url, headers: [:],
                                     subtitle: subtitleUrl, subtitleHeaders: subtitleHeaders,
                                     allSubtitles: allSubtitles, playlistKey: sharedPlaylistKey))
     } else if let stream = obj["stream"] as? [String: Any],
               let urlStr = stream["url"] as? String,
               let url = URL(string: urlStr) {
         let headers = stream["headers"] as? [String: String] ?? [:]
-        results.append(StreamResult(title: "Stream", url: url, headers: headers,
+        results.append(StreamResult(title: String(localized: "shared.stream"), url: url, headers: headers,
                                     subtitle: subtitleUrl, subtitleHeaders: subtitleHeaders,
                                     allSubtitles: allSubtitles,
                                     playlistKey: stream["playlistKey"] as? String ?? sharedPlaylistKey))
@@ -86,7 +86,7 @@ private func parseSubtitleTracks(from value: Any?) -> [SubtitleTrack]? {
             ?? item["lang"] as? String
             ?? item["language"] as? String
             ?? item["name"] as? String
-            ?? "Subtitle"
+            ?? String(localized: "shared.subtitle")
         let headers = item["headers"] as? [String: String] ?? [:]
         return SubtitleTrack(title: title, url: url, headers: headers)
     }

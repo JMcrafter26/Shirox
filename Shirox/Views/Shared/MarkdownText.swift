@@ -65,7 +65,7 @@ struct MarkdownText: View {
         case .listItem(let content, let indent, let checked):
             HStack(alignment: .top, spacing: 6) {
                 if checked {
-                    Image(systemName: "checkmark.square.fill")
+                    IconView("checkmark.square.fill")
                         .foregroundStyle(Color.accentColor)
                         .font(font)
                 } else if indent > 0 {
@@ -667,8 +667,8 @@ struct MarkdownMediaEmbed: View {
     }
 
     private var caption: String {
-        if isYouTube { return "Watch on YouTube" }
-        return destination?.host.map { "Video on \($0)" } ?? "Open video"
+        if isYouTube { return String(localized: "shared.watch_on_youtube") }
+        return destination?.host.map { String(localized: "shared.video_on \($0)") } ?? String(localized: "common.open_video")
     }
 
     var body: some View {
@@ -692,7 +692,7 @@ struct MarkdownMediaEmbed: View {
                 .aspectRatio(16 / 9, contentMode: .fit)
                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
 
-            Image(systemName: "play.circle.fill")
+            IconView("play.circle.fill")
                 .font(.system(size: 44))
                 .foregroundStyle(.white)
                 .shadow(color: .black.opacity(0.45), radius: 8)
@@ -702,7 +702,7 @@ struct MarkdownMediaEmbed: View {
 
     private var fileCard: some View {
         HStack(spacing: 10) {
-            Image(systemName: "play.rectangle.fill")
+            IconView("play.rectangle.fill")
                 .font(.title3)
                 .foregroundStyle(.accent)
             VStack(alignment: .leading, spacing: 2) {
@@ -714,7 +714,7 @@ struct MarkdownMediaEmbed: View {
                     .foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)
-            Image(systemName: "arrow.up.right")
+            IconView("arrow.up.right")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.tertiary)
         }

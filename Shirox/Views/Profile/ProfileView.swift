@@ -5,10 +5,10 @@ enum ProfileTab: CaseIterable {
 
     var title: String {
         switch self {
-        case .activity:   return "Activity"
-        case .favourites: return "Favourites"
-        case .stats:      return "Stats"
-        case .social:     return "Social"
+        case .activity:   return String(localized: "shared.activity")
+        case .favourites: return String(localized: "profile.favourites")
+        case .stats:      return String(localized: "profile.stats")
+        case .social:     return String(localized: "profile.social")
         }
     }
 
@@ -44,6 +44,11 @@ struct ProfileView: View {
         providerManager.fallbackActive
             ? (providerManager.fallback?.providerType ?? .anilist)
             : (providerManager.primary?.providerType ?? .anilist)
+    }
+
+    /// AniList or MyAnimeList, for the lines that name the service.
+    private var providerName: String {
+        activeProviderType == .mal ? ProviderType.mal.displayName : ProviderType.anilist.displayName
     }
 
     private var isOwnProfile: Bool {
@@ -106,16 +111,16 @@ struct ProfileView: View {
             ToolbarItem(placement: isPushed ? .primaryAction : .cancellationAction) {
                 if isOwnProfile {
                     Button(role: .destructive) { showLogoutConfirm = true } label: {
-                        Image(systemName: "rectangle.portrait.and.arrow.right")
+                        IconView("rectangle.portrait.and.arrow.right")
                             .foregroundStyle(.red)
                     }
-                    .accessibilityLabel("Log Out")
+                    .accessibilityLabel("profile.log_out")
                 }
             }
             // An `if` around the item needs iOS 16; one inside it doesn't.
             ToolbarItem(placement: .confirmationAction) {
                 if !isPushed {
-                    Button("Done") { dismiss() }
+                    Button("common.done") { dismiss() }
                 }
             }
         }
@@ -131,8 +136,8 @@ struct ProfileView: View {
         #if !os(iOS)
         .macSheetFrame()
         #endif
-        .confirmationDialog("Log out of \(activeProviderType == .mal ? "MyAnimeList" : "AniList")?", isPresented: $showLogoutConfirm, titleVisibility: .visible) {
-            Button("Log Out", role: .destructive) {
+        .confirmationDialog(String(localized: "profile.log_out_of \(providerName)"), isPresented: $showLogoutConfirm, titleVisibility: .visible) {
+            Button("profile.log_out", role: .destructive) {
                 if activeProviderType == .mal {
                     MALAuthManager.shared.logout()
                 } else {
@@ -140,7 +145,7 @@ struct ProfileView: View {
                 }
                 dismiss()
             }
-            Button("Cancel", role: .cancel) { }
+            Button("common.cancel", role: .cancel) { }
         }
     }
 
@@ -172,7 +177,7 @@ struct ProfileView: View {
     private var loadingState: some View {
         VStack(spacing: 14) {
             ProgressView()
-            Text("Hang tight — loading your profile…")
+            Text("profile.hang_tight_loading_your_profile")
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -183,19 +188,19 @@ struct ProfileView: View {
 
     private var retryState: some View {
         VStack(spacing: 14) {
-            Image(systemName: "wifi.exclamationmark")
+            IconView("wifi.exclamationmark")
                 .font(.largeTitle)
                 .foregroundStyle(.secondary)
-            Text("Couldn't load right now")
+            Text("profile.couldnt_load_right_now")
                 .font(.headline)
-            Text("\(activeProviderType == .mal ? "MyAnimeList" : "AniList") may be busy. Give it a moment.")
+            Text("profile.may_be_busy_give_it \(providerName)")
                 .font(.footnote)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
             Button {
                 Task { await vm.loadProfile(userId: userId) }
             } label: {
-                Text("Retry")
+                Text("common.retry")
                     .font(.subheadline.weight(.semibold))
                     .padding(.horizontal, 18).padding(.vertical, 8)
                     .background(Color.accentColor)
@@ -209,16 +214,16 @@ struct ProfileView: View {
 
     private var staleBanner: some View {
         HStack(spacing: 8) {
-            Image(systemName: "arrow.clockwise.circle")
+            IconView("arrow.clockwise.circle")
                 .font(.footnote)
-            Text("Showing saved profile — \(activeProviderType == .mal ? "MyAnimeList" : "AniList") is rate-limited")
+            Text("profile.showing_saved_profile_rate_limited \(providerName)")
                 .font(.caption)
                 .lineLimit(2)
             Spacer(minLength: 8)
             Button {
                 withAnimation { staleBannerDismissed = true }
             } label: {
-                Image(systemName: "xmark").font(.caption2)
+                IconView("xmark").font(.caption2)
             }
             .buttonStyle(.plain)
         }
@@ -295,7 +300,7 @@ struct ProfileView: View {
                     .fill(Color.secondary.opacity(0.25))
                     .frame(width: size, height: size)
                     .overlay(
-                        Image(systemName: "person.fill")
+                        IconView("person.fill")
                             .font(.system(size: size * 0.45))
                             .foregroundStyle(.secondary)
                     )
@@ -319,7 +324,7 @@ struct ProfileView: View {
                 if vm.isTogglingFollow {
                     ProgressView().tint(.white).scaleEffect(0.75)
                 } else {
-                    Text(vm.user?.isFollowing == true ? "Following" : "Follow")
+                    Text(vm.user?.isFollowing == true ? String(localized: "common.following") : String(localized: "profile.follow"))
                         .font(.subheadline.weight(.semibold))
                         .lineLimit(1)
                 }
@@ -355,7 +360,7 @@ struct ProfileView: View {
                 } label: {
                     VStack(spacing: 6) {
                         HStack(spacing: 5) {
-                            Image(systemName: tab.icon).font(.caption)
+                            IconView(tab.icon).font(.caption)
                             Text(tab.title).font(.caption.weight(.semibold))
                         }
                         .foregroundStyle(selectedTab == tab ? Color.primary : .secondary)

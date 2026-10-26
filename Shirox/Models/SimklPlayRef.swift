@@ -38,7 +38,7 @@ enum SimklPlayNumbering {
     /// What the module picker searches: the title for a movie or season 1, "Title Season N" after.
     static func searchTitle(_ title: String, season: Int?) -> String {
         guard let season, season > 1 else { return title }
-        return "\(title) Season \(season)"
+        return String(localized: "shared.season \(title) \(season)")
     }
 
     /// The picker's numbering for `season`, or nil when there's no season before it to skip.
@@ -78,8 +78,8 @@ enum SimklWatchTarget {
 
     /// "Watch Movie", "Continue Movie", "Watch S1 E1", "Continue S2 E6".
     static func label(kind: MediaKind, episode: SimklEpisodeRef?, resuming: Bool) -> String {
-        let verb = resuming ? "Continue" : "Watch"
-        if kind == .movie { return "\(verb) Movie" }
+        let verb = resuming ? String(localized: "shared.continue") : String(localized: "home.watch")
+        if kind == .movie { return String(localized: "shared.movie \(verb)") }
         guard let episode else { return verb }
         return "\(verb) \(episode.label)"
     }

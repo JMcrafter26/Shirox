@@ -62,7 +62,7 @@ final class HomeViewModel: ObservableObject {
             #if !os(tvOS)
             if !trending.isEmpty {
                 let name = ProviderManager.shared.primary?.providerType.displayName ?? "provider"
-                ToastManager.shared.show(message: "Couldn't load \(name). Showing previous results.",
+                ToastManager.shared.show(message: String(localized: "home.couldnt_load_showing_previous_results \(name)"),
                                           type: .error, duration: 4)
             }
             #endif

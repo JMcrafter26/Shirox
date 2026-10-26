@@ -3,6 +3,10 @@ import Combine
 import UniformTypeIdentifiers
 
 struct SearchView: View {
+    #if os(macOS)
+    /// The window toolbar's field, when the page is brought up by it rather than having its own.
+    var toolbarSearch: MacToolbarSearch? = nil
+    #endif
     @StateObject private var vm = SearchViewModel()
     @StateObject private var history = SearchHistoryManager()
     @EnvironmentObject private var moduleManager: ModuleManager
@@ -11,6 +15,7 @@ struct SearchView: View {
     @State private var showModuleList = false
     /// The module button the module list grows out of.
     @Namespace private var moduleListZoom
+    @AppStorage(ProviderMenuStyle.key) private var buttonStyle = ProviderMenuStyle.iconAndName
     @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var isLandscape = false
     // A SINGLE file importer drives both phases. Two `.fileImporter` modifiers in one view
@@ -26,6 +31,14 @@ struct SearchView: View {
     @State private var pendingVideoTitle: String?
 
     private var isLocalModule: Bool { moduleManager.activeModule?.isLocalPlayback == true }
+
+    private var usesToolbarSearch: Bool {
+        #if os(macOS)
+        toolbarSearch != nil
+        #else
+        false
+        #endif
+    }
     private var isJellyfinModule: Bool { moduleManager.activeModule?.isJellyfin == true }
 
     private var platformBackground: Color {
@@ -62,13 +75,26 @@ struct SearchView: View {
 
     var body: some View {
         NavigationStack {
-            mainContent
-                .background(SearchActivationObserver { vm.clearResults() })
-                .navigationTitle("Search")
-                .toolbarZoomSource("moduleList", in: moduleListZoom, placement: .automatic) {
-                    moduleButton
+            withModuleButton(
+                mainContent
+                    .background(SearchActivationObserver { vm.clearResults() })
+                    .navigationTitle("common.search")
+            )
+                .modifier(ConditionalSearchable(enabled: !isLocalModule && !isJellyfinModule && !usesToolbarSearch,
+                                                text: $vm.query))
+                #if os(macOS)
+                .onReceive(toolbarSearch?.$text.eraseToAnyPublisher() ?? Empty().eraseToAnyPublisher()) { text in
+                    if vm.query != text { vm.query = text }
                 }
-                .modifier(ConditionalSearchable(enabled: !isLocalModule && !isJellyfinModule, text: $vm.query))
+                .onReceive(toolbarSearch?.$submissions.dropFirst().eraseToAnyPublisher() ?? Empty().eraseToAnyPublisher()) { _ in
+                    history.add(vm.query)
+                    vm.search(usingModule: usingModule)
+                }
+                // A history entry or suggestion picked on the page goes into the field.
+                .onChangeOf(vm.query) { query in
+                    if let toolbarSearch, toolbarSearch.text != query { toolbarSearch.text = query }
+                }
+                #endif
                 // The module button stays up while searching, keyboard and all, rather than
                 // going with the navigation bar.
                 .keepsToolbarWhileSearching()
@@ -105,7 +131,7 @@ struct SearchView: View {
                 ModuleListView(showsDone: true)
             }
             .environmentObject(moduleManager)
-            .tint(.primary)
+            .appTint()
             // A List in a Mac sheet has no size of its own: the sheet showed only its toolbar.
             .macSheetFrame()
             .zoomingOut(of: "moduleList", in: moduleListZoom, fromToolbar: true)
@@ -169,12 +195,12 @@ struct SearchView: View {
             } else {
                 emptyStateView(
                     icon: usingModule ? "puzzlepiece.extension" : "magnifyingglass",
-                    title: usingModule ? "Search via Module" : (discovery.usesSimkl ? "Search Simkl" : "Search Anime"),
+                    title: usingModule ? String(localized: "search.search_via_module") : (discovery.usesSimkl ? String(localized: "search.search_simkl") : String(localized: "search.search_anime_title")),
                     subtitle: usingModule
-                        ? "Searching \(moduleManager.activeModule?.sourceName ?? "")…"
+                        ? String(localized: "search.searching_module \(moduleManager.activeModule?.sourceName ?? String())")
                         : discovery.usesSimkl
-                            ? "Find anime, shows and movies on Simkl"
-                            : "Find any anime via \(primaryProvider.displayName)"
+                            ? String(localized: "search.find_anime_shows_and_movies")
+                            : String(localized: "search.find_any_anime_via \(primaryProvider.displayName)")
                 )
             }
         } else if vm.isLoading {
@@ -182,7 +208,7 @@ struct SearchView: View {
         } else if let err = vm.errorMessage {
             emptyStateView(
                 icon: "exclamationmark.triangle",
-                title: "Something went wrong",
+                title: String(localized: "search.something_went_wrong"),
                 subtitle: err
             )
         } else if !vm.hasResults && !vm.query.isEmpty {
@@ -204,29 +230,29 @@ struct SearchView: View {
 
     private var localStepDescription: String {
         if !needsVideoStep {
-            return "Step 2 of 2 — choose a subtitle file for this video."
+            return String(localized: "search.step_2_of_2_choose")
         }
         return addSubtitleUpFront
-            ? "Step 1 of 2 — choose the video, then you'll add a subtitle."
-            : "Pick a video from Files to play it in Shirox."
+            ? String(localized: "search.step_1_of_2_choose")
+            : String(localized: "search.pick_a_video_from_files")
     }
 
     private var localEntryView: some View {
         VStack(spacing: 20) {
-            Image(systemName: "folder.badge.plus")
+            IconView("folder.badge.plus")
                 .font(.system(size: 52))
                 .foregroundStyle(.secondary)
             VStack(spacing: 4) {
-                Text("Play a Local File")
+                Text("search.play_a_local_file")
                     .font(.headline)
                 Text(localStepDescription)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
-            Toggle("Add subtitle file", isOn: $addSubtitleUpFront)
+            Toggle("search.add_subtitle_file", isOn: $addSubtitleUpFront)
                 .toggleStyle(.switch)
-                .tint(.secondary)
+                .switchTint()
                 .fixedSize()
                 .disabled(!needsVideoStep)   // locked once a video is staged; clear it to change
                 .onChangeOf(addSubtitleUpFront) { _ in clearStagedVideo() }
@@ -234,7 +260,7 @@ struct SearchView: View {
             // Feedback: show the staged video (and let the user drop it) before the subtitle step.
             if let title = pendingVideoTitle {
                 HStack(spacing: 8) {
-                    Image(systemName: "film.fill")
+                    IconView("film.fill")
                         .foregroundStyle(.green)
                     Text(title)
                         .lineLimit(1)
@@ -242,7 +268,7 @@ struct SearchView: View {
                     Button {
                         clearStagedVideo()
                     } label: {
-                        Image(systemName: "xmark.circle.fill")
+                        IconView("xmark.circle.fill")
                             .foregroundStyle(.secondary)
                     }
                     .buttonStyle(.plain)
@@ -257,8 +283,8 @@ struct SearchView: View {
                 importPhase = needsVideoStep ? .video : .subtitle
                 showFileImporter = true
             } label: {
-                Label(needsVideoStep ? "Choose video file" : "Choose subtitle file",
-                      systemImage: needsVideoStep ? "play.rectangle.on.rectangle" : "captions.bubble")
+                Label(needsVideoStep ? String(localized: "search.choose_video_file") : String(localized: "search.choose_subtitle_file"),
+                      icon: needsVideoStep ? "play.rectangle.on.rectangle" : "captions.bubble")
                     .font(.headline)
                     .foregroundStyle(platformBackground)
                     .padding(.horizontal, 20)
@@ -269,7 +295,7 @@ struct SearchView: View {
 
             // On the subtitle step, allow playing the staged video without one.
             if !needsVideoStep {
-                Button("Play without subtitle") { playStaged(subtitle: nil) }
+                Button("search.play_without_subtitle") { playStaged(subtitle: nil) }
                     .font(.subheadline)
                     .buttonStyle(.plain)
                     .foregroundStyle(.secondary)
@@ -373,7 +399,7 @@ struct SearchView: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 20) {
                 if !vm.simklFailedKinds.isEmpty {
-                    Text("Couldn't search \(ListFormatter.localizedString(byJoining: vm.simklFailedKinds.map(\.simklKindTitle))) on Simkl.")
+                    Text("search.couldnt_search_on_simkl \(ListFormatter.localizedString(byJoining: vm.simklFailedKinds.map(\.simklKindTitle)))")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                         .padding(.horizontal, 16)
@@ -411,7 +437,7 @@ struct SearchView: View {
         VStack(spacing: 12) {
             ProgressView()
                 .scaleEffect(1.2)
-            Text("Searching…")
+            Text("search.searching")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
         }
@@ -428,7 +454,7 @@ struct SearchView: View {
                         history.add(query)
                         vm.search(usingModule: usingModule)
                     } label: {
-                        Label(query, systemImage: "clock")
+                        Label(query, icon: "clock")
                             .foregroundStyle(.primary)
                     }
                     #if !os(tvOS)
@@ -436,7 +462,7 @@ struct SearchView: View {
                         Button(role: .destructive) {
                             history.remove(query)
                         } label: {
-                            Label("Delete", systemImage: "trash")
+                            Label("common.delete", icon: "trash")
                         }
                         .tint(.red)
                     }
@@ -444,9 +470,9 @@ struct SearchView: View {
                 }
             } header: {
                 HStack {
-                    Text("Recent Searches")
+                    Text("search.recent_searches")
                     Spacer()
-                    Button("Clear All") { history.clear() }
+                    Button("downloads.clear_all") { history.clear() }
                         .font(.caption)
                         .textCase(nil)
                 }
@@ -463,7 +489,7 @@ struct SearchView: View {
     // MARK: - Empty State
     private func emptyStateView(icon: String, title: String, subtitle: String) -> some View {
         VStack(spacing: 16) {
-            Image(systemName: icon)
+            IconView(icon)
                 .font(.system(size: 52))
                 .foregroundStyle(.secondary)
             VStack(spacing: 4) {
@@ -480,6 +506,20 @@ struct SearchView: View {
     }
 
     // MARK: - Module Button
+
+    /// The module button in the toolbar, left out when Settings hides it. Left out, not left
+    /// empty: from iOS 26 an empty item still draws its glass.
+    @ViewBuilder
+    private func withModuleButton(_ content: some View) -> some View {
+        if buttonStyle == .hidden {
+            content
+        } else {
+            content.toolbarZoomSource("moduleList", in: moduleListZoom, placement: .automatic) {
+                moduleButton
+            }
+        }
+    }
+
     @ViewBuilder
     private var moduleButton: some View {
         Button {
@@ -508,21 +548,23 @@ struct SearchView: View {
                 )
 
                 // Text label
-                Text(usingModule ? (moduleManager.activeModule?.sourceName ?? "Module") : shownProvider.displayName)
-                    .font(.callout)
-                    .fontWeight(.medium)
-                    // A toolbar item takes whatever width it asks for, so a long module name
-                    // would run the button off the leading edge of the screen.
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .frame(maxWidth: 160, alignment: .leading)
+                if buttonStyle != .iconOnly {
+                    Text(usingModule ? (moduleManager.activeModule?.sourceName ?? String(localized: "modules.module")) : shownProvider.displayName)
+                        .font(.callout)
+                        .fontWeight(.medium)
+                        // A toolbar item takes whatever width it asks for, so a long module name
+                        // would run the button off the leading edge of the screen.
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .frame(maxWidth: 160, alignment: .leading)
+                }
             }
             .foregroundStyle(.primary)
         }
     }
 
     private var fallbackIcon: some View {
-        Image(systemName: "puzzlepiece.extension")
+        IconView("puzzlepiece.extension")
             .font(.system(size: 14))
             .foregroundStyle(.secondary)
     }
@@ -596,7 +638,7 @@ private struct ConditionalSearchable: ViewModifier {
     @Binding var text: String
     func body(content: Content) -> some View {
         if enabled {
-            content.searchable(text: $text, prompt: "Search anime…")
+            content.searchable(text: $text, prompt: String(localized: "search.search_anime"))
         } else {
             content
         }
@@ -649,7 +691,7 @@ struct AniListCardView: View {
             }
             .overlay(alignment: .topTrailing) {
                 if let score = media.averageScore {
-                    Label("\(score)%", systemImage: "star.fill")
+                    Label("\(score)%", icon: "star.fill")
                         .font(.caption2.weight(.bold))
                         .foregroundStyle(.yellow)
                         .padding(.horizontal, 8)

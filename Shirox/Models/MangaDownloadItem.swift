@@ -88,12 +88,12 @@ enum MangaDownloadPlanning {
             case .pending, .downloading:
                 var reset = item
                 reset.state = .failed
-                reset.error = "Download was interrupted"
+                reset.error = String(localized: "shared.download_was_interrupted")
                 return reset
             case .completed where !folderComplete(item):
                 var reset = item
                 reset.state = .failed
-                reset.error = "Downloaded files are missing"
+                reset.error = String(localized: "shared.downloaded_files_are_missing")
                 reset.pageFiles = []
                 reset.progress = 0
                 return reset

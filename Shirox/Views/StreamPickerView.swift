@@ -9,7 +9,7 @@ struct StreamPickerView: View {
                 if vm.isLoadingStreams {
                     VStack(spacing: 14) {
                         ProgressView()
-                        Text("Fetching streams…")
+                        Text("common.fetching_streams")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -18,9 +18,9 @@ struct StreamPickerView: View {
                     CloudflareVerifyView { vm.verifyCloudflare() }
                 } else if vm.streamOptions.isEmpty {
                     ContentUnavailableView(
-                        "No Streams Found",
+                        "common.no_streams_found",
                         systemImage: "antenna.radiowaves.left.and.right.slash",
-                        description: Text("Could not find any playable streams for this episode.")
+                        description: Text("modules.could_not_find_any_playable")
                     )
                 } else {
                     List(vm.streamOptions, id: \.url) { stream in
@@ -28,7 +28,7 @@ struct StreamPickerView: View {
                             vm.pickStream(stream)
                         } label: {
                             HStack(spacing: 12) {
-                                Image(systemName: "play.circle.fill")
+                                IconView("play.circle.fill")
                                     .font(.system(size: 32))
                                     .foregroundStyle(.primary)
                                 StreamRowText(stream: stream)
@@ -53,10 +53,10 @@ struct StreamPickerView: View {
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { vm.cancelStreamLoading() }
+                    Button("common.cancel") { vm.cancelStreamLoading() }
                 }
             }
-            .tint(.primary)
+            .appTint()
         }
         #if os(macOS)
         .macSheetFrame()
@@ -68,7 +68,7 @@ struct StreamPickerView: View {
     private var episodeTitle: String {
         // A film is a one-item list; "Episode 1" over its streams read oddly.
         if let detail = vm.detail, detail.episodes.count == 1, !detail.title.isEmpty { return detail.title }
-        return vm.selectedEpisode.map { "Episode \($0.displayNumber)" } ?? "Select Stream"
+        return vm.selectedEpisode.map { String(localized: "common.episode \($0.displayNumber)") } ?? String(localized: "modules.select_stream")
     }
 }
 
@@ -81,19 +81,19 @@ struct CloudflareVerifyView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            Image(systemName: "shield.lefthalf.filled")
+            IconView("shield.lefthalf.filled")
                 .font(.system(size: 44))
                 .foregroundStyle(.secondary)
             VStack(spacing: 4) {
-                Text("Verification Required")
+                Text("detail.verification_required")
                     .font(.headline)
-                Text("This source is protected by Cloudflare. Verify to load streams.")
+                Text("detail.this_source_is_protected_by")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             }
             Button(action: onVerify) {
-                Label("Verify Cloudflare", systemImage: "checkmark.shield")
+                Label("detail.verify_cloudflare", icon: "checkmark.shield")
                     .font(.headline)
             }
             .buttonStyle(.borderedProminent)
@@ -109,7 +109,7 @@ struct CloudflareVerifyInlineButton: View {
 
     var body: some View {
         Button(action: onVerify) {
-            Label("Verify Cloudflare", systemImage: "checkmark.shield")
+            Label("detail.verify_cloudflare", icon: "checkmark.shield")
                 .font(.caption.weight(.semibold))
         }
         .buttonStyle(.bordered)
@@ -246,7 +246,7 @@ struct ModulePickerMessage<Accessory: View>: View {
     var body: some View {
         ModulePickerStrip {
             VStack(spacing: 6) {
-                Image(systemName: icon)
+                IconView(icon)
                     .font(.title2)
                     .foregroundStyle(tint)
                 Text(title)
@@ -279,7 +279,7 @@ struct CloudflareVerifyCompactButton: View {
 
     var body: some View {
         Button(action: onVerify) {
-            Label("Verify Cloudflare", systemImage: "checkmark.shield")
+            Label("detail.verify_cloudflare", icon: "checkmark.shield")
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.orange)
         }
@@ -297,7 +297,7 @@ struct ModulePickerEpisodeGrid: View {
             ScrollView(.vertical, showsIndicators: true) {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 64), spacing: 8)], spacing: 8) {
                     ForEach(episodes) { ep in
-                        Button("Ep \(ep.displayNumber)") { onPick(ep) }
+                        Button("detail.ep \(ep.displayNumber)") { onPick(ep) }
                             .buttonStyle(.bordered)
                             .controlSize(.small)
                             .foregroundStyle(.primary)
@@ -329,11 +329,11 @@ struct StreamRowText: View {
             // The details already say what an addon knows; "no soft subtitles" under each one
             // was noise. A stream that does carry subtitles still says so.
             if stream.subtitle != nil {
-                Text("Soft subtitles available")
+                Text("detail.soft_subtitles_available")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             } else if stream.details == nil {
-                Text("No soft subtitles")
+                Text("detail.no_soft_subtitles")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             }

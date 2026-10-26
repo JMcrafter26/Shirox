@@ -13,7 +13,7 @@ struct SimklBudgetRow: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
-            Text("Counts this device's requests only.")
+            Text("shared.counts_this_devices_requests_only")
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
         }

@@ -21,16 +21,16 @@ struct JellyfinConnectView: View {
 
     var body: some View {
         VStack(spacing: 18) {
-            Image(systemName: "server.rack")
+            IconView("server.rack")
                 .font(.system(size: 48))
                 .foregroundStyle(.secondary)
-            Text("Connect to Jellyfin")
+            Text("jellyfin.connect_to_jellyfin")
                 .font(.headline)
 
             VStack(spacing: 10) {
-                field("Server (e.g. http://192.168.1.10:8096)", text: $server)
-                field("Username", text: $username)
-                secureField("Password", text: $password)
+                field(String(localized: "jellyfin.server_placeholder"), text: $server)
+                field(String(localized: "settings.username"), text: $username)
+                secureField(String(localized: "settings.password"), text: $password)
             }
 
             if let error {
@@ -45,7 +45,7 @@ struct JellyfinConnectView: View {
             } label: {
                 HStack {
                     if isConnecting { ProgressView().scaleEffect(0.8) }
-                    Text(isConnecting ? "Connecting…" : "Connect").font(.headline)
+                    Text(isConnecting ? String(localized: "jellyfin.connecting") : String(localized: "jellyfin.connect")).font(.headline)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
@@ -58,7 +58,7 @@ struct JellyfinConnectView: View {
             Button {
                 showGuide = true
             } label: {
-                Label("How do I set this up?", systemImage: "questionmark.circle")
+                Label("jellyfin.how_do_i_set_this", icon: "questionmark.circle")
                     .font(.subheadline)
             }
             .buttonStyle(.plain)
@@ -116,24 +116,24 @@ private struct JellyfinSetupGuide: View {
     }
 
     #if os(macOS)
-    private static let device = "Mac"
-    private static let action = "click"
-    private static let sameMachine = ", or http://localhost:8096 when it runs on this Mac"
+    private static let addressDetail = String(localized: "jellyfin.find_address_detail_mac")
+    private static let connectDetail = String(localized: "jellyfin.connect_detail_mac")
+    private static let openInSafari = String(localized: "jellyfin.open_in_safari_mac")
     #else
-    private static let device = "phone"
-    private static let action = "tap"
-    private static let sameMachine = ""
+    private static let addressDetail = String(localized: "jellyfin.find_address_detail_phone")
+    private static let connectDetail = String(localized: "jellyfin.connect_detail_phone")
+    private static let openInSafari = String(localized: "jellyfin.open_in_safari_phone")
     #endif
 
     private let steps: [Step] = [
-        Step(id: 1, title: "Install Jellyfin on a computer",
-             detail: "Jellyfin is a free media server that runs on your Mac, PC or NAS. Download it from jellyfin.org/downloads, start it, and finish the setup wizard it opens in your browser. That's where you create the username and password you'll use here."),
-        Step(id: 2, title: "Add your library",
-             detail: "In the Jellyfin dashboard, open Libraries and add a folder of shows or movies. Name episodes like \"Show Name/Season 01/Show Name S01E01.mkv\" so Jellyfin can match them."),
-        Step(id: 3, title: "Find the server address",
-             detail: "It's the server computer's local IP address followed by :8096, for example http://192.168.1.10:8096\(Self.sameMachine). Your \(Self.device) needs to be on the same network. To watch away from home you need Jellyfin's remote access set up, or a domain pointing at your server."),
-        Step(id: 4, title: "Connect",
-             detail: "Type that address and your Jellyfin username and password into this screen and \(Self.action) Connect. Your libraries then show up in Shirox."),
+        Step(id: 1, title: String(localized: "jellyfin.install_jellyfin_on_a_computer"),
+             detail: String(localized: "jellyfin.jellyfin_is_a_free_media")),
+        Step(id: 2, title: String(localized: "jellyfin.add_your_library"),
+             detail: String(localized: "jellyfin.in_the_jellyfin_dashboard_open")),
+        Step(id: 3, title: String(localized: "jellyfin.find_the_server_address"),
+             detail: Self.addressDetail),
+        Step(id: 4, title: String(localized: "jellyfin.connect"),
+             detail: Self.connectDetail),
     ]
 
     var body: some View {
@@ -158,29 +158,29 @@ private struct JellyfinSetupGuide: View {
                     }
                 }
 
-                Section("If it won't connect") {
-                    Label("Include http:// and the port, e.g. :8096.", systemImage: "link")
+                Section("jellyfin.if_it_wont_connect") {
+                    Label("jellyfin.include_http_and_the_port", icon: "link")
                     #if os(iOS)
-                    Label("Allow Shirox under Settings → Privacy & Security → Local Network.", systemImage: "wifi")
+                    Label("jellyfin.allow_shirox_under_settings_privacy", icon: "wifi")
                     #endif
-                    Label("Make sure the server is running and your computer's firewall allows port 8096.", systemImage: "shield")
-                    Label("Open the same address in Safari on your \(Self.device). If it doesn't load there, it's the network, not the app.", systemImage: "safari")
+                    Label("jellyfin.make_sure_the_server_is", icon: "shield")
+                    Label(Self.openInSafari, icon: "safari")
                 }
                 .font(.subheadline)
 
                 Section {
                     Link(destination: URL(string: "https://jellyfin.org/docs/general/quick-start")!) {
-                        Label("Jellyfin's quick start guide", systemImage: "arrow.up.right.square")
+                        Label("jellyfin.jellyfins_quick_start_guide", icon: "arrow.up.right.square")
                     }
                 }
             }
-            .navigationTitle("Setting up Jellyfin")
+            .navigationTitle("jellyfin.setting_up_jellyfin")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                    Button("common.done") { dismiss() }
                 }
             }
         }

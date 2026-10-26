@@ -29,12 +29,22 @@ final class HostBlocklistTests: XCTestCase {
         XCTAssertEqual(set, ["first.com", "second.net", "third.org"])
     }
 
-    /// Parsed on every launch, so it was made faster; it must still read the shipped list exactly
-    /// as the Foundation-based parser it replaced did.
-    func testParseMatchesTheOriginalParserOnTheShippedList() throws {
+    func testParseSkipsLocalhostAndDotlessTokens() {
+        XCTAssertEqual(HostBlocklist.parse("127.0.0.1 localhost\n0.0.0.0 intranet\nok.com"), ["ok.com"])
+    }
+
+    /// The shipped list is bare hosts, pruned of subdomains of other entries: every host the
+    /// old string parser read from it must still be in, and nothing more.
+    func testParseReadsEveryHostOfTheShippedList() throws {
         let url = try XCTUnwrap(Bundle.main.url(forResource: "adult_hosts", withExtension: "txt"))
-        let contents = try String(contentsOf: url, encoding: .utf8)
-        XCTAssertEqual(HostBlocklist.parse(contents), Self.originalParse(contents))
+        let data = try Data(contentsOf: url)
+        let contents = try XCTUnwrap(String(data: data, encoding: .utf8))
+        let hosts = Self.originalParse(contents)
+        let set = HostBlocklist.parse(data)
+        XCTAssertGreaterThan(hosts.count, 10_000)
+        XCTAssertEqual(set.count, hosts.count)
+        XCTAssertEqual(set, HostBlocklist.parse(contents))
+        for host in hosts { XCTAssertTrue(set.contains(host), host) }
     }
 
     private static func originalParse(_ contents: String) -> Set<String> {
@@ -53,33 +63,45 @@ final class HostBlocklistTests: XCTestCase {
     }
 
     func testExactHostBlocked() {
-        let set: Set<String> = ["badporn.com"]
+        let set: HostSet = ["badporn.com"]
         XCTAssertTrue(HostBlocklist.isHostBlocked("badporn.com", in: set))
     }
 
     func testSubdomainBlocked() {
-        let set: Set<String> = ["badporn.com"]
+        let set: HostSet = ["badporn.com"]
         XCTAssertTrue(HostBlocklist.isHostBlocked("cdn.videos.badporn.com", in: set))
     }
 
     func testLookalikeNotBlocked() {
-        let set: Set<String> = ["porn.com"]
+        let set: HostSet = ["porn.com"]
         XCTAssertFalse(HostBlocklist.isHostBlocked("notporn.com", in: set))
         XCTAssertFalse(HostBlocklist.isHostBlocked("pornial.com", in: set))
     }
 
     func testUnrelatedHostNotBlocked() {
-        let set: Set<String> = ["badporn.com"]
+        let set: HostSet = ["badporn.com"]
         XCTAssertFalse(HostBlocklist.isHostBlocked("anilist.co", in: set))
     }
 
     func testCaseInsensitiveMatch() {
-        let set: Set<String> = ["badporn.com"]
+        let set: HostSet = ["badporn.com"]
         XCTAssertTrue(HostBlocklist.isHostBlocked("CDN.BadPorn.Com", in: set))
     }
 
+    func testFullyQualifiedHostBlocked() {
+        let set: HostSet = ["badporn.com"]
+        XCTAssertTrue(HostBlocklist.isHostBlocked("www.badporn.com.", in: set))
+    }
+
+    func testParentWithTwoLabelsBlocksDeeperSubdomains() {
+        let set: HostSet = ["videos.example.co"]
+        XCTAssertTrue(HostBlocklist.isHostBlocked("a.b.videos.example.co", in: set))
+        XCTAssertFalse(HostBlocklist.isHostBlocked("example.co", in: set))
+        XCTAssertFalse(HostBlocklist.isHostBlocked("othervideos.example.co", in: set))
+    }
+
     func testDoesNotBlockBareTLD() {
-        let set: Set<String> = ["com"]   // pathological entry must not nuke everything
+        let set: HostSet = ["com"]   // pathological entry must not nuke everything
         XCTAssertFalse(HostBlocklist.isHostBlocked("anilist.com", in: set))
     }
 

@@ -114,11 +114,11 @@ enum AniListNotificationFilter: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .all: return "All"
-        case .airing: return "Airing"
-        case .activity: return "Activity"
-        case .follows: return "Follows"
-        case .media: return "Media"
+        case .all: return String(localized: "common.all")
+        case .airing: return String(localized: "shared.airing")
+        case .activity: return String(localized: "shared.activity")
+        case .follows: return String(localized: "shared.follows")
+        case .media: return String(localized: "shared.media")
         }
     }
 

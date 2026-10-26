@@ -10,7 +10,7 @@ struct ExtensionRepoSheet: View {
     @State private var failures: [String: String] = [:]
 
     static func header(kind: ExtensionKind, count: Int) -> String {
-        "\(kind.badge) · \(count) \(count == 1 ? "provider" : "providers")"
+        kind.badge + " · " + String(localized: "modules.providers_count \(count)")
     }
 
     private func isInstalled(_ entry: ExtensionRepoEntry) -> Bool {
@@ -22,7 +22,7 @@ struct ExtensionRepoSheet: View {
             List {
                 Section {
                     if repo.entries.isEmpty {
-                        Text("This repo has no providers Shirox can add.")
+                        Text("modules.this_repo_has_no_providers")
                             .foregroundStyle(.secondary)
                     }
                     ForEach(repo.entries) { entry in
@@ -31,16 +31,16 @@ struct ExtensionRepoSheet: View {
                 } header: {
                     Text(Self.header(kind: repo.kind, count: repo.entries.count))
                 } footer: {
-                    Text("Adult providers and torrent links are never offered.")
+                    Text("modules.adult_providers_and_torrent_links")
                 }
             }
             .navigationTitle(repo.name)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") { dismiss() }
+                    Button("common.done") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Install All") {
+                    Button("modules.install_all") {
                         Task { await install(repo.entries.filter { !isInstalled($0) }) }
                     }
                     .disabled(repo.entries.allSatisfy(isInstalled) || !installing.isEmpty)
@@ -54,7 +54,7 @@ struct ExtensionRepoSheet: View {
             AsyncImage(url: entry.iconUrl.flatMap(URL.init(string:))) { image in
                 image.resizable().scaledToFit()
             } placeholder: {
-                Image(systemName: "puzzlepiece.extension").foregroundStyle(.secondary)
+                IconView("puzzlepiece.extension").foregroundStyle(.secondary)
             }
             .frame(width: 32, height: 32)
             .clipShape(RoundedRectangle(cornerRadius: 6))
@@ -73,10 +73,10 @@ struct ExtensionRepoSheet: View {
             if installing.contains(entry.key) {
                 ProgressView()
             } else if isInstalled(entry) {
-                Image(systemName: "checkmark")
+                IconView("checkmark")
                     .foregroundStyle(.secondary)
             } else {
-                Button("Install") {
+                Button("modules.install") {
                     Task { await install([entry]) }
                 }
             }

@@ -35,7 +35,8 @@ xcodebuild -project "$WORKING_LOCATION/$APPLICATION_NAME.xcodeproj" \
    -destination 'generic/platform=iOS' \
    -skipPackagePluginValidation \
    clean build \
-   CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGN_ENTITLEMENTS="" CODE_SIGNING_ALLOWED="NO"
+   CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGN_ENTITLEMENTS="" CODE_SIGNING_ALLOWED="NO" \
+   ENABLE_CODE_COVERAGE=NO CLANG_COVERAGE_MAPPING=NO CLANG_ENABLE_CODE_COVERAGE=NO
 
 DD_APP_PATH="$WORKING_LOCATION/build/DerivedDataApp/Build/Products/Release-iphoneos/$APPLICATION_NAME.app"
 TARGET_APP="$WORKING_LOCATION/build/$APPLICATION_NAME.app"
@@ -56,13 +57,25 @@ if [ -e "$TARGET_APP/embedded.mobileprovision" ]; then
    rm -rf "$TARGET_APP/embedded.mobileprovision"
 fi
 
+echo "--- Keeping dSYMs ---"
+# Made by the build before anything is stripped; they're what crash reports are symbolicated with.
+rm -rf dSYMs && mkdir dSYMs
+find "$WORKING_LOCATION/build/DerivedDataApp/Build/Products/Release-iphoneos" -maxdepth 1 -name "*.dSYM" \
+   -exec cp -R {} dSYMs/ \;
+
 echo "--- Packaging IPA ---"
 mkdir Payload
 cp -r "$APPLICATION_NAME.app" "Payload/$APPLICATION_NAME.app"
-strip "Payload/$APPLICATION_NAME.app/$APPLICATION_NAME"
+# Local, debug and Swift symbols out of the app and its frameworks; exported symbols stay, so
+# the frameworks still link. -r keeps anything referenced dynamically.
+strip -rSTx "Payload/$APPLICATION_NAME.app/$APPLICATION_NAME"
+for framework in "Payload/$APPLICATION_NAME.app/Frameworks/"*.framework; do
+   binary="$framework/$(basename "$framework" .framework)"
+   [ -f "$binary" ] && strip -rSTx "$binary" 2>/dev/null || true
+done
 zip -vr "$APPLICATION_NAME.ipa" Payload
 
 rm -rf "$APPLICATION_NAME.app"
 rm -rf Payload
 
-echo "--- Success: build/$APPLICATION_NAME.ipa created ---"
+echo "--- Success: build/$APPLICATION_NAME.ipa created (dSYMs in build/dSYMs) ---"

@@ -144,15 +144,15 @@ struct ToastView: View {
         .contentShape(Rectangle())
         .onTapGesture { isExpanded = true }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(manager.toasts.count) notifications")
-        .accessibilityHint("Double tap to show all")
+        .accessibilityLabel("shared.notifications \(manager.toasts.count)")
+        .accessibilityHint("shared.double_tap_to_show_all")
     }
 
     // MARK: - Card
 
     private func card(_ toast: Toast, badge: Int? = nil) -> some View {
         HStack(spacing: 10) {
-            Image(systemName: toast.type.icon)
+            IconView(toast.type.icon)
                 .foregroundStyle(toast.type.color)
                 .font(.system(size: 15, weight: .semibold))
             Text(toast.message)

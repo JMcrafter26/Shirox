@@ -11,10 +11,20 @@ enum LegalPage {
 
     var title: String {
         switch self {
-        case .imprint:      return "Imprint"
-        case .privacy:      return "Data Privacy"
-        case .contributors: return "Contributors"
-        case .licenses:     return "Licenses"
+        case .imprint:      return String(localized: "shared.imprint")
+        case .privacy:      return String(localized: "shared.data_privacy")
+        case .contributors: return String(localized: "shared.contributors")
+        case .licenses:     return String(localized: "shared.licenses")
+        }
+    }
+
+    /// The SF Symbol beside the page's row in Settings.
+    var icon: String {
+        switch self {
+        case .imprint:      return "building.columns"
+        case .privacy:      return "hand.raised"
+        case .contributors: return "heart"
+        case .licenses:     return "doc.text"
         }
     }
 
@@ -43,7 +53,7 @@ struct LegalWebView: View {
     var body: some View {
         Group {
             if failed {
-                ContentUnavailableView("Couldn't Load", systemImage: "wifi.slash")
+                ContentUnavailableView("common.couldnt_load", systemImage: "wifi.slash")
             } else if transitionDone {
                 _WebViewBridge(html: html, baseURL: page.url)
                     .ignoresSafeArea()
@@ -91,6 +101,7 @@ private struct _WebViewBridge: NSViewRepresentable {
     func makeNSView(context: Context) -> WKWebView {
         let wv = WKWebView()
         wv.setValue(false, forKey: "drawsBackground")
+        wv.navigationDelegate = context.coordinator
         return wv
     }
 
@@ -100,7 +111,16 @@ private struct _WebViewBridge: NSViewRepresentable {
         nsView.loadHTMLString(html, baseURL: baseURL)
     }
 
-    final class Coordinator { var hasLoaded = false }
+    final class Coordinator: NSObject, WKNavigationDelegate {
+        var hasLoaded = false
+
+        // Tapped links open in the default browser instead of inside the page.
+        func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
+            guard navigationAction.navigationType == .linkActivated, let url = navigationAction.request.url else { return .allow }
+            NSWorkspace.shared.open(url)
+            return .cancel
+        }
+    }
 }
 #else
 private struct _WebViewBridge: UIViewRepresentable {
@@ -118,6 +138,7 @@ private struct _WebViewBridge: UIViewRepresentable {
             wv.backgroundColor = .systemGroupedBackground
             wv.scrollView.backgroundColor = .systemGroupedBackground
             wv.scrollView.contentInsetAdjustmentBehavior = .always
+            wv.navigationDelegate = context.coordinator
         #endif
         return wv
     }
@@ -128,6 +149,19 @@ private struct _WebViewBridge: UIViewRepresentable {
         uiView.loadHTMLString(html, baseURL: baseURL)
     }
 
+    #if os(tvOS)
     final class Coordinator { var hasLoaded = false }
+    #else
+    final class Coordinator: NSObject, WKNavigationDelegate {
+        var hasLoaded = false
+
+        // Tapped links open in Safari instead of inside the page.
+        func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
+            guard navigationAction.navigationType == .linkActivated, let url = navigationAction.request.url else { return .allow }
+            await UIApplication.shared.open(url)
+            return .cancel
+        }
+    }
+    #endif
 }
 #endif

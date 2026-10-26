@@ -24,7 +24,7 @@ struct PlayerVolumeSlider: View {
                     volume = 0
                 }
             } label: {
-                Image(systemName: speakerIcon)
+                IconView(speakerIcon)
                     .font(.system(size: 16, weight: .medium))
                     .foregroundStyle(.white)
                     .frame(width: 24)

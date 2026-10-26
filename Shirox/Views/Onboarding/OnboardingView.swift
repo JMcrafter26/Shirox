@@ -53,17 +53,17 @@ struct OnboardingView: View {
                     .padding(.top, 28)
                     .padding(.bottom, 32)
 
-                Text("SET UP SHIROX")
+                Text("onboarding.set_up_shirox")
                     .font(.caption.weight(.semibold))
                     .tracking(2.2)
                     .foregroundStyle(.secondary)
 
-                Text("Bring your own\nlibrary.")
+                Text("onboarding.bring_your_own_nlibrary")
                     .font(.system(size: 40, weight: .heavy))
                     .lineSpacing(-2)
                     .padding(.top, 8)
 
-                Text("Shirox doesn’t host any content. Connect a source and it becomes your library — tracked, downloaded and played on this device.")
+                Text("onboarding.shirox_doesnt_host_any_content")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .padding(.top, 12)
@@ -71,17 +71,17 @@ struct OnboardingView: View {
 
                 VStack(spacing: 10) {
                     stepRow(
-                        title: "Add a source",
+                        title: String(localized: "onboarding.add_a_source"),
                         detail: hasSource
                             ? "\(moduleManager.modules.count) connected"
-                            : "A module, a Jellyfin server, or files on this device",
+                            : String(localized: "onboarding.a_module_a_jellyfin_server"),
                         isDone: hasSource,
                         isRequired: true
                     ) { showSources = true }
                     .zoomSource("sources", in: sourcesZoom, cornerRadius: 14)
 
                     stepRow(
-                        title: "Sign in to a tracker",
+                        title: String(localized: "onboarding.sign_in_to_a_tracker"),
                         detail: trackerDetail,
                         isDone: hasTracker,
                         isRequired: false,
@@ -91,7 +91,7 @@ struct OnboardingView: View {
                 .padding(.top, 28)
 
                 Button(action: finish) {
-                    Text(hasSource ? "Start watching" : "Skip for now")
+                    Text(hasSource ? String(localized: "onboarding.start_watching") : String(localized: "onboarding.skip_for_now"))
                         .font(.headline)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 15)
@@ -104,7 +104,7 @@ struct OnboardingView: View {
                 .buttonStyle(.plain)
                 .padding(.top, 28)
 
-                Text("You can change any of this later in Settings.")
+                Text("onboarding.you_can_change_any_of")
                     .font(.caption)
                     .foregroundStyle(.tertiary)
                     .frame(maxWidth: .infinity)
@@ -135,10 +135,10 @@ struct OnboardingView: View {
     }
 
     private var trackerDetail: String {
-        if aniListAuth.isLoggedIn && malAuth.isLoggedIn { return "AniList and MyAnimeList" }
+        if aniListAuth.isLoggedIn && malAuth.isLoggedIn { return String(localized: "onboarding.anilist_and_myanimelist") }
         if aniListAuth.isLoggedIn { return "AniList" }
         if malAuth.isLoggedIn { return "MyAnimeList" }
-        return "Sync your progress to AniList or MyAnimeList"
+        return String(localized: "onboarding.sync_your_progress_to_anilist")
     }
 
     // MARK: - The frame
@@ -190,7 +190,7 @@ struct OnboardingView: View {
                         .background(Circle().fill(isDone ? accent : Color.clear))
                         .frame(width: 26, height: 26)
                     if isDone {
-                        Image(systemName: "checkmark")
+                        IconView("checkmark")
                             .font(.caption2.weight(.bold))
                             .foregroundStyle(.white)
                     }
@@ -202,7 +202,7 @@ struct OnboardingView: View {
                             .font(.body.weight(.semibold))
                             .foregroundStyle(.primary)
                         if !isRequired && !isDone {
-                            Text("Optional")
+                            Text("settings.optional")
                                 .font(.caption2.weight(.semibold))
                                 .foregroundStyle(.secondary)
                                 .padding(.horizontal, 6)
@@ -219,7 +219,7 @@ struct OnboardingView: View {
 
                 Spacer(minLength: 0)
 
-                Image(systemName: "chevron.right")
+                IconView("chevron.right")
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.tertiary)
             }

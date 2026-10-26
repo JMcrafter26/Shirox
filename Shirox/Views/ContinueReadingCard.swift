@@ -17,7 +17,7 @@ struct ContinueReadingSection: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            HomeRowHeader(title: "Continue Reading")
+            HomeRowHeader(title: String(localized: "shared.continue_reading"))
 
             HomeShelf(items: items) { item in
                 Button { open(item) } label: {
@@ -30,12 +30,12 @@ struct ContinueReadingSection: View {
                 .frame(width: cinematic ? 150 : 120)
                 .contextMenu {
                     Button { openDetails(item) } label: {
-                        Label("View Details", systemImage: "list.bullet.below.rectangle")
+                        Label("shared.view_details", icon: "list.bullet.below.rectangle")
                     }
                     Button(role: .destructive) {
                         MangaProgressManager.shared.remove(item)
                     } label: {
-                        Label("Remove", systemImage: "xmark.circle")
+                        Label("common.remove", icon: "xmark.circle")
                     }
                 }
             }
@@ -45,12 +45,12 @@ struct ContinueReadingSection: View {
     /// Makes the manga's module the active one — the manga page and the reader both load through it.
     private func activateModule(for item: MangaReadingItem) async -> Bool {
         guard let module = ModuleManager.shared.modules.first(where: { $0.id == item.moduleId }) else {
-            ToastManager.shared.show(message: "Module no longer installed", type: .error)
+            ToastManager.shared.show(message: String(localized: "shared.module_no_longer_installed"), type: .error)
             return false
         }
         if ModuleManager.shared.moduleReadyId != module.id {
             guard await ModuleManager.shared.selectAndAwaitReady(module) else {
-                ToastManager.shared.show(message: "Failed to load \(module.sourceName)", type: .error)
+                ToastManager.shared.show(message: String(localized: "shared.failed_to_load \(module.sourceName)"), type: .error)
                 return false
             }
         }
@@ -75,7 +75,7 @@ struct ContinueReadingSection: View {
             do {
                 let chapters = try await JSEngine.shared.mangaChapters(url: item.mangaHref)
                 guard !chapters.isEmpty else {
-                    ToastManager.shared.show(message: "No chapters found", type: .error)
+                    ToastManager.shared.show(message: String(localized: "common.no_chapters_found"), type: .error)
                     return
                 }
                 let idx = chapters.firstIndex(where: { $0.href == item.chapterHref }) ?? 0
@@ -92,7 +92,7 @@ struct ContinueReadingSection: View {
                     match: MangaMatchManager.shared.cachedMatch(mangaHref: item.mangaHref)
                 )
             } catch {
-                ToastManager.shared.show(message: "Failed to load chapters", type: .error)
+                ToastManager.shared.show(message: String(localized: "shared.failed_to_load_chapters"), type: .error)
             }
         }
     }
@@ -133,7 +133,7 @@ struct ContinueReadingCardDisplay: View {
                 )
                 .overlay(alignment: .bottomLeading) {
                     HStack(spacing: 4) {
-                        Image(systemName: "book.fill")
+                        IconView("book.fill")
                             .font(.system(size: 8, weight: .bold))
                         Text(progressLabel)
                             .font(.caption2.weight(.medium))

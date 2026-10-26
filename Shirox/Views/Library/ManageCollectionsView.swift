@@ -52,25 +52,25 @@ private struct CollectionEditorAlerts: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .alert("Rename Collection", isPresented: Binding(
+            .alert("library.rename_collection", isPresented: Binding(
                 get: { editor.renaming != nil },
                 set: { if !$0 { editor.renaming = nil } }
             ), presenting: editor.renaming) { _ in
-                TextField("Name", text: $editor.draftName)
-                Button("Save") { editor.commitRename() }
-                Button("Cancel", role: .cancel) {}
+                TextField("common.name", text: $editor.draftName)
+                Button("common.save") { editor.commitRename() }
+                Button("common.cancel", role: .cancel) {}
             } message: { _ in
-                Text("Choose a new name for this collection.")
+                Text("library.choose_a_new_name_for")
             }
-            .alert("Delete Collection", isPresented: Binding(
+            .alert("library.delete_collection", isPresented: Binding(
                 get: { editor.deleting != nil },
                 set: { if !$0 { editor.deleting = nil } }
             ), presenting: editor.deleting) { _ in
-                Button("Delete", role: .destructive) { editor.commitDelete() }
-                Button("Cancel", role: .cancel) {}
+                Button("common.delete", role: .destructive) { editor.commitDelete() }
+                Button("common.cancel", role: .cancel) {}
             } message: { collection in
                 let n = collection.mediaUniqueIds.count
-                Text("This won't remove the \(n) title\(n == 1 ? "" : "s") from your library.")
+                Text("library.this_wont_remove_the_titles \(n)")
             }
     }
 }
@@ -89,9 +89,9 @@ struct ManageCollectionsView: View {
             Group {
                 if library.collections.isEmpty {
                     ContentUnavailableView(
-                        "No Collections",
+                        "library.no_collections",
                         systemImage: "folder",
-                        description: Text("Tap + to create a collection, then add titles to it from your library.")
+                        description: Text("library.tap_to_create_a_collection")
                     )
                 } else {
                     List {
@@ -102,35 +102,35 @@ struct ManageCollectionsView: View {
                     .softScrollEdges()
                 }
             }
-            .navigationTitle("Collections")
+            .navigationTitle("library.collections")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
+                    Button("common.done") { dismiss() }
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button {
                         newCollectionName = ""
                         showNewCollection = true
                     } label: {
-                        Label("New Collection", systemImage: "plus")
+                        Label("library.new_collection", icon: "plus")
                     }
                 }
             }
             .collectionEditorAlerts(editor)
-            .alert("New Collection", isPresented: $showNewCollection) {
-                TextField("Name", text: $newCollectionName)
-                Button("Create") {
+            .alert("library.new_collection", isPresented: $showNewCollection) {
+                TextField("common.name", text: $newCollectionName)
+                Button("library.create") {
                     let trimmed = newCollectionName.trimmingCharacters(in: .whitespacesAndNewlines)
                     newCollectionName = ""
                     guard !trimmed.isEmpty else { return }
                     library.createCollection(name: trimmed)
                 }
-                Button("Cancel", role: .cancel) { newCollectionName = "" }
+                Button("common.cancel", role: .cancel) { newCollectionName = "" }
             } message: {
-                Text("Name your new collection.")
+                Text("library.name_your_new_collection")
             }
         }
     }
@@ -143,7 +143,7 @@ struct ManageCollectionsView: View {
         } label: {
             VStack(alignment: .leading, spacing: 2) {
                 Text(collection.name).foregroundStyle(.primary)
-                Text("\(count) title\(count == 1 ? "" : "s")")
+                Text("common.titles \(count)")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -156,7 +156,7 @@ struct ManageCollectionsView: View {
             Button(role: .destructive) {
                 editor.requestDelete(collection)
             } label: {
-                Label("Delete", systemImage: "trash")
+                Label("common.delete", icon: "trash")
             }
             .tint(.red)
         }
@@ -164,7 +164,7 @@ struct ManageCollectionsView: View {
             Button {
                 editor.beginRename(collection)
             } label: {
-                Label("Rename", systemImage: "pencil")
+                Label("library.rename", icon: "pencil")
             }
             .tint(.blue)
         }
@@ -173,12 +173,12 @@ struct ManageCollectionsView: View {
             Button {
                 editor.beginRename(collection)
             } label: {
-                Label("Rename", systemImage: "pencil")
+                Label("library.rename", icon: "pencil")
             }
             Button(role: .destructive) {
                 editor.requestDelete(collection)
             } label: {
-                Label("Delete", systemImage: "trash")
+                Label("common.delete", icon: "trash")
             }
         }
     }

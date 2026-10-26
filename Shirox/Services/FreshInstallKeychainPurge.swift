@@ -26,7 +26,7 @@ enum FreshInstallKeychainPurge {
     /// Every account this app stores under `kSecClassGenericPassword`. A credential missing
     /// from this list would survive a reinstall and go on impersonating a signed-in account,
     /// so anything added to the Keychain elsewhere belongs here too.
-    static let accounts = [
+    nonisolated static let accounts = [
         "anilist_access_token",
         "mal_access_token",
         "mal_refresh_token",
@@ -34,7 +34,9 @@ enum FreshInstallKeychainPurge {
         "simkl_refresh_token",
         "jellyfin_access_token",
         "jellyfin_user_id",
-        NetworkProxySettings.passwordAccount
+        NetworkProxySettings.passwordAccount,
+        "discord_access_token",
+        "discord_refresh_token",
     ]
 
     private static var hasRun = false

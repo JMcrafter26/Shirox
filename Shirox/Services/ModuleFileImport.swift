@@ -66,7 +66,7 @@ enum ModuleFileImport {
         guard !JSCheckScriptSyntax(context.jsGlobalContextRef, source, nil, 1, &exception),
               let exception else { return nil }
         let value = JSValue(jsValueRef: exception, in: context)
-        let message = value?.toString() ?? "Syntax error"
+        let message = value?.toString() ?? String(localized: "modules.syntax_error")
         if let line = value?.objectForKeyedSubscript("line"), line.isNumber {
             return "\(message) (line \(line.toInt32()))"
         }

@@ -26,13 +26,13 @@ struct PlayerSequelPickerSheet: View {
                 .buttonStyle(.plain)
             }
             .softScrollEdges()
-            .navigationTitle("Choose Sequel")
+            .navigationTitle("player.choose_sequel")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("common.cancel") { dismiss() }
                 }
             }
         }

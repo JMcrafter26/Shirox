@@ -38,13 +38,13 @@ struct BatchDownloadModulePickerView: View {
                     .modulePickerRow()
                 }
             }
-            .navigationTitle("Download \(episodeNumbers.count) Episode\(episodeNumbers.count == 1 ? "" : "s")")
+            .navigationTitle("downloads.download_episodes \(episodeNumbers.count)")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") { onDismiss() }
+                    Button("common.done") { onDismiss() }
                 }
             }
             .adaptiveSheet(item: $streamPickerItem, onDismiss: {
@@ -77,7 +77,7 @@ struct BatchDownloadModulePickerView: View {
                             streamTitle: streamTitle
                         )
                     } catch {
-                        ToastManager.shared.show(message: "Failed to load episodes: \(error.localizedDescription)", type: .error)
+                        ToastManager.shared.show(message: String(localized: "downloads.failed_to_load_episodes \(error.localizedDescription)"), type: .error)
                     }
                 }
                 
@@ -158,7 +158,7 @@ private final class BatchDownloadModuleRowViewModel: ObservableObject {
     func cancel() { currentTask?.cancel(); currentTask = nil; state = .idle }
 
     func startFind() {
-        state = .loading   // at once, or the row shows "Not searching" for a frame
+        state = .loading   // at once, or the row shows String(localized: "downloads.not_searching") for a frame
         ModuleSearchAliasManager.shared.setAlias(mediaId: mediaId, animeTitle: originalAnimeTitle, moduleId: module.id, alias: searchTitle)
         currentTask = Task { await find() }
     }
@@ -200,12 +200,12 @@ private final class BatchDownloadModuleRowViewModel: ObservableObject {
             let allEpisodes = try await r.fetchEpisodes(url: item.href)
             guard let firstEpNum = episodeNumbers.first,
                   let matched = allEpisodes.first(where: { $0.number == Double(firstEpNum) }) else {
-                settle(.error("Could not find episode \(episodeNumbers.first ?? 0)"))
+                settle(.error(String(localized: "downloads.could_not_find_episode \(episodeNumbers.first ?? 0)")))
                 return
             }
             let streams = try await r.fetchStreams(episodeUrl: matched.href)
             if streams.isEmpty {
-                settle(.error("No streams found"))
+                settle(.error(String(localized: "common.no_streams_found")))
             } else {
                 readyStreams = streams
                 readySearchItem = item
@@ -276,7 +276,7 @@ private struct BatchDownloadModuleRow: View {
                 if case .success(let img) = phase {
                     img.resizable().scaledToFill()
                 } else {
-                    Image(systemName: "puzzlepiece.extension").foregroundStyle(.secondary)
+                    IconView("puzzlepiece.extension").foregroundStyle(.secondary)
                 }
             }
             .frame(width: 32, height: 32)
@@ -298,18 +298,18 @@ private struct BatchDownloadModuleRow: View {
     private var actionButton: some View {
         switch rowVm.state {
         case .idle, .notFound, .error:
-            Button("Find") { rowVm.startFind() }
+            Button("common.find") { rowVm.startFind() }
                 .buttonStyle(.bordered).controlSize(.small)
         case .loading, .downloading:
             Button { rowVm.cancel() } label: {
-                Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                IconView("xmark.circle.fill").foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
         case .searchResults:
-            Button("Retry") { rowVm.reset(); rowVm.startFind() }
+            Button("common.retry") { rowVm.reset(); rowVm.startFind() }
                 .buttonStyle(.bordered).controlSize(.small).foregroundStyle(Color.accentColor)
         case .done:
-            Image(systemName: "checkmark.circle.fill").foregroundStyle(.green).font(.title3)
+            IconView("checkmark.circle.fill").foregroundStyle(.green).font(.title3)
         }
     }
 
@@ -320,7 +320,7 @@ private struct BatchDownloadModuleRow: View {
             HStack(spacing: 8) {
                 titleField
                 if case .searchResults = rowVm.state {
-                    Button("Show All") { showAllResults = true }
+                    Button("downloads.show_all") { showAllResults = true }
                         .font(.caption.weight(.semibold)).foregroundStyle(Color.accentColor)
                         .zoomSource("allResults", in: resultsZoom, cornerRadius: 8)
                 }
@@ -339,13 +339,13 @@ private struct BatchDownloadModuleRow: View {
 
     private var statusText: String {
         switch rowVm.state {
-        case .idle: return "Search stopped"
-        case .loading: return "Searching \"\(rowVm.searchTitle)\"…"
+        case .idle: return String(localized: "downloads.search_stopped")
+        case .loading: return String(localized: "downloads.searching \(rowVm.searchTitle)")
         case .searchResults(let items): return items.count == 1 ? "1 result" : "\(items.count) results"
-        case .downloading(let current, let total): return "Fetching \(current) of \(total)…"
-        case .done: return "Queued"
-        case .notFound: return rowVm.cloudflareURL != nil ? "Blocked by Cloudflare" : "No results"
-        case .error: return "Couldn't load"
+        case .downloading(let current, let total): return String(localized: "downloads.fetching_of \(current) \(total)")
+        case .done: return String(localized: "downloads.queued")
+        case .notFound: return rowVm.cloudflareURL != nil ? String(localized: "downloads.blocked_by_cloudflare") : String(localized: "common.no_results")
+        case .error: return String(localized: "common.couldnt_load")
         }
     }
 
@@ -358,8 +358,8 @@ private struct BatchDownloadModuleRow: View {
     private var strip: some View {
         switch rowVm.state {
         case .idle:
-            ModulePickerMessage(icon: "magnifyingglass", title: "Not searching",
-                                detail: "Tap Find to search this module.")
+            ModulePickerMessage(icon: "magnifyingglass", title: String(localized: "downloads.not_searching"),
+                                detail: String(localized: "downloads.tap_find_to_search_this"))
         case .loading:
             ModulePickerSkeletonStrip()
         case .searchResults(let items):
@@ -378,25 +378,25 @@ private struct BatchDownloadModuleRow: View {
                 }
             }
         case .downloading(let current, let total):
-            ModulePickerMessage(icon: "arrow.down.circle", title: "Fetching \(current) of \(total)") {
+            ModulePickerMessage(icon: "arrow.down.circle", title: String(localized: "downloads.fetching_of_short \(current) \(total)")) {
                 ProgressView(value: Double(current), total: Double(max(total, 1)))
                     .frame(maxWidth: 200)
             }
         case .done(let count):
             ModulePickerMessage(icon: "checkmark.circle.fill",
-                                title: "Queued \(count) episode\(count == 1 ? "" : "s")",
-                                detail: "They're downloading now.", tint: .green)
+                                title: String(localized: "downloads.queued_episodes \(count)"),
+                                detail: String(localized: "downloads.theyre_downloading_now"), tint: .green)
         case .notFound:
             if rowVm.cloudflareURL != nil {
-                ModulePickerMessage(icon: "shield.lefthalf.filled", title: "Blocked by Cloudflare", tint: .orange) {
+                ModulePickerMessage(icon: "shield.lefthalf.filled", title: String(localized: "downloads.blocked_by_cloudflare"), tint: .orange) {
                     CloudflareVerifyInlineButton { rowVm.verifyAndRetry() }
                 }
             } else {
-                ModulePickerMessage(icon: "questionmark.square.dashed", title: "Nothing found",
-                                    detail: "Try another title in the search field.")
+                ModulePickerMessage(icon: "questionmark.square.dashed", title: String(localized: "downloads.nothing_found"),
+                                    detail: String(localized: "downloads.try_another_title_in_the"))
             }
         case .error(let msg):
-            ModulePickerMessage(icon: "exclamationmark.triangle", title: "Couldn't load", detail: msg, tint: .orange) {
+            ModulePickerMessage(icon: "exclamationmark.triangle", title: String(localized: "common.couldnt_load"), detail: msg, tint: .orange) {
                 if rowVm.cloudflareURL != nil {
                     CloudflareVerifyInlineButton { rowVm.verifyAndRetry() }
                 }
@@ -406,8 +406,8 @@ private struct BatchDownloadModuleRow: View {
 
     private var titleField: some View {
         HStack(spacing: 6) {
-            Image(systemName: "magnifyingglass").font(.caption).foregroundStyle(.secondary)
-            TextField("Search title…", text: $rowVm.searchTitle)
+            IconView("magnifyingglass").font(.caption).foregroundStyle(.secondary)
+            TextField("downloads.search_title", text: $rowVm.searchTitle)
                 // The rounded fill around it is its border.
                 .textFieldStyle(.plain)
                 .font(.caption)
@@ -436,7 +436,7 @@ private struct BatchSearchResultCard: View {
                             Spacer()
                             HStack {
                                 Spacer()
-                                Text("\(episodeCount) ep\(episodeCount == 1 ? "" : "s")")
+                                Text("downloads.eps \(episodeCount)")
                                     .font(.system(size: 8, weight: .bold))
                                     .padding(.horizontal, 4).padding(.vertical, 2)
                                     .foregroundStyle(Color.primary)
@@ -484,7 +484,7 @@ private struct BatchSearchResultsPickerSheet: View {
                                         .padding(.horizontal, 8).padding(.bottom, 8)
                                 }
                                 .overlay(alignment: .topTrailing) {
-                                    Text("\(episodeCount) ep\(episodeCount == 1 ? "" : "s")")
+                                    Text("downloads.eps \(episodeCount)")
                                         .font(.system(size: 8, weight: .bold))
                                         .padding(.horizontal, 6).padding(.vertical, 3)
                                         .foregroundStyle(Color.primary)

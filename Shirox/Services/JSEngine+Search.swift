@@ -6,7 +6,7 @@ extension JSEngine {
         let json = try await callAsyncJS("searchResults", args: [keyword])
         guard let data = json.data(using: .utf8),
               let array = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
-            throw JSEngineError.parseError("Could not parse search results")
+            throw JSEngineError.parseError(String(localized: "search.could_not_parse_search_results"))
         }
         ModuleWebLinks.shared.record(array, moduleId: ModuleManager.shared.activeModule?.id)
         return array.compactMap { item in

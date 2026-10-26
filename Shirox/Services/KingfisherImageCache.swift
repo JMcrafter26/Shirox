@@ -22,7 +22,7 @@ enum KingfisherImageCache {
     /// page, which Kingfisher's downloader won't take), or the network.
     static func source(for url: URL, cacheKey: String) -> Source {
         if let bytes = dataURLBytes(url) { return .provider(RawImageDataProvider(data: bytes, cacheKey: cacheKey)) }
-        return .network(Kingfisher.ImageResource(downloadURL: url, cacheKey: cacheKey))
+        return .network(KF.ImageResource(downloadURL: url, cacheKey: cacheKey))
     }
 
     /// The bytes of a `data:…;base64,…` address.

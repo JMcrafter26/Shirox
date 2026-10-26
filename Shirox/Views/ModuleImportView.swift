@@ -52,105 +52,111 @@ struct ModuleImportView: View {
     }
     private var hasInput: Bool { script != nil || manifestName != nil || !name.isEmpty }
 
+    /// "120 lines", for the script row.
+    private static func lineCount(_ script: String) -> String {
+        let lines = script.split(separator: "\n", omittingEmptySubsequences: false).count
+        return String(localized: "modules.lines \(lines)")
+    }
+
     var body: some View {
         Form {
             Section {
-                fileRow(title: "Script", systemImage: "curlybraces", file: scriptName,
-                        detail: script.map { "\($0.split(separator: "\n", omittingEmptySubsequences: false).count) lines" },
-                        action: "Choose .js File") { picking = .script }
+                fileRow(title: String(localized: "modules.script"), systemImage: "curlybraces", file: scriptName,
+                        detail: script.map { Self.lineCount($0) },
+                        action: String(localized: "modules.choose_js_file")) { picking = .script }
                 NavigationLink {
                     ScriptDraftView(script: Binding(
                         get: { script ?? "" },
                         set: { newValue in
                             script = newValue.isEmpty ? nil : newValue
-                            scriptName = newValue.isEmpty ? nil : "Written in the editor"
+                            scriptName = newValue.isEmpty ? nil : String(localized: "modules.written_in_the_editor")
                             if !newValue.isEmpty { asyncJS = newValue.contains("async ") }
                         }))
                 } label: {
                     Label {
-                        Text(scriptName == "Written in the editor" ? "Edit in Editor" : "Write or Paste in Editor")
+                        Text(scriptName == String(localized: "modules.written_in_the_editor") ? String(localized: "modules.edit_in_editor") : String(localized: "modules.write_or_paste_in_editor"))
                             .foregroundStyle(Color.primary)
                     } icon: {
-                        Image(systemName: "square.and.pencil").foregroundStyle(.secondary)
+                        IconView("square.and.pencil").foregroundStyle(.secondary)
                     }
                 }
             } header: {
-                Text("Script")
+                Text("modules.script")
             } footer: {
-                Text("Required. The module's JavaScript, from a .js file or written in the editor: what it searches, lists and plays.")
+                Text("modules.required_the_modules_javascript_from")
             }
 
             Section {
-                fileRow(title: "Manifest", systemImage: "doc.text", file: manifestName, detail: nil,
-                        action: "Fill from .json File") { picking = .manifest }
+                fileRow(title: String(localized: "modules.manifest"), systemImage: "doc.text", file: manifestName, detail: nil,
+                        action: String(localized: "modules.fill_from_json_file")) { picking = .manifest }
             } header: {
-                Text("Manifest")
+                Text("modules.manifest")
             } footer: {
-                Text("Optional. A module's .json fills in the details below; you can still change them. The script above is needed either way.")
+                Text("modules.optional_a_modules_json_fills")
             }
 
             Section {
                 HStack(spacing: 14) {
                     iconPreview
                     VStack(alignment: .leading, spacing: 4) {
-                        TextField("Name (required)", text: $name)
+                        TextField("modules.name_required", text: $name)
                             .font(.headline)
-                        TextField("Version", text: $version)
+                        TextField("modules.version", text: $version)
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
                 }
                 Menu {
-                    Button { picking = .icon } label: { Label("Choose Picture…", systemImage: "photo") }
+                    Button { picking = .icon } label: { Label("modules.choose_picture", icon: "photo") }
                     if iconData != nil || !iconURL.isEmpty {
-                        Button(role: .destructive) { iconData = nil; iconURL = "" } label: { Label("Remove Icon", systemImage: "trash") }
+                        Button(role: .destructive) { iconData = nil; iconURL = "" } label: { Label("modules.remove_icon", icon: "trash") }
                     }
                 } label: {
-                    Label(iconData == nil && iconURL.isEmpty ? "Add Icon" : "Change Icon", systemImage: "photo.badge.plus")
+                    Label(iconData == nil && iconURL.isEmpty ? String(localized: "modules.add_icon") : String(localized: "modules.change_icon"), icon: "photo.badge.plus")
                 }
-                urlField("Icon URL", text: $iconURL)
+                urlField(String(localized: "modules.icon_url"), text: $iconURL)
             } header: {
-                Text("Module")
+                Text("modules.module")
             }
 
-            Section("Author") {
-                TextField("Name", text: $authorName)
-                urlField("Picture URL", text: $authorIcon)
+            Section("modules.author") {
+                TextField("common.name", text: $authorName)
+                urlField(String(localized: "modules.picture_url"), text: $authorIcon)
             }
 
-            Section("Source") {
-                Picker("Type", selection: $kind) {
-                    Text("Anime").tag("anime")
-                    Text("Manga").tag("manga")
+            Section("modules.source") {
+                Picker("settings.type", selection: $kind) {
+                    Text("common.anime").tag("anime")
+                    Text("common.manga").tag("manga")
                 }
-                TextField("Language (e.g. English)", text: $language)
-                urlField("Website", text: $baseUrl)
-                urlField("Search URL", text: $searchBaseUrl)
+                TextField("modules.language_e_g_english", text: $language)
+                urlField(String(localized: "modules.website"), text: $baseUrl)
+                urlField(String(localized: "modules.search_url"), text: $searchBaseUrl)
             }
 
-            Section("Streams") {
-                TextField("Stream type (e.g. HLS)", text: $streamType)
-                TextField("Quality (e.g. 1080p)", text: $quality)
-                Toggle("Soft Subtitles", isOn: $softsub)
-                    .tint(.secondary)
-                Toggle("Async Script", isOn: $asyncJS)
-                    .tint(.secondary)
+            Section("modules.streams") {
+                TextField("modules.stream_type_e_g_hls", text: $streamType)
+                TextField("modules.quality_e_g_1080p", text: $quality)
+                Toggle("modules.soft_subtitles", isOn: $softsub)
+                    .switchTint()
+                Toggle("modules.async_script", isOn: $asyncJS)
+                    .switchTint()
             }
         }
         #if os(macOS)
         .formStyle(.grouped)
         #endif
-        .navigationTitle("Import Module")
+        .navigationTitle("modules.import_module")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
         .interactiveDismissDisabled(hasInput)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") { if hasInput { confirmDiscard = true } else { dismiss() } }
+                Button("common.cancel") { if hasInput { confirmDiscard = true } else { dismiss() } }
             }
             ToolbarItem(placement: .confirmationAction) {
-                if isAdding { ProgressView() } else { Button("Add", action: add).disabled(!canAdd) }
+                if isAdding { ProgressView() } else { Button("modules.add", action: add).disabled(!canAdd) }
             }
         }
         .fileImporter(isPresented: Binding(get: { picking != nil }, set: { if !$0 { picking = nil } }),
@@ -162,12 +168,12 @@ struct ModuleImportView: View {
             case .failure(let error): problem = error.localizedDescription
             }
         }
-        .confirmationDialog("Discard this module?", isPresented: $confirmDiscard, titleVisibility: .visible) {
-            Button("Discard", role: .destructive) { dismiss() }
-            Button("Keep Editing", role: .cancel) {}
+        .confirmationDialog("modules.discard_this_module", isPresented: $confirmDiscard, titleVisibility: .visible) {
+            Button("modules.discard", role: .destructive) { dismiss() }
+            Button("modules.keep_editing", role: .cancel) {}
         }
-        .alert("Couldn't do that", isPresented: Binding(get: { problem != nil }, set: { if !$0 { problem = nil } })) {
-            Button("OK", role: .cancel) {}
+        .alert("modules.couldnt_do_that", isPresented: Binding(get: { problem != nil }, set: { if !$0 { problem = nil } })) {
+            Button("common.ok", role: .cancel) {}
         } message: {
             Text(problem ?? "")
         }
@@ -179,7 +185,7 @@ struct ModuleImportView: View {
                          action: String, pick: @escaping () -> Void) -> some View {
         Button(action: pick) {
             HStack(spacing: 12) {
-                Image(systemName: file == nil ? systemImage : "checkmark.circle.fill")
+                IconView(file == nil ? systemImage : "checkmark.circle.fill")
                     .font(.title3)
                     .foregroundStyle(file == nil ? Color.secondary : Color.green)
                     .frame(width: 28)
@@ -192,7 +198,7 @@ struct ModuleImportView: View {
                 }
                 Spacer()
                 if file != nil {
-                    Text("Replace").font(.subheadline).foregroundStyle(Color.accentColor)
+                    Text("modules.replace").font(.subheadline).foregroundStyle(Color.accentColor)
                 }
             }
             .contentShape(Rectangle())
@@ -208,7 +214,7 @@ struct ModuleImportView: View {
             } else if !iconURL.isEmpty {
                 CachedAsyncImage(urlString: iconURL)
             } else {
-                Image(systemName: "puzzlepiece.extension.fill")
+                IconView("puzzlepiece.extension.fill")
                     .font(.title2)
                     .foregroundStyle(.secondary)
             }
@@ -348,7 +354,7 @@ private struct ScriptDraftView: View {
         VStack(spacing: 0) {
             CodeTextEditor(text: $text)
             if let syntaxError {
-                Label(syntaxError, systemImage: "exclamationmark.triangle.fill")
+                Label(syntaxError, icon: "exclamationmark.triangle.fill")
                     .font(.caption)
                     .foregroundStyle(.orange)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -357,7 +363,7 @@ private struct ScriptDraftView: View {
                     .background(.regularMaterial)
             }
         }
-        .navigationTitle("Script")
+        .navigationTitle("modules.script")
         #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
         #endif
@@ -366,11 +372,11 @@ private struct ScriptDraftView: View {
                 Button {
                     if text.isEmpty { paste() } else { confirmPaste = true }
                 } label: {
-                    Label("Paste", systemImage: "doc.on.clipboard")
+                    Label("modules.paste", icon: "doc.on.clipboard")
                 }
             }
             ToolbarItem(placement: .confirmationAction) {
-                Button("Done") {
+                Button("common.done") {
                     script = text
                     dismiss()
                 }
@@ -390,11 +396,11 @@ private struct ScriptDraftView: View {
                 syntaxError = newValue.isEmpty ? nil : ModuleFileImport.syntaxError(in: newValue)
             }
         }
-        .confirmationDialog("Replace the whole script?", isPresented: $confirmPaste, titleVisibility: .visible) {
-            Button("Delete All and Paste", role: .destructive, action: paste)
-            Button("Cancel", role: .cancel) {}
+        .confirmationDialog("modules.replace_the_whole_script", isPresented: $confirmPaste, titleVisibility: .visible) {
+            Button("modules.delete_all_and_paste", role: .destructive, action: paste)
+            Button("common.cancel", role: .cancel) {}
         } message: {
-            Text("Everything in the editor is replaced with what's on your clipboard.")
+            Text("modules.paste_replaces_editor")
         }
     }
 

@@ -157,7 +157,8 @@ struct PlayerMenuButton: UIViewRepresentable {
             switch label {
             case let .symbol(name, size, weight):
                 let cfg = UIImage.SymbolConfiguration(pointSize: size, weight: weight.symbolWeight)
-                button.setImage(UIImage(systemName: name, withConfiguration: cfg), for: .normal)
+                button.setImage(IconPackRenderer.shared.image(name, pointSize: size)
+                    ?? UIImage(systemName: name, withConfiguration: cfg), for: .normal)
                 button.setTitle(nil, for: .normal)
             case let .text(text, size, weight):
                 button.setImage(nil, for: .normal)
@@ -366,7 +367,7 @@ struct PlayerMenuButton: View {
     @ViewBuilder private var labelView: some View {
         switch label {
         case let .symbol(name, size, weight):
-            Image(systemName: name).font(.system(size: size, weight: weight.font)).foregroundStyle(.white)
+            IconView(name).font(.system(size: size, weight: weight.font)).foregroundStyle(.white)
         case let .text(text, size, weight):
             Text(text).font(.system(size: size, weight: weight.font)).foregroundStyle(.white)
         }
@@ -384,7 +385,7 @@ private struct PlayerMenuContent: View {
                 Button {
                     item.action()
                 } label: {
-                    if item.isOn { Label(item.title, systemImage: "checkmark") } else { Text(item.title) }
+                    if item.isOn { Label(item.title, icon: "checkmark") } else { Text(item.title) }
                 }
             case let .section(title, children):
                 Section {

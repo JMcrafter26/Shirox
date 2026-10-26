@@ -53,13 +53,13 @@ struct DownloadModulePickerView: View {
                     .modulePickerRow()
                 }
             }
-            .navigationTitle("Download Episode \(episodeNumber)")
+            .navigationTitle("downloads.download_episode \(episodeNumber)")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { onDismiss() }
+                    Button("common.cancel") { onDismiss() }
                 }
             }
             .adaptiveSheet(item: $streamPickerItem, onDismiss: {
@@ -146,7 +146,7 @@ private struct DownloadModuleRow: View {
                 if case .success(let img) = phase {
                     img.resizable().scaledToFill()
                 } else {
-                    Image(systemName: "puzzlepiece.extension").foregroundStyle(.secondary)
+                    IconView("puzzlepiece.extension").foregroundStyle(.secondary)
                 }
             }
             .frame(width: 32, height: 32)
@@ -168,15 +168,15 @@ private struct DownloadModuleRow: View {
     private var actionButton: some View {
         switch rowVm.state {
         case .idle:
-            Button("Find") { rowVm.startFind() }
+            Button("common.find") { rowVm.startFind() }
                 .buttonStyle(.bordered).controlSize(.small)
         case .loading, .loadingEpisodes, .loadingStreams:
             Button { rowVm.cancel() } label: {
-                Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+                IconView("xmark.circle.fill").foregroundStyle(.secondary)
             }
             .buttonStyle(.plain)
         case .searchResults, .selectingEpisode, .notFound, .error:
-            Button("Retry") { rowVm.reset(); rowVm.startFind() }
+            Button("common.retry") { rowVm.reset(); rowVm.startFind() }
                 .buttonStyle(.bordered).controlSize(.small).foregroundStyle(Color.accentColor)
         }
     }
@@ -188,7 +188,7 @@ private struct DownloadModuleRow: View {
             HStack(spacing: 8) {
                 titleField
                 if case .searchResults = rowVm.state {
-                    Button("Show All") { showAllResults = true }
+                    Button("downloads.show_all") { showAllResults = true }
                         .font(.caption.weight(.semibold)).foregroundStyle(Color.accentColor)
                         .zoomSource("allResults", in: resultsZoom, cornerRadius: 8)
                 }
@@ -207,14 +207,14 @@ private struct DownloadModuleRow: View {
 
     private var statusText: String {
         switch rowVm.state {
-        case .idle: return "Search stopped"
-        case .loading: return "Searching \"\(rowVm.searchTitle)\"…"
-        case .loadingEpisodes(let item): return "Loading episodes for \"\(item.title)\"…"
-        case .loadingStreams: return "Fetching streams…"
+        case .idle: return String(localized: "downloads.search_stopped")
+        case .loading: return String(localized: "downloads.searching \(rowVm.searchTitle)")
+        case .loadingEpisodes(let item): return String(localized: "downloads.loading_episodes_for \(item.title)")
+        case .loadingStreams: return String(localized: "common.fetching_streams")
         case .searchResults(let items): return items.count == 1 ? "1 result" : "\(items.count) results"
-        case .selectingEpisode: return "Episode \(episodeNumber) wasn't matched — pick it:"
-        case .notFound: return rowVm.cloudflareURL != nil ? "Blocked by Cloudflare" : "No results"
-        case .error: return "Couldn't load"
+        case .selectingEpisode: return String(localized: "downloads.episode_wasnt_matched_pick_it \(episodeNumber)")
+        case .notFound: return rowVm.cloudflareURL != nil ? String(localized: "downloads.blocked_by_cloudflare") : String(localized: "common.no_results")
+        case .error: return String(localized: "common.couldnt_load")
         }
     }
 
@@ -232,8 +232,8 @@ private struct DownloadModuleRow: View {
     private var strip: some View {
         switch rowVm.state {
         case .idle:
-            ModulePickerMessage(icon: "magnifyingglass", title: "Not searching",
-                                detail: "Tap Find to search this module.")
+            ModulePickerMessage(icon: "magnifyingglass", title: String(localized: "downloads.not_searching"),
+                                detail: String(localized: "downloads.tap_find_to_search_this"))
         case .loading, .loadingEpisodes, .loadingStreams:
             ModulePickerSkeletonStrip()
         case .searchResults(let items):
@@ -255,15 +255,15 @@ private struct DownloadModuleRow: View {
             ModulePickerEpisodeGrid(episodes: episodes) { rowVm.startSelectEpisode($0) }
         case .notFound:
             if rowVm.cloudflareURL != nil {
-                ModulePickerMessage(icon: "shield.lefthalf.filled", title: "Blocked by Cloudflare", tint: .orange) {
+                ModulePickerMessage(icon: "shield.lefthalf.filled", title: String(localized: "downloads.blocked_by_cloudflare"), tint: .orange) {
                     CloudflareVerifyInlineButton { rowVm.verifyAndRetry() }
                 }
             } else {
-                ModulePickerMessage(icon: "questionmark.square.dashed", title: "Nothing found",
-                                    detail: "Try another title in the search field.")
+                ModulePickerMessage(icon: "questionmark.square.dashed", title: String(localized: "downloads.nothing_found"),
+                                    detail: String(localized: "downloads.try_another_title_in_the"))
             }
         case .error(let msg):
-            ModulePickerMessage(icon: "exclamationmark.triangle", title: "Couldn't load", detail: msg, tint: .orange) {
+            ModulePickerMessage(icon: "exclamationmark.triangle", title: String(localized: "common.couldnt_load"), detail: msg, tint: .orange) {
                 if rowVm.cloudflareURL != nil {
                     CloudflareVerifyInlineButton { rowVm.verifyAndRetry() }
                 }
@@ -273,8 +273,8 @@ private struct DownloadModuleRow: View {
 
     private var titleField: some View {
         HStack(spacing: 6) {
-            Image(systemName: "magnifyingglass").font(.caption).foregroundStyle(.secondary)
-            TextField("Search title…", text: $rowVm.searchTitle)
+            IconView("magnifyingglass").font(.caption).foregroundStyle(.secondary)
+            TextField("downloads.search_title", text: $rowVm.searchTitle)
                 // The rounded fill around it is its border.
                 .textFieldStyle(.plain)
                 .font(.caption)
@@ -333,7 +333,7 @@ private final class DownloadModuleRowViewModel: ObservableObject {
 
     func startFind() {
         guard case .idle = state else { return }
-        state = .loading   // at once, or the row shows "Not searching" for a frame
+        state = .loading   // at once, or the row shows String(localized: "downloads.not_searching") for a frame
         persistAlias()
         currentTask = Task { await find() }
     }
@@ -386,7 +386,7 @@ private final class DownloadModuleRowViewModel: ObservableObject {
             if let matched = episodes.first(where: { $0.number == Double(targetEpisodeNumber) }) {
                 state = .loadingStreams; selectedEpisodeHref = item.href
                 let streams = try await r.fetchStreams(episodeUrl: matched.href)
-                if streams.isEmpty { settle(.error("No streams found for episode \(targetEpisodeNumber)")) }
+                if streams.isEmpty { settle(.error(String(localized: "downloads.no_streams_found_for_episode \(targetEpisodeNumber)"))) }
                 else { state = .idle; readyStreams = streams }
             } else {
                 settle(.selectingEpisode(episodes))
@@ -402,7 +402,7 @@ private final class DownloadModuleRowViewModel: ObservableObject {
         state = .loadingStreams
         do {
             let streams = try await r.fetchStreams(episodeUrl: episode.href)
-            if streams.isEmpty { settle(.error("No streams found")) }
+            if streams.isEmpty { settle(.error(String(localized: "common.no_streams_found"))) }
             else { readyStreams = streams; if let href = currentSearchResultHref { selectedEpisodeHref = href } }
         } catch {
             if (error as? CancellationError) != nil { return }
@@ -427,7 +427,7 @@ private struct SearchResultCard: View {
                             Spacer()
                             HStack {
                                 Spacer()
-                                Text("1 ep")
+                                Text("downloads.1_ep")
                                     .font(.system(size: 8, weight: .bold))
                                     .padding(.horizontal, 4).padding(.vertical, 2)
                                     .foregroundStyle(Color.primary)
@@ -475,7 +475,7 @@ private struct SearchResultsPickerSheet: View {
                                         .padding(.horizontal, 8).padding(.bottom, 8)
                                 }
                                 .overlay(alignment: .topTrailing) {
-                                    Text("1 ep")
+                                    Text("downloads.1_ep")
                                         .font(.system(size: 8, weight: .bold))
                                         .padding(.horizontal, 6).padding(.vertical, 3)
                                         .foregroundStyle(Color.primary)

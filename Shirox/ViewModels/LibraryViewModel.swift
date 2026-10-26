@@ -460,7 +460,7 @@ final class LibraryViewModel: ObservableObject {
         case .provider(let type):
             switch type {
             case .anilist:
-                guard let userId = await AniListAuthManager.shared.authenticatedUserId else { return [] }
+                guard let userId = AniListAuthManager.shared.authenticatedUserId else { return [] }
                 let raw = try await AniListLibraryService.shared.fetchAllLists(userId: userId, type: .manga)
                 return raw.map(Self.aniListMangaEntry)
             case .mal:

@@ -114,13 +114,13 @@ final class SimklBudget: ObservableObject {
         formatter.timeZone = timeZone
         formatter.dateStyle = .none
         formatter.timeStyle = .short
-        return "Requests today: \(min(used, limit)) of \(limit) · resets at \(formatter.string(from: resetsAt))"
+        return String(localized: "shared.requests_today_of_resets_at \(min(used, limit)) \(limit) \(formatter.string(from: resetsAt))")
     }
 
     /// What's held back, if anything.
     nonisolated static func note(used: Int, spent: Bool) -> String? {
-        if spent { return "Today's allowance is used up. Changes are sent after the reset." }
-        if used >= automaticCeiling { return "Automatic checks are paused until then." }
+        if spent { return String(localized: "shared.todays_allowance_is_used_up") }
+        if used >= automaticCeiling { return String(localized: "shared.automatic_checks_are_paused_until") }
         return nil
     }
     var resetsAt: Date { Self.reset(after: now()) }

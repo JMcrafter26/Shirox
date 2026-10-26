@@ -23,7 +23,7 @@ struct SimklEpisodeRef: Hashable, Codable, Comparable, Sendable {
     }
 
     /// "S2 E5".
-    var label: String { "S\(season) E\(episode)" }
+    var label: String { String(localized: "shared.s_e \(season) \(episode)") }
 }
 
 /// One entry of a show's episode list from Simkl's catalog.

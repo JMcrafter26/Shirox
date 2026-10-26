@@ -42,7 +42,7 @@ struct EpisodeRowView: View {
                                 Circle()
                                     .fill(Color.primary)
                                     .frame(width: 40, height: 40)
-                                Image(systemName: "checkmark")
+                                IconView("checkmark")
                                     .font(.caption2.weight(.bold))
                                     .foregroundStyle(adaptiveBackground)   // ← white → adaptiveBackground
                             }
@@ -53,7 +53,7 @@ struct EpisodeRowView: View {
                                 .fill(isComplete ? Color.green : Color.primary)
                                 .frame(width: 40, height: 40)
                             if isComplete {
-                                Image(systemName: "checkmark")
+                                IconView("checkmark")
                                     .font(.caption2.weight(.bold))
                                     .foregroundStyle(.white)   // green is dark enough in both modes
                             } else {
@@ -69,7 +69,7 @@ struct EpisodeRowView: View {
                                 radius: 4, y: 2)
                     }
 
-                    Text("Episode \(episode.displayNumber)")
+                    Text("common.episode \(episode.displayNumber)")
                         .font(.callout.weight(.medium))
                         .foregroundStyle(.primary)
 
@@ -80,15 +80,15 @@ struct EpisodeRowView: View {
                     // with the checkbox.
                     if isSelectionMode {
                         if isComplete {
-                            Image(systemName: "checkmark.circle.fill")
+                            IconView("checkmark.circle.fill")
                                 .font(.caption)
                                 .foregroundStyle(.green)
-                                .accessibilityLabel("Watched")
+                                .accessibilityLabel("detail.watched")
                         } else if let p = progress, p > 0 {
                             Text("\(Int(p * 100))%")
                                 .font(.caption2.weight(.semibold))
                                 .foregroundStyle(.secondary)
-                                .accessibilityLabel("\(Int(p * 100)) percent watched")
+                                .accessibilityLabel("detail.percent_watched \(Int(p * 100))")
                         }
                     }
 
@@ -100,25 +100,25 @@ struct EpisodeRowView: View {
                                 Group {
                                     switch state {
                                     case .completed:
-                                        Image(systemName: "checkmark.circle.fill")
+                                        IconView("checkmark.circle.fill")
                                             .foregroundStyle(.green)
                                     case .downloading:
                                         ProgressView().controlSize(.small)
                                     case .pending:
-                                        Image(systemName: "hourglass")
+                                        IconView("hourglass")
                                             .foregroundStyle(.secondary)
                                     case .paused:
-                                        Image(systemName: "pause.circle.fill")
+                                        IconView("pause.circle.fill")
                                             .foregroundStyle(.secondary)
                                     case .failed:
-                                        Image(systemName: "exclamationmark.circle.fill")
+                                        IconView("exclamationmark.circle.fill")
                                             .foregroundStyle(.red)
                                     }
                                 }
                                 .font(.system(size: 16))
                             }
 
-                            Image(systemName: "play.fill")
+                            IconView("play.fill")
                                 .font(.caption.weight(.semibold))
                                 .foregroundStyle(.primary)
                                 .padding(8)
@@ -159,29 +159,29 @@ struct EpisodeRowView: View {
             if !isSelectionMode {
                 if isComplete {
                     Button { onMarkUnwatched?() } label: {
-                        Label("Mark as Unwatched", systemImage: "xmark.circle")
+                        Label("detail.mark_as_unwatched", icon: "xmark.circle")
                     }
                 } else {
                     Button { onMarkWatched?() } label: {
-                        Label("Mark as Watched", systemImage: "checkmark.circle")
+                        Label("detail.mark_as_watched", icon: "checkmark.circle")
                     }
                 }
                 if let onTryOtherStream {
                     Divider()
                     Button { onTryOtherStream() } label: {
-                        Label("Try Other Stream", systemImage: "arrow.triangle.2.circlepath")
+                        Label("detail.try_other_stream", icon: "arrow.triangle.2.circlepath")
                     }
                 }
                 if let onResetProgress, progress != nil {
                     Divider()
                     Button(role: .destructive) { onResetProgress() } label: {
-                        Label("Reset Progress", systemImage: "arrow.counterclockwise")
+                        Label("detail.reset_progress", icon: "arrow.counterclockwise")
                     }
                 }
                 if let onDownload {
                     Divider()
                     Button { onDownload() } label: {
-                        Label("Download Episode", systemImage: "arrow.down.circle")
+                        Label("detail.download_episode", icon: "arrow.down.circle")
                     }
                     .disabled(downloadState == .completed || downloadState == .downloading || downloadState == .pending)
                 }
@@ -194,7 +194,7 @@ struct EpisodeRowView: View {
                 if let onDeleteDownload {
                     Divider()
                     Button(role: .destructive) { onDeleteDownload() } label: {
-                        Label("Delete Download", systemImage: "trash")
+                        Label("detail.delete_download", icon: "trash")
                     }
                 }
             }

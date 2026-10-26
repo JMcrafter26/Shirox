@@ -185,9 +185,9 @@ enum SimklFeedList: Hashable, Sendable {
 
         var title: String {
             switch self {
-            case .today: return "Today"
-            case .week:  return "This Week"
-            case .month: return "This Month"
+            case .today: return String(localized: "shared.today")
+            case .week:  return String(localized: "shared.this_week")
+            case .month: return String(localized: "shared.this_month")
             }
         }
     }
@@ -273,13 +273,13 @@ enum SimklFeedList: Hashable, Sendable {
     /// The row title.
     var title: String {
         switch self {
-        case .trending(_, let period): return "Trending \(period.title)"
-        case .dvdReleases: return "Popular on DVD & Digital"
-        case .calendar(.movie): return "Coming Soon"
-        case .calendar: return "Airing Today"
-        case .top: return "Top Rated"
-        case .premieres: return "New Premieres"
-        case .newReleases: return "New Releases"
+        case .trending(_, let period): return String(localized: "shared.trending_period \(period.title)")
+        case .dvdReleases: return String(localized: "shared.popular_on_dvd_and_digital")
+        case .calendar(.movie): return String(localized: "shared.coming_soon")
+        case .calendar: return String(localized: "shared.airing_today")
+        case .top: return String(localized: "shared.top_rated")
+        case .premieres: return String(localized: "shared.new_premieres")
+        case .newReleases: return String(localized: "shared.new_releases")
         }
     }
 

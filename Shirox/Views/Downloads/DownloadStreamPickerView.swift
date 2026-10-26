@@ -24,16 +24,16 @@ struct DownloadStreamPickerView: View {
             #else
             .listStyle(.inset)
             #endif
-            .navigationTitle("Select Stream Quality")
+            .navigationTitle("downloads.select_stream_quality")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("common.cancel") { dismiss() }
                 }
             }
-            .tint(.primary)
+            .appTint()
         }
         #if os(iOS)
         .adaptivePresentationDetents([.medium, .large])
@@ -55,7 +55,7 @@ private struct DownloadStreamRow: View {
     var body: some View {
         Button(action: onSelect) {
             HStack(spacing: 12) {
-                Image(systemName: "play.circle.fill")
+                IconView("play.circle.fill")
                     .font(.system(size: 32))
                     .foregroundStyle(.primary)
 

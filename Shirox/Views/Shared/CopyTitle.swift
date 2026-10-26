@@ -49,10 +49,10 @@ struct FullTitleMenuItems: View {
                     Clipboard.copy(title)
                     #if os(iOS)
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    ToastManager.shared.show(message: "Title copied", type: .success, duration: 1.6)
+                    ToastManager.shared.show(message: String(localized: "shared.title_copied"), type: .success, duration: 1.6)
                     #endif
                 } label: {
-                    Label("Copy Title", systemImage: "doc.on.doc")
+                    Label("shared.copy_title", icon: "doc.on.doc")
                 }
                 #endif
             }
@@ -91,10 +91,10 @@ extension View {
                     // `ToastManager` lives in an iOS-only file; macOS copies silently,
                     // which is the platform convention there anyway.
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
-                    ToastManager.shared.show(message: "Title copied", type: .success, duration: 1.6)
+                    ToastManager.shared.show(message: String(localized: "shared.title_copied"), type: .success, duration: 1.6)
                     #endif
                 } label: {
-                    Label("Copy Title", systemImage: "doc.on.doc")
+                    Label("shared.copy_title", icon: "doc.on.doc")
                 }
             }
         }
@@ -115,10 +115,10 @@ extension View {
                 Button {
                     Clipboard.copy(message)
                     #if os(iOS)
-                    ToastManager.shared.show(message: "Error copied", type: .success, duration: 1.6)
+                    ToastManager.shared.show(message: String(localized: "shared.error_copied"), type: .success, duration: 1.6)
                     #endif
                 } label: {
-                    Label("Copy Error", systemImage: "doc.on.doc")
+                    Label("shared.copy_error", icon: "doc.on.doc")
                 }
             }
         } else {
@@ -147,9 +147,9 @@ extension View {
                     #if os(iOS)
                     UIImpactFeedbackGenerator(style: .light).impactOccurred()
                     #endif
-                    ToastManager.shared.show(message: "Description copied", type: .success, duration: 1.6)
+                    ToastManager.shared.show(message: String(localized: "shared.description_copied"), type: .success, duration: 1.6)
                 } label: {
-                    Label("Copy Description", systemImage: "doc.on.doc")
+                    Label("shared.copy_description", icon: "doc.on.doc")
                 }
             }
         } else {

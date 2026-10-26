@@ -102,7 +102,7 @@ struct ActivityMedia: Codable {
 
 extension ActivityMedia {
     var displayTitle: String {
-        title?.english ?? title?.romaji ?? title?.native ?? "Unknown"
+        title?.english ?? title?.romaji ?? title?.native ?? String(localized: "shared.unknown")
     }
 }
 

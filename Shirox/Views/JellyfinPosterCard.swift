@@ -66,9 +66,9 @@ struct JellyfinContinueCard: View {
     private var progress: Double { min(pct / 100.0, 1.0) }
     private var title: String { item.seriesName ?? item.name }
     private var episodeLabel: String {
-        let ep = item.indexNumber.map { "Ep \($0)" } ?? (item.type == "Movie" ? "Movie" : "")
+        let ep = item.indexNumber.map { String(localized: "common.ep \($0)") } ?? (item.type == "Movie" ? String(localized: "common.movie") : "")
         if isInProgress { return ep }
-        return ep.isEmpty ? "Up Next" : "Up Next • \(ep)"
+        return ep.isEmpty ? String(localized: "shared.up_next") : String(localized: "jellyfin.up_next \(ep)")
     }
 
     var body: some View {
@@ -88,7 +88,7 @@ struct JellyfinContinueCard: View {
                 )
                 .overlay(alignment: .bottomLeading) {
                     HStack(spacing: 4) {
-                        Image(systemName: isInProgress ? "play.fill" : "arrow.right.circle.fill")
+                        IconView(isInProgress ? "play.fill" : "arrow.right.circle.fill")
                             .font(.system(size: isInProgress ? 8 : 10, weight: .bold))
                         Text(episodeLabel)
                             .font(.caption2.weight(isInProgress ? .medium : .bold))

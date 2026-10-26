@@ -156,7 +156,7 @@ enum HLSManifestParser {
                 .compactMap { attrs in
                     guard let url = attrs["URI"].flatMap({ URL(string: $0, relativeTo: baseURL)?.absoluteURL }),
                           seen.insert(url).inserted else { return nil }
-                    return HLSAudioRendition(url: url, name: attrs["NAME"] ?? "Audio",
+                    return HLSAudioRendition(url: url, name: attrs["NAME"] ?? String(localized: "shared.audio"),
                                              language: attrs["LANGUAGE"], isDefault: attrs["DEFAULT"] == "YES")
                 }
         }

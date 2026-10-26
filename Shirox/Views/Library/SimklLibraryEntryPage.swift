@@ -41,9 +41,9 @@ struct SimklLibraryEntryPage: View {
                 AniListDetailView(mediaId: target.id, preloadedMedia: target)
             } else if resolved {
                 ContentUnavailableView(
-                    "Not Found",
+                    "detail.not_found",
                     systemImage: "questionmark.circle",
-                    description: Text("\(entry.media.title.displayTitle) couldn't be matched to a show on \(primary.displayName)."))
+                    description: Text("library.couldnt_be_matched_to_a \(entry.media.title.displayTitle) \(primary.displayName)"))
             } else {
                 ProgressView()
             }

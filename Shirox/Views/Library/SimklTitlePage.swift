@@ -63,8 +63,8 @@ struct SimklTitlePage: View {
                             .padding(.top, 16)
                     } else if detailsFailed {
                         HStack {
-                            Text("Couldn't load the details.").foregroundStyle(.secondary)
-                            Button("Retry") { Task { await load() } }
+                            Text("library.couldnt_load_the_details").foregroundStyle(.secondary)
+                            Button("common.retry") { Task { await load() } }
                         }
                         .font(.subheadline)
                         .padding(.horizontal, 16)
@@ -153,6 +153,7 @@ struct SimklTitlePage: View {
                 CachedAsyncImage(urlString: posterURL ?? "")
                     .frame(width: 110, height: 165)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .glassChrome(RoundedRectangle(cornerRadius: 12), enabled: true, off: Color.clear)
                     .shadow(color: .black.opacity(0.5), radius: 14, y: 6)
                     .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.white.opacity(0.08), lineWidth: 0.5))
                     .expandablePoster {
@@ -168,7 +169,7 @@ struct SimklTitlePage: View {
                         if let rating = details?.rating {
                             chip {
                                 HStack(spacing: 4) {
-                                    Image(systemName: "star.fill").font(.caption2.weight(.bold))
+                                    IconView("star.fill").font(.caption2.weight(.bold))
                                     Text(String(format: "%.1f", rating)).font(.caption2.weight(.bold))
                                 }
                             }
@@ -257,7 +258,7 @@ struct SimklTitlePage: View {
             }
         } label: {
             HStack(spacing: 10) {
-                Image(systemName: "play.fill").font(.system(size: 13, weight: .bold))
+                IconView("play.fill").font(.system(size: 13, weight: .bold))
                 Text(SimklWatchTarget.label(kind: kind, episode: target, resuming: resuming))
                     .font(.system(size: 15, weight: .bold))
             }
@@ -272,24 +273,24 @@ struct SimklTitlePage: View {
         .contextMenu {
             if kind == .movie || target != nil {
                 Button { play(target) } label: {
-                    Label("Change Stream", systemImage: "arrow.triangle.2.circlepath")
+                    Label("detail.change_stream", icon: "arrow.triangle.2.circlepath")
                 }
             }
             if let target {
                 if watched.contains(target) {
                     Button { Task { await mark(target, watched: false) } } label: {
-                        Label("Mark as Unwatched", systemImage: "xmark.circle")
+                        Label("detail.mark_as_unwatched", icon: "xmark.circle")
                     }
                 } else {
                     Button { Task { await mark(target, watched: true) } } label: {
-                        Label("Mark as Watched", systemImage: "checkmark.circle")
+                        Label("detail.mark_as_watched", icon: "checkmark.circle")
                     }
                 }
             }
             if resuming, let item = resumeItem {
                 Divider()
                 Button(role: .destructive) { ContinueWatchingManager.shared.remove(item) } label: {
-                    Label("Reset Progress", systemImage: "arrow.counterclockwise")
+                    Label("detail.reset_progress", icon: "arrow.counterclockwise")
                 }
             }
         }
@@ -301,7 +302,7 @@ struct SimklTitlePage: View {
     }
 
     private func circleLabel(systemImage: String) -> some View {
-        Image(systemName: systemImage)
+        IconView(systemImage)
             .font(.system(size: 16, weight: .semibold))
             .foregroundStyle(.primary)
             .frame(width: 46, height: 46)
@@ -314,7 +315,8 @@ struct SimklTitlePage: View {
         VStack(alignment: .leading, spacing: 4) {
             if let entry {
                 let progress = kind == .movie ? SimklTitleLabels.movieLine(entry.media) : SimklTitleLabels.showProgress(entry)
-                Text("\(entry.status.displayName) · \(progress)\(entry.score > 0 ? " · \(Int(entry.score))/10" : "")")
+                Text(verbatim: [entry.status.displayName, progress, entry.score > 0 ? "\(Int(entry.score))/10" : nil]
+                        .compactMap { $0 }.joined(separator: " · "))
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -322,7 +324,7 @@ struct SimklTitlePage: View {
                 Text(message).font(.footnote).foregroundStyle(.secondary)
             }
             Link(destination: simklURL) {
-                Label("Open on Simkl", systemImage: "safari")
+                Label("library.open_on_simkl", icon: "safari")
             }
             .font(.subheadline)
         }
@@ -340,23 +342,23 @@ struct SimklTitlePage: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ForEach(seasons, id: \.self) { number in
-                            seasonPill("Season \(number)", selected: !showsSpecials && season == number) {
+                            seasonPill(String(localized: "common.season \(number)"), selected: !showsSpecials && season == number) {
                                 showsSpecials = false
                                 season = number
                             }
                         }
                         if !specials.isEmpty {
-                            seasonPill("Specials", selected: showsSpecials) { showsSpecials = true }
+                            seasonPill(String(localized: "library.specials"), selected: showsSpecials) { showsSpecials = true }
                         }
                     }
                     .padding(.horizontal, 16)
                 }
                 if showsSpecials {
-                    Text("Simkl gives specials no season or episode number, so they can't be played or marked from here.")
+                    Text("library.simkl_gives_specials_no_season")
                         .font(.footnote).foregroundStyle(.secondary)
                         .padding(.horizontal, 16)
                     ForEach(specials) { special in
-                        Text(special.title ?? "Special")
+                        Text(special.title ?? String(localized: "library.special"))
                             .font(.subheadline.weight(.semibold))
                             .padding(.horizontal, 16)
                     }
@@ -400,13 +402,13 @@ struct SimklTitlePage: View {
 
     private func seasonHeader(_ number: Int) -> some View {
         HStack {
-            Text("Season \(number)").font(.title3.weight(.bold))
+            Text("common.season \(number)").font(.title3.weight(.bold))
             Spacer()
             Menu {
-                Button("Mark season watched") { Task { await changeSeason(number, marking: true) } }
-                Button("Un-mark season", role: .destructive) { Task { await changeSeason(number, marking: false) } }
+                Button("library.mark_season_watched") { Task { await changeSeason(number, marking: true) } }
+                Button("library.un_mark_season", role: .destructive) { Task { await changeSeason(number, marking: false) } }
             } label: {
-                Image(systemName: "ellipsis.circle").font(.title3)
+                IconView("ellipsis.circle").font(.title3)
             }
             .disabled(busy)
         }
@@ -565,7 +567,7 @@ struct SimklTitlePage: View {
             if SimklAuthManager.shared.needsReauthorization {
                 message = SimklError.readOnly.localizedDescription
             } else {
-                message = delivered ? nil : "Simkl couldn't be reached — this is saved and will be sent later."
+                message = delivered ? nil : String(localized: "library.simkl_couldnt_be_reached_this")
             }
         } catch {
             message = error.localizedDescription

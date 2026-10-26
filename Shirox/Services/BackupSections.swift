@@ -109,8 +109,14 @@ struct LocalLibraryBackupSection: BackupSection {
 struct SubtitleBackupPayload: Codable {
     var enabled: Bool
     var fontSize: Double
+    /// Absent from backups made before it existed.
+    var fontFamily: String? = nil
     var shadowRadius: Double
     var backgroundEnabled: Bool
+    /// Nil in backups from before the background could be styled.
+    var backgroundRGB: [Double]?
+    var backgroundOpacity: Double?
+    var backgroundCornerRadius: Double?
     var bottomPadding: Double
     var delaySeconds: Double
     /// r, g, b, a. Nil when the user never picked a colour.
@@ -146,7 +152,8 @@ struct SettingsBackupSection: BackupSection {
         "autoRotateForcedLandscape",
         "librarySortAscending", "playerLiquidGlass", "rateOnFinish", "playerSpatialAudio", "playerPlayInBackground",
         "readerLiquidGlass", "readerPageCurl", "readerPortraitOnly", "readerTapZones", "readerTapZonesReversed", "skipReWatchTracking", "useDefaultExtension",
-        "dataSaverEnabled", "gooeyRefresh"
+        "dataSaverEnabled", "gooeyRefresh", AppTab.hideLabelsKey, AppTab.minimizeKey,
+        "discordPresenceEnabled", "discordShowsCover", "discordShowsDetails"
     ]
 
     static let intKeys = [
@@ -158,7 +165,9 @@ struct SettingsBackupSection: BackupSection {
     static let stringKeys = [
         "librarySortOrder", "libraryStatusOrder", "mangaReadingMode",
         "preferredQuality", "titleLanguagePriority", SyncTargets.key,
-        DiscoverySource.choiceKey, DiscoverySource.kindKey, "playerHoldAction"
+        DiscoverySource.choiceKey, DiscoverySource.kindKey, "playerHoldAction",
+        AppTint.key, AppColorScheme.key, AppTab.orderKey, AppTab.hiddenKey, AppTab.launchKey,
+        PullToRefreshStyle.key, "discordApplicationID"
     ]
 
     static let stringListKeys = [AniListMappingManager.manualTrackingKey]
@@ -190,6 +199,7 @@ struct SettingsBackupSection: BackupSection {
         }
 
         let subtitles = SubtitleSettingsManager.shared
+        let background = SubtitleSettingsManager.rgb(subtitles.backgroundColor)
         let color: [Double]? = d.object(forKey: SubtitleKeys.colorR) == nil ? nil : [
             d.double(forKey: SubtitleKeys.colorR), d.double(forKey: SubtitleKeys.colorG),
             d.double(forKey: SubtitleKeys.colorB), d.double(forKey: SubtitleKeys.colorA)
@@ -203,8 +213,12 @@ struct SettingsBackupSection: BackupSection {
             subtitles: SubtitleBackupPayload(
                 enabled: subtitles.enabled,
                 fontSize: subtitles.fontSize,
+                fontFamily: subtitles.fontFamily,
                 shadowRadius: subtitles.shadowRadius,
                 backgroundEnabled: subtitles.backgroundEnabled,
+                backgroundRGB: [background.0, background.1, background.2],
+                backgroundOpacity: subtitles.backgroundOpacity,
+                backgroundCornerRadius: subtitles.backgroundCornerRadius,
                 bottomPadding: subtitles.bottomPadding,
                 delaySeconds: subtitles.delaySeconds,
                 colorRGBA: color),
@@ -234,8 +248,17 @@ struct SettingsBackupSection: BackupSection {
             let manager = SubtitleSettingsManager.shared
             manager.enabled = s.enabled
             manager.fontSize = s.fontSize
+            // Only a family this device has; otherwise the system font stays.
+            if let family = s.fontFamily, family.isEmpty || SubtitleFonts.families.contains(family) {
+                manager.fontFamily = family
+            }
             manager.shadowRadius = s.shadowRadius
             manager.backgroundEnabled = s.backgroundEnabled
+            if let c = s.backgroundRGB, c.count == 3 {
+                manager.backgroundColor = Color(red: c[0], green: c[1], blue: c[2])
+            }
+            if let opacity = s.backgroundOpacity { manager.backgroundOpacity = opacity }
+            if let radius = s.backgroundCornerRadius { manager.backgroundCornerRadius = radius }
             manager.bottomPadding = s.bottomPadding
             manager.delaySeconds = s.delaySeconds
             if let c = s.colorRGBA, c.count == 4 {
@@ -314,7 +337,7 @@ struct ModulesBackupSection: BackupSection {
         // rest of the modules did install, and the user can add the missing one by URL.
         return failedUrls.map { url in
             let name = payload.modules.first { $0.jsonUrl == url }?.sourceName ?? url
-            return "Couldn't reinstall \(name) — \(url)"
+            return String(localized: "settings.couldnt_reinstall \(name) \(url)")
         }
     }
 }

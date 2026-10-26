@@ -55,7 +55,7 @@ enum BackupSectionError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .incompatibleDataVersion(let found, let expected):
-            return "Progress data from an incompatible app version (found \(found), expected \(expected))."
+            return String(localized: "settings.progress_data_from_an_incompatible \(found) \(expected)")
         }
     }
 }
@@ -180,7 +180,7 @@ final class BackupManager {
 
         if let value = envelope.sections[BackupSectionID.settings],
            (try? value.decoded(as: SettingsBackupPayload.self, using: BackupCoding.decoder)) != nil {
-            lines.append("Settings")
+            lines.append(String(localized: "settings.settings"))
         }
 
         return (envelope, BackupSummary(createdAt: envelope.createdAt,

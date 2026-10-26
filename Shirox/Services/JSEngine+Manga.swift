@@ -31,7 +31,7 @@ extension JSEngine {
         let json = try await callAsyncJS("__shiroxCallJSON", args: ["searchResults", [keyword]])
         guard let data = json.data(using: .utf8),
               let array = try JSONSerialization.jsonObject(with: data) as? [[String: Any]] else {
-            throw JSEngineError.parseError("Could not parse manga search results")
+            throw JSEngineError.parseError(String(localized: "shared.could_not_parse_manga_search"))
         }
         for (image, headers) in Self.mangaImageHeaders(array) { MangaPageHeaders.shared.record(headers, for: image) }
         ModuleWebLinks.shared.record(array, hrefKey: "id", moduleId: ModuleManager.shared.activeModule?.id)
@@ -42,7 +42,7 @@ extension JSEngine {
         let json = try await callAsyncJS("__shiroxCallJSON", args: ["extractDetails", [url]])
         guard let data = json.data(using: .utf8),
               let dict = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-            throw JSEngineError.parseError("Could not parse manga details")
+            throw JSEngineError.parseError(String(localized: "shared.could_not_parse_manga_details"))
         }
         return Self.parseMangaDetails(dict)
     }
@@ -50,7 +50,7 @@ extension JSEngine {
     func mangaChapters(url: String) async throws -> [MangaChapter] {
         let json = try await callAsyncJS("__shiroxCallJSON", args: ["extractChapters", [url]])
         guard let data = json.data(using: .utf8) else {
-            throw JSEngineError.parseError("Could not parse manga chapters")
+            throw JSEngineError.parseError(String(localized: "shared.could_not_parse_manga_chapters"))
         }
         let object = try JSONSerialization.jsonObject(with: data)
         return Self.parseMangaChapters(object)
@@ -60,7 +60,7 @@ extension JSEngine {
         let json = try await callAsyncJS("__shiroxCallJSON", args: ["extractImages", [url]])
         guard let data = json.data(using: .utf8),
               let array = try JSONSerialization.jsonObject(with: data) as? [Any] else {
-            throw JSEngineError.parseError("Could not parse manga pages")
+            throw JSEngineError.parseError(String(localized: "shared.could_not_parse_manga_pages"))
         }
         let pages = Self.parseMangaPages(array)
         for page in pages { MangaPageHeaders.shared.record(page.headers, for: page.url) }

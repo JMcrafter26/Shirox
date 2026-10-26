@@ -59,7 +59,8 @@ final class RefreshLimiter {
     }
 
     static func message(retryIn wait: TimeInterval) -> String {
-        "Rate limited — try again in \(max(1, Int(wait.rounded(.up)))) s"
+        let seconds = max(1, Int(wait.rounded(.up)))
+        return String(localized: "shared.rate_limited_try_again_in \(seconds)")
     }
 
     static func announce(_ message: String) {
@@ -123,7 +124,7 @@ private struct RefreshLimitNoticeView: View {
         VStack {
             if let message = notice.message {
                 HStack(spacing: 8) {
-                    Image(systemName: "exclamationmark.circle.fill")
+                    IconView("exclamationmark.circle.fill")
                         .foregroundStyle(.red)
                     Text(message)
                         .font(.footnote.weight(.semibold))

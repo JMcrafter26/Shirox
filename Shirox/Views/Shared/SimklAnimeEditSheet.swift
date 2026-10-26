@@ -45,8 +45,8 @@ struct SimklAnimeEditSheet: View {
                 onDelete: entry.map { existing in { Task { await SimklAnimeEdits.remove(existing) } } }
             )
         } else {
-            ContentUnavailableView("Not on Simkl", systemImage: "questionmark.circle",
-                                   description: Text("This title has no MyAnimeList or AniList id for Simkl to find it by."))
+            ContentUnavailableView("shared.not_on_simkl", systemImage: "questionmark.circle",
+                                   description: Text("shared.this_title_has_no_myanimelist"))
         }
     }
 }

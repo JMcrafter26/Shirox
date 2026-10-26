@@ -35,18 +35,18 @@ struct PlayerVideoInfoPanel: View {
     var body: some View {
         VStack(alignment: .leading, spacing: isPad ? 16 : 12) {
             HStack {
-                Text("Video Details")
+                Text("player.video_details")
                     .font(.system(size: isPad ? 17 : 15, weight: .semibold))
                 Spacer()
                 Button(action: onClose) {
-                    Image(systemName: "xmark")
+                    IconView("xmark")
                         .font(.system(size: 11, weight: .bold))
                         .frame(width: 26, height: 26)
                         .background(Color.white.opacity(0.15), in: Circle())
                         .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel("Close Video Details")
+                .accessibilityLabel("player.close_video_details")
             }
             .background(GeometryReader { geo in
                 Color.clear.preference(key: InfoPanelHeaderHeightKey.self, value: geo.size.height)
@@ -83,27 +83,27 @@ struct PlayerVideoInfoPanel: View {
 
     private var fields: some View {
         VStack(alignment: .leading, spacing: isPad ? 16 : 12) {
-            section("Video", [
-                field("Codec", stats.videoCodec),
-                field("Resolution", stats.resolutionText),
-                field("Frame Rate", stats.frameRateText),
-                field("Bitrate", PlaybackStats.bitrateText(stats.videoBitrate)),
-                field("Dropped Frames", stats.droppedFrames.map(String.init)),
+            section(String(localized: "player.video"), [
+                field(String(localized: "player.codec"), stats.videoCodec),
+                field(String(localized: "player.resolution"), stats.resolutionText),
+                field(String(localized: "player.frame_rate"), stats.frameRateText),
+                field(String(localized: "player.bitrate"), PlaybackStats.bitrateText(stats.videoBitrate)),
+                field(String(localized: "player.dropped_frames"), stats.droppedFrames.map(String.init)),
             ])
-            section("Audio", [
-                field("Codec", stats.audioCodec),
-                field("Channels", stats.channelsText),
-                field("Sample Rate", stats.sampleRateText),
-                field("Bitrate", PlaybackStats.bitrateText(stats.audioBitrate)),
-                field("Track", audioTrack),
+            section(String(localized: "shared.audio"), [
+                field(String(localized: "player.codec"), stats.audioCodec),
+                field(String(localized: "player.channels"), stats.channelsText),
+                field(String(localized: "player.sample_rate"), stats.sampleRateText),
+                field(String(localized: "player.bitrate"), PlaybackStats.bitrateText(stats.audioBitrate)),
+                field(String(localized: "player.track"), audioTrack),
             ])
             if let subtitle {
-                section("Subtitle", [field("Name", subtitle.name), field("Source", subtitle.source)])
+                section(String(localized: "shared.subtitle"), [field(String(localized: "common.name"), subtitle.name), field(String(localized: "modules.source"), subtitle.source)])
             }
-            section("Stream", [
-                field("Player", stats.player),
-                field("Stream Bitrate", PlaybackStats.bitrateText(stats.streamBitrate)),
-                field("Network", PlaybackStats.bitrateText(stats.throughput)),
+            section(String(localized: "shared.stream"), [
+                field(String(localized: "settings.player"), stats.player),
+                field(String(localized: "player.stream_bitrate"), PlaybackStats.bitrateText(stats.streamBitrate)),
+                field(String(localized: "player.network"), PlaybackStats.bitrateText(stats.throughput)),
             ])
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -124,7 +124,7 @@ struct PlayerVideoInfoPanel: View {
                 .tracking(0.8)
                 .foregroundStyle(.white.opacity(0.55))
             if known.isEmpty {
-                Text("Not known yet")
+                Text("player.not_known_yet")
                     .font(.system(size: isPad ? 15 : 13))
                     .foregroundStyle(.white.opacity(0.7))
             } else {

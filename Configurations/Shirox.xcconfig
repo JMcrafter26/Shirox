@@ -7,6 +7,22 @@ GITHUB_REPO = xibrox/Shirox
 // Swift concurrency checking level: minimal | targeted | complete
 SWIFT_STRICT_CONCURRENCY = targeted
 
+// The compiler hands the build every localized string it finds, so Xcode keeps
+// Localizable.xcstrings in step with the code (see scripts/i18n/i18n.py).
+SWIFT_EMIT_LOC_STRINGS = YES
+LOCALIZATION_PREFERS_STRING_CATALOGS = YES
+
+// Alternate home screen icons (Assets.xcassets/*.appiconset), offered in Settings › General.
+ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES[sdk=iphoneos*] = realistic pride
+ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES[sdk=iphonesimulator*] = realistic pride
+
+// Release builds carry no code coverage instrumentation (__LLVM_COV, __llvm_prf_*): that was
+// 3.6 MB of the shipped binary. Debug keeps it for tests.
+// (buildipa.sh also passes these on the command line, so the Swift packages build without it too.)
+ENABLE_CODE_COVERAGE[config=Release] = NO
+CLANG_COVERAGE_MAPPING[config=Release] = NO
+CLANG_ENABLE_CODE_COVERAGE[config=Release] = NO
+
 // TMDB's API key, for title logos TVDB doesn't have. Set it in Shirox.local.xcconfig, never
 // here — this file is committed. Left empty, the app uses TVDB's logos alone.
 TMDB_API_KEY =

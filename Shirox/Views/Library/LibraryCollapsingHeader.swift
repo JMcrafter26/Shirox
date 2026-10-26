@@ -14,7 +14,7 @@ struct LibraryFilterLabel: View {
     var body: some View {
         Group {
             if collapsed {
-                Image(systemName: systemImage)
+                IconView(systemImage)
                     .font(.subheadline)
                     .frame(width: 40, height: 38)
                     .background(.ultraThinMaterial, in: Capsule())
@@ -29,12 +29,12 @@ struct LibraryFilterLabel: View {
                     }
             } else {
                 HStack(spacing: 6) {
-                    Image(systemName: systemImage)
+                    IconView(systemImage)
                         .font(.subheadline)
                     Text(text)
                         .font(.subheadline.weight(.medium))
                         .lineLimit(1)
-                    Image(systemName: "chevron.down")
+                    IconView("chevron.down")
                         .font(.caption)
                 }
                 .padding(.horizontal, 16)
@@ -48,9 +48,9 @@ struct LibraryFilterLabel: View {
     }
 }
 
-#Preview("Filter labels") {
+#Preview(String(localized: "library.filter_labels")) {
     HStack(spacing: 10) {
-        LibraryFilterLabel(systemImage: "line.3.horizontal.decrease", text: "Watching", isActive: false, collapsed: false)
+        LibraryFilterLabel(systemImage: "line.3.horizontal.decrease", text: String(localized: "shared.watching"), isActive: false, collapsed: false)
         LibraryFilterLabel(systemImage: "tag", text: "2 selected", isActive: true, collapsed: false)
     }
     .padding()

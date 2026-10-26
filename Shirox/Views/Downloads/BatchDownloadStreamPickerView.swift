@@ -24,7 +24,7 @@ struct BatchDownloadStreamPickerView: View {
                 if isLoading {
                     VStack(spacing: 14) {
                         ProgressView()
-                        Text("Fetching streams…")
+                        Text("common.fetching_streams")
                             .font(.subheadline)
                             .foregroundStyle(.secondary)
                     }
@@ -33,7 +33,7 @@ struct BatchDownloadStreamPickerView: View {
                     CloudflareVerifyView { Task { await verifyCloudflare() } }
                 } else if let error {
                     ContentUnavailableView(
-                        "Failed to Load",
+                        "downloads.failed_to_load",
                         systemImage: "antenna.radiowaves.left.and.right.slash",
                         description: Text(error)
                     )
@@ -44,7 +44,7 @@ struct BatchDownloadStreamPickerView: View {
                             onDismiss()
                         } label: {
                             HStack(spacing: 12) {
-                                Image(systemName: "arrow.down.circle.fill")
+                                IconView("arrow.down.circle.fill")
                                     .font(.system(size: 32))
                                     .foregroundStyle(.primary)
                                 StreamRowText(stream: stream)
@@ -63,16 +63,16 @@ struct BatchDownloadStreamPickerView: View {
                     #endif
                 }
             }
-            .navigationTitle("Download \(episodeNumbers.count) Episode\(episodeNumbers.count == 1 ? "" : "s")")
+            .navigationTitle("downloads.download_episodes \(episodeNumbers.count)")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { onDismiss() }
+                    Button("common.cancel") { onDismiss() }
                 }
             }
-            .tint(.primary)
+            .appTint()
         }
         #if os(iOS)
         .adaptivePresentationDetents([.medium, .large])
@@ -92,7 +92,7 @@ struct BatchDownloadStreamPickerView: View {
         CloudflareBypassManager.shared.pendingVerificationURL = nil
         guard let firstEpNum = episodeNumbers.first,
               let episode = episodes.first(where: { Int($0.number) == firstEpNum }) else {
-            error = "Could not find episode"
+            error = String(localized: "downloads.could_not_find_the_episode")
             isLoading = false
             return
         }

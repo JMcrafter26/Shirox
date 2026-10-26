@@ -56,13 +56,13 @@ struct ReaderPageView: View {
                     .contextMenu { pageMenu(image) }
             } else if failed {
                 VStack(spacing: 8) {
-                    Image(systemName: "exclamationmark.triangle")
+                    IconView("exclamationmark.triangle")
                         .font(.title2)
                         .foregroundStyle(.white.opacity(0.7))
-                    Text("Page \(pageNumber) failed to load")
+                    Text("reader.page_failed_to_load \(pageNumber)")
                         .font(.caption)
                         .foregroundStyle(.white.opacity(0.7))
-                    Text("Tap to retry")
+                    Text("reader.tap_to_retry")
                         .font(.caption2)
                         .foregroundStyle(.white.opacity(0.45))
                 }
@@ -90,12 +90,12 @@ struct ReaderPageView: View {
         Button {
             Task { await saveToPhotos(fallback: shown) }
         } label: {
-            Label("Save to Photos", systemImage: "photo.on.rectangle")
+            Label("reader.save_to_photos", icon: "photo.on.rectangle")
         }
         if #available(iOS 16.0, *) {
             let image = Image(uiImage: shown)
-            ShareLink(item: image, preview: SharePreview("Page \(pageNumber)", image: image)) {
-                Label("Share", systemImage: "square.and.arrow.up")
+            ShareLink(item: image, preview: SharePreview(String(localized: "reader.page \(pageNumber)"), image: image)) {
+                Label("profile.share", icon: "square.and.arrow.up")
             }
         }
     }
@@ -109,13 +109,13 @@ struct ReaderPageView: View {
         PhotoLibrarySaver.save(full) { outcome in
             switch outcome {
             case .savedToAlbum:
-                ToastManager.shared.show(message: "Page saved to the Shirox album", type: .success)
+                ToastManager.shared.show(message: String(localized: "reader.page_saved_to_the_shirox"), type: .success)
             case .savedToLibrary:
-                ToastManager.shared.show(message: "Page saved to Photos", type: .success)
+                ToastManager.shared.show(message: String(localized: "reader.page_saved_to_photos"), type: .success)
             case .denied:
-                ToastManager.shared.show(message: "Allow Photos access in Settings to save pages", type: .warning)
+                ToastManager.shared.show(message: String(localized: "reader.allow_photos_access_in_settings"), type: .warning)
             case .failed(let error):
-                ToastManager.shared.show(message: "Couldn't save page: \(error.localizedDescription)", type: .error)
+                ToastManager.shared.show(message: String(localized: "reader.couldnt_save_page \(error.localizedDescription)"), type: .error)
             }
         }
     }

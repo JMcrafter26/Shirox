@@ -151,11 +151,11 @@ struct DetailView: View {
                     }
                     .transition(.scale.combined(with: .opacity))
                     .confirmationDialog(
-                        "Delete \(selectedOfflineDownloads().count) downloaded episodes?",
+                        String(localized: "detail.delete_downloaded_episodes \(selectedOfflineDownloads().count)"),
                         isPresented: $showBatchDeleteConfirmation,
                         titleVisibility: .visible
                     ) {
-                        Button("Delete", role: .destructive) {
+                        Button("common.delete", role: .destructive) {
                             for it in selectedOfflineDownloads() {
                                 DownloadManager.shared.remove(it)
                                 selectedEpisodeNumbers.remove(it.episodeNumber)
@@ -172,8 +172,14 @@ struct DetailView: View {
                 BookmarkButton(media: bookmarkMedia, localSource: bookmarkSource)
                 #endif
             }
+            #if os(iOS)
+            // Placed like Home's calendar button: centred over the tab bar's search button.
+            .padding(.trailing, 26)
+            .padding(.bottom, 12)
+            #else
             .padding(.trailing, 16)
             .padding(.bottom, 24)
+            #endif
             #if !os(tvOS)
             .animation(.spring(response: 0.35, dampingFraction: 0.8), value: isSelectionMode)
             #endif
@@ -374,7 +380,7 @@ struct DetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackgroundHidden()
         .scrollAwareNavTitle(item.title)
-        .tint(.primary)
+        .appTint()
         .toolbarZoomSource("edit", in: sheetZoom, placement: .topBarTrailing) { detailToolbarButton }
         .adaptiveSheet(item: $simklEdit) { target in
             SimklAnimeEditSheet(target: target)
@@ -483,7 +489,7 @@ struct DetailView: View {
         .onChangeOf(vm.aniListID) { _ in
             Task { await reloadLinkedIDs() }
         }
-        .tint(.primary)
+        .appTint()
         .adaptiveSheet(isPresented: $vm.showStreamPicker, onDismiss: {
             if let stream = vm.pendingStream {
                 vm.pendingStream = nil
@@ -583,18 +589,18 @@ struct DetailView: View {
                         showLibraryEdit = true
                     }
                 } label: {
-                    Label("Edit Library Entry", systemImage: "pencil")
+                    Label("detail.edit_library_entry", icon: "pencil")
                 }
                 Button {
                     showMatchingSearch = true
                 } label: {
-                    Label("Tracking Links…", systemImage: "link")
+                    Label("detail.tracking_links", icon: "link")
                 }
             } label: {
                 if isLoadingEntry {
                     ProgressView().scaleEffect(0.8)
                 } else {
-                    Image(systemName: "pencil.circle")
+                    IconView("pencil.circle")
                         .font(.system(size: 17, weight: .medium))
                         .foregroundStyle(.primary)
                 }
@@ -604,7 +610,7 @@ struct DetailView: View {
             Button {
                 showMatchingSearch = true
             } label: {
-                Image(systemName: "link.badge.plus")
+                IconView("link.badge.plus")
                     .font(.system(size: 17, weight: .medium))
             }
         }
@@ -654,7 +660,7 @@ struct DetailView: View {
                     circleIconButton(icon: selectedTab == 0 ? "person.3.fill" : "list.bullet", isActive: selectedTab == 1, size: 16)
                 }
                 .buttonStyle(.plain)
-                .help(selectedTab == 0 ? "Show related titles" : "Show episodes")
+                .help(selectedTab == 0 ? String(localized: "detail.show_related_titles") : String(localized: "detail.show_episodes"))
                 // Picks episodes to download.
                 #if !os(tvOS)
                 Button {
@@ -673,7 +679,7 @@ struct DetailView: View {
     #endif
 
     private func circleIconButton(icon: String, isActive: Bool, size: CGFloat) -> some View {
-        Image(systemName: icon)
+        IconView(icon)
             .font(.system(size: size, weight: .semibold))
             .foregroundStyle(isActive ? platformBackground : .primary)
             .frame(width: 46, height: 46)
@@ -696,8 +702,8 @@ struct DetailView: View {
         let nextEp = item?.episodeNumber ?? 1
         let continuing = item != nil && !item!.streamUrl.isEmpty
         let label = isSingleEpisode(detail)
-            ? (continuing ? "Continue" : "Watch")
-            : continuing ? "Continue Ep \(nextEp)" : "Watch Ep \(nextEp)"
+            ? (continuing ? String(localized: "shared.continue") : String(localized: "home.watch"))
+            : continuing ? String(localized: "detail.continue_ep \(nextEp)") : String(localized: "detail.watch_ep \(nextEp)")
         let activeModule = effectiveModuleId
         #if !os(tvOS)
         let downloadedTarget = DownloadManager.shared.items.first {
@@ -731,7 +737,7 @@ struct DetailView: View {
             }
         } label: {
             HStack(spacing: 10) {
-                Image(systemName: "play.fill")
+                IconView("play.fill")
                     .font(.system(size: 13, weight: .bold))
                 Text(label)
                     .font(.system(size: 15, weight: .bold))
@@ -750,12 +756,12 @@ struct DetailView: View {
         .contextMenu {
             if let targetEpisode, !targetEpisode.href.isEmpty {
                 Button { vm.loadStreams(for: targetEpisode) } label: {
-                    Label("Change Stream", systemImage: "arrow.triangle.2.circlepath")
+                    Label("detail.change_stream", icon: "arrow.triangle.2.circlepath")
                 }
                 #if !os(tvOS)
                 if downloadedTarget == nil {
                     Button { vm.loadDownloadStreams(for: targetEpisode) } label: {
-                        Label("Download Episode", systemImage: "arrow.down.circle")
+                        Label("detail.download_episode", icon: "arrow.down.circle")
                     }
                 }
                 #endif
@@ -763,7 +769,7 @@ struct DetailView: View {
             #if !os(tvOS)
             if let downloadedTarget {
                 Button(role: .destructive) { DownloadManager.shared.remove(downloadedTarget) } label: {
-                    Label("Delete Download", systemImage: "trash")
+                    Label("detail.delete_download", icon: "trash")
                 }
             }
             #endif
@@ -774,7 +780,7 @@ struct DetailView: View {
                         aniListID: vm.aniListID ?? aniListID, moduleId: activeModule, mediaTitle: detail.title,
                         episodeNumber: nextEp, episodeHref: targetEpisode?.href)
                 } label: {
-                    Label("Reset Progress", systemImage: "arrow.counterclockwise")
+                    Label("detail.reset_progress", icon: "arrow.counterclockwise")
                 }
             }
         }
@@ -787,7 +793,7 @@ struct DetailView: View {
                 selectedTab = (selectedTab == 0 ? 1 : 0)
             }
         } label: {
-            Image(systemName: selectedTab == 0 ? "person.3.fill" : "list.bullet")
+            IconView(selectedTab == 0 ? "person.3.fill" : "list.bullet")
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundStyle(selectedTab == 1 ? platformBackground : .primary)
                 .frame(width: 46, height: 46)
@@ -812,7 +818,7 @@ struct DetailView: View {
                 }
             }
         } label: {
-            Image(systemName: isSelectionMode ? "checkmark.circle.fill" : "checkmark.circle")
+            IconView(isSelectionMode ? "checkmark.circle.fill" : "checkmark.circle")
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundStyle(isSelectionMode ? platformBackground : .primary)
                 .frame(width: 46, height: 46)
@@ -876,7 +882,7 @@ struct DetailView: View {
         }
 
         let stream = StreamResult(
-            title: item.streamTitle ?? item.episodeTitle ?? "Episode \(item.episodeNumber)",
+            title: item.streamTitle ?? item.episodeTitle ?? String(localized: "common.episode \(item.episodeNumber)"),
             url: url,
             headers: item.headers ?? [:],
             subtitle: item.subtitle,
@@ -958,7 +964,7 @@ struct DetailView: View {
 
     @ViewBuilder private var simklEditButton: some View {
         if simklAuth.isLoggedIn, let target = simklEditTarget {
-            Button { simklEdit = target } label: { Label("Edit on Simkl", systemImage: "pencil") }
+            Button { simklEdit = target } label: { Label("detail.edit_on_simkl", icon: "pencil") }
         }
     }
 
@@ -988,7 +994,7 @@ struct DetailView: View {
                             isLoadingEntry = false
                             showLibraryEdit = true
                         }
-                    } label: { Label("Edit on Both Services", systemImage: "pencil") }
+                    } label: { Label("detail.edit_on_both_services", icon: "pencil") }
                 } else {
                     if hasAniListEdit {
                         Button {
@@ -1001,7 +1007,7 @@ struct DetailView: View {
                                 isLoadingEntry = false
                                 showAniListEdit = true
                             }
-                        } label: { Label("Edit on AniList", systemImage: "pencil") }
+                        } label: { Label("detail.edit_on_anilist", icon: "pencil") }
                     }
                     if hasMALEdit {
                         Button {
@@ -1013,12 +1019,12 @@ struct DetailView: View {
                                 isLoadingEntry = false
                                 showMALEdit = true
                             }
-                        } label: { Label("Edit on MyAnimeList", systemImage: "pencil") }
+                        } label: { Label("detail.edit_on_myanimelist", icon: "pencil") }
                     }
                 }
                 simklEditButton
                 Button { openLinks(from: "edit") } label: {
-                    Label("Tracking Links…", systemImage: "link")
+                    Label("detail.tracking_links", icon: "link")
                 }
             } label: { libraryEditButtonLabel }
             .disabled(isLoadingEntry)
@@ -1026,7 +1032,7 @@ struct DetailView: View {
             Menu {
                 simklEditButton
                 Button { openLinks(from: "edit") } label: {
-                    Label("Tracking Links…", systemImage: "link")
+                    Label("detail.tracking_links", icon: "link")
                 }
             } label: { libraryEditButtonLabel }
         } else {
@@ -1034,7 +1040,7 @@ struct DetailView: View {
                 if isLoadingEntry {
                     ProgressView().scaleEffect(0.8)
                 } else {
-                    Image(systemName: "link.badge.plus").font(.system(size: 17, weight: .medium))
+                    IconView("link.badge.plus").font(.system(size: 17, weight: .medium))
                 }
             }
         }
@@ -1124,7 +1130,7 @@ struct DetailView: View {
         if isLoadingEntry {
             ProgressView().scaleEffect(0.8)
         } else {
-            Image(systemName: "pencil.circle")
+            IconView("pencil.circle")
                 .font(.system(size: 17, weight: .medium))
                 .foregroundStyle(.primary)
         }
@@ -1179,6 +1185,7 @@ struct DetailView: View {
                 CachedAsyncImage(urlString: posterURL)
                     .frame(width: 110, height: 165)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .glassChrome(RoundedRectangle(cornerRadius: 12), enabled: true, off: Color.clear)
                     .shadow(color: .black.opacity(0.5), radius: 14, y: 6)
                     .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(Color.white.opacity(0.08), lineWidth: 0.5))
                     .expandablePoster {
@@ -1301,9 +1308,9 @@ struct DetailView: View {
 
     @ViewBuilder
     private var tabSelector: some View {
-        Picker("Section", selection: $selectedTab) {
-            Text("Episodes").tag(0)
-            Text("Relations").tag(1)
+        Picker("detail.section", selection: $selectedTab) {
+            Text("common.episodes").tag(0)
+            Text("detail.relations").tag(1)
         }
         .pickerStyle(.segmented)
         .padding(.horizontal, 16)
@@ -1346,7 +1353,7 @@ struct DetailView: View {
             } else if vm.isLoadingAniListMedia {
                 VStack(spacing: 12) {
                     ProgressView()
-                    Text("Loading relations…")
+                    Text("detail.loading_relations")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -1355,7 +1362,7 @@ struct DetailView: View {
             } else if vm.isMatchingAniList {
                 VStack(spacing: 12) {
                     ProgressView()
-                    Text("Searching AniList...")
+                    Text("detail.searching_anilist")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -1365,16 +1372,16 @@ struct DetailView: View {
                 // Linked, with nothing related: a film or a one-off. It used to fall through to
                 // "Not linked", as if no relations meant no link.
                 VStack(spacing: 8) {
-                    Image(systemName: "checkmark.seal")
+                    IconView("checkmark.seal")
                         .font(.largeTitle)
                         .foregroundStyle(.secondary.opacity(0.5))
-                    Text("No related entries")
+                    Text("detail.no_related_entries")
                         .font(.subheadline.weight(.semibold))
-                    Text("This title is linked to AniList and has no sequels, prequels or side stories.")
+                    Text("detail.this_title_is_linked_to")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
-                    Button("Change Link") { openLinks(from: "linkButton") }
+                    Button("detail.change_link") { openLinks(from: "linkButton") }
                         .font(.caption.weight(.semibold))
                         .padding(.top, 4)
                         .zoomSource("linkButton", in: sheetZoom, cornerRadius: 20)
@@ -1388,14 +1395,14 @@ struct DetailView: View {
                 EmptyView()
             } else if watchOrder.isEmpty {
                 VStack(spacing: 16) {
-                    Image(systemName: "link.badge.plus")
+                    IconView("link.badge.plus")
                         .font(.largeTitle)
                         .foregroundStyle(.secondary.opacity(0.5))
 
                     VStack(spacing: 4) {
-                        Text("Not linked to AniList")
+                        Text("detail.not_linked_to_anilist")
                             .font(.subheadline.weight(.semibold))
-                        Text("Link this series to enable tracking and relations.")
+                        Text("detail.link_this_series_to_enable")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -1403,7 +1410,7 @@ struct DetailView: View {
                     Button {
                         openLinks(from: "linkButton")
                     } label: {
-                        Text("Link with AniList")
+                        Text("detail.link_with_anilist")
                             .font(.subheadline.weight(.bold))
                             .padding(.horizontal, 20)
                             .padding(.vertical, 10)
@@ -1422,13 +1429,13 @@ struct DetailView: View {
     @ViewBuilder
     private func errorView(_ error: String) -> some View {
         VStack(spacing: 15) {
-            Image(systemName: "exclamationmark.triangle.fill")
+            IconView("exclamationmark.triangle.fill")
                 .font(.largeTitle)
                 .foregroundStyle(.red)
             Text(error)
                 .font(.headline)
                 .multilineTextAlignment(.center)
-            Button("Retry") {
+            Button("common.retry") {
                 vm.load(item: item)
             }
             .buttonStyle(.bordered)
@@ -1468,7 +1475,7 @@ struct DetailView: View {
     private func synopsisSection(detail: MediaDetail) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 10) {
-                Text("Synopsis")
+                Text("detail.synopsis")
                     .font(.title3.weight(.bold))
             }
             .padding(.horizontal, 16)
@@ -1549,8 +1556,8 @@ struct DetailView: View {
     /// set a flag nothing showed and did nothing.
     private func episodesSection(detail: MediaDetail) -> some View {
         episodeList(detail: detail)
-            .alert("Reset Progress", isPresented: $showResetConfirmation) {
-                Button("Reset", role: .destructive) {
+            .alert("detail.reset_progress", isPresented: $showResetConfirmation) {
+                Button("common.reset", role: .destructive) {
                     // Both the AniList id and the module's title: a download keeps the id, so
                     // resetting by module alone left downloaded episodes watched.
                     ContinueWatchingManager.shared.resetProgress(
@@ -1560,9 +1567,9 @@ struct DetailView: View {
                             aniListID: snap.aniListID, moduleId: snap.moduleId, mediaTitle: snap.mediaTitle)
                     }
                 }
-                Button("Cancel", role: .cancel) {}
+                Button("common.cancel", role: .cancel) {}
             } message: {
-                Text("This will clear all watched history and progress for \(detail.title).")
+                Text("detail.this_will_clear_all_watched \(detail.title)")
             }
     }
 
@@ -1587,7 +1594,7 @@ struct DetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .center) {
                 HStack(spacing: 8) {
-                    Text("Episodes")
+                    Text("common.episodes")
                         .font(.title3.weight(.bold))
                     #if !os(tvOS)
                     if !isSelectionMode {
@@ -1611,7 +1618,7 @@ struct DetailView: View {
                 Button {
                     isReversed.toggle()
                 } label: {
-                    Image(systemName: isReversed ? "arrow.down" : "arrow.up")
+                    IconView(isReversed ? "arrow.down" : "arrow.up")
                         .font(.system(size: 16, weight: .bold))
                         .foregroundStyle(.primary)
                         .frame(width: 42, height: 42)
@@ -1619,7 +1626,7 @@ struct DetailView: View {
                         .overlay(Circle().strokeBorder(Color.primary.opacity(0.15), lineWidth: 1))
                 }
                 .buttonStyle(.plain)
-                .help(isReversed ? "Newest episodes first — show oldest first" : "Oldest episodes first — show newest first")
+                .help(isReversed ? String(localized: "detail.newest_episodes_first_show_oldest") : String(localized: "detail.oldest_episodes_first_show_newest"))
                 .padding(.trailing, 4)
 
                 #if !os(tvOS)
@@ -1628,7 +1635,7 @@ struct DetailView: View {
                         Button {
                             showResetConfirmation = true
                         } label: {
-                            Image(systemName: "arrow.counterclockwise")
+                            IconView("arrow.counterclockwise")
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundStyle(.primary)
                                 .frame(width: 42, height: 42)
@@ -1643,7 +1650,7 @@ struct DetailView: View {
                     Button {
                         showResetConfirmation = true
                     } label: {
-                        Image(systemName: "arrow.counterclockwise")
+                        IconView("arrow.counterclockwise")
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(.primary)
                             .frame(width: 42, height: 42)
@@ -1674,13 +1681,13 @@ struct DetailView: View {
                                 } label: {
                                     Text("\(start)-\(end)")
                                     if selectedRangeIndex == index {
-                                        Image(systemName: "checkmark")
+                                        IconView("checkmark")
                                     }
                                 }
                             }
                         } label: {
                             HStack(spacing: 6) {
-                                Image(systemName: "list.number")
+                                IconView("list.number")
                                     .font(.subheadline)
                                 // Same clamp as the list, so the button never advertises a range
                                 // different from the episodes actually shown.
@@ -1691,7 +1698,7 @@ struct DetailView: View {
                                 let end = rangeIdx * 100 + shown.count
                                 Text("\(start)-\(end)")
                                     .font(.subheadline.weight(.medium))
-                                Image(systemName: "chevron.down")
+                                IconView("chevron.down")
                                     .font(.caption)
                             }
                             .padding(.horizontal, 16)
@@ -1718,19 +1725,19 @@ struct DetailView: View {
                                         selectedRangeIndex = 0
                                     }
                                 } label: {
-                                    Text("Season \(i + 1)")
+                                    Text("common.season \(i + 1)")
                                     if selectedSeason == i {
-                                        Image(systemName: "checkmark")
+                                        IconView("checkmark")
                                     }
                                 }
                             }
                         } label: {
                             HStack(spacing: 6) {
-                                Image(systemName: "tv")
+                                IconView("tv")
                                     .font(.subheadline)
-                                Text("Season \(selectedSeason + 1)")
+                                Text("common.season \(selectedSeason + 1)")
                                     .font(.subheadline.weight(.medium))
-                                Image(systemName: "chevron.down")
+                                IconView("chevron.down")
                                     .font(.caption)
                             }
                             .padding(.horizontal, 16)
@@ -1765,7 +1772,7 @@ struct DetailView: View {
                     
                     let allSelected = !selectableEpisodes.isEmpty && selectableEpisodes.allSatisfy { selectedEpisodeNumbers.contains(Int($0.number)) }
                     
-                    Button(allSelected ? "Deselect All" : "Select All") {
+                    Button(allSelected ? String(localized: "detail.deselect_all") : String(localized: "detail.select_all")) {
                         if allSelected {
                             selectableEpisodes.forEach { selectedEpisodeNumbers.remove(Int($0.number)) }
                         } else {
@@ -1798,7 +1805,7 @@ struct DetailView: View {
                                     selectedEpisodeNumbers.remove(it.episodeNumber)
                                 }
                             } label: {
-                                Label("Delete \(deleteCount)", systemImage: "trash.fill")
+                                Label("detail.delete \(deleteCount)", icon: "trash.fill")
                                     .font(.subheadline.weight(.bold))
                             }
                             .buttonStyle(.borderedProminent)
@@ -1811,12 +1818,12 @@ struct DetailView: View {
                                 batchDownloadZoomID = "batchDownload"
                                 showBatchDownloadPicker = true
                             } label: {
-                                Label("Download \(downloadCount)", systemImage: "arrow.down.circle.fill")
+                                Label("detail.download \(downloadCount)", icon: "arrow.down.circle.fill")
                                     .font(.subheadline.weight(.bold))
                                     .foregroundStyle(platformBackground)
                             }
                             .buttonStyle(.borderedProminent)
-                            .tint(.primary)
+                            .appTint()
                             .controlSize(.small)
                             .clipShape(Capsule())
                             .zoomSource("batchDownload", in: sheetZoom, cornerRadius: 16)
@@ -1847,7 +1854,7 @@ struct DetailView: View {
                 .padding(.horizontal, 16)
                 .shimmer()
             } else if detail.episodes.isEmpty {
-                Text("No episodes found.")
+                Text("detail.no_episodes_found")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .padding(.horizontal, 16)
@@ -1960,7 +1967,7 @@ struct DetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .center) {
                 HStack(spacing: 8) {
-                    Text("Downloaded Episodes").font(.title3.weight(.bold))
+                    Text("detail.downloaded_episodes").font(.title3.weight(.bold))
                     Text("\(completed.count)")
                         .font(.caption.weight(.bold))
                         .foregroundStyle(platformBackground)
@@ -1970,7 +1977,7 @@ struct DetailView: View {
                 Spacer()
 
                 Button { isReversed.toggle() } label: {
-                    Image(systemName: isReversed ? "arrow.down" : "arrow.up")
+                    IconView(isReversed ? "arrow.down" : "arrow.up")
                         .font(.system(size: 16, weight: .bold))
                         .foregroundStyle(.primary)
                         .frame(width: 42, height: 42)
@@ -1978,7 +1985,7 @@ struct DetailView: View {
                         .overlay(Circle().strokeBorder(Color.primary.opacity(0.15), lineWidth: 1))
                 }
                 .buttonStyle(.plain)
-                .help(isReversed ? "Newest episodes first — show oldest first" : "Oldest episodes first — show newest first")
+                .help(isReversed ? String(localized: "detail.newest_episodes_first_show_oldest") : String(localized: "detail.oldest_episodes_first_show_newest"))
                 .padding(.trailing, 4)
 
                 if continueWatching.hasProgress(
@@ -1987,7 +1994,7 @@ struct DetailView: View {
                     mediaTitle: snapshot.mediaTitle
                 ) {
                     Button { showResetConfirmation = true } label: {
-                        Image(systemName: "arrow.counterclockwise")
+                        IconView("arrow.counterclockwise")
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(.primary)
                             .frame(width: 42, height: 42)
@@ -2005,7 +2012,7 @@ struct DetailView: View {
             if isSelectionMode && !sorted.isEmpty {
                 let allSelected = sorted.allSatisfy { selectedEpisodeNumbers.contains($0.episodeNumber) }
                 HStack(spacing: 8) {
-                    Button(allSelected ? "Deselect All" : "Select All") {
+                    Button(allSelected ? String(localized: "detail.deselect_all") : String(localized: "detail.select_all")) {
                         if allSelected {
                             sorted.forEach { selectedEpisodeNumbers.remove($0.episodeNumber) }
                         } else {
@@ -2029,7 +2036,7 @@ struct DetailView: View {
                                 selectedEpisodeNumbers.remove(it.episodeNumber)
                             }
                         } label: {
-                            Label("Delete \(selectedItems.count)", systemImage: "trash.fill")
+                            Label("detail.delete \(selectedItems.count)", icon: "trash.fill")
                                 .font(.subheadline.weight(.bold))
                         }
                         .buttonStyle(.borderedProminent)
@@ -2044,8 +2051,8 @@ struct DetailView: View {
 
             if completed.isEmpty {
                 VStack(spacing: 12) {
-                    Image(systemName: "folder.badge.minus").font(.system(size: 48)).foregroundStyle(.secondary)
-                    Text("No downloaded episodes left").font(.headline).foregroundStyle(.secondary)
+                    IconView("folder.badge.minus").font(.system(size: 48)).foregroundStyle(.secondary)
+                    Text("detail.no_downloaded_episodes_left").font(.headline).foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity).padding(.top, 40)
             } else {
@@ -2105,19 +2112,19 @@ struct DetailView: View {
             }
         }
         .alert(
-            "Update tracking progress?",
+            String(localized: "detail.update_tracking_progress"),
             isPresented: Binding(get: { offlineDowngrade != nil }, set: { if !$0 { offlineDowngrade = nil } }),
             presenting: offlineDowngrade
         ) { d in
-            Button("Update everywhere (ep \(d.newProgress))") {
+            Button("detail.update_everywhere_ep \(d.newProgress)") {
                 Task { await d.confirm(); offlineDowngrade = nil }
             }
-            Button("This device only") { d.localOnly(); offlineDowngrade = nil }
-            Button("Cancel", role: .cancel) { offlineDowngrade = nil }
+            Button("detail.this_device_only") { d.localOnly(); offlineDowngrade = nil }
+            Button("common.cancel", role: .cancel) { offlineDowngrade = nil }
         } message: { d in
             let parts = [
-                d.anilistFrom.map { "AniList: \($0) → \(d.newProgress)" },
-                d.malFrom.map { "MAL: \($0) → \(d.newProgress)" }
+                d.anilistFrom.map { String(localized: "detail.anilist \($0) \(d.newProgress)") },
+                d.malFrom.map { String(localized: "detail.mal \($0) \(d.newProgress)") }
             ].compactMap { $0 }
             Text(parts.joined(separator: "\n"))
         }
@@ -2229,7 +2236,7 @@ struct DetailView: View {
     /// next download past episodes that weren't downloaded but could stream.
     static func nextDownloadLoader(after item: DownloadItem, online: WatchNextLoader? = nil) -> WatchNextLoader {
         { currentNumber in
-            func downloaded(_ wanted: (Int) -> Bool) async -> (streams: [StreamResult], episodeNumber: Int, episodeHref: String?)? {
+            func downloaded(_ wanted: @escaping @Sendable (Int) -> Bool) async -> (streams: [StreamResult], episodeNumber: Int, episodeHref: String?)? {
                 let next = await MainActor.run { () -> DownloadItem? in
                     DownloadManager.shared.items
                         .filter {
@@ -2483,19 +2490,19 @@ private struct ModuleEpisodeRowContainer: View {
             }
         }
         .alert(
-            "Update tracking progress?",
+            String(localized: "detail.update_tracking_progress"),
             isPresented: Binding(get: { pendingDowngrade != nil }, set: { if !$0 { pendingDowngrade = nil } }),
             presenting: pendingDowngrade
         ) { d in
-            Button("Update everywhere (ep \(d.newProgress))") {
+            Button("detail.update_everywhere_ep \(d.newProgress)") {
                 Task { await d.confirm(); pendingDowngrade = nil }
             }
-            Button("This device only") { d.localOnly(); pendingDowngrade = nil }
-            Button("Cancel", role: .cancel) { pendingDowngrade = nil }
+            Button("detail.this_device_only") { d.localOnly(); pendingDowngrade = nil }
+            Button("common.cancel", role: .cancel) { pendingDowngrade = nil }
         } message: { d in
             let parts = [
-                d.anilistFrom.map { "AniList: \($0) → \(d.newProgress)" },
-                d.malFrom.map { "MAL: \($0) → \(d.newProgress)" }
+                d.anilistFrom.map { String(localized: "detail.anilist \($0) \(d.newProgress)") },
+                d.malFrom.map { String(localized: "detail.mal \($0) \(d.newProgress)") }
             ].compactMap { $0 }
             Text(parts.joined(separator: "\n"))
         }

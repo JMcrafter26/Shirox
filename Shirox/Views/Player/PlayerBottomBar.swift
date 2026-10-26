@@ -122,7 +122,7 @@ struct PlayerBottomBar: View {
     private var titleBlock: some View {
         VStack(alignment: .leading, spacing: 3) {
             if let ep = episodeNumber {
-                let epLine = tvdbEpisodeTitle.flatMap { $0.isEmpty ? nil : "EP\(ep): \($0)" } ?? "EP\(ep)"
+                let epLine = tvdbEpisodeTitle.flatMap { $0.isEmpty ? nil : String(localized: "player.ep \(ep) \($0)") } ?? String(localized: "common.ep \(ep)").uppercased()
                 Text(epLine)
                     .font(.system(size: isPad ? 16 : 14, weight: .semibold))
                     .foregroundStyle(.white.opacity(0.6))
@@ -140,7 +140,7 @@ struct PlayerBottomBar: View {
     private var skip85Button: some View {
         Button(action: onSkip85) {
             HStack(spacing: isPad ? 8 : 5) {
-                Image(systemName: "goforward")
+                IconView("goforward")
                     .font(.system(size: isPad ? 18 : 15, weight: .medium))
                 Text("\(skipLongAmount)s")
                     .font(isPad ? .body.weight(.semibold) : .subheadline.weight(.semibold))
@@ -190,7 +190,7 @@ struct PlayerBottomBar: View {
         HStack(spacing: 0) {
             if shown.contains(.source), let sourceMenuItems {
                 PlayerMenuButton(
-                    menuTitle: "Source",
+                    menuTitle: String(localized: "modules.source"),
                     label: .symbol("list.bullet", size: iconSize, weight: .medium),
                     items: sourceMenuItems,
                     onOpen: onMenuOpen
@@ -200,7 +200,7 @@ struct PlayerBottomBar: View {
             }
             if shown.contains(.quality), let qualityMenuItems {
                 PlayerMenuButton(
-                    menuTitle: "Quality",
+                    menuTitle: String(localized: "player.quality"),
                     label: .symbol("4k.tv", size: iconSize, weight: .medium),
                     items: qualityMenuItems,
                     onOpen: onMenuOpen
@@ -210,7 +210,7 @@ struct PlayerBottomBar: View {
             }
             if shown.contains(.audio), let audioMenuItems {
                 PlayerMenuButton(
-                    menuTitle: "Audio",
+                    menuTitle: String(localized: "shared.audio"),
                     label: .symbol("waveform", size: iconSize, weight: .medium),
                     items: audioMenuItems,
                     onOpen: onMenuOpen
@@ -220,7 +220,7 @@ struct PlayerBottomBar: View {
             }
             if shown.contains(.subtitles), let subtitleMenu {
                 PlayerMenuButton(
-                    menuTitle: "Subtitles",
+                    menuTitle: String(localized: "settings.subtitles"),
                     label: .symbol("captions.bubble.fill", size: iconSize, weight: .medium),
                     elements: subtitleMenu,
                     onOpen: onMenuOpen
@@ -230,7 +230,7 @@ struct PlayerBottomBar: View {
             }
             if shown.contains(.fill) {
                 Button(action: onFillTap) {
-                    Image(systemName: isFilled ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
+                    IconView(isFilled ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")
                         .font(.system(size: iconSize - 1, weight: .medium))
                         .foregroundStyle(.white)
                         .frame(width: buttonWidth, height: height)
@@ -239,7 +239,7 @@ struct PlayerBottomBar: View {
             }
             if shown.contains(.speed) {
                 PlayerMenuButton(
-                    menuTitle: "Playback Speed",
+                    menuTitle: String(localized: "player.playback_speed"),
                     label: .text(speedLabel, size: isPad ? 17 : 15, weight: .semibold),
                     items: speedMenuItems,
                     onOpen: onMenuOpen
@@ -250,7 +250,7 @@ struct PlayerBottomBar: View {
             }
             if shown.contains(.nextEpisode), let onNextEpisodeTap {
                 Button(action: onNextEpisodeTap) {
-                    Image(systemName: "forward.end.fill")
+                    IconView("forward.end.fill")
                         .font(.system(size: iconSize, weight: .medium))
                         .foregroundStyle(.white)
                         .frame(width: buttonWidth, height: height)
@@ -274,7 +274,7 @@ struct PlayerBottomBar: View {
 
     /// Full label for a speed menu row (e.g. "Normal (1×)", "1.25×").
     private func speedMenuLabel(_ speed: Float) -> String {
-        speed == 1.0 ? "Normal (1×)" : Self.speedText(speed) + "×"
+        speed == 1.0 ? String(localized: "player.normal_speed") : Self.speedText(speed) + "×"
     }
 
     /// "1", "0.75", "1.25": every digit the speed has. "%.2g" made 1.25 read "1.2".
@@ -306,7 +306,7 @@ struct PlayerBottomBar_Previews: PreviewProvider {
                 )
             }
         }
-        .previewDisplayName("Default")
+        .previewDisplayName(String(localized: "settings.default"))
 
         ZStack {
             Color.black.ignoresSafeArea()
@@ -323,6 +323,6 @@ struct PlayerBottomBar_Previews: PreviewProvider {
                 )
             }
         }
-        .previewDisplayName("With Subtitles & Speed")
+        .previewDisplayName(String(localized: "player.with_subtitles_and_speed"))
     }
 }

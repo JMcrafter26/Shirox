@@ -75,12 +75,12 @@ enum SeanimeInstallError: LocalizedError, Equatable {
 
     var errorDescription: String? {
         switch self {
-        case .unsupportedType: return "Shirox runs Seanime manga and streaming providers only."
-        case .noScript: return "This Seanime provider has no script to install."
+        case .unsupportedType: return String(localized: "shared.shirox_runs_seanime_manga_and")
+        case .noScript: return String(localized: "shared.this_seanime_provider_has_no")
         case .unsupportedHelpers(let names):
-            return "This provider needs \(ListFormatter.localizedString(byJoining: names)), which Shirox doesn't support."
-        case .typeScriptFailed: return "Shirox couldn't convert this provider's TypeScript."
-        case .noProvider: return "This script doesn't define a Seanime provider."
+            return String(localized: "shared.this_provider_needs_which_shirox \(ListFormatter.localizedString(byJoining: names))")
+        case .typeScriptFailed: return String(localized: "shared.shirox_couldnt_convert_this_providers")
+        case .noProvider: return String(localized: "shared.this_script_doesnt_define_a")
         }
     }
 }

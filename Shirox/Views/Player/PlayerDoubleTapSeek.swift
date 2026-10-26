@@ -50,7 +50,7 @@ struct PlayerDoubleTapSeek: View {
         ZStack {
             if showing {
                 VStack(spacing: 6) {
-                    Image(systemName: isLeft ? "chevron.left.2" : "chevron.right.2")
+                    IconView(isLeft ? "chevron.left.2" : "chevron.right.2")
                         .font(.system(size: 26, weight: .bold))
                     Text(isLeft ? "-\(Int(seekAmount))s" : "+\(Int(seekAmount))s")
                         .font(.subheadline.weight(.semibold))

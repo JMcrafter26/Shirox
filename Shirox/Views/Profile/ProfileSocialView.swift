@@ -27,9 +27,9 @@ struct ProfileSocialView: View {
             }
 
             if !isMAL {
-                Picker("Social", selection: $selectedSocial) {
-                    Text("Followers").tag(ProfileViewModel.SocialType.followers)
-                    Text("Following").tag(ProfileViewModel.SocialType.following)
+                Picker("profile.social", selection: $selectedSocial) {
+                    Text("profile.followers").tag(ProfileViewModel.SocialType.followers)
+                    Text("common.following").tag(ProfileViewModel.SocialType.following)
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal, 4)
@@ -52,9 +52,9 @@ struct ProfileSocialView: View {
                     .listRowBackground(Color.clear)
             } else if users.isEmpty {
                 ContentUnavailableView {
-                    Label("No Users", systemImage: "person.2")
+                    Label("profile.no_users", icon: "person.2")
                 } description: {
-                    Text(isMAL ? "No friends yet." : (selectedSocial == .followers ? "No followers yet." : "Not following anyone yet."))
+                    Text(isMAL ? String(localized: "profile.no_friends_yet") : (selectedSocial == .followers ? String(localized: "profile.no_followers_yet") : String(localized: "profile.not_following_anyone_yet")))
                 }
                 #if !os(tvOS)
                 .listRowSeparator(.hidden)
@@ -75,7 +75,7 @@ struct ProfileSocialView: View {
                                 .font(.subheadline.weight(.semibold))
                             Spacer()
                             if !isMAL {
-                                Image(systemName: "chevron.right")
+                                IconView("chevron.right")
                                     .font(.caption2)
                                     .foregroundStyle(.tertiary)
                             }
@@ -96,7 +96,7 @@ struct ProfileSocialView: View {
                             if vm.isLoadingSocial {
                                 ProgressView().controlSize(.small)
                             } else {
-                                Text("Load More").font(.subheadline.weight(.medium))
+                                Text("profile.load_more").font(.subheadline.weight(.medium))
                             }
                             Spacer()
                         }
@@ -111,7 +111,7 @@ struct ProfileSocialView: View {
         .circleRefreshable { await vm.loadSocial(userId: userId, type: selectedSocial) }
         .task { await vm.loadSocial(userId: userId, type: selectedSocial) }
         .adaptiveSheet(item: $targetUserId) { uid in
-            ProfileView(userId: uid, username: targetUsername ?? "Profile", avatarURL: nil)
+            ProfileView(userId: uid, username: targetUsername ?? String(localized: "common.profile"), avatarURL: nil)
         }
     }
 }

@@ -104,6 +104,12 @@ struct MacMangaReaderView: View {
         !ReaderTapZone.rightIsForward(mode: mode, reversed: controlsReversed)
     }
     private var chapter: MangaChapter? { context.chapters.indices.contains(chapterIndex) ? context.chapters[chapterIndex] : nil }
+
+    /// The manga and chapter open, as the Discord status.
+    private func showOnDiscord() {
+        DiscordPresence.shared.updateManga(title: context.mangaTitle, chapter: chapter?.displayName,
+                                           volume: nil, coverURL: context.coverImage)
+    }
     private var hasPrevious: Bool { chapterIndex > 0 }
     private var hasNext: Bool { chapterIndex + 1 < context.chapters.count }
 
@@ -138,7 +144,10 @@ struct MacMangaReaderView: View {
         }
         .onChangeOf(chromeVisible) { cover.setWindowButtonsVisible($0) }
         .onChangeOf(autoScrollSpeed) { autoScroller.speed = $0 }
+        .onAppear { showOnDiscord() }
+        .onChangeOf(chapterIndex) { showOnDiscord() }
         .onDisappear {
+            DiscordPresence.shared.clear()
             stopAutoScroll()
             cover.setWindowButtonsVisible(true)
             save()
@@ -179,7 +188,7 @@ struct MacMangaReaderView: View {
                 Color.clear.frame(width: 62, height: 1)
             }
             Button { MacReaderWindowManager.shared.close() } label: {
-                Image(systemName: "xmark")
+                IconView("xmark")
                     .font(.system(size: 12, weight: .bold))
                     .foregroundStyle(.white)
                     .frame(width: 30, height: 30)
@@ -187,7 +196,7 @@ struct MacMangaReaderView: View {
                     .contentShape(Circle())
             }
             .buttonStyle(.plain)
-            .help("Close (Esc)")
+            .help("player.close_esc")
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(context.mangaTitle)
@@ -196,8 +205,8 @@ struct MacMangaReaderView: View {
                     .lineLimit(1)
                 // NSMenus, as the player's: a SwiftUI menu on a Mac flattens its label, glass and all.
                 PlayerMenuButton(
-                    menuTitle: "Chapters",
-                    label: .text("\(chapter?.displayName ?? "Chapter") ▾", size: 11, weight: .medium),
+                    menuTitle: String(localized: "detail.chapters_menu"),
+                    label: .text((chapter?.displayName ?? String(localized: "reader.chapter")) + " ▾", size: 11, weight: .medium),
                     items: {
                         context.chapters.indices.reversed().map { index in
                             PlayerMenuItem(title: context.chapters[index].displayName,
@@ -207,7 +216,7 @@ struct MacMangaReaderView: View {
                 )
                 .fixedSize()
                 .opacity(0.8)
-                .help("Chapters")
+                .help("detail.chapters_menu")
             }
 
             Spacer(minLength: 12)
@@ -227,29 +236,29 @@ struct MacMangaReaderView: View {
 
     private var settingsMenu: some View {
         PlayerMenuButton(
-            menuTitle: "Reader Settings",
+            menuTitle: String(localized: "reader.reader_settings"),
             label: .symbol("book", size: 13, weight: .semibold),
             elements: {
                 var elements: [PlayerMenuElement] = [
-                    .section("Reading Mode", MangaReadingMode.allCases.map { option in
+                    .section(String(localized: "reader.reading_mode"), MangaReadingMode.allCases.map { option in
                         .item(PlayerMenuItem(title: option.label, isOn: option == mode) { modeRaw = option.rawValue })
                     }),
                 ]
                 var clicks: [PlayerMenuElement] = [
-                    .item(PlayerMenuItem(title: mode == .vertical ? "Click Sides to Scroll" : "Click Sides to Turn",
+                    .item(PlayerMenuItem(title: mode == .vertical ? String(localized: "reader.click_sides_to_scroll") : String(localized: "reader.click_sides_to_turn"),
                                          isOn: tapZones) { tapZones.toggle() }),
                 ]
                 // Reversed only in vertical mode: paged, a forward turn read as going back.
                 if mode == .vertical {
-                    clicks.append(.item(PlayerMenuItem(title: "Reverse Direction", isOn: tapZonesReversed) {
+                    clicks.append(.item(PlayerMenuItem(title: String(localized: "reader.reverse_direction"), isOn: tapZonesReversed) {
                         tapZonesReversed.toggle()
                     }))
                 }
-                elements.append(.section("Click Zones", clicks))
+                elements.append(.section(String(localized: "reader.click_zones"), clicks))
                 if mode == .vertical {
-                    elements.append(.section("Page Width", [
-                        .item(PlayerMenuItem(title: "Wider Pages (⌘+)") { pageWidth = min(1600, pageWidth + 80) }),
-                        .item(PlayerMenuItem(title: "Narrower Pages (⌘−)") { pageWidth = max(420, pageWidth - 80) }),
+                    elements.append(.section(String(localized: "reader.page_width"), [
+                        .item(PlayerMenuItem(title: String(localized: "reader.wider_pages")) { pageWidth = min(1600, pageWidth + 80) }),
+                        .item(PlayerMenuItem(title: String(localized: "reader.narrower_pages")) { pageWidth = max(420, pageWidth - 80) }),
                     ]))
                 }
                 return elements
@@ -257,19 +266,19 @@ struct MacMangaReaderView: View {
         )
         .frame(width: 30, height: 30)
         .readerGlass(Circle(), enabled: readerLiquidGlass)
-        .help("Reader Settings")
+        .help("reader.reader_settings")
     }
 
     private var bottomBar: some View {
         VStack(spacing: 8) {
             if isAutoScrolling {
                 HStack(spacing: 10) {
-                    Image(systemName: "tortoise.fill")
+                    IconView("tortoise.fill")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.white.opacity(0.7))
                     Slider(value: $autoScrollSpeed, in: 30...600)
                         .tint(.white)
-                    Image(systemName: "hare.fill")
+                    IconView("hare.fill")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(.white.opacity(0.7))
                 }
@@ -327,7 +336,7 @@ struct MacMangaReaderView: View {
     private func chapterButton(previous: Bool) -> some View {
         let enabled = previous ? hasPrevious : hasNext
         return Button { go(to: chapterIndex + (previous ? -1 : 1)) } label: {
-            Image(systemName: previous ? "backward.end.fill" : "forward.end.fill")
+            IconView(previous ? "backward.end.fill" : "forward.end.fill")
                 .font(.system(size: 14, weight: .semibold))
                 .scaleEffect(x: controlsReversed ? -1 : 1, y: 1)
                 .foregroundStyle(.white.opacity(enabled ? 1 : 0.3))
@@ -337,12 +346,12 @@ struct MacMangaReaderView: View {
         }
         .buttonStyle(.plain)
         .disabled(!enabled)
-        .help(previous ? "Previous Chapter" : "Next Chapter")
+        .help(previous ? String(localized: "reader.previous_chapter") : String(localized: "reader.next_chapter"))
     }
 
     private var autoScrollButton: some View {
         Button { toggleAutoScroll() } label: {
-            Image(systemName: isAutoScrolling ? "pause.fill" : "play.fill")
+            IconView(isAutoScrolling ? "pause.fill" : "play.fill")
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(isAutoScrolling ? .black : .white)
                 .frame(width: 36, height: 36)
@@ -350,7 +359,7 @@ struct MacMangaReaderView: View {
                 .contentShape(Circle())
         }
         .buttonStyle(.plain)
-        .help(isAutoScrolling ? "Stop Auto-Scroll" : "Auto-Scroll")
+        .help(isAutoScrolling ? String(localized: "reader.stop_auto_scroll") : String(localized: "reader.auto_scroll"))
     }
 
     // MARK: Pages
@@ -551,11 +560,11 @@ struct MacMangaReaderView: View {
 
     private var chapterEnd: some View {
         VStack(spacing: 14) {
-            Text("End of \(chapter?.displayName ?? "chapter")")
+            (chapter.map { Text("reader.end_of \($0.displayName)") } ?? Text("reader.end_of_chapter"))
                 .font(.headline)
                 .foregroundStyle(.secondary)
             if hasNext {
-                Button("Next Chapter: \(context.chapters[chapterIndex + 1].displayName)") { go(to: chapterIndex + 1) }
+                Button("reader.next_chapter_named \(context.chapters[chapterIndex + 1].displayName)") { go(to: chapterIndex + 1) }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
             }
@@ -567,9 +576,9 @@ struct MacMangaReaderView: View {
 
     private func failure(_ message: String) -> some View {
         VStack(spacing: 12) {
-            Image(systemName: "exclamationmark.triangle").font(.largeTitle).foregroundStyle(.secondary)
+            IconView("exclamationmark.triangle").font(.largeTitle).foregroundStyle(.secondary)
             Text(message).foregroundStyle(.secondary)
-            Button("Try Again") { Task { await load() } }
+            Button("library.try_again") { Task { await load() } }
         }
     }
 
@@ -586,7 +595,7 @@ struct MacMangaReaderView: View {
 
     private func load() async {
         guard let chapter else {
-            loadError = "No chapters found"
+            loadError = String(localized: "common.no_chapters_found")
             isLoading = false
             return
         }
@@ -605,7 +614,7 @@ struct MacMangaReaderView: View {
             }
             guard !Task.isCancelled else { return }
             if result.isEmpty {
-                loadError = "No pages found"
+                loadError = String(localized: "reader.no_pages_found")
             } else {
                 pages = result
                 topPage = min(pendingResume ?? 0, result.count - 1)
@@ -741,8 +750,8 @@ private struct MacReaderPage: View {
                         Color.white.opacity(0.04)
                         if failed {
                             VStack(spacing: 6) {
-                                Text("Page \(pageNumber) didn't load").foregroundStyle(.secondary)
-                                Button("Try Again") { failed = false; failures = 0; attempt += 1 }
+                                Text("reader.page_didnt_load \(pageNumber)").foregroundStyle(.secondary)
+                                Button("library.try_again") { failed = false; failures = 0; attempt += 1 }
                             }
                         } else {
                             ProgressView()
@@ -753,8 +762,8 @@ private struct MacReaderPage: View {
                 .resizable()
                 .scaledToFit()
                 .contextMenu {
-                    Button("Save Page to Pictures") { save() }
-                    Button("Copy Page") { copy() }
+                    Button("reader.save_page_to_pictures") { save() }
+                    Button("reader.copy_page") { copy() }
                 }
                 // A String, so it can't collide with the strip's Int page ids the keys scroll to.
                 .id("\(urlString)#\(attempt)")
@@ -787,7 +796,7 @@ private struct MacReaderPage: View {
         guard let data = originalData(),
               let source = CGImageSourceCreateWithData(data as CFData, nil),
               let type = CGImageSourceGetType(source).flatMap({ UTType($0 as String) }) else {
-            ToastManager.shared.show(message: "This page hasn't loaded yet.", type: .error)
+            ToastManager.shared.show(message: String(localized: "reader.this_page_hasnt_loaded_yet"), type: .error)
             return
         }
         let folder = FileManager.default.urls(for: .picturesDirectory, in: .userDomainMask)[0]
@@ -799,15 +808,15 @@ private struct MacReaderPage: View {
         do {
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
             try data.write(to: file)
-            ToastManager.shared.show(message: "Page saved to Pictures › Shirox", type: .success)
+            ToastManager.shared.show(message: String(localized: "reader.page_saved_to_pictures_shirox"), type: .success)
         } catch {
-            ToastManager.shared.show(message: "Couldn't save page: \(error.localizedDescription)", type: .error)
+            ToastManager.shared.show(message: String(localized: "reader.couldnt_save_page \(error.localizedDescription)"), type: .error)
         }
     }
 
     private func copy() {
         guard let data = originalData(), let image = NSImage(data: data) else {
-            ToastManager.shared.show(message: "This page hasn't loaded yet.", type: .error)
+            ToastManager.shared.show(message: String(localized: "reader.this_page_hasnt_loaded_yet"), type: .error)
             return
         }
         NSPasteboard.general.clearContents()

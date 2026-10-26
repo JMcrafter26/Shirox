@@ -69,7 +69,7 @@ struct LibrarySourceSwitcher: View {
     /// Short labels keep the pills compact; the icon identifies the service.
     private func title(for source: LibrarySource) -> String {
         switch source {
-        case .local:              return "My Library"
+        case .local:              return String(localized: "common.my_library")
         case .simkl:              return ProviderType.simkl.displayName
         case .provider(.mal):     return "MAL"
         case .provider(let type): return type.displayName
@@ -80,7 +80,7 @@ struct LibrarySourceSwitcher: View {
     private func icon(for source: LibrarySource) -> some View {
         switch source {
         case .local:
-            Image(systemName: "books.vertical.fill")
+            IconView("books.vertical.fill")
                 .font(.system(size: 13, weight: .semibold))
                 .frame(width: 16, height: 16)
         case .simkl:

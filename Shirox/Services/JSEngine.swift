@@ -288,7 +288,7 @@ final class JSEngine: ObservableObject {
                             httpResponse = recovered.response
                             responseText = Self.bodyText(data)
                         } else {
-                            await CloudflareBypassManager.shared.flagPendingVerification(for: cfResponseURL)
+                            CloudflareBypassManager.shared.flagPendingVerification(for: cfResponseURL)
                         }
                     }
 
@@ -507,7 +507,7 @@ final class JSEngine: ObservableObject {
         }
 
         let catchBlock: @convention(block) (JSValue) -> Void = { error in
-            let msg = error.toString() ?? "Unknown JS error"
+            let msg = error.toString() ?? String(localized: "shared.unknown_js_error")
             DispatchQueue.main.async {
                 completion(.failure(JSEngineError.jsError(msg)))
             }
@@ -712,11 +712,11 @@ enum JSEngineError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .functionNotFound(let name): return "JS function '\(name)' not found in module"
-        case .nullResult: return "JS function returned null/undefined"
-        case .jsError(let msg): return "JS error: \(msg)"
-        case .parseError(let msg): return "Parse error: \(msg)"
-        case .timedOut(let name): return "Module function '\(name)' timed out"
+        case .functionNotFound(let name): return String(localized: "shared.js_function_not_found_in \(name)")
+        case .nullResult: return String(localized: "shared.js_function_returned_null_undefined")
+        case .jsError(let msg): return String(localized: "shared.js_error \(msg)")
+        case .parseError(let msg): return String(localized: "shared.parse_error \(msg)")
+        case .timedOut(let name): return String(localized: "shared.module_function_timed_out \(name)")
         }
     }
 }

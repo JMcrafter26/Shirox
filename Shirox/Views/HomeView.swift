@@ -29,7 +29,7 @@ struct HomeView: View {
 
     @State private var isRefreshing = false
     @State private var leadingInset: CGFloat = 0
-    @AppStorage(GooeyRefreshGeometry.settingKey) private var gooeyRefresh = true
+    @AppStorage(PullToRefreshStyle.key) private var refreshStyle = PullToRefreshStyle.defaultStyle
     @ObservedObject private var discovery = DiscoverySource.shared
     @StateObject private var simkl = SimklHomeViewModel()
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -145,19 +145,19 @@ struct HomeView: View {
                         }
                     } else {
                         if !vm.trending.isEmpty {
-                            AnimeSection(title: "Trending Now", items: vm.trending) { BrowseView(category: .trending) }
+                            AnimeSection(title: String(localized: "shared.trending_now"), items: vm.trending) { BrowseView(category: .trending) }
                         }
                         if !vm.seasonal.isEmpty {
-                            AnimeSection(title: "This Season", items: vm.seasonal) { BrowseView(category: .seasonal) }
+                            AnimeSection(title: String(localized: "shared.this_season"), items: vm.seasonal) { BrowseView(category: .seasonal) }
                         }
                         if !vm.lastSeason.isEmpty {
-                            AnimeSection(title: "Last Season · Complete", items: vm.lastSeason) { BrowseView(category: .lastSeason) }
+                            AnimeSection(title: String(localized: "shared.last_season_complete"), items: vm.lastSeason) { BrowseView(category: .lastSeason) }
                         }
                         if !vm.popular.isEmpty {
-                            AnimeSection(title: "All-Time Popular", items: vm.popular) { BrowseView(category: .popular) }
+                            AnimeSection(title: String(localized: "shared.all_time_popular"), items: vm.popular) { BrowseView(category: .popular) }
                         }
                         if !vm.topRated.isEmpty {
-                            AnimeSection(title: "Top Rated", items: vm.topRated) { BrowseView(category: .topRated) }
+                            AnimeSection(title: String(localized: "shared.top_rated"), items: vm.topRated) { BrowseView(category: .topRated) }
                         }
                     }
                 }
@@ -175,13 +175,13 @@ struct HomeView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if let error = emptyError {
                     ContentUnavailableView(
-                        "Couldn't Load",
+                        "common.couldnt_load",
                         systemImage: "wifi.slash",
                         description: Text(error)
                     )
                     .toolbar {
                         ToolbarItem(placement: .primaryAction) {
-                            Button("Retry") { Task { await reloadCurrent() } }
+                            Button("common.retry") { Task { await reloadCurrent() } }
                         }
                     }
                 } else if usesCinematicLayout {
@@ -205,8 +205,8 @@ struct HomeView: View {
                                     FeaturedCarousel(
                                         items: heroItems,
                                         isRefreshing: isRefreshing,
-                                        // With the drop off, the hero's own circle refreshes.
-                                        onRefresh: gooeyRefresh ? nil : heroRefresh,
+                                        // With the glass style, the hero's own circle refreshes.
+                                        onRefresh: refreshStyle == .glass ? heroRefresh : nil,
                                         leadingInset: leadingInset
                                     )
                                     .id(homePage)
@@ -328,6 +328,9 @@ private struct HomeToolbar: ViewModifier {
     @Binding var kind: MediaKind
     let openCalendar: () -> Void
 
+    @AppStorage(ProviderMenuStyle.key) private var providerMenuStyle = ProviderMenuStyle.iconAndName
+    private var showsProviderMenu: Bool { providerMenuStyle != .hidden }
+
     /// The leading edge of the navigation bar, named differently per platform.
     private static var leadingPlacement: ToolbarItemPlacement {
         #if os(iOS)
@@ -344,26 +347,21 @@ private struct HomeToolbar: ViewModifier {
         // launch ("failed to demangle witness … does not conform to protocol ToolbarContent").
         content.toolbar {
             ToolbarItem(placement: .navigation) {
-                Button(action: openCalendar) { Label("Upcoming", systemImage: "calendar") }
-                    .help("Upcoming episodes")
+                Button(action: openCalendar) { Label("shared.upcoming", icon: "calendar") }
+                    .help("home.upcoming_episodes")
             }
             if discovery.usesSimkl {
                 ToolbarItem(placement: .navigation) { SimklKindMenu(kind: $kind) }
             }
-            ToolbarItem(placement: .primaryAction) { ProviderMenuButton() }
-        }
-        #else
-        if #available(iOS 16, macOS 13, tvOS 16, *) {
-            // Left out, not left empty: from iOS 26 an empty item still draws its glass.
-            content.toolbar {
-                #if !os(iOS)
-                calendarItem
-                #endif
-                if discovery.usesSimkl {
-                    ToolbarItem(placement: Self.leadingPlacement) { kindMenu }
-                }
-                providerItem
+            if showsProviderMenu {
+                ToolbarItem(placement: .primaryAction) { ProviderMenuButton() }
             }
+        }
+        #elseif os(tvOS)
+        currentToolbar(content)
+        #else
+        if #available(iOS 16, *) {
+            currentToolbar(content)
         } else {
             // A bare `if` in a toolbar builder needs iOS 16; before it, the condition lives
             // inside the item.
@@ -374,15 +372,34 @@ private struct HomeToolbar: ViewModifier {
                 ToolbarItem(placement: Self.leadingPlacement) {
                     if discovery.usesSimkl { kindMenu }
                 }
-                providerItem
+                ToolbarItem(placement: .primaryAction) {
+                    if showsProviderMenu { ProviderMenuButton().toolbarItemBackdrop() }
+                }
             }
         }
         #endif
     }
 
+    /// Items that are there or not, which a toolbar builder can do from iOS 16.
+    @available(iOS 16, tvOS 16, *)
+    private func currentToolbar(_ content: Content) -> some View {
+        // Left out, not left empty: from iOS 26 an empty item still draws its glass.
+        content.toolbar {
+            #if !os(iOS)
+            calendarItem
+            #endif
+            if discovery.usesSimkl {
+                ToolbarItem(placement: Self.leadingPlacement) { kindMenu }
+            }
+            if showsProviderMenu {
+                providerItem
+            }
+        }
+    }
+
     private var calendarItem: some ToolbarContent {
         ToolbarItem(placement: Self.leadingPlacement) {
-            Button(action: openCalendar) { Image(systemName: "calendar") }
+            Button(action: openCalendar) { IconView("calendar") }
         }
     }
 
@@ -402,7 +419,7 @@ private struct CalendarButton: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: "calendar")
+            IconView("calendar")
                 .font(.system(size: 19, weight: .semibold))
                 .foregroundStyle(.primary)
                 .frame(width: 52, height: 52)
@@ -410,7 +427,7 @@ private struct CalendarButton: View {
                 .shadow(color: .black.opacity(0.18), radius: 10, y: 4)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Upcoming")
+        .accessibilityLabel("shared.upcoming")
     }
 }
 #endif
@@ -552,8 +569,8 @@ private struct FeaturedCarousel: View {
                                     MediaDestination(media: currentMedia)
                                 } label: {
                                     HStack(spacing: 6) {
-                                        Image(systemName: "play.fill").font(.footnote.weight(.semibold))
-                                        Text("Watch").fontWeight(.semibold)
+                                        IconView("play.fill").font(.footnote.weight(.semibold))
+                                        Text("home.watch").fontWeight(.semibold)
                                     }
                                     .foregroundStyle(platformBackground)
                                     .frame(width: 130, height: 42)
@@ -808,7 +825,7 @@ private struct MacFeaturedCarousel: View {
 
             HStack(spacing: 8) {
                 if let score = media.averageScore {
-                    Label("\(score)%", systemImage: "star.fill")
+                    Label("\(score)%", icon: "star.fill")
                         .font(.callout.weight(.semibold))
                         .foregroundStyle(.yellow)
                 }
@@ -833,7 +850,7 @@ private struct MacFeaturedCarousel: View {
             NavigationLink {
                 MediaDestination(media: media)
             } label: {
-                Label("Watch", systemImage: "play.fill")
+                Label("home.watch", icon: "play.fill")
                     .font(.body.weight(.semibold))
                     .foregroundStyle(.black)
                     .padding(.horizontal, 18)
@@ -848,16 +865,16 @@ private struct MacFeaturedCarousel: View {
 
     private var arrows: some View {
         HStack {
-            arrow("chevron.left", help: "Previous") { step(-1) }
+            arrow("chevron.left", help: String(localized: "home.previous")) { step(-1) }
             Spacer()
-            arrow("chevron.right", help: "Next") { step(1) }
+            arrow("chevron.right", help: String(localized: "home.next")) { step(1) }
         }
         .padding(.horizontal, 16)
     }
 
     private func arrow(_ symbol: String, help: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: symbol)
+            IconView(symbol)
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(.white)
                 .frame(width: 40, height: 40)
@@ -920,7 +937,7 @@ private struct MacHeroHeight: ViewModifier {
 private struct CinematicHome<Rows: View>: View {
     let items: [Media]
     var leadingInset: CGFloat = 0
-    var onRefresh: (@Sendable () async -> Void)? = nil
+    nonisolated var onRefresh: (@Sendable () async -> Void)? = nil
     @ViewBuilder let rows: () -> Rows
 
     @State private var currentIndex = 0
@@ -997,9 +1014,9 @@ private struct CinematicHome<Rows: View>: View {
                             MediaDestination(media: media)
                         } label: {
                             HStack(spacing: 10) {
-                                Image(systemName: "play.fill")
+                                IconView("play.fill")
                                     .font(.system(size: 13, weight: .bold))
-                                Text("Watch")
+                                Text("home.watch")
                                     .font(.system(size: 15, weight: .bold))
                             }
                             .foregroundStyle(Color.black)
@@ -1033,9 +1050,9 @@ private struct CinematicHome<Rows: View>: View {
 
             if displayItems.count > 1 {
                 HStack(spacing: 12) {
-                    pagerButton("chevron.left", help: "Previous") { step(-1) }
+                    pagerButton("chevron.left", help: String(localized: "home.previous")) { step(-1) }
                     PageIndicator(numberOfPages: displayItems.count, currentPage: currentIndex)
-                    pagerButton("chevron.right", help: "Next") { step(1) }
+                    pagerButton("chevron.right", help: String(localized: "home.next")) { step(1) }
                 }
                 .padding(.top, 4)
             }
@@ -1058,7 +1075,7 @@ private struct CinematicHome<Rows: View>: View {
 
     private func pagerButton(_ symbol: String, help: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: symbol)
+            IconView(symbol)
                 .font(.system(size: 13, weight: .bold))
                 .foregroundStyle(.white)
                 .frame(width: 32, height: 32)
@@ -1242,7 +1259,7 @@ private struct FeaturedCard: View {
 
             HStack(spacing: 8) {
                 if let score = media.averageScore {
-                    Label("\(score)%", systemImage: "star.fill")
+                    Label("\(score)%", icon: "star.fill")
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.yellow)
                         .lineLimit(1)
@@ -1304,9 +1321,9 @@ private struct AnimeSection<SeeAll: View>: View {
                     seeAll()
                 } label: {
                     HStack(spacing: 3) {
-                        Text("See all")
+                        Text("home.see_all")
                             .font(.subheadline.weight(.semibold))
-                        Image(systemName: "chevron.right")
+                        IconView("chevron.right")
                             .font(.caption.weight(.semibold))
                     }
                     .foregroundStyle(.primary)

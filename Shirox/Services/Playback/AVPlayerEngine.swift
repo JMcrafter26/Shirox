@@ -345,17 +345,24 @@ final class AVPlayerEngine: PlaybackEngine {
 
     func seek(to seconds: Double, precision: SeekPrecision, completion: ((Bool) -> Void)?) {
         let time = CMTime(seconds: seconds, preferredTimescale: 600)
+        // AVPlayer wants a Sendable handler; it calls it once the seek lands, as it always has.
+        let done = SeekCompletion(completion)
         switch precision {
         case .fast:
-            if let completion { player.seek(to: time, completionHandler: completion) } else { player.seek(to: time) }
+            if completion != nil { player.seek(to: time) { done.call($0) } } else { player.seek(to: time) }
         case .exact:
-            player.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero,
-                        completionHandler: completion ?? { _ in })
+            player.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero) { done.call($0) }
         case .within(let seconds):
             let tolerance = CMTime(seconds: seconds, preferredTimescale: 600)
-            player.seek(to: time, toleranceBefore: tolerance, toleranceAfter: tolerance,
-                        completionHandler: completion ?? { _ in })
+            player.seek(to: time, toleranceBefore: tolerance, toleranceAfter: tolerance) { done.call($0) }
         }
+    }
+
+    /// A seek's completion, handed to AVPlayer's `@Sendable` handler.
+    private struct SeekCompletion: @unchecked Sendable {
+        let handler: ((Bool) -> Void)?
+        init(_ handler: ((Bool) -> Void)?) { self.handler = handler }
+        func call(_ finished: Bool) { handler?(finished) }
     }
 
     func seek(to seconds: Double, precision: SeekPrecision) async {

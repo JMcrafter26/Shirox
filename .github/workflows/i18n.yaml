@@ -1,0 +1,26 @@
+name: Strings and icons
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check UI text and icons
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+
+      # Same check as .githooks/pre-commit: no hardcoded UI text, and every key has English.
+      - name: Check strings
+        run: python3 -I scripts/i18n/i18n.py check
+
+      # Every SF Symbol in the code is listed in iconpacks/icons.json, for icon packs.
+      - name: Check icons
+        run: python3 -I scripts/icons/icons.py check

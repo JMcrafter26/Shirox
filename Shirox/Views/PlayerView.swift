@@ -474,8 +474,8 @@ struct PlayerView: View {
         }
         .ignoresSafeArea()
         #if os(iOS)
-        .alert("Save Frame", isPresented: $showFrameSaveAlert) {
-            Button("OK", role: .cancel) { }
+        .alert("app.save_frame", isPresented: $showFrameSaveAlert) {
+            Button("common.ok", role: .cancel) { }
         } message: {
             Text(frameSaveMessage)
         }
@@ -853,6 +853,7 @@ struct PlayerView: View {
         .onChangeOf(subtitleSettings.enabled) { _ in applySubtitlesToMPV() }
         .onChangeOf(subtitleSettings.delaySeconds) { _ in applySubtitlesToMPV() }
         .onChangeOf(subtitleSettings.fontSize) { _ in applySubtitlesToMPV() }
+        .onChangeOf(subtitleSettings.fontFamily) { _ in applySubtitlesToMPV() }
         .sheet(isPresented: $showNextEpisodePicker, onDismiss: {
             nextEpisodeStreams = []
             nextEpisodeNumber = 0
@@ -988,7 +989,7 @@ struct PlayerView: View {
                     .font(.title3.weight(.semibold)).foregroundStyle(.white)
                     .multilineTextAlignment(.center).lineLimit(2)
                 if let ep = currentContext?.episodeNumber {
-                    Text("Episode \(ep)").font(.subheadline).foregroundStyle(.white.opacity(0.65))
+                    Text("common.episode \(ep)").font(.subheadline).foregroundStyle(.white.opacity(0.65))
                 }
 
                 ClockReader(clock: clock) { clock in
@@ -1007,7 +1008,7 @@ struct PlayerView: View {
                 .padding(.top, 8)
 
                 if isOpeningSlowly {
-                    Text("Still loading. This source is slow to start.")
+                    Text("player.still_loading_this_source_is")
                         .font(.caption).foregroundStyle(.white.opacity(0.6))
                         .multilineTextAlignment(.center)
                         .transition(.opacity)
@@ -1118,8 +1119,8 @@ struct PlayerView: View {
     private var speedBoostBadge: some View {
         VStack {
             HStack(spacing: 4) {
-                Image(systemName: "forward.fill").font(.system(size: 12, weight: .semibold))
-                Text("2× Speed").font(.caption.weight(.semibold))
+                IconView("forward.fill").font(.system(size: 12, weight: .semibold))
+                Text("player.2_speed").font(.caption.weight(.semibold))
             }
             .foregroundStyle(.white).padding(.horizontal, 12).padding(.vertical, 6)
             .mediaGlassChrome(Capsule(), enabled: playerLiquidGlass, off: .ultraThinMaterial)
@@ -1138,7 +1139,7 @@ struct PlayerView: View {
         let finish: @MainActor (PlatformImage?) -> Void = { image in
             guard let image, let tiff = image.tiffRepresentation,
                   let png = NSBitmapImageRep(data: tiff)?.representation(using: .png, properties: [:]) else {
-                ToastManager.shared.show(message: "The frame isn't available yet — try again while it plays.", type: .error)
+                ToastManager.shared.show(message: String(localized: "player.the_frame_isnt_available_yet"), type: .error)
                 return
             }
             let folder = FileManager.default.urls(for: .picturesDirectory, in: .userDomainMask)[0]
@@ -1150,9 +1151,9 @@ struct PlayerView: View {
                 try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
                 let file = folder.appendingPathComponent(name)
                 try png.write(to: file)
-                ToastManager.shared.show(message: "Frame saved to Pictures › Shirox", type: .success)
+                ToastManager.shared.show(message: String(localized: "player.frame_saved_to_pictures_shirox"), type: .success)
             } catch {
-                ToastManager.shared.show(message: "Couldn't save the frame: \(error.localizedDescription)", type: .error)
+                ToastManager.shared.show(message: String(localized: "player.couldnt_save_the_frame \(error.localizedDescription)"), type: .error)
             }
         }
         if let mpv = engine as? MPVEngine {
@@ -1174,7 +1175,7 @@ struct PlayerView: View {
 
     private func saveFrameImage(_ image: UIImage?) {
         guard let image else {
-            frameSaveMessage = "The current video frame is unavailable. Try again while the video is playing."
+            frameSaveMessage = String(localized: "player.the_current_video_frame_is")
             showFrameSaveAlert = true
             return
         }
@@ -1182,13 +1183,13 @@ struct PlayerView: View {
         PhotoLibrarySaver.save(image) { outcome in
             switch outcome {
             case .savedToAlbum:
-                frameSaveMessage = "Frame saved to the Shirox album in Photos."
+                frameSaveMessage = String(localized: "player.frame_saved_to_the_shirox")
             case .savedToLibrary:
-                frameSaveMessage = "Frame saved to Photos. Allow Full Access in Settings to use the Shirox album."
+                frameSaveMessage = String(localized: "player.frame_saved_to_photos_allow")
             case .denied:
-                frameSaveMessage = "Allow Photos access in Settings to save video frames."
+                frameSaveMessage = String(localized: "player.allow_photos_access_in_settings")
             case .failed(let error):
-                frameSaveMessage = "Could not save the frame: \(error.localizedDescription)"
+                frameSaveMessage = String(localized: "player.could_not_save_the_frame \(error.localizedDescription)")
             }
             showFrameSaveAlert = true
         }
@@ -1332,10 +1333,10 @@ struct PlayerView: View {
 
     private var videoInfoSubtitle: (name: String, source: String)? {
         if let id = shownEmbeddedSubtitle {
-            return (embeddedSubtitles.first { $0.id == id }?.title ?? "Track \(id)", "Embedded")
+            return (embeddedSubtitles.first { $0.id == id }?.title ?? String(localized: "shared.track \(id)"), String(localized: "player.embedded"))
         }
         if let track = shownSubtitleTrack {
-            return (track.title, track.url.isFileURL ? "File" : "Downloaded")
+            return (track.title, track.url.isFileURL ? String(localized: "modules.file") : String(localized: "player.downloaded"))
         }
         return nil
     }
@@ -1508,7 +1509,7 @@ struct PlayerView: View {
                 Button {
                     withAnimation(.easeInOut(duration: 0.2)) { isLocked = false }
                 } label: {
-                    Image(systemName: "lock.fill")
+                    IconView("lock.fill")
                         .font(.system(size: isPad ? 24 : 18, weight: .semibold))
                         .foregroundStyle(.white).padding(isPad ? 16 : 12)
                         .mediaGlassChrome(Circle(), enabled: playerLiquidGlass, off: .ultraThinMaterial)
@@ -1551,7 +1552,7 @@ struct PlayerView: View {
             VStack {
                 HStack {
                     Button(action: castManager.isConnected ? exitCastMode : handleDismiss) {
-                        Image(systemName: "xmark")
+                        IconView("xmark")
                             .font(.system(size: isPad ? 24 : 18, weight: .semibold)).foregroundStyle(.white)
                             .frame(width: isPad ? 56 : 44, height: isPad ? 56 : 44)
                             .mediaGlassChrome(Circle(), enabled: playerLiquidGlass, off: Color.white.opacity(0.25))
@@ -1582,16 +1583,16 @@ struct PlayerView: View {
                 .onTapGesture { }
 
             VStack(spacing: 16) {
-                Image(systemName: "wifi.exclamationmark")
+                IconView("wifi.exclamationmark")
                     .font(.system(size: 44, weight: .regular))
                     .foregroundStyle(.white.opacity(0.85))
-                Text("Playback stalled")
+                Text("player.playback_stalled")
                     .font(.headline).foregroundStyle(.white)
-                Text("Couldn't keep buffering this stream.")
+                Text("player.couldnt_keep_buffering_this_stream")
                     .font(.subheadline).foregroundStyle(.white.opacity(0.65))
                     .multilineTextAlignment(.center)
                 Button(action: manualStallRetry) {
-                    Text("Retry")
+                    Text("common.retry")
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.black)
                         .padding(.horizontal, 28).padding(.vertical, 10)
@@ -1607,7 +1608,7 @@ struct PlayerView: View {
             VStack {
                 HStack {
                     Button(action: handleDismiss) {
-                        Image(systemName: "xmark")
+                        IconView("xmark")
                             .font(.system(size: isPad ? 24 : 18, weight: .semibold))
                             .foregroundStyle(.white)
                             .frame(width: isPad ? 56 : 44, height: isPad ? 56 : 44)
@@ -1628,7 +1629,7 @@ struct PlayerView: View {
     @ViewBuilder
     private var loadingViewPlaceholder: some View {
         VStack(spacing: 20) {
-            Image(systemName: "play.circle")
+            IconView("play.circle")
                 .font(.system(size: 64)).foregroundStyle(.white.opacity(0.6))
                 .opacity(loadingOpacity)
                 .onAppear {
@@ -1636,7 +1637,7 @@ struct PlayerView: View {
                         loadingOpacity = 0.2
                     }
                 }
-            Text("Loading…").font(.subheadline).foregroundStyle(.white.opacity(0.5))
+            Text("common.loading").font(.subheadline).foregroundStyle(.white.opacity(0.5))
         }
     }
 
@@ -2171,7 +2172,7 @@ struct PlayerView: View {
                 let subtitles = withSubtitles ? airPlaySubtitleCues() : nil
                 let subtitlesID = subtitles.map {
                     CastProxyServer.shared.registerSubtitles(
-                        cues: $0.cues, name: selectedSubtitleTrack?.title ?? "Subtitles",
+                        cues: $0.cues, name: selectedSubtitleTrack?.title ?? String(localized: "settings.subtitles"),
                         duration: duration > 0 ? duration : ($0.cues.last?.end ?? 0) + 60)
                 }
                 if let proxied = CastProxyServer.shared.proxyURL(for: stream.url, playlistKey: stream.playlistKey,
@@ -2296,7 +2297,7 @@ struct PlayerView: View {
             scheduleHide()
             return
         }
-        guard let engine, duration > 0 else { return }
+        guard engine != nil, duration > 0 else { return }
         let newTime = min(max(currentTime + seconds, 0), duration)
         currentTime = newTime
         isScrubbing = true
@@ -2969,8 +2970,8 @@ struct PlayerView: View {
         let epTitle = tvdbEpisodeTitle ?? currentContext?.episodeTitle
         let subtitleString: String
         if let n = epNumber {
-            if let t = epTitle { subtitleString = "Episode \(n) - \(t)" }
-            else { subtitleString = "Episode \(n)" }
+            if let t = epTitle { subtitleString = String(localized: "player.episode_titled \(n) \(t)") }
+            else { subtitleString = String(localized: "common.episode \(n)") }
         } else {
             subtitleString = epTitle ?? ""
         }
@@ -3004,6 +3005,13 @@ struct PlayerView: View {
             info[MPMediaItemPropertyArtwork] = artwork
         }
 
+        #if !os(tvOS)
+        // The same place feeds Discord, for every player: AVPlayer, MPV and casting alike.
+        DiscordPresence.shared.updateMedia(title: mediaTitle, subtitle: epTitle, season: nil,
+                                           episode: epNumber, coverURL: currentContext?.imageUrl,
+                                           isPlaying: isPlaying, elapsed: elapsed)
+        #endif
+
         let snapshot = NowPlayingSnapshot(
             details: NowPlayingDetails(title: mediaTitle, subtitle: subtitleString,
                                        duration: duration, artworkKey: artwork == nil ? nil : artworkUrl),
@@ -3034,6 +3042,9 @@ struct PlayerView: View {
     }
 
     private func tearDownNowPlaying() {
+        #if !os(tvOS)
+        DiscordPresence.shared.clear()
+        #endif
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
         nowPlaying.sent = nil
         #if os(macOS)
@@ -3764,7 +3775,7 @@ struct PlayerView: View {
     // Rebuilt on every open by PlayerMenuButton's deferred element, so state stays fresh.
 
     private func qualityMenuItems() -> [PlayerMenuItem] {
-        var items = [PlayerMenuItem(title: "Auto", isOn: selectedQualityBandwidth == nil) { selectQuality(nil) }]
+        var items = [PlayerMenuItem(title: String(localized: "player.auto"), isOn: selectedQualityBandwidth == nil) { selectQuality(nil) }]
         items += hlsQualities.map { quality in
             PlayerMenuItem(title: quality.label, isOn: selectedQualityBandwidth == quality.bandwidth) {
                 selectQuality(quality.bandwidth)
@@ -3896,7 +3907,7 @@ struct PlayerView: View {
         case .none, .cues, .assOverlay: mpv.showSubtitles(.none)
         }
         mpv.applySubtitleSettings(visible: subtitleSettings.enabled, delay: subtitleSettings.delaySeconds,
-                                  fontSize: subtitleSettings.fontSize)
+                                  fontSize: subtitleSettings.fontSize, fontFamily: subtitleSettings.fontFamily)
     }
 
     private func sourceMenuItems() -> [PlayerMenuItem] {
@@ -4008,7 +4019,7 @@ enum MacDisplaySleep {
     static func prevent() {
         guard activity == nil else { return }
         activity = ProcessInfo.processInfo.beginActivity(
-            options: [.idleDisplaySleepDisabled, .userInitiated], reason: "Playing video")
+            options: [.idleDisplaySleepDisabled, .userInitiated], reason: String(localized: "player.playing_video"))
     }
 
     static func allow() {
@@ -4255,9 +4266,19 @@ final class MacPlayerWindowManager: NSObject, ObservableObject {
         NSApp.windows.first { $0.isVisible && $0.canBecomeMain && !($0 is NSPanel) }
     }
 
+    /// File ▸ New Window, found by its ⌘N rather than its title, which is in the app's language.
     private static func openAppWindow() {
-        if let item = NSApp.mainMenu?.item(withTitle: "File")?.submenu?.item(withTitle: "New Window") {
-            item.menu?.performActionForItem(at: item.menu?.index(of: item) ?? 0)
+        func newWindowItem(in menu: NSMenu?) -> NSMenuItem? {
+            for item in menu?.items ?? [] {
+                if item.keyEquivalent == "n", item.keyEquivalentModifierMask == .command, item.action != nil {
+                    return item
+                }
+                if let found = newWindowItem(in: item.submenu) { return found }
+            }
+            return nil
+        }
+        if let item = newWindowItem(in: NSApp.mainMenu), let menu = item.menu {
+            menu.performActionForItem(at: menu.index(of: item))
         }
     }
 
@@ -4290,7 +4311,7 @@ final class MacPlayerWindowManager: NSObject, ObservableObject {
         // SwiftUI shows its toolbar again, or puts up a new one, now and then while the cover is
         // up (when a sheet that opened the player goes away, for one). It goes again.
         toolbarObservations = [window.observe(\.toolbar, options: [.new]) { [weak self] window, _ in
-            DispatchQueue.main.async { self?.hideToolbar(of: window) }
+            DispatchQueue.main.async { [self] in self?.hideToolbar(of: window) }
         }]
         hideToolbar(of: window)
         // SwiftUI puts its toolbar back now and then without a word: on a resize, and when
@@ -4339,7 +4360,7 @@ final class MacPlayerWindowManager: NSObject, ObservableObject {
             if hiddenToolbar !== toolbar {
                 hiddenToolbar = toolbar
                 toolbarObservations.append(toolbar.observe(\.isVisible, options: [.new]) { [weak self, weak window] toolbar, _ in
-                    DispatchQueue.main.async {
+                    DispatchQueue.main.async { [self, window] in
                         guard let self, let window, self.isCovering, toolbar.isVisible else { return }
                         self.hideToolbar(of: window)
                     }
@@ -4353,7 +4374,7 @@ final class MacPlayerWindowManager: NSObject, ObservableObject {
             hiddenAccessories.append(accessory)
             // SwiftUI shows it again when the page under the cover redraws its search field.
             toolbarObservations.append(accessory.observe(\.isHidden, options: [.new]) { [weak self, weak window] accessory, _ in
-                DispatchQueue.main.async {
+                DispatchQueue.main.async { [self, window] in
                     guard let self, let window, self.isCovering, !accessory.isHidden else { return }
                     self.hideToolbar(of: window)
                 }
@@ -5195,11 +5216,11 @@ private struct MPVOnExternalDisplayPlaceholder: View {
         ZStack {
             Color.black
             VStack(spacing: 12) {
-                Image(systemName: "tv")
+                IconView("tv")
                     .font(.system(size: 44, weight: .light))
-                Text("Playing on the TV")
+                Text("player.playing_on_the_tv")
                     .font(.headline)
-                Text("Screen Mirroring")
+                Text("player.screen_mirroring")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }

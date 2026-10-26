@@ -27,11 +27,11 @@ enum SimklError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .dailyLimit:
-            return "Simkl's daily limit for your account has been reached. It resets at midnight US Eastern time."
+            return String(localized: "shared.simkls_daily_limit_for_your")
         case .readOnly:
-            return "Sign in to Simkl again to allow edits."
+            return String(localized: "shared.sign_in_to_simkl_again")
         case .budgetReserved:
-            return "Simkl's last requests today are kept for your own actions."
+            return String(localized: "shared.simkls_last_requests_today_are")
         }
     }
 }
@@ -360,7 +360,7 @@ final class SimklLibraryService {
     ///
     /// The last clause is the reason this exists. Activity checks are charged to the user's own
     /// request budget, so a check on every activation is spending something that belongs to them.
-    static let minimumAwayInterval: TimeInterval = 30 * 60
+    nonisolated static let minimumAwayInterval: TimeInterval = 30 * 60
 
     /// Whether returning to the foreground should check for changes.
     ///

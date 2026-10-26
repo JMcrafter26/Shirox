@@ -9,13 +9,13 @@ struct ProfileStatsView: View {
         if let stats = stats {
             VStack(spacing: 20) {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                    statBox(title: "Total Anime", value: Text("\(stats.count)"), icon: "play.tv")
-                    statBox(title: "Episodes", value: Text("\(stats.episodesWatched)"), icon: "play.circle")
+                    statBox(title: String(localized: "profile.total_anime"), value: Text("\(stats.count)"), icon: "play.tv")
+                    statBox(title: String(localized: "common.episodes"), value: Text("\(stats.episodesWatched)"), icon: "play.circle")
                     if stats.minutesWatched > 0 {
-                        statBox(title: "Time Watched", value: Text(formatMinutes(stats.minutesWatched)), icon: "clock")
+                        statBox(title: String(localized: "profile.time_watched"), value: Text(formatMinutes(stats.minutesWatched)), icon: "clock")
                     }
                     if stats.meanScore > 0 {
-                        statBox(title: "Mean Score", value: scoreFormat.scoreText(for: stats.meanScore), icon: "star")
+                        statBox(title: String(localized: "profile.mean_score"), value: scoreFormat.scoreText(for: stats.meanScore), icon: "star")
                     }
                 }
                 .padding(.horizontal)
@@ -33,7 +33,7 @@ struct ProfileStatsView: View {
                 }
             }
         } else {
-            ContentUnavailableView("No Stats", systemImage: "chart.bar.xaxis")
+            ContentUnavailableView("profile.no_stats", systemImage: "chart.bar.xaxis")
         }
     }
 
@@ -41,7 +41,7 @@ struct ProfileStatsView: View {
     @ViewBuilder
     private func chartsSection(stats: ProfileAnimeStats) -> some View {
         VStack(alignment: .leading, spacing: 15) {
-            Text("Status Distribution")
+            Text("profile.status_distribution")
                 .font(.headline)
                 .padding(.horizontal)
 
@@ -51,7 +51,7 @@ struct ProfileStatsView: View {
 
             Divider().padding(.horizontal)
 
-            Text("Genre Distribution")
+            Text("profile.genre_distribution")
                 .font(.headline)
                 .padding(.horizontal)
 
@@ -61,7 +61,7 @@ struct ProfileStatsView: View {
 
             Divider().padding(.horizontal)
 
-            Text("Score Distribution")
+            Text("profile.score_distribution")
                 .font(.headline)
                 .padding(.horizontal)
 
@@ -76,7 +76,7 @@ struct ProfileStatsView: View {
     private func statsListFallback(stats: ProfileAnimeStats) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             if let statuses = stats.statuses {
-                Text("Status Distribution")
+                Text("profile.status_distribution")
                     .font(.headline)
                     .padding(.horizontal)
                 ForEach(statuses.filter { $0.count > 0 }, id: \.status) { s in
@@ -89,7 +89,7 @@ struct ProfileStatsView: View {
                 Divider().padding(.horizontal)
             }
             if let genres = stats.genres?.sorted(by: { $0.count > $1.count }).prefix(10) {
-                Text("Top Genres")
+                Text("profile.top_genres")
                     .font(.headline)
                     .padding(.horizontal)
                 ForEach(Array(genres), id: \.genre) { g in
@@ -106,7 +106,7 @@ struct ProfileStatsView: View {
 
     private func statBox(title: String, value: Text, icon: String) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: icon)
+            IconView(icon)
                 .font(.title3)
                 .foregroundStyle(.accent)
             VStack(alignment: .leading, spacing: 2) {
@@ -125,10 +125,10 @@ struct ProfileStatsView: View {
         if let data = data?.filter({ $0.count > 0 }) {
             Chart(data, id: \.status) { item in
                 BarMark(
-                    x: .value("Count", item.count),
-                    y: .value("Status", item.status.capitalized)
+                    x: .value(String(localized: "profile.count"), item.count),
+                    y: .value(String(localized: "library.status"), item.status.capitalized)
                 )
-                .foregroundStyle(by: .value("Status", item.status))
+                .foregroundStyle(by: .value(String(localized: "library.status"), item.status))
                 .annotation(position: .trailing) {
                     Text("\(item.count)")
                         .font(.caption2)
@@ -142,7 +142,7 @@ struct ProfileStatsView: View {
                 }
             }
         } else {
-            Text("No status data").foregroundStyle(.secondary)
+            Text("profile.no_status_data").foregroundStyle(.secondary)
         }
     }
 
@@ -152,8 +152,8 @@ struct ProfileStatsView: View {
         if let data = data?.sorted(by: { $0.count > $1.count }).prefix(10) {
             Chart(data, id: \.genre) { item in
                 BarMark(
-                    x: .value("Genre", item.genre),
-                    y: .value("Count", item.count)
+                    x: .value(String(localized: "profile.genre"), item.genre),
+                    y: .value(String(localized: "profile.count"), item.count)
                 )
                 .foregroundStyle(Color.primary.gradient)
             }
@@ -163,7 +163,7 @@ struct ProfileStatsView: View {
                 }
             }
         } else {
-            Text("No genre data").foregroundStyle(.secondary)
+            Text("profile.no_genre_data").foregroundStyle(.secondary)
         }
     }
 
@@ -176,15 +176,15 @@ struct ProfileStatsView: View {
         if let data = data?.sorted(by: { $0.score < $1.score }), !data.isEmpty {
             Chart(data, id: \.score) { item in
                 AreaMark(
-                    x: .value("Score", item.score),
-                    y: .value("Count", item.count)
+                    x: .value(String(localized: "library.score"), item.score),
+                    y: .value(String(localized: "profile.count"), item.count)
                 )
                 .foregroundStyle(Color.primary.opacity(0.3).gradient)
                 .interpolationMethod(.catmullRom)
 
                 LineMark(
-                    x: .value("Score", item.score),
-                    y: .value("Count", item.count)
+                    x: .value(String(localized: "library.score"), item.score),
+                    y: .value(String(localized: "profile.count"), item.count)
                 )
                 .foregroundStyle(Color.primary)
                 .interpolationMethod(.catmullRom)
@@ -193,7 +193,7 @@ struct ProfileStatsView: View {
                 AxisMarks(values: ScoreChartAxis.values(for: data.map(\.score)))
             }
         } else {
-            Text("No score data").foregroundStyle(.secondary)
+            Text("profile.no_score_data").foregroundStyle(.secondary)
         }
     }
 

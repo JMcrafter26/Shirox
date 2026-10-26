@@ -14,7 +14,7 @@ enum MediaRemuxer {
     enum RemuxError: LocalizedError {
         case failed(String)
         var errorDescription: String? {
-            switch self { case .failed(let message): return "Couldn't build the video file: \(message)" }
+            switch self { case .failed(let message): return String(localized: "shared.couldnt_build_the_video_file \(message)") }
         }
     }
 
@@ -477,7 +477,7 @@ enum MediaRemuxer {
     private static func stripADTSHeader(_ packet: UnsafeMutablePointer<AVPacket>) throws {
         guard packet.pointee.size >= 7, let data = packet.pointee.data,
               let header = ADTSHeader(Array(UnsafeBufferPointer(start: data, count: 7))) else { return }
-        guard header.extraRawBlocks == 0 else { throw RemuxError.failed("AAC frames packed several to a header") }
+        guard header.extraRawBlocks == 0 else { throw RemuxError.failed(String(localized: "shared.aac_frames_packed_several_to")) }
         guard Int(packet.pointee.size) > header.length else { return }
         packet.pointee.data = data.advanced(by: header.length)
         packet.pointee.size -= Int32(header.length)

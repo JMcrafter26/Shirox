@@ -25,7 +25,7 @@ enum ProviderError: Error, LocalizedError {
     var errorDescription: String? {
         switch self {
         case .allProvidersFailed(let failures):
-            guard !failures.isEmpty else { return "No tracker is available." }
+            guard !failures.isEmpty else { return String(localized: "shared.no_tracker_is_available") }
             // Lead with which services were tried, then each one's own explanation — a service
             // that says why it's down beats a bare status code.
             let names = ListFormatter.localizedString(byJoining: failures.map(\.provider.displayName))
@@ -34,19 +34,19 @@ enum ProviderError: Error, LocalizedError {
                 .map { "\($0.provider.displayName): \($0.error.localizedDescription)" }
                 .joined(separator: "\n")
             return "\(names) \(verb) unavailable.\n\n\(reasons)"
-        case .unauthenticated: return "Not logged in."
-        case .notFound: return "Content not found."
+        case .unauthenticated: return String(localized: "shared.not_logged_in")
+        case .notFound: return String(localized: "shared.content_not_found")
         case .serverError(let code):
             // 5xx and 429 from a free public API are load, not breakage — say something the
             // reader can act on instead of a bare status code.
             switch code {
-            case 429: return "Too many requests just now. Try again in a moment."
-            case 500...599: return "The service is busy. Try again in a moment."
-            default: return "Server error (\(code))."
+            case 429: return String(localized: "shared.too_many_requests_just_now")
+            case 500...599: return String(localized: "shared.the_service_is_busy_try")
+            default: return String(localized: "shared.server_error \(code)")
             }
         case .networkError(let e): return e.localizedDescription
-        case .unsupported: return "This feature is not supported by the current provider."
-        case .decodingError(let e): return "Data error: \(e.localizedDescription)"
+        case .unsupported: return String(localized: "shared.this_feature_is_not_supported")
+        case .decodingError(let e): return String(localized: "shared.data_error \(e.localizedDescription)")
         }
     }
 }
@@ -63,9 +63,9 @@ enum ActivityFeed: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .mine: return "My Feed"
-        case .following: return "Following"
-        case .global: return "Global"
+        case .mine: return String(localized: "shared.my_feed")
+        case .following: return String(localized: "common.following")
+        case .global: return String(localized: "shared.global")
         }
     }
     var icon: String {
@@ -90,10 +90,10 @@ enum DiscoverSort: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .popular:  return "Popular"
-        case .trending: return "Trending"
-        case .topRated: return "Top Rated"
-        case .newest:   return "Newest"
+        case .popular:  return String(localized: "shared.popular")
+        case .trending: return String(localized: "shared.trending")
+        case .topRated: return String(localized: "shared.top_rated")
+        case .newest:   return String(localized: "shared.newest")
         }
     }
 

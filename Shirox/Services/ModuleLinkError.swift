@@ -15,21 +15,21 @@ enum ModuleLinkError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .unreachable(let status):
-            return "That link answered with error \(status). Check it was copied in full."
+            return String(localized: "modules.that_link_answered_with_error \(status)")
         case .image:
-            return "That link is an image, not a module. Paste the module's .json link instead."
+            return String(localized: "modules.that_link_is_an_image")
         case .webPage:
-            return "That link is a web page, not a module. On GitHub, open the file and use its Raw link."
+            return String(localized: "modules.that_link_is_a_web")
         case .script:
-            return "That link is a script, not a module. Paste the .json link beside it instead, or download the .js and pick it with Import from Files."
+            return String(localized: "modules.that_link_is_a_script")
         case .seanimeList:
-            return "That link is a list of modules. Adding a whole list isn't supported yet — paste one module's .json link."
+            return String(localized: "modules.that_link_is_a_list")
         case .notAModule:
-            return "That link isn't a module, a Stremio addon, or a Nuvio, Vega, SkyStream or Mana repo Shirox can add."
+            return String(localized: "modules.that_link_isnt_a_module")
         case .adult:
-            return "Shirox doesn't add adult modules."
+            return String(localized: "modules.shirox_doesnt_add_adult_modules")
         case .cloudStream:
-            return "That link is a CloudStream repo. CloudStream plugins are Android code, which Shirox can't run."
+            return String(localized: "modules.that_link_is_a_cloudstream")
         }
     }
 

@@ -15,12 +15,28 @@ struct DownloadsView: View {
     private enum KindFilter: String, CaseIterable, Identifiable {
         case all = "All", anime = "Anime", manga = "Manga"
         var id: Self { self }
+
+        var title: String {
+            switch self {
+            case .all:   return String(localized: "common.all")
+            case .anime: return String(localized: "common.anime")
+            case .manga: return String(localized: "common.manga")
+            }
+        }
     }
 
     fileprivate enum SortOrder: String, CaseIterable, Identifiable {
         case title = "Title"
         case recent = "Recently Downloaded"
         var id: Self { self }
+
+        /// The raw value is what's stored; this is what the menu shows.
+        var title: String {
+            switch self {
+            case .title:  return String(localized: "common.title")
+            case .recent: return String(localized: "downloads.recently_downloaded")
+            }
+        }
     }
 
     @State private var kindFilter: KindFilter = .all
@@ -98,11 +114,11 @@ struct DownloadsView: View {
                 Menu {
                     ForEach(actions) { action in
                         Button(role: action.isDestructive ? .destructive : nil, action: action.run) {
-                            Label(action.title, systemImage: action.systemImage ?? "circle")
+                            Label(action.title, icon: action.systemImage ?? "circle")
                         }
                     }
                 } label: {
-                    Image(systemName: "ellipsis.circle")
+                    IconView("ellipsis.circle")
                         .font(.body)
                 }
                 .textCase(nil)
@@ -147,7 +163,7 @@ struct DownloadsView: View {
 
         let groups = byModule.map { moduleId, items in
             let module = moduleManager.modules.first { $0.id == moduleId }
-            let moduleName = module?.sourceName ?? (moduleId.isEmpty ? "Unknown Source" : moduleId)
+            let moduleName = module?.sourceName ?? (moduleId.isEmpty ? String(localized: "downloads.unknown_source") : moduleId)
 
             let byMedia = Dictionary(grouping: items) { $0.mediaTitle }
             let mediaGroups = byMedia.map { title, eps in
@@ -214,7 +230,7 @@ struct DownloadsView: View {
             }
             return MangaModuleGroup(
                 id: moduleId,
-                moduleName: module?.sourceName ?? (moduleId.isEmpty ? "Unknown Source" : moduleId),
+                moduleName: module?.sourceName ?? (moduleId.isEmpty ? String(localized: "downloads.unknown_source") : moduleId),
                 iconUrl: module?.iconUrl, iconData: module?.iconData,
                 mangaGroups: sortGroups(groups, title: \.mangaTitle, date: \.lastDownloaded))
         }
@@ -236,12 +252,12 @@ struct DownloadsView: View {
     private func downloadingActions(active: [DownloadItem], paused: [DownloadItem]) -> [SectionAction] {
         var actions: [SectionAction] = []
         if !active.isEmpty {
-            actions.append(SectionAction(title: "Pause All", systemImage: "pause.fill") { pauseAll(active) })
+            actions.append(SectionAction(title: String(localized: "downloads.pause_all"), systemImage: "pause.fill") { pauseAll(active) })
         }
         if !paused.isEmpty {
-            actions.append(SectionAction(title: "Resume All", systemImage: "play.fill") { resumeAll(paused) })
+            actions.append(SectionAction(title: String(localized: "downloads.resume_all"), systemImage: "play.fill") { resumeAll(paused) })
         }
-        actions.append(SectionAction(title: "Cancel All", systemImage: "xmark", isDestructive: true) {
+        actions.append(SectionAction(title: String(localized: "downloads.cancel_all"), systemImage: "xmark", isDestructive: true) {
             dm.removeAll(inProgress)
         })
         return actions
@@ -283,9 +299,9 @@ struct DownloadsView: View {
             Group {
                 if !hasAnything {
                     ContentUnavailableView(
-                        "No Downloads",
+                        "downloads.no_downloads",
                         systemImage: "arrow.down.circle",
-                        description: Text("Episodes and chapters you download will appear here")
+                        description: Text("downloads.episodes_and_chapters_you_download")
                     )
                 } else {
                     List {
@@ -295,9 +311,9 @@ struct DownloadsView: View {
                             Section {
                                 if searchText.isEmpty {
                                     ContentUnavailableView(
-                                        kindFilter == .manga ? "No Manga Downloads" : "No Anime Downloads",
+                                        kindFilter == .manga ? "downloads.no_manga_downloads" : "downloads.no_anime_downloads",
                                         systemImage: kindFilter == .manga ? "book.closed" : "play.rectangle",
-                                        description: Text("Nothing of this kind has been downloaded yet")
+                                        description: Text("downloads.nothing_of_this_kind_has")
                                     )
                                 } else {
                                     ContentUnavailableView.search(text: searchText)
@@ -315,11 +331,11 @@ struct DownloadsView: View {
                     #else
                     .listStyle(.inset)
                     #endif
-                    .searchable(text: $searchText, prompt: "Search downloads")
+                    .searchable(text: $searchText, prompt: String(localized: "downloads.search_downloads"))
                     .animation(.default, value: kindFilter)
                 }
             }
-            .navigationTitle("Downloads")
+            .navigationTitle("common.downloads")
             .modifier(SortToolbar(isShown: hasAnything, sortOrder: $sortOrder))
             // Re-measured whenever something finishes or is removed, off the main thread: an
             // HLS download is thousands of segment files.
@@ -327,20 +343,22 @@ struct DownloadsView: View {
                 storage = await StorageUsage.measure()
             }
             .alert(
-                pendingGroupDelete.map { "Delete \($0.title)?" } ?? "Delete",
+                pendingGroupDelete.map { String(localized: "common.delete_name_confirm \($0.title)") } ?? String(localized: "common.delete"),
                 isPresented: Binding(
                     get: { pendingGroupDelete != nil },
                     set: { if !$0 { pendingGroupDelete = nil } }
                 ),
                 presenting: pendingGroupDelete
             ) { pending in
-                Button("Delete", role: .destructive) {
+                Button("common.delete", role: .destructive) {
                     pending.delete()
                     pendingGroupDelete = nil
                 }
-                Button("Cancel", role: .cancel) { pendingGroupDelete = nil }
+                Button("common.cancel", role: .cancel) { pendingGroupDelete = nil }
             } message: { pending in
-                Text("Removes \(pending.count) downloaded \(pending.unit)\(pending.count == 1 ? "" : "s") from this device.")
+                Text(pending.unit == "chapter"
+                     ? String(localized: "downloads.removes_downloaded_chapters \(pending.count)")
+                     : String(localized: "downloads.removes_downloaded_episodes \(pending.count)"))
             }
         }
     }
@@ -363,8 +381,8 @@ struct DownloadsView: View {
             )
             // Only worth a control once both kinds are on the device.
             if !dm.items.isEmpty && !mdm.items.isEmpty {
-                Picker("Show", selection: $kindFilter) {
-                    ForEach(KindFilter.allCases) { Text($0.rawValue).tag($0) }
+                Picker("downloads.show", selection: $kindFilter) {
+                    ForEach(KindFilter.allCases) { Text($0.title).tag($0) }
                 }
                 .pickerStyle(.segmented)
                 .listRowSeparator(.hidden)
@@ -385,25 +403,25 @@ struct DownloadsView: View {
                     DownloadProgressRow(item: item)
                         .swipeActions(edge: .trailing) {
                             Button(role: .destructive) { dm.remove(item) } label: {
-                                Label("Cancel", systemImage: "xmark")
+                                Label("common.cancel", icon: "xmark")
                             }
                             .tint(.red)
                         }
                         .swipeActions(edge: .leading) {
                             if item.state == .paused {
                                 Button { dm.resumeDownload(item) } label: {
-                                    Label("Resume", systemImage: "play.fill")
+                                    Label("downloads.resume", icon: "play.fill")
                                 }
                                 .tint(.blue)
                             } else {
                                 Button { dm.pause(item) } label: {
-                                    Label("Pause", systemImage: "pause.fill")
+                                    Label("downloads.pause", icon: "pause.fill")
                                 }
                                 .tint(.orange)
                             }
                             if item.state == .pending {
                                 Button { dm.prioritize(item) } label: {
-                                    Label("Download Next", systemImage: "arrow.up.to.line")
+                                    Label("downloads.download_next", icon: "arrow.up.to.line")
                                 }
                                 .tint(.indigo)
                             }
@@ -411,21 +429,21 @@ struct DownloadsView: View {
                         .contextMenu {
                             if item.state != .downloading {
                                 Button { dm.prioritize(item) } label: {
-                                    Label("Download Next", systemImage: "arrow.up.to.line")
+                                    Label("downloads.download_next", icon: "arrow.up.to.line")
                                 }
                             }
                             if item.state == .paused {
-                                Button { dm.resumeDownload(item) } label: { Label("Resume", systemImage: "play.fill") }
+                                Button { dm.resumeDownload(item) } label: { Label("downloads.resume", icon: "play.fill") }
                             } else {
-                                Button { dm.pause(item) } label: { Label("Pause", systemImage: "pause.fill") }
+                                Button { dm.pause(item) } label: { Label("downloads.pause", icon: "pause.fill") }
                             }
                             Button(role: .destructive) { dm.remove(item) } label: {
-                                Label("Cancel Download", systemImage: "xmark")
+                                Label("downloads.cancel_download", icon: "xmark")
                             }
                         }
                 }
             } header: {
-                sectionHeader("Downloading", detail: overallProgress(inProgress),
+                sectionHeader(String(localized: "downloads.downloading"), detail: overallProgress(inProgress),
                               actions: downloadingActions(active: active, paused: paused))
             }
         }
@@ -484,7 +502,7 @@ struct DownloadsView: View {
                     }
                     .swipeActions(edge: .trailing) {
                         Button(role: .destructive, action: deleteGroup) {
-                            Label("Delete", systemImage: "trash")
+                            Label("common.delete", icon: "trash")
                         }
                         .tint(.red)
                     }
@@ -494,8 +512,8 @@ struct DownloadsView: View {
                             DownloadFolderMenuItem(file: file)
                         }
                         Button(role: .destructive, action: deleteGroup) {
-                            Label("Delete \(mediaGroup.items.count) Episode\(mediaGroup.items.count == 1 ? "" : "s")",
-                                  systemImage: "trash")
+                            Label("downloads.delete_episodes \(mediaGroup.items.count)",
+                                  icon: "trash")
                         }
                     }
                 }
@@ -516,21 +534,21 @@ struct DownloadsView: View {
                     DownloadProgressRow(item: item)
                         .swipeActions(edge: .trailing) {
                             Button(role: .destructive) { dm.remove(item) } label: {
-                                Label("Delete", systemImage: "trash")
+                                Label("common.delete", icon: "trash")
                             }
                             .tint(.red)
                         }
                         .swipeActions(edge: .leading) {
                             Button { dm.retry(item) } label: {
-                                Label("Retry", systemImage: "arrow.clockwise")
+                                Label("common.retry", icon: "arrow.clockwise")
                             }
                             .tint(.blue)
                         }
                 }
             } header: {
-                sectionHeader("Failed", detail: "\(failed.count)", actions: [
-                    .init(title: "Retry All") { dm.retryAll(failed) },
-                    .init(title: "Clear All", isDestructive: true) { dm.removeAll(failed) }
+                sectionHeader(String(localized: "downloads.failed"), detail: "\(failed.count)", actions: [
+                    .init(title: String(localized: "downloads.retry_all")) { dm.retryAll(failed) },
+                    .init(title: String(localized: "downloads.clear_all"), isDestructive: true) { dm.removeAll(failed) }
                 ])
             }
         }
@@ -547,14 +565,14 @@ struct DownloadsView: View {
                     MangaDownloadProgressRow(item: item)
                         .swipeActions(edge: .trailing) {
                             Button(role: .destructive) { mdm.remove(item) } label: {
-                                Label("Cancel", systemImage: "xmark")
+                                Label("common.cancel", icon: "xmark")
                             }.tint(.red)
                         }
                 }
             } header: {
                 let average = mangaInProgress.map(\.progress).reduce(0, +) / Double(mangaInProgress.count)
-                sectionHeader("Downloading Manga", detail: "\(mangaInProgress.count) · \(Int(average * 100))%", actions: [
-                    .init(title: "Cancel All", isDestructive: true) {
+                sectionHeader(String(localized: "downloads.downloading_manga"), detail: "\(mangaInProgress.count) · \(Int(average * 100))%", actions: [
+                    .init(title: String(localized: "downloads.cancel_all"), isDestructive: true) {
                         mdm.removeAll(mangaInProgress)
                     }
                 ])
@@ -582,20 +600,20 @@ struct DownloadsView: View {
                         MediaGroupRow(
                             mediaTitle: g.mangaTitle, imageUrl: g.coverImage,
                             count: g.items.count, unit: "chapter",
-                            completedCount: readCount(g), completedVerb: "read",
+                            completedCount: readCount(g),
                             numbers: g.items.map(\.chapterNumber))
                     }
                     .swipeActions(edge: .trailing) {
                         Button(role: .destructive, action: deleteGroup) {
-                            Label("Delete", systemImage: "trash")
+                            Label("common.delete", icon: "trash")
                         }
                         .tint(.red)
                     }
                     .contextMenu {
                         FullTitleMenuItems(g.mangaTitle)
                         Button(role: .destructive, action: deleteGroup) {
-                            Label("Delete \(g.items.count) Chapter\(g.items.count == 1 ? "" : "s")",
-                                  systemImage: "trash")
+                            Label("downloads.delete_chapters \(g.items.count)",
+                                  icon: "trash")
                         }
                     }
                 }
@@ -612,20 +630,20 @@ struct DownloadsView: View {
                     MangaDownloadProgressRow(item: item)
                         .swipeActions(edge: .trailing) {
                             Button(role: .destructive) { mdm.remove(item) } label: {
-                                Label("Delete", systemImage: "trash")
+                                Label("common.delete", icon: "trash")
                             }.tint(.red)
                         }
                         .swipeActions(edge: .leading) {
                             Button { mdm.retry(item) } label: {
-                                Label("Retry", systemImage: "arrow.clockwise")
+                                Label("common.retry", icon: "arrow.clockwise")
                             }
                             .tint(.blue)
                         }
                 }
             } header: {
-                sectionHeader("Failed Manga", detail: "\(mangaFailed.count)", actions: [
-                    .init(title: "Retry All") { mdm.retryAll(mangaFailed) },
-                    .init(title: "Clear All", isDestructive: true) {
+                sectionHeader(String(localized: "downloads.failed_manga"), detail: "\(mangaFailed.count)", actions: [
+                    .init(title: String(localized: "downloads.retry_all")) { mdm.retryAll(mangaFailed) },
+                    .init(title: String(localized: "downloads.clear_all"), isDestructive: true) {
                         mdm.removeAll(mangaFailed)
                     }
                 ])
@@ -681,22 +699,22 @@ private struct StorageSummaryRow: View {
 
     private var countsLine: String {
         var parts: [String] = []
-        if episodeCount > 0 { parts.append("\(episodeCount) episode\(episodeCount == 1 ? "" : "s")") }
-        if chapterCount > 0 { parts.append("\(chapterCount) chapter\(chapterCount == 1 ? "" : "s")") }
-        return parts.isEmpty ? "Nothing finished yet" : parts.joined(separator: " · ")
+        if episodeCount > 0 { parts.append(String(localized: "downloads.episodes_count \(episodeCount)")) }
+        if chapterCount > 0 { parts.append(String(localized: "downloads.chapters_count \(chapterCount)")) }
+        return parts.isEmpty ? String(localized: "downloads.nothing_finished_yet") : parts.joined(separator: " · ")
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline) {
-                Image(systemName: "internaldrive")
+                IconView("internaldrive")
                     .foregroundStyle(.secondary)
-                Text(usage.map { format($0.totalBytes) } ?? "Measuring…")
+                Text(usage.map { format($0.totalBytes) } ?? String(localized: "downloads.measuring"))
                     .font(.headline)
                     .monospacedDigit()
                 Spacer()
                 if let free = usage?.freeBytes {
-                    Text("\(format(free)) free")
+                    Text("downloads.free \(format(free))")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .monospacedDigit()
@@ -722,8 +740,8 @@ private struct StorageSummaryRow: View {
                 Text(countsLine)
                 Spacer()
                 if let usage, usage.animeBytes > 0, usage.mangaBytes > 0 {
-                    legend(color: .accentColor, label: "Anime \(format(usage.animeBytes))")
-                    legend(color: .orange, label: "Manga \(format(usage.mangaBytes))")
+                    legend(color: .accentColor, label: String(localized: "downloads.anime \(format(usage.animeBytes))"))
+                    legend(color: .orange, label: String(localized: "downloads.manga \(format(usage.mangaBytes))"))
                 }
             }
             .font(.caption)
@@ -757,7 +775,7 @@ private struct ModuleSectionHeader: View {
             Text(name)
             if let count {
                 Spacer()
-                Text("\(count) title\(count == 1 ? "" : "s")")
+                Text("common.titles \(count)")
                     .textCase(nil)
                     .font(.caption)
             }
@@ -774,7 +792,6 @@ private struct MediaGroupRow: View {
     var unit: String = "episode"
     /// How many of the downloaded ones have been watched / read.
     var completedCount: Int = 0
-    var completedVerb: String = "watched"
     /// Episode or chapter numbers on disk, for the "Ep 1–12" range line.
     var numbers: [Double] = []
     /// Short facts to show beside the range, e.g. format and year.
@@ -790,7 +807,7 @@ private struct MediaGroupRow: View {
     private var rangeLine: String? {
         let sorted = Array(Set(numbers)).sorted()
         guard let first = sorted.first, let last = sorted.last else { return nil }
-        let prefix = unit == "chapter" ? "Ch." : "Ep"
+        let prefix = unit == "chapter" ? String(localized: "common.ch") : String(localized: "downloads.ep")
         if first == last { return "\(prefix) \(display(first))" }
         return "\(prefix) \(display(first))–\(display(last))"
     }
@@ -809,7 +826,8 @@ private struct MediaGroupRow: View {
                     .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.primary)
 
-                Text(([ "\(count) \(unit)\(count == 1 ? "" : "s")", rangeLine ].compactMap { $0 } + metadata)
+                Text(([ unit == "chapter" ? String(localized: "downloads.chapters_count \(count)")
+                                            : String(localized: "downloads.episodes_count \(count)"), rangeLine ].compactMap { $0 } + metadata)
                         .joined(separator: " · "))
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -820,11 +838,13 @@ private struct MediaGroupRow: View {
                         .tint(completedCount == count ? .green : .accentColor)
                         .frame(maxWidth: 90)
                     if completedCount == count {
-                        Label("All \(completedVerb)", systemImage: "checkmark.circle.fill")
+                        Label(unit == "chapter" ? String(localized: "downloads.all_read") : String(localized: "downloads.all_watched"),
+                              icon: "checkmark.circle.fill")
                             .labelStyle(.titleAndIcon)
                             .foregroundStyle(.green)
                     } else {
-                        Text("\(completedCount)/\(count) \(completedVerb)")
+                        Text(unit == "chapter" ? String(localized: "downloads.count_of_read \(completedCount) \(count)")
+                                              : String(localized: "downloads.count_of_watched \(completedCount) \(count)"))
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -854,7 +874,7 @@ private struct DownloadProgressRow: View {
                 Text(item.mediaTitle)
                     .font(.subheadline.weight(.semibold))
                     .lineLimit(1)
-                Text(item.episodeTitle ?? "Episode \(item.episodeNumber)")
+                Text(item.episodeTitle ?? String(localized: "common.episode \(item.episodeNumber)"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -869,14 +889,14 @@ private struct DownloadProgressRow: View {
                             .foregroundStyle(.secondary)
                     }
                 case .pending:
-                    Text("Waiting…")
+                    Text("downloads.waiting")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 case .paused:
                     HStack(spacing: 8) {
                         ProgressView(value: item.progress)
                             .tint(.secondary)
-                        Text("Paused · \(Int(item.progress * 100))%")
+                        Text("downloads.paused \(Int(item.progress * 100))")
                             .font(.system(size: 10, weight: .bold, design: .monospaced))
                             .foregroundStyle(.secondary)
                     }
@@ -885,7 +905,7 @@ private struct DownloadProgressRow: View {
                         // Two lines truncates the part that identifies the failure — the URL or
                         // the segment that 404'd. Tap to read it in full, long-press to copy it
                         // somewhere useful.
-                        Text(item.error ?? "Download failed")
+                        Text(item.error ?? String(localized: "downloads.download_failed"))
                             .font(.caption2)
                             .foregroundStyle(.red)
                             .lineLimit(errorExpanded ? nil : 2)
@@ -898,7 +918,7 @@ private struct DownloadProgressRow: View {
                         Button {
                             DownloadManager.shared.retry(item)
                         } label: {
-                            Label("Retry", systemImage: "arrow.clockwise")
+                            Label("common.retry", icon: "arrow.clockwise")
                                 .font(.caption2.bold())
                                 .foregroundStyle(.blue)
                                 .padding(.horizontal, 8)
@@ -918,9 +938,9 @@ private struct DownloadProgressRow: View {
             case .downloading:
                 ProgressView().controlSize(.small)
             case .pending:
-                Image(systemName: "hourglass").foregroundStyle(.secondary)
+                IconView("hourglass").foregroundStyle(.secondary)
             case .failed:
-                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.red)
+                IconView("exclamationmark.triangle.fill").foregroundStyle(.red)
             default:
                 EmptyView()
             }
@@ -954,10 +974,10 @@ private struct MangaDownloadProgressRow: View {
                             .foregroundStyle(.secondary)
                     }
                 case .pending:
-                    Text("Waiting…").font(.caption2).foregroundStyle(.secondary)
+                    Text("downloads.waiting").font(.caption2).foregroundStyle(.secondary)
                 case .failed:
                     HStack {
-                        Text(item.error ?? "Download failed")
+                        Text(item.error ?? String(localized: "downloads.download_failed"))
                             .font(.caption2)
                             .foregroundStyle(.red)
                             .lineLimit(errorExpanded ? nil : 2)
@@ -968,7 +988,7 @@ private struct MangaDownloadProgressRow: View {
                             .copyErrorContextMenu(item.error)
                         Spacer()
                         Button { MangaDownloadManager.shared.retry(item) } label: {
-                            Label("Retry", systemImage: "arrow.clockwise")
+                            Label("common.retry", icon: "arrow.clockwise")
                                 .font(.caption2.bold()).foregroundStyle(.blue)
                                 .padding(.horizontal, 8).padding(.vertical, 4)
                                 .background(Color.blue.opacity(0.1), in: RoundedRectangle(cornerRadius: 4))
@@ -982,8 +1002,8 @@ private struct MangaDownloadProgressRow: View {
             Spacer()
             switch item.state {
             case .downloading: ProgressView().controlSize(.small)
-            case .pending: Image(systemName: "hourglass").foregroundStyle(.secondary)
-            case .failed: Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.red)
+            case .pending: IconView("hourglass").foregroundStyle(.secondary)
+            case .failed: IconView("exclamationmark.triangle.fill").foregroundStyle(.red)
             default: EmptyView()
             }
         }
@@ -1017,11 +1037,11 @@ private struct SortToolbar: ViewModifier {
 
     private var menu: some View {
         Menu {
-            Picker("Sort By", selection: $sortOrder) {
-                ForEach(DownloadsView.SortOrder.allCases) { Text($0.rawValue).tag($0) }
+            Picker("common.sort_by", selection: $sortOrder) {
+                ForEach(DownloadsView.SortOrder.allCases) { Text($0.title).tag($0) }
             }
         } label: {
-            Image(systemName: "arrow.up.arrow.down")
+            IconView("arrow.up.arrow.down")
         }
     }
 }

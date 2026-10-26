@@ -111,12 +111,12 @@ enum MediaListStatus: String, Codable, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .current:   return "Watching"
-        case .planning:  return "Planning"
-        case .completed: return "Completed"
-        case .dropped:   return "Dropped"
-        case .paused:    return "Paused"
-        case .repeating: return "Rewatching"
+        case .current:   return String(localized: "shared.watching")
+        case .planning:  return String(localized: "shared.planning")
+        case .completed: return String(localized: "shared.completed")
+        case .dropped:   return String(localized: "shared.dropped")
+        case .paused:    return String(localized: "shared.paused")
+        case .repeating: return String(localized: "shared.rewatching")
         }
     }
 
@@ -124,8 +124,8 @@ enum MediaListStatus: String, Codable, CaseIterable, Identifiable {
     func displayName(for kind: MediaKind) -> String {
         guard kind == .manga else { return displayName }
         switch self {
-        case .current:   return "Reading"
-        case .repeating: return "Rereading"
+        case .current:   return String(localized: "shared.reading")
+        case .repeating: return String(localized: "shared.rereading")
         default:         return displayName
         }
     }

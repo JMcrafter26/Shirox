@@ -48,7 +48,7 @@ struct CinematicPage<Backdrop: View, Hero: View, Rows: View>: View {
     /// How dark the artwork gets once the rows have scrolled over it: 1 is black.
     var maxDim: CGFloat = 0.6
     /// Pull to refresh, where the page has one.
-    var onRefresh: (@Sendable () async -> Void)? = nil
+    nonisolated var onRefresh: (@Sendable () async -> Void)? = nil
     @ViewBuilder let backdrop: () -> Backdrop
     @ViewBuilder let hero: () -> Hero
     @ViewBuilder let rows: () -> Rows
@@ -161,7 +161,7 @@ extension CinematicPage {
 }
 
 private struct OptionalRefresh: ViewModifier {
-    let action: (@Sendable () async -> Void)?
+    nonisolated let action: (@Sendable () async -> Void)?
 
     @ViewBuilder
     func body(content: Content) -> some View {
@@ -264,9 +264,9 @@ struct CinematicMetaLine: View {
     private var parts: [String] {
         var parts: [String] = []
         if media.format == "MOVIE" {
-            parts.append("Movie")
+            parts.append(String(localized: "common.movie"))
         } else if let eps = media.episodes ?? media.airedOrAnnouncedEpisodes, eps > 0 {
-            parts.append(eps == 1 ? "1 Episode" : "\(eps) Episodes")
+            parts.append(eps == 1 ? "1 Episode" : String(localized: "detail.episodes \(eps)"))
         }
         if let year = media.seasonYear { parts.append(String(year)) }
         if let status = media.statusDisplay { parts.append(status) }
@@ -278,7 +278,7 @@ struct CinematicMetaLine: View {
             Text(parts.joined(separator: " · "))
             if let score = media.averageScore {
                 if !parts.isEmpty { Text("·") }
-                Label("\(score)%", systemImage: "star.fill")
+                Label("\(score)%", icon: "star.fill")
                     .labelStyle(.titleAndIcon)
             }
         }
@@ -454,7 +454,7 @@ struct CinematicCircleButton: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: systemImage)
+            IconView(systemImage)
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(isOn ? Color.black : Color.white)
                 .frame(width: 46, height: 46)

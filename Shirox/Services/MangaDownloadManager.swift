@@ -69,7 +69,7 @@ final class MangaDownloadManager: ObservableObject {
         guard folderComplete(item) else {
             if let idx = items.firstIndex(where: { $0.id == item.id }) {
                 items[idx].state = .failed
-                items[idx].error = "Downloaded files are missing"
+                items[idx].error = String(localized: "shared.downloaded_files_are_missing")
                 items[idx].pageFiles = []
                 items[idx].progress = 0
                 persist()
@@ -104,12 +104,12 @@ final class MangaDownloadManager: ObservableObject {
         if items.contains(where: { $0.chapterHref == chapter.href }) {
             let existing = items.first { $0.chapterHref == chapter.href }
             let status = existing?.state == .completed ? "already downloaded" : "already in queue"
-            ToastManager.shared.show(message: "\(chapter.displayName) is \(status)", type: .warning)
+            ToastManager.shared.show(message: String(localized: "shared.title_is_status \(chapter.displayName) \(status)"), type: .warning)
             return
         }
         items.append(makeItem(chapter: chapter, context: context))
         persist()
-        ToastManager.shared.show(message: "Download added: \(context.mangaTitle) - \(chapter.displayName)", type: .info)
+        ToastManager.shared.show(message: String(localized: "shared.download_added \(context.mangaTitle) \(chapter.displayName)"), type: .info)
         processQueue()
     }
 
@@ -121,7 +121,7 @@ final class MangaDownloadManager: ObservableObject {
         }
         guard queued > 0 else { return }
         persist()
-        ToastManager.shared.show(message: "Queued \(queued) chapter\(queued == 1 ? "" : "s")", type: .info)
+        ToastManager.shared.show(message: String(localized: "downloads.queued_chapters \(queued)"), type: .info)
         processQueue()
     }
 
@@ -173,7 +173,7 @@ final class MangaDownloadManager: ObservableObject {
         items.removeAll { ids.contains($0.id) }
         persist()
         reconcileDownloadsDirectory()
-        ToastManager.shared.show(message: "Removed \(toRemove.count) downloads", type: .info)
+        ToastManager.shared.show(message: String(localized: "shared.removed_downloads \(toRemove.count)"), type: .info)
         processQueue()
     }
 
@@ -189,7 +189,7 @@ final class MangaDownloadManager: ObservableObject {
         items.removeAll { $0.id == item.id }
         persist()
         reconcileDownloadsDirectory()
-        ToastManager.shared.show(message: "Download removed: \(item.mangaTitle) - \(item.chapterName)", type: .info)
+        ToastManager.shared.show(message: String(localized: "shared.download_removed \(item.mangaTitle) \(item.chapterName)"), type: .info)
         processQueue()
     }
 
@@ -231,11 +231,11 @@ final class MangaDownloadManager: ObservableObject {
             do {
                 let urls = try await JSEngine.shared.mangaImages(url: chapterHref)
                 guard !urls.isEmpty else { throw NSError(domain: "MangaDownloadManager", code: -2,
-                    userInfo: [NSLocalizedDescriptionKey: "No pages found"]) }
+                    userInfo: [NSLocalizedDescriptionKey: String(localized: "reader.no_pages_found")]) }
                 let pageFiles = try await self.downloadPages(id: id, urls: urls, referer: referer, folder: folder)
-                await self.finishChapter(id: id, pageFiles: pageFiles)
+                self.finishChapter(id: id, pageFiles: pageFiles)
             } catch {
-                await self.failChapter(id: id, error: error)
+                self.failChapter(id: id, error: error)
             }
             self.chapterTasks.removeValue(forKey: id)
             self.processQueue()
@@ -262,7 +262,7 @@ final class MangaDownloadManager: ObservableObject {
         let parsed: [URL] = try urls.map {
             guard let url = URL(string: $0) else {
                 throw NSError(domain: "MangaDownloadManager", code: -1, userInfo: [
-                    NSLocalizedDescriptionKey: "Chapter contains an unreadable page URL"
+                    NSLocalizedDescriptionKey: String(localized: "shared.chapter_contains_an_unreadable_page")
                 ])
             }
             return url
@@ -307,7 +307,7 @@ final class MangaDownloadManager: ObservableObject {
         let status = (response as? HTTPURLResponse)?.statusCode ?? -1
         guard (200..<300).contains(status), !data.isEmpty else {
             throw NSError(domain: "MangaDownloadManager", code: status,
-                          userInfo: [NSLocalizedDescriptionKey: "Page fetch failed (HTTP \(status))"])
+                          userInfo: [NSLocalizedDescriptionKey: String(localized: "shared.page_fetch_failed_http \(status)")])
         }
         return data
     }
@@ -321,7 +321,7 @@ final class MangaDownloadManager: ObservableObject {
         items[idx].completedAt = Date()
         items[idx].error = nil
         persist()
-        ToastManager.shared.show(message: "Download finished: \(items[idx].mangaTitle) - \(items[idx].chapterName)", type: .success)
+        ToastManager.shared.show(message: String(localized: "shared.download_finished \(items[idx].mangaTitle) \(items[idx].chapterName)"), type: .success)
     }
 
     private func failChapter(id: UUID, error: Error) {
@@ -330,7 +330,7 @@ final class MangaDownloadManager: ObservableObject {
         items[idx].state = .failed
         items[idx].error = error.localizedDescription
         persist()
-        ToastManager.shared.show(message: "Download failed: \(items[idx].mangaTitle) - \(items[idx].chapterName)", type: .error)
+        ToastManager.shared.show(message: String(localized: "shared.download_failed \(items[idx].mangaTitle) \(items[idx].chapterName)"), type: .error)
     }
 
     // MARK: - Background keep-alive

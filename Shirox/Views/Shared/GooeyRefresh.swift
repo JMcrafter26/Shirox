@@ -5,8 +5,8 @@ extension View {
     /// Pull to refresh with a drop that stretches out of the Dynamic Island — or the notch, or the
     /// top edge — pinches off to hold the spinner, and melts back in when the refresh is done.
     ///
-    /// Settings › Library › Gooey Pull to Refresh turns it off, leaving `fallback`: the frosted
-    /// circle, or nothing for a screen that draws its own. Only for full screens: in a sheet the
+    /// Settings › General › Pull to Refresh picks it, `fallback` (the frosted circle, or nothing
+    /// for a screen that draws its own), or no indicator at all. Only for full screens: in a sheet the
     /// island is nowhere near the top of the view, so sheets use `circleRefreshable`.
     func gooeyRefreshable(fallback: GooeyRefreshFallback = .circle,
                           action: @escaping @Sendable () async -> Void) -> some View {
@@ -14,7 +14,35 @@ extension View {
     }
 }
 
-/// What a full screen shows with the drop turned off.
+/// How a full screen shows that it's refreshing.
+enum PullToRefreshStyle: String, CaseIterable, Identifiable {
+    /// The drop out of the Dynamic Island.
+    case gooey
+    /// The frosted circle, as sheets have.
+    case glass
+    /// Pulling still refreshes, with nothing on screen: a haptic at the threshold, and another
+    /// once the refresh is done.
+    case none
+
+    static let key = "pullToRefreshStyle"
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .gooey: return String(localized: "settings.gooey")
+        case .glass: return String(localized: "settings.glass")
+        case .none:  return String(localized: "settings.none")
+        }
+    }
+
+    /// Before the picker it was the Gooey switch: off meant the circle.
+    static var defaultStyle: PullToRefreshStyle {
+        UserDefaults.standard.object(forKey: GooeyRefreshGeometry.settingKey) as? Bool == false ? .glass : .gooey
+    }
+}
+
+/// What a full screen shows with the glass style.
 enum GooeyRefreshFallback {
     /// `circleRefreshable`.
     case circle
@@ -90,15 +118,15 @@ enum GooeyRefreshGeometry {
 
 struct GooeyRefreshModifier: ViewModifier {
     let fallback: GooeyRefreshFallback
-    let action: @Sendable () async -> Void
-    @AppStorage(GooeyRefreshGeometry.settingKey) private var enabled = true
+    nonisolated let action: @Sendable () async -> Void
+    @AppStorage(PullToRefreshStyle.key) private var style = PullToRefreshStyle.defaultStyle
 
     func body(content: Content) -> some View {
         #if os(iOS)
-        if enabled {
-            content.background(GooeyScrollHook(action: action))
-        } else {
-            fallbackContent(content)
+        switch style {
+        case .gooey: content.background(GooeyScrollHook(action: action, showsDrop: true))
+        case .none:  content.background(GooeyScrollHook(action: action, showsDrop: false))
+        case .glass: fallbackContent(content)
         }
         #else
         fallbackContent(content)
@@ -119,7 +147,9 @@ import UIKit
 
 /// Finds the scroll view the modifier sits on and drives the drop from its pull.
 private struct GooeyScrollHook: UIViewRepresentable {
-    let action: @Sendable () async -> Void
+    nonisolated let action: @Sendable () async -> Void
+    /// False for the None style: the pull and release refresh, but no drop comes out.
+    let showsDrop: Bool
 
     func makeCoordinator() -> GooeyRefreshController { GooeyRefreshController(action: action) }
 
@@ -133,6 +163,7 @@ private struct GooeyScrollHook: UIViewRepresentable {
 
     func updateUIView(_ uiView: ScrollViewHookView, context: Context) {
         context.coordinator.action = action
+        context.coordinator.showsDrop = showsDrop
     }
 
     static func dismantleUIView(_ uiView: ScrollViewHookView, coordinator: GooeyRefreshController) {
@@ -189,6 +220,7 @@ final class ScrollViewHookView: UIView {
 @MainActor
 final class GooeyRefreshController: NSObject {
     var action: @Sendable () async -> Void
+    var showsDrop = true
     private(set) weak var scrollView: UIScrollView?
     private(set) var refreshing = false
     /// The app-wide few-a-minute allowance; a pull over it never starts the spinner.
@@ -234,7 +266,7 @@ final class GooeyRefreshController: NSObject {
             if past, !crossedThreshold { haptic.impactOccurred() }
             crossedThreshold = past
         }
-        GooeyRefreshCenter.shared.update(pull: pull, from: self)
+        if showsDrop { GooeyRefreshCenter.shared.update(pull: pull, from: self) }
     }
 
     @objc private func panned(_ gesture: UIPanGestureRecognizer) {
@@ -248,14 +280,16 @@ final class GooeyRefreshController: NSObject {
     func refresh() {
         guard !refreshing, limiter.allow() else { return }
         refreshing = true
-        let center = GooeyRefreshCenter.shared
-        center.began(self)
+        let center = showsDrop ? GooeyRefreshCenter.shared : nil
+        center?.began(self)
         let action = self.action
         // Held until the action returns, so the drop is told even if the screen has gone.
         Task { @MainActor in
             await action()
             self.refreshing = false
-            center.ended(self)
+            center?.ended(self)
+            // With no drop, nothing else says the refresh is over.
+            if !self.showsDrop { UINotificationFeedbackGenerator().notificationOccurred(.success) }
         }
     }
 }

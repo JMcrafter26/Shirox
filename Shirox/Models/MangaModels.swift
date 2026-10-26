@@ -18,7 +18,7 @@ struct MangaChapter: Identifiable, Codable, Equatable {
     var displayName: String {
         if let title, !title.isEmpty { return title }
         if let group, !group.isEmpty { return group }
-        return "Chapter \(label)"
+        return String(localized: "shared.chapter \(label)")
     }
 
     /// Compact number for the row circle: whole numbers drop the ".0"

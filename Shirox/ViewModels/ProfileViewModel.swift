@@ -263,7 +263,7 @@ final class ProfileViewModel: ObservableObject {
                 await loadActivity(userId: uid)
             }
         } catch ProviderError.unsupported {
-            self.error = "Posting status is not supported by the current provider."
+            self.error = String(localized: "shared.posting_status_is_not_supported")
         } catch {
             self.error = error.localizedDescription
         }

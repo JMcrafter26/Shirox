@@ -65,7 +65,7 @@ struct CastOverlayView: View {
                         .lineLimit(2)
 
                     if let ep = episodeNumber {
-                        Text("Episode \(ep)")
+                        Text("common.episode \(ep)")
                             .font(.subheadline)
                             .foregroundStyle(.white.opacity(0.65))
                     }
@@ -76,12 +76,12 @@ struct CastOverlayView: View {
                         ProgressView()
                             .controlSize(.mini)
                             .tint(.white)
-                        Text("Reconnecting to \(deviceName)…")
+                        Text("player.reconnecting_to \(deviceName)")
                             .font(.caption.weight(.semibold))
                     } else {
-                        Image(systemName: "tv.fill")
+                        IconView("tv.fill")
                             .font(.system(size: 12, weight: .semibold))
-                        Text("Playing on \(deviceName)")
+                        Text("player.playing_on \(deviceName)")
                             .font(.caption.weight(.semibold))
                     }
                 }
@@ -95,7 +95,7 @@ struct CastOverlayView: View {
 
             // // Dismiss button — respects safe area so it sits at the real top
             // Button(action: onDismiss) {
-            //     Image(systemName: "xmark")
+            //     IconView("xmark")
             //         .font(.system(size: 18, weight: .semibold))
             //         .foregroundStyle(.white)
             //         .frame(width: 44, height: 44)

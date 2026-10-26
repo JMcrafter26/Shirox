@@ -19,7 +19,8 @@ final class MALAuthManager: NSObject, ObservableObject {
 
     // Register app at https://myanimelist.net/apiconfig
     // App Type: other, Redirect URI: shirox://auth-mal
-    let clientId = "9e0dc49b04d7c8f95014ddcb7718fcb9"
+    /// The app's public client id: no secret, and readable from any thread.
+    nonisolated static let clientId = "9e0dc49b04d7c8f95014ddcb7718fcb9"
 
     private let accessTokenKey = "mal_access_token"
     private let refreshTokenKey = "mal_refresh_token"
@@ -161,7 +162,7 @@ final class MALAuthManager: NSObject, ObservableObject {
         var components = URLComponents(string: "https://myanimelist.net/v1/oauth2/authorize")!
         components.queryItems = [
             URLQueryItem(name: "response_type", value: "code"),
-            URLQueryItem(name: "client_id", value: clientId),
+            URLQueryItem(name: "client_id", value: Self.clientId),
             URLQueryItem(name: "code_challenge", value: verifier),
             URLQueryItem(name: "code_challenge_method", value: "plain"),
             URLQueryItem(name: "redirect_uri", value: "shirox://auth-mal")
@@ -202,7 +203,7 @@ final class MALAuthManager: NSObject, ObservableObject {
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
         let bodyParts = [
-            "client_id=\(clientId)",
+            "client_id=\(Self.clientId)",
             "code=\(code)",
             "code_verifier=\(verifier)",
             "grant_type=authorization_code",
@@ -224,7 +225,7 @@ final class MALAuthManager: NSObject, ObservableObject {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        let body = "client_id=\(clientId)&grant_type=refresh_token&refresh_token=\(refresh)"
+        let body = "client_id=\(Self.clientId)&grant_type=refresh_token&refresh_token=\(refresh)"
         request.httpBody = body.data(using: .utf8)
         let (data, response) = try await URLSession.shared.data(for: request)
         if let http = response as? HTTPURLResponse, http.statusCode != 200 {

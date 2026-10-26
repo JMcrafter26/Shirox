@@ -32,7 +32,12 @@ enum AirPlaySubtitles {
     static func languageCode(forName name: String) -> String? {
         let lowered = name.lowercased()
         let words = Set(lowered.components(separatedBy: CharacterSet.letters.inverted).filter { !$0.isEmpty })
-        let codes = Locale.isoLanguageCodes.filter { $0.count == 2 }
+        let codes: [String]
+        if #available(iOS 16, macOS 13, tvOS 16, *) {
+            codes = Locale.LanguageCode.isoLanguageCodes.map(\.identifier).filter { $0.count == 2 }
+        } else {
+            codes = Locale.isoLanguageCodes.filter { $0.count == 2 }
+        }
         // A bare code, two letters or three ("en", "eng", "pt-BR").
         if let first = lowered.split(whereSeparator: { !$0.isLetter }).first.map(String.init) {
             if first.count == 2, codes.contains(first), lowered.count <= 5 { return first }

@@ -4,7 +4,7 @@ extension ScoreFormat {
     /// Renders a score for display, using an SF Symbol face for the 3-point format.
     func scoreText(for score: Double) -> Text {
         if let symbol = point3Symbol(for: score) {
-            return Text(Image(systemName: symbol))
+            return Text(Image(icon: symbol))
         }
         return Text(displayString(for: score))
     }
@@ -37,19 +37,19 @@ struct ScoreInputView: View {
             }
         case .point10:
             #if !os(tvOS)
-            Stepper(score == 0 ? "No score" : "\(Int(score)) / 10", value: $score, in: 0...10, step: 1)
+            Stepper(score == 0 ? String(localized: "shared.no_score") : "\(Int(score)) / 10", value: $score, in: 0...10, step: 1)
             #else
             EmptyView()
             #endif
         case .point5:
             HStack(spacing: 8) {
                 Button { score = 0 } label: {
-                    Image(systemName: "xmark.circle")
+                    IconView("xmark.circle")
                         .foregroundStyle(score == 0 ? .primary : .secondary)
                 }
                 .buttonStyle(.plain)
                 ForEach(1...5, id: \.self) { star in
-                    Image(systemName: Double(star) <= score ? "star.fill" : "star")
+                    IconView(Double(star) <= score ? "star.fill" : "star")
                         .foregroundStyle(Double(star) <= score ? .yellow : .secondary)
                         .onTapGesture { score = score == Double(star) ? 0 : Double(star) }
                 }
@@ -61,7 +61,7 @@ struct ScoreInputView: View {
         case .point3:
             HStack(spacing: 20) {
                 ForEach(Array(zip(ScoreFormat.point3SymbolNames, [1.0, 2.0, 3.0])), id: \.0) { symbol, value in
-                    Image(systemName: symbol)
+                    IconView(symbol)
                         .font(.title2)
                         .symbolRenderingMode(.hierarchical)
                         .opacity(score == value ? 1 : 0.35)

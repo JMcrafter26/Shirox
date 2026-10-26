@@ -829,24 +829,24 @@ enum AniListError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .rateLimited:
-            return "AniList rate limit reached. Please wait a moment."
+            return String(localized: "shared.anilist_rate_limit_reached_please")
         case .httpError(let code):
-            return "HTTP error \(code). Please try again."
+            return String(localized: "shared.http_error_please_try_again \(code)")
         case .serviceMessage(_, let message):
             return message
         case .tokenRejected:
             // Names the remedy, not the status. A bare "HTTP error 400" on every authenticated
             // screen was the original complaint.
-            return "AniList didn't accept your sign-in. Sign in to AniList again to keep syncing."
+            return String(localized: "shared.anilist_didnt_accept_your_sign")
 
         case .graphQL(let message):
             // The service's own wording, unadorned — prefixing it with "AniList error:" made
             // sentences like "The AniList API has been temporarily disabled…" read twice.
             return message
         case .noData:
-            return "No data received from AniList."
+            return String(localized: "shared.no_data_received_from_anilist")
         case .decodingError(let message):
-            return "Failed to parse response: \(message)"
+            return String(localized: "shared.failed_to_parse_response \(message)")
         }
     }
 }
@@ -980,11 +980,11 @@ enum BrowseCategory: String, CaseIterable, Hashable {
 
     var title: String {
         switch self {
-        case .trending:   return "Trending Now"
-        case .seasonal:   return "This Season"
-        case .lastSeason: return "Last Season · Complete"
-        case .popular:    return "All-Time Popular"
-        case .topRated:   return "Top Rated"
+        case .trending:   return String(localized: "shared.trending_now")
+        case .seasonal:   return String(localized: "shared.this_season")
+        case .lastSeason: return String(localized: "shared.last_season_complete")
+        case .popular:    return String(localized: "shared.all_time_popular")
+        case .topRated:   return String(localized: "shared.top_rated")
         }
     }
 }

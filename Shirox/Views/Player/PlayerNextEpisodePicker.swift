@@ -2,7 +2,7 @@ import SwiftUI
 
 struct PlayerNextEpisodePicker: View {
     let streams: [StreamResult]
-    var title: String = "Choose Quality"
+    var title: String = String(localized: "player.choose_quality")
     let onSelect: (StreamResult) -> Void
     @Environment(\.dismiss) private var dismiss
 
@@ -34,7 +34,7 @@ struct PlayerNextEpisodePicker: View {
             #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("common.cancel") { dismiss() }
                 }
             }
         }

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # 1. Blocks staged lines that add bidi controls or zero-width characters (Trojan Source).
-# 2. Runs Semgrep on the staged files when it's installed (brew install semgrep). It scans the
+# 2. Blocks hardcoded UI text in staged Swift files (scripts/i18n/i18n.py check), and SF Symbols
+#    missing from iconpacks/icons.json (scripts/icons/icons.py check).
+# 3. Runs Semgrep on the staged files when it's installed (brew install semgrep). It scans the
 #    working tree copies, so unstaged edits in those files are scanned too.
 # Skip once with: git commit --no-verify
 
@@ -20,6 +22,22 @@ if [ -n "$hidden" ]; then
   echo "Staged changes add hidden Unicode characters:" >&2
   echo "$hidden" >&2
   exit 1
+fi
+
+# 2. UI text in staged Swift files goes through the string catalog (scripts/i18n/i18n.py).
+swift_files=()
+while IFS= read -r -d '' f; do
+  swift_files+=("$f")
+done < <(git diff --cached --name-only --diff-filter=ACM -z -- '*.swift')
+if [ ${#swift_files[@]} -gt 0 ] && command -v python3 >/dev/null 2>&1; then
+  if ! python3 -I scripts/i18n/i18n.py check "${swift_files[@]}"; then
+    echo "Use a key from Shirox/Localizable.xcstrings, or commit with --no-verify." >&2
+    exit 1
+  fi
+  # Every SF Symbol the app uses is in iconpacks/icons.json, which icon packs are made against.
+  if ! python3 -I scripts/icons/icons.py check; then
+    exit 1
+  fi
 fi
 
 if ! command -v semgrep >/dev/null 2>&1; then

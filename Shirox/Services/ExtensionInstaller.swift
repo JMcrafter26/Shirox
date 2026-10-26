@@ -10,9 +10,10 @@ enum ExtensionInstallError: LocalizedError, Equatable {
     var errorDescription: String? {
         switch self {
         case .missingFiles(let names):
-            return "This provider is missing \(ListFormatter.localizedString(byJoining: names.map { "\($0).js" }))."
-        case .noPlugin: return "This plugin file has no script Shirox can run."
-        case .nothingToSearch: return "This addon has nothing Shirox can search: it needs a search catalog, or Kitsu or IMDb ids."
+            let files = ListFormatter.localizedString(byJoining: names.map { $0 + ".js" })
+            return String(localized: "modules.this_provider_is_missing \(files)")
+        case .noPlugin: return String(localized: "modules.this_plugin_file_has_no")
+        case .nothingToSearch: return String(localized: "modules.this_addon_has_nothing_shirox")
         case .adult: return ModuleLinkError.adult.localizedDescription
         }
     }

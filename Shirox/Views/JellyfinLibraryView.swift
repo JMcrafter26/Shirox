@@ -29,7 +29,7 @@ struct JellyfinLibraryView: View {
                         .frame(maxWidth: .infinity).padding(.top, 40)
                 } else {
                     if query.isEmpty && !combinedContinue.isEmpty {
-                        Text("Library")
+                        Text("common.library")
                             .font(.headline)
                             .padding(.top, 12)
                     }
@@ -39,17 +39,17 @@ struct JellyfinLibraryView: View {
             .padding(16)
         }
         .softScrollEdges()
-        .searchable(text: $query, prompt: "Search your Jellyfin library")
+        .searchable(text: $query, prompt: String(localized: "library.search_your_jellyfin_library"))
         .onChangeOf(query) { _ in scheduleSearch() }
         .task { await loadInitial() }
     }
 
     private var header: some View {
         HStack {
-            Label(auth.serverName ?? "Jellyfin", systemImage: "server.rack")
+            Label(auth.serverName ?? "Jellyfin", icon: "server.rack")
                 .font(.subheadline.weight(.semibold))
             Spacer()
-            Button("Disconnect") { auth.logout() }
+            Button("library.disconnect") { auth.logout() }
                 .font(.caption)
                 .foregroundStyle(.red)
         }
@@ -67,7 +67,7 @@ struct JellyfinLibraryView: View {
 
     private var continueRow: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Continue Watching").font(.headline)
+            Text("shared.continue_watching").font(.headline)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
                     ForEach(combinedContinue) { item in
@@ -114,7 +114,7 @@ struct JellyfinLibraryView: View {
             nextUp = (try? await n) ?? []
             items = try await i
         } catch {
-            self.error = "Couldn't load your library."
+            self.error = String(localized: "library.couldnt_load_your_library")
         }
         isLoading = false
     }
@@ -134,7 +134,7 @@ struct JellyfinLibraryView: View {
             items = try await JellyfinService.shared.items(
                 parentId: nil, searchTerm: query.isEmpty ? nil : query)
         } catch {
-            self.error = "Search failed."
+            self.error = String(localized: "library.search_failed")
         }
         isLoading = false
     }

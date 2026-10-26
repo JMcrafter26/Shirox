@@ -24,20 +24,20 @@ struct AniListMangaDetailView: View {
             if let media, let resolvedItem, phase == .ready {
                 MangaDetailView(item: resolvedItem, aniListMedia: media)
             } else if phase == .noModule {
-                ContentUnavailableView("No Manga Module",
+                ContentUnavailableView("detail.no_manga_module",
                     systemImage: "book.closed",
-                    description: Text("Install a manga module in the Search tab to read this."))
+                    description: Text("detail.install_a_manga_module_in"))
             } else if phase == .notFound {
-                ContentUnavailableView("Not Found",
+                ContentUnavailableView("detail.not_found",
                     systemImage: "magnifyingglass",
-                    description: Text("No match for this title in your manga module."))
+                    description: Text("detail.no_match_for_this_title"))
             } else if case .error(let msg) = phase {
-                ContentUnavailableView("Couldn't Load",
+                ContentUnavailableView("common.couldnt_load",
                     systemImage: "exclamationmark.triangle", description: Text(msg))
             } else {
                 VStack(spacing: 12) {
                     ProgressView().scaleEffect(1.2)
-                    Text("Loading…").font(.subheadline).foregroundStyle(.secondary)
+                    Text("common.loading").font(.subheadline).foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
@@ -51,7 +51,7 @@ struct AniListMangaDetailView: View {
             do { media = try await AniListProvider.shared.mangaDetail(id: mediaId) }
             catch { phase = .error(error.localizedDescription); return }
         }
-        guard let media else { phase = .error("No data"); return }
+        guard let media else { phase = .error(String(localized: "detail.no_data")); return }
         #if os(iOS)
         if let item = await MangaModuleResolver.shared.resolve(title: media.title.searchTitle) {
             resolvedItem = item

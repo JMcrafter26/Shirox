@@ -12,9 +12,9 @@ enum MangaReadingMode: String, CaseIterable, Identifiable {
 
     var label: String {
         switch self {
-        case .vertical: return "Vertical Scroll"
-        case .pagedLTR: return "Paged (Left to Right)"
-        case .pagedRTL: return "Paged (Right to Left)"
+        case .vertical: return String(localized: "reader.vertical_scroll")
+        case .pagedLTR: return String(localized: "reader.paged_left_to_right")
+        case .pagedRTL: return String(localized: "reader.paged_right_to_left")
         }
     }
 
@@ -250,6 +250,12 @@ struct MangaReaderView: View {
     }
 
     private var displayedChapter: MangaChapter? { context.chapters[safe: displayedChapterIndex] }
+
+    /// The manga and chapter open, as the Discord status.
+    private func showOnDiscord() {
+        DiscordPresence.shared.updateManga(title: context.mangaTitle, chapter: displayedChapter?.displayName,
+                                           volume: nil, coverURL: context.coverImage)
+    }
     private var hasNextChapter: Bool { displayedChapterIndex + 1 < context.chapters.count }
     private var hasPrevChapter: Bool { displayedChapterIndex > 0 }
 
@@ -336,6 +342,7 @@ struct MangaReaderView: View {
             performSave()
         }
         .onAppear {
+            showOnDiscord()
             // Reading session: keep the screen awake until the reader closes.
             UIApplication.shared.isIdleTimerDisabled = true
             // The reader turns with the phone, as the player does, unless Settings → Reader →
@@ -344,7 +351,9 @@ struct MangaReaderView: View {
                 PlayerPresenter.shared.updateOrientationLock(.allButUpsideDown)
             }
         }
+        .onChangeOf(displayedChapterIndex) { showOnDiscord() }
         .onDisappear {
+            DiscordPresence.shared.clear()
             UIApplication.shared.isIdleTimerDisabled = false
             PlayerPresenter.shared.resetToAppOrientation(shouldRotate: true)
             saveTask?.cancel()
@@ -537,7 +546,7 @@ struct MangaReaderView: View {
                 HStack {
                     Spacer()
                     Button { toggleAutoScroll() } label: {
-                        Image(systemName: "pause.fill")
+                        IconView("pause.fill")
                             .font(.system(size: 17, weight: .semibold))
                             .foregroundStyle(.black)
                             .frame(width: 46, height: 46)
@@ -563,7 +572,7 @@ struct MangaReaderView: View {
                 PlayerPresenter.shared.resetToAppOrientation(shouldRotate: true)
                 dismiss()
             } label: {
-                Image(systemName: "xmark")
+                IconView("xmark")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(width: 46, height: 46)
@@ -586,7 +595,7 @@ struct MangaReaderView: View {
             Spacer()
 
             Menu {
-                Picker("Reading Mode", selection: Binding(
+                Picker("reader.reading_mode", selection: Binding(
                     get: { modeRaw },
                     set: { newMode in
                         guard newMode != modeRaw else { return }
@@ -594,24 +603,24 @@ struct MangaReaderView: View {
                         modeRaw = newMode
                     })) {
                     ForEach(MangaReadingMode.allCases) { m in
-                        Label(m.label, systemImage: m.icon).tag(m.rawValue)
+                        Label(m.label, icon: m.icon).tag(m.rawValue)
                     }
                 }
                 Toggle(isOn: $pageCurl) {
-                    Label("Page Curl", systemImage: "book.pages")
+                    Label("reader.page_curl", icon: "book.pages")
                 }
                 .disabled(mode == .vertical)
                 Section {
                     Toggle(isOn: $tapZones) {
-                        Label("Tap Sides to \(mode == .vertical ? "Scroll" : "Turn")", systemImage: "hand.tap")
+                        Label(mode == .vertical ? String(localized: "reader.tap_sides_to_scroll") : String(localized: "reader.tap_sides_to_turn"), icon: "hand.tap")
                     }
                     Toggle(isOn: $tapZonesReversed) {
-                        Label("Reverse Direction", systemImage: "arrow.left.arrow.right")
+                        Label("reader.reverse_direction", icon: "arrow.left.arrow.right")
                     }
                     .disabled(mode != .vertical)
                 }
             } label: {
-                Image(systemName: "book")
+                IconView("book")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(.white)
                     .frame(width: 46, height: 46)
@@ -634,12 +643,12 @@ struct MangaReaderView: View {
                 // cluster. Dragging feeds autoScrollSpeed, which onChangeOf
                 // pushes straight into the running scroller — no stopping.
                 HStack(spacing: 10) {
-                    Image(systemName: "tortoise.fill")
+                    IconView("tortoise.fill")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(.white.opacity(0.7))
                     Slider(value: $autoScrollSpeed, in: Self.autoScrollSpeedRange)
                         .tint(.white)
-                    Image(systemName: "hare.fill")
+                    IconView("hare.fill")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(.white.opacity(0.7))
                 }
@@ -684,7 +693,7 @@ struct MangaReaderView: View {
                 // (vertical mode); it hides with the chrome, not on its own.
                 if mode == .vertical {
                     Button { toggleAutoScroll() } label: {
-                        Image(systemName: isAutoScrolling ? "pause.fill" : "play.fill")
+                        IconView(isAutoScrolling ? "pause.fill" : "play.fill")
                             .font(.system(size: 17, weight: .semibold))
                             .foregroundStyle(isAutoScrolling ? .black : .white)
                             .frame(width: 46, height: 46)
@@ -713,7 +722,7 @@ struct MangaReaderView: View {
     private func chapterButton(previous: Bool) -> some View {
         let enabled = previous ? hasPrevChapter : hasNextChapter
         return Button { goToChapter(displayedChapterIndex + (previous ? -1 : 1)) } label: {
-            Image(systemName: previous ? "backward.end.fill" : "forward.end.fill")
+            IconView(previous ? "backward.end.fill" : "forward.end.fill")
                 .font(.system(size: 17, weight: .semibold))
                 .scaleEffect(x: controlsReversed ? -1 : 1, y: 1)
                 .foregroundStyle(.white.opacity(enabled ? 1 : 0.3))
@@ -727,7 +736,7 @@ struct MangaReaderView: View {
         VStack {
             Spacer()
             Button { goToChapter(displayedChapterIndex + 1) } label: {
-                Label("Next Chapter", systemImage: "arrow.right")
+                Label("reader.next_chapter", icon: "arrow.right")
                     .font(.subheadline.weight(.bold))
                     .foregroundStyle(.white)
                     .padding(.horizontal, 20)
@@ -741,14 +750,14 @@ struct MangaReaderView: View {
 
     private func errorView(_ message: String) -> some View {
         VStack(spacing: 12) {
-            Image(systemName: "exclamationmark.triangle")
+            IconView("exclamationmark.triangle")
                 .font(.title)
                 .foregroundStyle(.white.opacity(0.8))
             Text(message)
                 .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.8))
                 .multilineTextAlignment(.center)
-            Button("Retry") {
+            Button("common.retry") {
                 let chapterIdx = displayedChapterIndex
                 Task { await loadChapter(chapterIdx) }
             }
@@ -769,7 +778,7 @@ struct MangaReaderView: View {
         // Reading entry) used to reach `context.chapters[-1]` and crash the app.
         guard !context.chapters.isEmpty else {
             strip = []
-            loadError = "No chapters found"
+            loadError = String(localized: "common.no_chapters_found")
             isLoading = false
             return
         }
@@ -795,7 +804,7 @@ struct MangaReaderView: View {
                 result = try await CloudflareBypassManager.shared.pastWall { try await JSEngine.shared.mangaImages(url: target.href) }
             }
             if result.isEmpty {
-                loadError = "No pages found"
+                loadError = String(localized: "reader.no_pages_found")
             } else {
                 strip = result.enumerated().map {
                     StripPage(chapterIdx: clamped, pageIdx: $0.offset, url: $0.element, globalIdx: $0.offset)
@@ -948,7 +957,7 @@ struct MangaReaderView: View {
     private func warmImage(_ urlString: String) {
         guard let url = URL(string: urlString) else { return }
         KingfisherManager.shared.retrieveImage(
-            with: Kingfisher.ImageResource(downloadURL: url, cacheKey: urlString),
+            with: KF.ImageResource(downloadURL: url, cacheKey: urlString),
             options: ReaderPageView.imageOptions(referer: referer, for: url)) { _ in }
     }
 
