@@ -177,7 +177,6 @@ struct AppIconOption: Identifiable, Hashable {
         switch name {
         case nil:         return String(localized: "settings.default")
         case "realistic": return String(localized: "settings.app_icon_realistic")
-        case "pride":     return String(localized: "settings.app_icon_pride")
         case let name?:
             return name.replacingOccurrences(of: "-", with: " ").replacingOccurrences(of: "_", with: " ")
                 .localizedCapitalized
