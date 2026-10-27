@@ -188,9 +188,7 @@ struct HomeView: View {
                     // In a ZStack so a switch's leaving and arriving pages overlap.
                     ZStack {
                         CinematicHome(items: heroItems, leadingInset: leadingInset,
-                                      onRefresh: { await performRefresh() }) {
-                            rows
-                        }
+                                      onRefresh: { await performRefresh() }, rows: { rows })
                         .id(homePage)
                         .transition(.pageTurn(step: pageStep))
                     }
@@ -450,9 +448,9 @@ private struct PageTurnEffect: ViewModifier {
     }
 }
 
-private extension AnyTransition {
+extension AnyTransition {
     /// `step` is which way the switch went through the menus' order: 1 onward, -1 back.
-    static func pageTurn(step: Int) -> AnyTransition {
+    fileprivate static func pageTurn(step: Int) -> AnyTransition {
         .asymmetric(
             insertion: .modifier(active: PageTurnEffect(offset: CGFloat(step) * 56, hidden: true),
                                  identity: PageTurnEffect()),
@@ -466,7 +464,7 @@ private extension AnyTransition {
 private struct FeaturedCarousel: View {
     let items: [Media]
     var isRefreshing: Bool = false
-    var onRefresh: (() async -> Void)? = nil
+    var onRefresh: (() async -> Void)?
     var leadingInset: CGFloat = 0
 
     @State private var selectedTab = HeroPages.middle
@@ -913,7 +911,7 @@ private struct MacFeaturedCarousel: View {
 
 /// Gives the hero its height from the width it's offered, which a GeometryReader alone can't.
 private struct MacHeroHeight: ViewModifier {
-    @State private var width: CGFloat = 1000
+    @State private var width: CGFloat = 1_000
 
     func body(content: Content) -> some View {
         content
@@ -937,7 +935,7 @@ private struct MacHeroHeight: ViewModifier {
 private struct CinematicHome<Rows: View>: View {
     let items: [Media]
     var leadingInset: CGFloat = 0
-    nonisolated var onRefresh: (@Sendable () async -> Void)? = nil
+    nonisolated var onRefresh: (@Sendable () async -> Void)?
     @ViewBuilder let rows: () -> Rows
 
     @State private var currentIndex = 0
@@ -1153,10 +1151,10 @@ enum HeroParallax {
 private struct FeaturedCard: View {
     let media: Media
     var isWide: Bool = false
-    var width: CGFloat? = nil
-    var height: CGFloat? = nil
+    var width: CGFloat?
+    var height: CGFloat?
     /// The carousel's centre on screen, where a page rests. nil: no parallax.
-    var carouselMidX: CGFloat? = nil
+    var carouselMidX: CGFloat?
 
     private var aspectRatio: CGFloat {
         #if os(iOS) && !targetEnvironment(macCatalyst)
@@ -1350,7 +1348,6 @@ private struct AnimeSection<SeeAll: View>: View {
         }
     }
 }
-
 
 // MARK: - Press Style
 

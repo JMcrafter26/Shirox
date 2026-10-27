@@ -1,5 +1,5 @@
-import SwiftUI
 import AuthenticationServices
+import SwiftUI
 
 /// First-run setup.
 ///

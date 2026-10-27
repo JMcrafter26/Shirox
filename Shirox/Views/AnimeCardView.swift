@@ -5,7 +5,7 @@ struct AnimeCardView: View {
 
     var body: some View {
         Color.clear
-            .aspectRatio(2/3, contentMode: .fit)
+            .aspectRatio(2 / 3, contentMode: .fit)
             .overlay(
                 ZStack {
                     CachedAsyncImage(urlString: item.image)

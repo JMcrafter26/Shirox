@@ -50,7 +50,7 @@ struct ProfileSwap {
     static let deviceFiles: Set<String> = [
         profilesFolder, "Downloads", "MangaDownloads", "downloads_manifest.json",
         "manga_downloads_manifest.json", "logs.txt",
-        "id-mappings.json", "id-media-mappings.json", "id-tvdb-groups.json",
+        "id-mappings.json", "id-media-mappings.json", "id-tvdb-groups.json"
     ]
 
     /// Files in Caches that are an account's rather than a cache anyone could rebuild the same.
@@ -67,7 +67,7 @@ struct ProfileSwap {
         "com.shirox.hasLaunchedSinceInstall", "hasCompletedOnboarding",
         "movedFilesIntoSupportFolder", "movedFilesOutOfDocuments",
         "downloadsNotRemuxed", "downloadsAudioConfigChecked", "jellyfin_device_id",
-        "downloadsAudioRestoreChecked", "downloadsAudioRestoreTries", "profilesAskAtLaunch", "profilesPickerColor",
+        "downloadsAudioRestoreChecked", "downloadsAudioRestoreTries", "profilesAskAtLaunch", "profilesPickerColor"
     ]
 
     static func isDeviceKey(_ key: String) -> Bool {
@@ -282,7 +282,7 @@ struct SystemProfileKeychain: ProfileKeychain {
             kSecClass: kSecClassGenericPassword,
             kSecAttrAccount: account,
             kSecReturnData: true,
-            kSecMatchLimit: kSecMatchLimitOne,
+            kSecMatchLimit: kSecMatchLimitOne
         ]
         var result: AnyObject?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
@@ -299,7 +299,7 @@ struct SystemProfileKeychain: ProfileKeychain {
             kSecClass: kSecClassGenericPassword,
             kSecAttrAccount: account,
             kSecValueData: data,
-            kSecAttrAccessible: kSecAttrAccessibleWhenUnlocked,
+            kSecAttrAccessible: kSecAttrAccessibleWhenUnlocked
         ] as CFDictionary, nil)
     }
 

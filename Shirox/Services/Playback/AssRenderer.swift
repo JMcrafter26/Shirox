@@ -14,7 +14,6 @@ struct AssFrame {
 ///
 /// libass isn't thread-safe; every call to it goes through `queue`.
 final class AssRenderer: @unchecked Sendable {
-
     enum Rendered {
         /// Nothing changed since the last frame.
         case unchanged
@@ -101,7 +100,7 @@ final class AssRenderer: @unchecked Sendable {
                 self.fontScale = fontScale
                 settingsChanged = true
             }
-            let milliseconds = Int64((seconds * 1000).rounded())
+            let milliseconds = Int64((seconds * 1_000).rounded())
             if !settingsChanged {
                 // Paused: the same instant renders the same picture.
                 if milliseconds == lastMilliseconds { return .unchanged }

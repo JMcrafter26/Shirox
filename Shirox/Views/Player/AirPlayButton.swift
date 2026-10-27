@@ -1,6 +1,6 @@
 #if os(iOS)
-import SwiftUI
 import AVKit
+import SwiftUI
 
 #if canImport(GoogleCast)
 import GoogleCast

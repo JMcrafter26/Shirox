@@ -171,30 +171,34 @@ final class SimklLibraryService {
     }
 
     struct AllItemsResponse: Decodable {
-        struct Item: Decodable {
-            struct Show: Decodable {
-                struct IDs: Decodable {
-                    let simkl: FlexibleID?
-                    let mal: FlexibleID?
-                    let anilist: FlexibleID?
-                }
-                let title: String?
-                /// An image fragment such as `74/74415673dcdc9cdd`; see `SimklCatalogItem.posterURLString`.
-                let poster: String?
-                /// A number in Simkl's docs — decoded as leniently as the ids, so one odd value
-                /// can't fail the whole library.
-                let year: FlexibleID?
-                let ids: IDs?
-            }
-            let show: Show?
-            let status: String?
-            let watched_episodes_count: Int?
-            let total_episodes_count: Int?
-            let user_rating: Int?
-            /// `tv`, `movie`, `ova`, `ona`, `special` or `music video`.
-            let anime_type: String?
-        }
-        let anime: [Item]?
+        let anime: [AllItemsItem]?
+    }
+
+    /// One anime in a `/sync/all-items` read.
+    struct AllItemsItem: Decodable {
+        let show: AllItemsShow?
+        let status: String?
+        let watched_episodes_count: Int?
+        let total_episodes_count: Int?
+        let user_rating: Int?
+        /// `tv`, `movie`, `ova`, `ona`, `special` or `music video`.
+        let anime_type: String?
+    }
+
+    struct AllItemsShow: Decodable {
+        let title: String?
+        /// An image fragment such as `74/74415673dcdc9cdd`; see `SimklCatalogItem.posterURLString`.
+        let poster: String?
+        /// A number in Simkl's docs — decoded as leniently as the ids, so one odd value
+        /// can't fail the whole library.
+        let year: FlexibleID?
+        let ids: AllItemsShowIDs?
+    }
+
+    struct AllItemsShowIDs: Decodable {
+        let simkl: FlexibleID?
+        let mal: FlexibleID?
+        let anilist: FlexibleID?
     }
 
     /// Pure decoding seam, so the real response shape can be tested without a network.
@@ -210,7 +214,7 @@ final class SimklLibraryService {
         return (decoded.anime ?? []).compactMap(simklOnlyEntry(from:))
     }
 
-    nonisolated static func simklOnlyEntry(from item: AllItemsResponse.Item) -> LibraryEntry? {
+    nonisolated static func simklOnlyEntry(from item: AllItemsItem) -> LibraryEntry? {
         guard let show = item.show, let ids = show.ids, ids.mal?.value == nil, ids.anilist?.value == nil,
               let simklID = ids.simkl?.value else { return nil }
         let watched = item.watched_episodes_count ?? 0
@@ -678,7 +682,7 @@ final class SimklLibraryService {
         return order.compactMap { byID[$0] }
     }
 
-    nonisolated static func entry(from item: AllItemsResponse.Item) -> LibraryEntry? {
+    nonisolated static func entry(from item: AllItemsItem) -> LibraryEntry? {
         guard let show = item.show, let ids = show.ids else { return nil }
         // Keyed by the MyAnimeList id where there is one — the spine the pairing joins on.
         guard let id = ids.mal?.value ?? ids.anilist?.value else { return nil }

@@ -52,7 +52,7 @@ private struct WatchOrderCard: View {
         VStack(alignment: .leading, spacing: 6) {
             ZStack(alignment: .topLeading) {
                 CachedAsyncImage(urlString: entry.cover ?? "")
-                    .aspectRatio(2/3, contentMode: .fill)
+                    .aspectRatio(2 / 3, contentMode: .fill)
                     .frame(width: 110, height: 165)
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                     .contentShape(RoundedRectangle(cornerRadius: 12))

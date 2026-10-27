@@ -16,6 +16,7 @@ import GoogleCast
 ///
 /// Asserting on raw selector strings (rather than trusting Swift's importer to keep naming them
 /// the way it does today) is the point: these are the literal selectors `GCKSessionManager` sends.
+@MainActor
 final class CastSessionListenerSelectorTests: XCTestCase {
 
     /// Every callback the app depends on for correct state, as the SDK will send it.
@@ -40,7 +41,7 @@ final class CastSessionListenerSelectorTests: XCTestCase {
     func testCastManagerImplementsEverySessionCallbackTheSDKSends() {
         let manager: AnyObject = CastManager.shared
         var missing: [String] = []
-        for name in requiredSelectors where !manager.responds(to: Selector(name)) {
+        for name in requiredSelectors where !manager.responds(to: NSSelectorFromString(name)) {
             missing.append(name)
         }
         XCTAssertTrue(missing.isEmpty,
@@ -51,17 +52,19 @@ final class CastSessionListenerSelectorTests: XCTestCase {
     /// The media-status callback is what drives play/pause, position and receiver errors.
     func testCastManagerImplementsRemoteMediaClientCallbacks() {
         let manager: AnyObject = CastManager.shared
-        XCTAssertTrue(manager.responds(to: Selector("remoteMediaClient:didUpdateMediaStatus:")),
+        XCTAssertTrue(manager.responds(to: NSSelectorFromString("remoteMediaClient:didUpdateMediaStatus:")),
                       "media status updates would never arrive")
-        XCTAssertTrue(manager.responds(to: Selector("remoteMediaClientDidUpdateQueue:")),
+        XCTAssertTrue(manager.responds(to: NSSelectorFromString("remoteMediaClientDidUpdateQueue:")),
                       "the receiver dropping our media would go unnoticed")
     }
 
     /// `CastManager` must be registered as a listener at all — a correct implementation that
     /// nothing subscribed is just as silent.
     func testCastManagerConformsToListenerProtocols() {
-        XCTAssertTrue(CastManager.shared is GCKSessionManagerListener)
-        XCTAssertTrue(CastManager.shared is GCKRemoteMediaClientListener)
+        // Asked of the Objective-C runtime, which is what the SDK goes by; a Swift `is` is
+        // settled at compile time.
+        XCTAssertTrue(CastManager.shared.conforms(to: GCKSessionManagerListener.self))
+        XCTAssertTrue(CastManager.shared.conforms(to: GCKRemoteMediaClientListener.self))
     }
 }
 #endif

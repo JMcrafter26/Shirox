@@ -62,10 +62,9 @@ struct PosterViewer<Content: View>: View {
         // implementation; `onZoomChange` is what lets the drag stand down.
         ZoomableContainer(
             onSingleTap: { if !isZoomed { dismiss() } },
-            onZoomChange: { zoomScale = $0 }
-        ) {
-            content.padding(.horizontal, 12)
-        }
+            onZoomChange: { zoomScale = $0 },
+            content: { content.padding(.horizontal, 12) }
+        )
         .ignoresSafeArea()
         #else
         content

@@ -61,10 +61,10 @@ struct DownloadItem: Identifiable, Codable {
     var taskIdentifier: Int?
     var retryCount: Int = 0
     /// The key the stream's playlists are scrambled with (see ``HLSPlaylistCipher``), if any.
-    var playlistKey: String? = nil
+    var playlistKey: String?
     /// Every subtitle track the stream offered, each saved beside the video once fetched. Only
     /// the default (`subtitleURL`) used to be kept, so offline the other languages were gone.
-    var subtitleTracks: [DownloadedSubtitle]? = nil
+    var subtitleTracks: [DownloadedSubtitle]?
     
     // Helper to determine if we should use HLS playback
     var isHLS: Bool {

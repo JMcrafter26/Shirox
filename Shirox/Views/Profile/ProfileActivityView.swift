@@ -3,7 +3,7 @@ import SwiftUI
 struct ProfileActivityView: View {
     @ObservedObject var vm: ProfileViewModel
     let userId: Int
-    var topContent: AnyView? = nil
+    var topContent: AnyView?
     @State private var selectedActivity: UserActivity?
     @State private var showCompose = false
     /// The compose button its sheet grows out of.
@@ -62,7 +62,6 @@ struct ProfileActivityView: View {
             NavigationStack {
                 ActivityFetchView(activityId: activity.id)
             }
-    
         }
         .adaptiveSheet(isPresented: $showCompose) {
             ComposeStatusView(profileVM: vm)
@@ -82,7 +81,8 @@ struct ProfileActivityView: View {
                         #if os(iOS)
                         .foregroundStyle(Color(UIColor.systemBackground))
                         #elseif os(tvOS)
-                        // TODO: add back foreground color
+                        // tvOS has no system background color to invert the button's fill with,
+                        // so the icon keeps its default color.
                         #else
                         .foregroundStyle(Color(NSColor.windowBackgroundColor))
                         #endif

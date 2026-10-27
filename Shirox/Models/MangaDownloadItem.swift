@@ -50,7 +50,6 @@ struct MangaDownloadContext {
 /// so tests exercise them without the @MainActor manager (mirrors the
 /// `JSEngine+Manga` parser pattern).
 enum MangaDownloadPlanning {
-
     /// Zero-padded page filename. Width follows the chapter's page count so the
     /// directory sorts in reading order; extension is taken from the URL, else `.jpg`.
     static func pageFileName(index: Int, total: Int, url: URL) -> String {

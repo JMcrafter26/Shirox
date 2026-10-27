@@ -47,6 +47,7 @@ final class KingfisherImageCacheTests: XCTestCase {
         }
     }
 
+    @MainActor
     func testCachedImageDataRoundTrip() async {
         let key = "https://test.example/roundtrip-\(UUID().uuidString).png"
         let data = makePNGData()

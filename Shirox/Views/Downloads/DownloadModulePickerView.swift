@@ -26,9 +26,9 @@ struct DownloadModulePickerView: View {
 
     @EnvironmentObject private var moduleManager: ModuleManager
     @StateObject private var vmStore = DownloadVMStore()
-    @State private var streamPickerItem: StreamPickerItem? = nil
-    @State private var chosenStream: StreamResult? = nil
-    @State private var chosenPickerItem: StreamPickerItem? = nil
+    @State private var streamPickerItem: StreamPickerItem?
+    @State private var chosenStream: StreamResult?
+    @State private var chosenPickerItem: StreamPickerItem?
 
     private struct StreamPickerItem: Identifiable {
         let id = UUID()
@@ -69,13 +69,13 @@ struct DownloadModulePickerView: View {
                 moduleManager.selectModule(pickerItem.module)
                 onDismiss()
                 onStreamsLoaded([stream], pickerItem.episodeHref)
-            }) { pickerItem in
+            }, content: { pickerItem in
                 DownloadStreamPickerView(streams: pickerItem.streams) { stream in
                     chosenStream = stream
                     chosenPickerItem = pickerItem
                     streamPickerItem = nil
                 }
-            }
+            })
         }
         #if os(iOS)
         .adaptivePresentationDetents([.medium, .large])
@@ -386,8 +386,7 @@ private final class DownloadModuleRowViewModel: ObservableObject {
             if let matched = episodes.first(where: { $0.number == Double(targetEpisodeNumber) }) {
                 state = .loadingStreams; selectedEpisodeHref = item.href
                 let streams = try await r.fetchStreams(episodeUrl: matched.href)
-                if streams.isEmpty { settle(.error(String(localized: "downloads.no_streams_found_for_episode \(targetEpisodeNumber)"))) }
-                else { state = .idle; readyStreams = streams }
+                if streams.isEmpty { settle(.error(String(localized: "downloads.no_streams_found_for_episode \(targetEpisodeNumber)"))) } else { state = .idle; readyStreams = streams }
             } else {
                 settle(.selectingEpisode(episodes))
             }
@@ -402,8 +401,7 @@ private final class DownloadModuleRowViewModel: ObservableObject {
         state = .loadingStreams
         do {
             let streams = try await r.fetchStreams(episodeUrl: episode.href)
-            if streams.isEmpty { settle(.error(String(localized: "common.no_streams_found"))) }
-            else { readyStreams = streams; if let href = currentSearchResultHref { selectedEpisodeHref = href } }
+            if streams.isEmpty { settle(.error(String(localized: "common.no_streams_found"))) } else { readyStreams = streams; if let href = currentSearchResultHref { selectedEpisodeHref = href } }
         } catch {
             if (error as? CancellationError) != nil { return }
             settle(.error(error.localizedDescription))
@@ -417,7 +415,7 @@ private struct SearchResultCard: View {
     let item: SearchItem
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Color.clear.aspectRatio(2/3, contentMode: .fit).frame(width: 72)
+            Color.clear.aspectRatio(2 / 3, contentMode: .fit).frame(width: 72)
                 .overlay(
                     ZStack {
                         CachedAsyncImage(urlString: item.image).frame(maxWidth: .infinity, maxHeight: .infinity).clipped()
@@ -462,7 +460,7 @@ private struct SearchResultsPickerSheet: View {
                 LazyVGrid(columns: columns, spacing: 12) {
                     ForEach(items) { item in
                         Button { onSelect(item) } label: {
-                            Color.clear.aspectRatio(2/3, contentMode: .fit)
+                            Color.clear.aspectRatio(2 / 3, contentMode: .fit)
                                 .overlay(
                                     ZStack {
                                         CachedAsyncImage(urlString: item.image).frame(maxWidth: .infinity, maxHeight: .infinity).clipped()

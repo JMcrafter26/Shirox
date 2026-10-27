@@ -56,8 +56,7 @@ final class SimklAnimeIDCache {
             await withTaskGroup(of: (Int, Result<SimklDiscoverItem.IDs?, Error>).self) { group in
                 for id in batch {
                     group.addTask {
-                        do { return (id, .success(try await lookUp(id))) }
-                        catch { return (id, .failure(error)) }
+                        do { return (id, .success(try await lookUp(id))) } catch { return (id, .failure(error)) }
                     }
                 }
                 for await (id, result) in group {

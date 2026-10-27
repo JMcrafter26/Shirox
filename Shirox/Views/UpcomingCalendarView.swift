@@ -10,15 +10,15 @@ struct AiringEpisode: Identifiable {
     var episode: Int?
     let airingAt: Date
     /// The last of several episodes released together — a season dropped at once.
-    var lastEpisode: Int? = nil
+    var lastEpisode: Int?
     /// A Simkl show's season.
-    var season: Int? = nil
+    var season: Int?
     /// A movie's release: Simkl gives the day, not a time worth showing.
     var isRelease = false
     /// Simkl's popularity rank, 1 the most watched — what a busy day is cut down by.
-    var rank: Int? = nil
+    var rank: Int?
     /// What "My library" matches against: the media's own id, or Simkl's on a Simkl schedule.
-    var libraryID: Int? = nil
+    var libraryID: Int?
 
     /// Unique per broadcast, not per show — a series can air twice in one week.
     var id: String {

@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 /// Resolves and persists a module-scraped manga's tracking identity (AniList + MAL
 /// ids) by title. Mirrors AniListMappingManager, but stores the whole match keyed

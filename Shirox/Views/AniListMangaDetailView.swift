@@ -5,7 +5,7 @@ import SwiftUI
 /// with the metadata. The manga analog of AniListDetailView (which stays anime).
 struct AniListMangaDetailView: View {
     let mediaId: Int
-    var preloadedMedia: Media? = nil
+    var preloadedMedia: Media?
 
     @State private var media: Media?
     @State private var resolvedItem: SearchItem?
@@ -48,8 +48,7 @@ struct AniListMangaDetailView: View {
     private func resolve() async {
         guard phase == .loading else { return }
         if media == nil {
-            do { media = try await AniListProvider.shared.mangaDetail(id: mediaId) }
-            catch { phase = .error(error.localizedDescription); return }
+            do { media = try await AniListProvider.shared.mangaDetail(id: mediaId) } catch { phase = .error(error.localizedDescription); return }
         }
         guard let media else { phase = .error(String(localized: "detail.no_data")); return }
         #if os(iOS)

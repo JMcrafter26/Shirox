@@ -132,6 +132,20 @@ enum SeanimeScripts {
         """)?.toBool() ?? false
         return (true, dubs)
     }
+
+    /// Before a Seanime provider's script: the runtime, and what it's told about the module.
+    static func prepare(_ context: JSContext, module: ModuleDefinition) {
+        guard let info = module.seanime, let runtimeSource else { return }
+        let dub = info.kind == .anime && info.supportsDub && SeanimeProviderSettings.dub(for: module.id)
+        context.setObject(["kind": info.kind.rawValue, "name": module.sourceName, "dub": dub],
+                          forKeyedSubscript: "__seanime" as NSString)
+        context.evaluateScript(runtimeSource)
+    }
+
+    /// The show a streaming provider's next search is for; nil from the Search tab.
+    static func setSearchMedia(_ media: SeanimeSearchMedia?, in context: JSContext) {
+        context.setObject(media?.jsonObject ?? NSNull(), forKeyedSubscript: "__seanimeMedia" as NSString)
+    }
 }
 
 /// A Seanime manifest, installed as an ordinary Shirox module.
@@ -162,7 +176,7 @@ enum SeanimeInstaller {
 
         var object: [String: Any] = [
             "sourceName": manifest.name, "version": manifest.version, "scriptUrl": payload,
-            "type": kind == .manga ? "manga" : "anime",
+            "type": kind == .manga ? "manga" : "anime"
         ]
         if let lang = manifest.lang, !lang.isEmpty { object["language"] = lang }
         if let icon = manifest.icon, !icon.isEmpty { object["iconUrl"] = icon }
@@ -228,21 +242,5 @@ struct SeanimeSearchMedia: Equatable {
         if let status { object["status"] = status }
         if let year { object["year"] = year }
         return object
-    }
-}
-
-extension SeanimeScripts {
-    /// Before a Seanime provider's script: the runtime, and what it's told about the module.
-    static func prepare(_ context: JSContext, module: ModuleDefinition) {
-        guard let info = module.seanime, let runtimeSource else { return }
-        let dub = info.kind == .anime && info.supportsDub && SeanimeProviderSettings.dub(for: module.id)
-        context.setObject(["kind": info.kind.rawValue, "name": module.sourceName, "dub": dub],
-                          forKeyedSubscript: "__seanime" as NSString)
-        context.evaluateScript(runtimeSource)
-    }
-
-    /// The show a streaming provider's next search is for; nil from the Search tab.
-    static func setSearchMedia(_ media: SeanimeSearchMedia?, in context: JSContext) {
-        context.setObject(media?.jsonObject ?? NSNull(), forKeyedSubscript: "__seanimeMedia" as NSString)
     }
 }

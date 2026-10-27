@@ -5,7 +5,6 @@ import Foundation
 /// row opens the sheet for the rest.
 @MainActor
 enum PlayerSubtitleMenu {
-
     struct Actions {
         var setEnabled: (Bool) -> Void
         /// Read when a step is tapped: the menu stays open between steps, so the delay it was
@@ -23,7 +22,7 @@ enum PlayerSubtitleMenu {
 
     static let delaySteps: [Double] = [-5, -1, -0.5, -0.1, 0.1, 0.5, 1, 5]
     static let sizes: [(name: String, points: Double)] = [
-        (String(localized: "player.small"), 18), (String(localized: "player.medium"), 24), (String(localized: "player.large"), 30), (String(localized: "player.extra_large"), 36),
+        (String(localized: "player.small"), 18), (String(localized: "player.medium"), 24), (String(localized: "player.large"), 30), (String(localized: "player.extra_large"), 36)
     ]
 
     /// - Parameters:
@@ -34,7 +33,7 @@ enum PlayerSubtitleMenu {
                          selected: SubtitleTrack?, embedded: [PlaybackSubtitleOption] = [],
                          selectedEmbedded: Int? = nil, actions: Actions) -> [PlayerMenuElement] {
         var elements: [PlayerMenuElement] = [
-            .item(PlayerMenuItem(title: String(localized: "player.show_subtitles"), isOn: enabled) { actions.setEnabled(!enabled) }),
+            .item(PlayerMenuItem(title: String(localized: "player.show_subtitles"), isOn: enabled) { actions.setEnabled(!enabled) })
         ]
 
         if !tracks.isEmpty {
@@ -62,7 +61,7 @@ enum PlayerSubtitleMenu {
         }
         let delayMenu = PlayerMenuElement.submenu(title: String(localized: "player.delay"), value: delayLabel(delay), [
             .section(String(localized: "player.currently \(delayLabel(delay))"), steps),
-            .item(PlayerMenuItem(title: String(localized: "common.reset")) { actions.setDelay(0) }),
+            .item(PlayerMenuItem(title: String(localized: "common.reset")) { actions.setDelay(0) })
         ])
         let sizeMenu = PlayerMenuElement.submenu(title: String(localized: "player.size"), value: sizeLabel(fontSize), sizes.map { size in
             .item(PlayerMenuItem(title: size.name, isOn: fontSize == size.points) { actions.setFontSize(size.points) })

@@ -7,9 +7,7 @@ enum LibrarySource: Hashable {
     /// The user's Simkl list. Its own case rather than `.provider(.simkl)`: selecting a provider
     /// makes it the app's primary provider, and Simkl is a tracker that must never become one.
     case simkl
-}
 
-extension LibrarySource {
     /// The provider choosing this source makes primary — none for My Library or Simkl.
     var providerToSelect: ProviderType? {
         if case .provider(let type) = self { return type }

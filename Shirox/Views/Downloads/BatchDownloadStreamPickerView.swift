@@ -6,17 +6,17 @@ import SwiftUI
 struct BatchDownloadStreamPickerView: View {
     let mediaTitle: String
     let imageUrl: String
-    var aniListID: Int? = nil
+    var aniListID: Int?
     let moduleId: String?
     let episodes: [EpisodeLink]  // full EpisodeLink list so we can match by number
     let episodeNumbers: [Int]    // the selected subset to download
     let onDismiss: () -> Void
 
     @State private var streams: [StreamResult] = []
-    @State private var firstEpisodeHref: String? = nil
+    @State private var firstEpisodeHref: String?
     @State private var isLoading = true
-    @State private var error: String? = nil
-    @State private var cloudflareURL: URL? = nil
+    @State private var error: String?
+    @State private var cloudflareURL: URL?
 
     var body: some View {
         NavigationStack {

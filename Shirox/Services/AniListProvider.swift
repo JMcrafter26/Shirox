@@ -1,5 +1,5 @@
-import Foundation
 import AuthenticationServices
+import Foundation
 
 /// AniList answered in a way that leaves the signed-in user unknown, without ever rejecting the
 /// token. Distinct from `ProviderError.unauthenticated` so callers don't tell somebody to sign in

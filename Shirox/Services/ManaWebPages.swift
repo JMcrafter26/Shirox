@@ -34,7 +34,7 @@ final class ManaWebPages: NSObject {
         var errorDescription: String? {
             switch self {
             case .closed: return String(localized: "shared.the_page_was_already_closed")
-            case .badURL(let url): return "\(url) isn't a web page."
+            case .badURL(let url): return String(localized: "shared.url_isnt_a_web_page \(url)")
             case .blocked(let host): return String(localized: "shared.blocked_host_named \(host)")
             case .timedOut(let seconds): return String(localized: "shared.the_page_didnt_answer_in \(Int(seconds))")
             case .unknown(let op): return String(localized: "shared.unknown_web_view_call \(op)")
@@ -123,7 +123,7 @@ final class ManaWebPages: NSObject {
                     throw error
                 }
                 let json = try? JSONSerialization.data(withJSONObject: value ?? NSNull(), options: [.fragmentsAllowed])
-                return json.map { String(decoding: $0, as: UTF8.self) } ?? "null"
+                return json.flatMap { String(bytes: $0, encoding: .utf8) } ?? "null"
             }
         }
 
@@ -153,11 +153,13 @@ final class ManaWebPages: NSObject {
                     throw Failure.timedOut(seconds)
                 }
                 defer { group.cancelAll() }
-                return try await group.next()!
+                // Both tasks end by returning or throwing, so the first result is always there.
+                guard let first = try await group.next() else { throw Failure.timedOut(seconds) }
+                return first
             }
         }
 
-        nonisolated func webView(_ webView: WKWebView, didCommit navigation: WKNavigation!) {
+        nonisolated func webView(_ webView: WKWebView, didCommit navigation: WKNavigation?) {
             Task { @MainActor in
                 guard self.waitsForDOM else { return }
                 // WebKit has no DOMContentLoaded callback: the document's readyState says it.
@@ -169,15 +171,15 @@ final class ManaWebPages: NSObject {
             }
         }
 
-        nonisolated func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        nonisolated func webView(_ webView: WKWebView, didFinish navigation: WKNavigation?) {
             Task { @MainActor in self.finish(.success(())) }
         }
 
-        nonisolated func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+        nonisolated func webView(_ webView: WKWebView, didFail navigation: WKNavigation?, withError error: Error) {
             Task { @MainActor in if !Self.isRedirectCancel(error) { self.finish(.failure(error)) } }
         }
 
-        nonisolated func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        nonisolated func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation?, withError error: Error) {
             Task { @MainActor in if !Self.isRedirectCancel(error) { self.finish(.failure(error)) } }
         }
 

@@ -11,7 +11,6 @@ struct TMDBImage: Decodable, Equatable, Sendable {
 
 /// A title's logo among TMDB's.
 enum TMDBLogo {
-
     /// The most readable (`LogoLanguage`), then the best voted and largest. SVGs are passed over:
     /// TMDB serves them as SVG at every size, and the app's images can't draw one.
     static func pick(_ logos: [TMDBImage], originalLanguage: String?) -> String? {
@@ -96,13 +95,13 @@ final class TMDBLogoService {
         return path.map(TMDBLogo.imageURL)
     }
 
+    /// A title's logos, both inside `Details` and from the images endpoint on its own.
+    private struct Images: Decodable { let logos: [TMDBImage]? }
+
     private struct Details: Decodable {
-        struct Images: Decodable { let logos: [TMDBImage]? }
         let original_language: String?
         let images: Images?
     }
-
-    private struct Images: Decodable { let logos: [TMDBImage]? }
 
     private func lookUp(tmdbID: Int, record: TitleRecord, key: String, apiKey: String) async -> String? {
         let base = "https://api.themoviedb.org/3/\(record.tmdbPath)/\(tmdbID)"

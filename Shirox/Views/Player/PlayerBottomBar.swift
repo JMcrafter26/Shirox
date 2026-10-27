@@ -14,41 +14,41 @@ struct PlayerBottomBar: View {
     var bufferProgress: Double = 0
     @Binding var playbackSpeed: Float
     var onSeek: (Double) -> Void
-    var onSliderDragStart: (() -> Void)? = nil
-    var onSliderDragChange: ((Double) -> Void)? = nil
-    var onSliderDragEnd: (() -> Void)? = nil
+    var onSliderDragStart: (() -> Void)?
+    var onSliderDragChange: ((Double) -> Void)?
+    var onSliderDragEnd: (() -> Void)?
     var onFillTap: () -> Void = {}
     var isFilled: Bool = false
     var onSkip85: () -> Void
     var skipLongAmount: Int = 85
     /// Rows for the subtitles menu (native pull-down; its last row opens the full settings sheet).
-    var subtitleMenu: (() -> [PlayerMenuElement])? = nil
+    var subtitleMenu: (() -> [PlayerMenuElement])?
     var hasSubtitles: Bool = false
     var audioTrackCount: Int = 0
     /// Menu rows for the audio-track chooser (native pull-down, not a sheet). Rebuilt on open.
-    var audioMenuItems: (() -> [PlayerMenuItem])? = nil
+    var audioMenuItems: (() -> [PlayerMenuItem])?
     var streamCount: Int = 1
     /// Menu rows for the source/stream chooser.
-    var sourceMenuItems: (() -> [PlayerMenuItem])? = nil
+    var sourceMenuItems: (() -> [PlayerMenuItem])?
     var qualityCount: Int = 0
     /// Menu rows for the HLS quality chooser.
-    var qualityMenuItems: (() -> [PlayerMenuItem])? = nil
+    var qualityMenuItems: (() -> [PlayerMenuItem])?
     /// Called when any bottom-bar menu opens, so the player can pin the controls visible.
     var onMenuOpen: () -> Void = {}
     var bottomPadding: CGFloat = 24
-    var onNextEpisodeTap: (() -> Void)? = nil
+    var onNextEpisodeTap: (() -> Void)?
     var hasActiveSkipSegment: Bool = false
-    var skipSegments: SkipSegments? = nil
-    var episodeNumber: Int? = nil
-    var tvdbEpisodeTitle: String? = nil
-    var mediaTitle: String? = nil
+    var skipSegments: SkipSegments?
+    var episodeNumber: Int?
+    var tvdbEpisodeTitle: String?
+    var mediaTitle: String?
     /// Portrait on a phone: too narrow for the titles, the skip button and the button group
     /// on one row.
     var isPortrait: Bool = false
     /// How many of the right-hand buttons fit, most useful first; nil for all of them. The
     /// Mac's Picture in Picture window sets it by its size: in a small one the whole group ran
     /// into the middle buttons.
-    var buttonLimit: Int? = nil
+    var buttonLimit: Int?
     /// Off where the Picture in Picture window is too small for it beside the middle buttons.
     var showsSkipButton = true
     @AppStorage("playerLiquidGlass") private var playerLiquidGlass = true
@@ -299,7 +299,7 @@ struct PlayerBottomBar_Previews: PreviewProvider {
                 Spacer()
                 PlayerBottomBar(
                     currentTime: .constant(135),
-                    duration: 1440,
+                    duration: 1_440,
                     playbackSpeed: .constant(1.0),
                     onSeek: { _ in },
                     onSkip85: {}
@@ -314,7 +314,7 @@ struct PlayerBottomBar_Previews: PreviewProvider {
                 Spacer()
                 PlayerBottomBar(
                     currentTime: .constant(720),
-                    duration: 1440,
+                    duration: 1_440,
                     playbackSpeed: .constant(1.5),
                     onSeek: { _ in },
                     onSkip85: {},

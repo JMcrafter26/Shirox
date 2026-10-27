@@ -88,14 +88,14 @@ struct PlayerVideoInfoPanel: View {
                 field(String(localized: "player.resolution"), stats.resolutionText),
                 field(String(localized: "player.frame_rate"), stats.frameRateText),
                 field(String(localized: "player.bitrate"), PlaybackStats.bitrateText(stats.videoBitrate)),
-                field(String(localized: "player.dropped_frames"), stats.droppedFrames.map(String.init)),
+                field(String(localized: "player.dropped_frames"), stats.droppedFrames.map(String.init))
             ])
             section(String(localized: "shared.audio"), [
                 field(String(localized: "player.codec"), stats.audioCodec),
                 field(String(localized: "player.channels"), stats.channelsText),
                 field(String(localized: "player.sample_rate"), stats.sampleRateText),
                 field(String(localized: "player.bitrate"), PlaybackStats.bitrateText(stats.audioBitrate)),
-                field(String(localized: "player.track"), audioTrack),
+                field(String(localized: "player.track"), audioTrack)
             ])
             if let subtitle {
                 section(String(localized: "shared.subtitle"), [field(String(localized: "common.name"), subtitle.name), field(String(localized: "modules.source"), subtitle.source)])
@@ -103,7 +103,7 @@ struct PlayerVideoInfoPanel: View {
             section(String(localized: "shared.stream"), [
                 field(String(localized: "settings.player"), stats.player),
                 field(String(localized: "player.stream_bitrate"), PlaybackStats.bitrateText(stats.streamBitrate)),
-                field(String(localized: "player.network"), PlaybackStats.bitrateText(stats.throughput)),
+                field(String(localized: "player.network"), PlaybackStats.bitrateText(stats.throughput))
             ])
         }
         .frame(maxWidth: .infinity, alignment: .leading)

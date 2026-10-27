@@ -1,5 +1,5 @@
-import Foundation
 import CommonCrypto
+import Foundation
 
 // MARK: - Parsed model
 
@@ -78,7 +78,6 @@ struct HLSDownloadPlan: Equatable {
 // MARK: - Parser
 
 enum HLSManifestParser {
-
     /// In a master playlist, return the highest-`BANDWIDTH` variant's URL. Returns nil
     /// when the text is a media playlist (no `#EXT-X-STREAM-INF`).
     static func selectBestVariant(_ manifest: String, baseURL: URL) -> URL? {
@@ -137,13 +136,13 @@ enum HLSManifestParser {
             case "highest": return highest
             default:
                 guard let target = Int(quality) else { return highest }
-                let measured = variants.filter { height($0) != nil }
+                let measured = variants.compactMap { variant in height(variant).map { (variant: variant, height: $0) } }
                 guard !measured.isEmpty else { return highest }
-                let atOrBelow = measured.filter { height($0)! <= target }
-                if let topHeight = atOrBelow.map({ height($0)! }).max() {
-                    return atOrBelow.filter { height($0) == topHeight }.max { $0.bandwidth < $1.bandwidth }
+                let atOrBelow = measured.filter { $0.height <= target }
+                if let topHeight = atOrBelow.map(\.height).max() {
+                    return atOrBelow.filter { $0.height == topHeight }.max { $0.variant.bandwidth < $1.variant.bandwidth }?.variant
                 }
-                return measured.min { height($0)! < height($1)! }
+                return measured.min { $0.height < $1.height }?.variant
             }
         }()
         guard let best = picked else { return nil }
@@ -167,8 +166,8 @@ enum HLSManifestParser {
     /// The local master playlist for a download whose audio came separately: one variant, and
     /// each downloaded audio rendition under its own name and language, for the player's audio
     /// menu. Exactly one is the default: the source's, else the first.
-    static func localMasterManifest(videoPlaylist: String, audio: [HLSLocalAudio],
-                                    bandwidth: Int, codecs: String?) -> String {
+    static func localMultivariantManifest(videoPlaylist: String, audio: [HLSLocalAudio],
+                                          bandwidth: Int, codecs: String?) -> String {
         var inf = "#EXT-X-STREAM-INF:BANDWIDTH=\(max(bandwidth, 1)),AUDIO=\"audio\""
         if let codecs { inf += ",CODECS=\"\(codecs)\"" }
         let defaultIndex = audio.firstIndex { $0.isDefault } ?? 0

@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 /// Whether a Simkl request is the user's own doing or something the app does by itself.
 ///
@@ -38,7 +38,9 @@ final class SimklBudget: ObservableObject {
         static let spent = "simkl_budget_spent"
     }
 
-    private nonisolated static let eastern = TimeZone(identifier: "America/New_York")!
+    // Every system ships this zone; the fixed offset only keeps the day roughly right if not.
+    private nonisolated static let eastern = TimeZone(identifier: "America/New_York")
+        ?? TimeZone(secondsFromGMT: -5 * 60 * 60) ?? .current
 
     init(defaults: UserDefaults = .standard, now: @escaping () -> Date = { Date() }) {
         self.defaults = defaults
@@ -61,7 +63,8 @@ final class SimklBudget: ObservableObject {
     nonisolated static func reset(after date: Date) -> Date {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = eastern
-        return calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: date))!
+        let midnight = calendar.startOfDay(for: date)
+        return calendar.date(byAdding: .day, value: 1, to: midnight) ?? midnight.addingTimeInterval(24 * 60 * 60)
     }
 
     /// Throws when a request of this priority mustn't be sent: any request once Simkl has said the

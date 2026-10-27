@@ -8,7 +8,6 @@ struct HLSQualityLevel: Identifiable, Equatable {
 }
 
 enum HLSQualityParser {
-
     /// The rendition matching a saved quality preference, or nil to leave AVPlayer adaptive.
     ///
     /// Some sources advertise a ladder whose bottom rung is what actually gets picked on a
@@ -82,11 +81,11 @@ enum HLSQualityParser {
                 if let xIdx = resPart.firstIndex(of: "x") ?? resPart.firstIndex(of: "X") {
                     label = "\(resPart[resPart.index(after: xIdx)...])p"
                 } else {
-                    label = "\(bandwidth / 1000)k"
+                    label = "\(bandwidth / 1_000)k"
                 }
             } else {
                 resolution = ""
-                label = "\(bandwidth / 1000)k"
+                label = "\(bandwidth / 1_000)k"
             }
 
             levels.append(HLSQualityLevel(label: label, bandwidth: bandwidth, resolution: resolution))

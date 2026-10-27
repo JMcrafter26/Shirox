@@ -25,7 +25,7 @@ enum ZipReader {
             let nameLength = u16(o + 28), extraLength = u16(o + 30), commentLength = u16(o + 32)
             let local = u32(o + 42)
             guard o + 46 + nameLength <= bytes.count else { return nil }
-            let entryName = String(decoding: bytes[(o + 46)..<(o + 46 + nameLength)], as: UTF8.self)
+            let entryName = String(repairingUTF8: bytes[(o + 46)..<(o + 46 + nameLength)])
             if entryName == name {
                 guard u32(local) == 0x0403_4b50, size <= maxSize, compressed <= maxSize else { return nil }
                 let start = local + 30 + u16(local + 26) + u16(local + 28)

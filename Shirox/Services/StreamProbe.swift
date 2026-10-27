@@ -40,7 +40,7 @@ enum StreamProbe {
 
     /// The first bytes decide: a playlist, or anything that isn't a web page or an archive.
     static func judge(contentType: String?, head: [UInt8]) -> Verdict {
-        let text = String(decoding: head, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let text = String(repairingUTF8: head).trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         if text.hasPrefix("#extm3u") { return .playable }
         if head.starts(with: [0x50, 0x4b, 0x03, 0x04]) { return .notVideo }
         if (contentType ?? "").lowercased().contains("text/html") || text.hasPrefix("<") { return .notVideo }

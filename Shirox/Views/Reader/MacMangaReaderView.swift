@@ -242,11 +242,11 @@ struct MacMangaReaderView: View {
                 var elements: [PlayerMenuElement] = [
                     .section(String(localized: "reader.reading_mode"), MangaReadingMode.allCases.map { option in
                         .item(PlayerMenuItem(title: option.label, isOn: option == mode) { modeRaw = option.rawValue })
-                    }),
+                    })
                 ]
                 var clicks: [PlayerMenuElement] = [
                     .item(PlayerMenuItem(title: mode == .vertical ? String(localized: "reader.click_sides_to_scroll") : String(localized: "reader.click_sides_to_turn"),
-                                         isOn: tapZones) { tapZones.toggle() }),
+                                         isOn: tapZones) { tapZones.toggle() })
                 ]
                 // Reversed only in vertical mode: paged, a forward turn read as going back.
                 if mode == .vertical {
@@ -257,8 +257,8 @@ struct MacMangaReaderView: View {
                 elements.append(.section(String(localized: "reader.click_zones"), clicks))
                 if mode == .vertical {
                     elements.append(.section(String(localized: "reader.page_width"), [
-                        .item(PlayerMenuItem(title: String(localized: "reader.wider_pages")) { pageWidth = min(1600, pageWidth + 80) }),
-                        .item(PlayerMenuItem(title: String(localized: "reader.narrower_pages")) { pageWidth = max(420, pageWidth - 80) }),
+                        .item(PlayerMenuItem(title: String(localized: "reader.wider_pages")) { pageWidth = min(1_600, pageWidth + 80) }),
+                        .item(PlayerMenuItem(title: String(localized: "reader.narrower_pages")) { pageWidth = max(420, pageWidth - 80) })
                     ]))
                 }
                 return elements
@@ -453,8 +453,10 @@ struct MacMangaReaderView: View {
     private func click(atX x: CGFloat) {
         switch ReaderTapZone.zone(atX: x, mode: mode, enabled: tapZones, reversed: tapZonesReversed) {
         case .middle: toggleChrome()
-        case .forward: mode == .vertical ? clickScroll(down: true) : turn(1)
-        case .back: mode == .vertical ? clickScroll(down: false) : turn(-1)
+        case .forward:
+            if mode == .vertical { clickScroll(down: true) } else { turn(1) }
+        case .back:
+            if mode == .vertical { clickScroll(down: false) } else { turn(-1) }
         }
     }
 
@@ -501,7 +503,7 @@ struct MacMangaReaderView: View {
             if mode == .vertical { go(to: chapterIndex + 1) } else { turn(isRTL ? -1 : 1) }
         case .previousChapter:
             if mode == .vertical { go(to: chapterIndex - 1) } else { turn(isRTL ? 1 : -1) }
-        case .wider: pageWidth = min(1600, pageWidth + 80)
+        case .wider: pageWidth = min(1_600, pageWidth + 80)
         case .narrower: pageWidth = max(420, pageWidth - 80)
         }
     }

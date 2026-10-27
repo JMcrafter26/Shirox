@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 @MainActor
 final class SearchViewModel: ObservableObject {
@@ -137,9 +137,7 @@ final class SearchViewModel: ObservableObject {
     var resultCount: Int {
         moduleResults.count + aniListResults.count + simklSections.reduce(0) { $0 + $1.items.count }
     }
-}
 
-extension SearchViewModel {
     /// Results that came without an image take AniList's cover for their title. Each row is
     /// changed in place, keeping its identity, so the grid doesn't redraw it.
     static func withPosters(_ items: [SearchItem], covers: [String: String]) -> [SearchItem] {

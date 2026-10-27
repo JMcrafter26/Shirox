@@ -44,6 +44,9 @@ struct ProfileAnimeStats: Codable {
 struct ProfileStatusStat: Codable {
     let status: String
     let count: Int
+
+    /// A status with nothing in it is left out of the stats.
+    var hasEntries: Bool { count > 0 }
 }
 
 struct ProfileFormatStat: Codable {

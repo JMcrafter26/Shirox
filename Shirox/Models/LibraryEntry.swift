@@ -85,14 +85,6 @@ enum ScoreFormat: String, Codable {
 }
 
 /// Distinguishes anime vs manga for library/UI branching (progress unit, labels).
-extension LibraryEntry {
-    /// A progress bar says something only for a title under way: none with nothing watched yet,
-    /// and none on a finished or planned one, where it would be full or empty anyway.
-    var showsProgressBar: Bool {
-        progress > 0 && status != .completed && status != .planning
-    }
-}
-
 enum MediaKind: String, Codable {
     case anime, manga
     /// Simkl's TV shows and movies — only the Simkl list has them.
@@ -142,10 +134,10 @@ struct LibraryEntry: Identifiable, Codable, Sendable {
     var timesRewatched: Int?
     /// Local-library only: format-independent 0–100 score, so switching the
     /// in-app score format never loses precision. nil for provider entries.
-    var scoreCanonical: Double? = nil
+    var scoreCanonical: Double?
     /// Non-nil for on-device-only titles (module-scraped / imported file); routes tap-to-open.
     /// nil for AniList/MAL-matched entries — existing persisted JSON decodes unchanged.
-    var localSource: LocalSource? = nil
+    var localSource: LocalSource?
     /// Hidden from your public AniList profile and activity feed. AniList-only; MyAnimeList has
     /// no equivalent, so it stays false there. Defaulted so existing persisted JSON still decodes.
     var isPrivate: Bool = false
@@ -153,10 +145,10 @@ struct LibraryEntry: Identifiable, Codable, Sendable {
     /// as `comments`, but reading it back needs its list `fields` parameter extended, which is
     /// not worth risking the whole library fetch on untested. Defaulted so existing persisted
     /// JSON still decodes.
-    var notes: String? = nil
+    var notes: String?
     /// Simkl TV shows only: the episodes watched, by season. Optional, so saved JSON without it
     /// still decodes.
-    var watchedEpisodes: [SimklSeasonWatch]? = nil
+    var watchedEpisodes: [SimklSeasonWatch]?
 
     /// The score to show/edit in `format`. Local entries convert from their
     /// canonical value; provider entries fall back to `score` (their account
@@ -164,6 +156,12 @@ struct LibraryEntry: Identifiable, Codable, Sendable {
     func displayScore(in format: ScoreFormat) -> Double {
         if let scoreCanonical { return format.fromCanonical(scoreCanonical) }
         return score
+    }
+
+    /// A progress bar says something only for a title under way: none with nothing watched yet,
+    /// and none on a finished or planned one, where it would be full or empty anyway.
+    var showsProgressBar: Bool {
+        progress > 0 && status != .completed && status != .planning
     }
 }
 

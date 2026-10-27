@@ -3,7 +3,7 @@ import SwiftUI
 struct ProfileSocialView: View {
     @ObservedObject var vm: ProfileViewModel
     let userId: Int
-    var topContent: AnyView? = nil
+    var topContent: AnyView?
 
     @ObservedObject private var providerManager = ProviderManager.shared
     @State private var selectedSocial: ProfileViewModel.SocialType = .followers

@@ -11,16 +11,16 @@ struct MarkContext {
     let detailHref: String?
     /// The tapped episode's own unique href — records a season-unique watched marker so a flat
     /// multi-season list doesn't show another season's same-numbered episode as watched.
-    var episodeHref: String? = nil
-    var isAiring: Bool? = nil
-    var currentAniListProgress: Int? = nil
-    var currentMALProgress: Int? = nil
-    var currentAniListStatus: MediaListStatus? = nil
-    var currentMALStatus: MediaListStatus? = nil
+    var episodeHref: String?
+    var isAiring: Bool?
+    var currentAniListProgress: Int?
+    var currentMALProgress: Int?
+    var currentAniListStatus: MediaListStatus?
+    var currentMALStatus: MediaListStatus?
     /// The run of episodes the tapped one belongs to in its list — its season on a list that
     /// restarts numbering (see `ContinueWatchingManager.episodeRuns`). Marking or unmarking
     /// carries to the ones before or after it there.
-    var seasonEpisodes: [EpisodeLink]? = nil
+    var seasonEpisodes: [EpisodeLink]?
 }
 
 enum MarkResult {

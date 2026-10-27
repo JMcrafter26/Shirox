@@ -1,11 +1,11 @@
-import SwiftUI
 import Combine
+import SwiftUI
 import UniformTypeIdentifiers
 
 struct SearchView: View {
     #if os(macOS)
     /// The window toolbar's field, when the page is brought up by it rather than having its own.
-    var toolbarSearch: MacToolbarSearch? = nil
+    var toolbarSearch: MacToolbarSearch?
     #endif
     @StateObject private var vm = SearchViewModel()
     @StateObject private var history = SearchHistoryManager()
@@ -661,7 +661,7 @@ struct AniListCardView: View {
 
     var body: some View {
         Color.clear
-            .aspectRatio(2/3, contentMode: .fit)
+            .aspectRatio(2 / 3, contentMode: .fit)
             .overlay(
                 ZStack {
                     TVDBPosterImage(media: media)

@@ -122,7 +122,7 @@ enum SimklHomeRows {
     /// The "yyyy-MM-dd" day `days` before another.
     static func day(_ day: String, minus days: Int) -> String {
         // In UTC, where every day is 24 hours long.
-        let formatter = dayFormatter(TimeZone(identifier: "UTC")!)
+        let formatter = dayFormatter(TimeZone(identifier: "UTC") ?? TimeZone(secondsFromGMT: 0) ?? .current)
         guard let date = formatter.date(from: day) else { return day }
         return formatter.string(from: date.addingTimeInterval(-Double(days) * 24 * 60 * 60))
     }

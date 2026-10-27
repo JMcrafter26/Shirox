@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 /// Reconciles a whole tracking library between AniList and MyAnimeList.
 ///
@@ -154,21 +154,22 @@ final class LibrarySyncService: ObservableObject {
     /// mirror go through `preview` → `apply` instead, and when only `sync` flushed, every
     /// overwrite run queued its writes and silently dropped them while reporting success.
     private func flushSimkl(for run: SyncRun, into summaries: inout [LibrarySide: LibrarySyncSummary]) async {
-        guard run.writes(to: .simkl), summaries[.simkl] != nil else { return }
+        guard run.writes(to: .simkl), var simkl = summaries[.simkl] else { return }
+        defer { summaries[.simkl] = simkl }
         let unsent = await SimklLibraryService.shared.flushRemovals()
-        if unsent.removals > 0 { Self.chargeUnsentRemovals(unsent.removals, to: &summaries[.simkl]!) }
-        if unsent.unmarks > 0 { Self.chargeUndelivered(unsent.unmarks, to: &summaries[.simkl]!) }
+        if unsent.removals > 0 { Self.chargeUnsentRemovals(unsent.removals, to: &simkl) }
+        if unsent.unmarks > 0 { Self.chargeUndelivered(unsent.unmarks, to: &simkl) }
         let undelivered = await SimklLibraryService.shared.flush()
-        if undelivered > 0 { Self.chargeUndelivered(undelivered, to: &summaries[.simkl]!) }
+        if undelivered > 0 { Self.chargeUndelivered(undelivered, to: &simkl) }
 
         // Simkl's own not_found is authoritative: a title it could not resolve was never stored,
         // however cleanly the request succeeded. The run's own unmatched list only knows about
         // titles with no id at all, so it under-reports.
         let rejected = SimklLibraryService.shared.lastNotFoundCount
         if rejected > 0 {
-            Self.chargeUndelivered(rejected, to: &summaries[.simkl]!)
-            summaries[.simkl]!.failed -= rejected
-            summaries[.simkl]!.unmatched.append(
+            Self.chargeUndelivered(rejected, to: &simkl)
+            simkl.failed -= rejected
+            simkl.unmatched.append(
                 contentsOf: (0..<rejected).map { _ in "(not on Simkl)" })
         }
         // Deliberately does *not* invalidate the cache.
@@ -209,8 +210,7 @@ final class LibrarySyncService: ObservableObject {
             var best: (side: LibrarySide, entry: LibraryEntry)?
             for side in sources {
                 guard let candidate = pair.entry(on: side) else { continue }
-                if best == nil
-                    || LibrarySyncPlanner.viewing(candidate) > LibrarySyncPlanner.viewing(best!.entry) {
+                if best.map({ LibrarySyncPlanner.viewing(candidate) > LibrarySyncPlanner.viewing($0.entry) }) ?? true {
                     best = (side, candidate)
                 }
             }
@@ -492,12 +492,12 @@ final class LibrarySyncService: ObservableObject {
     private func report(_ run: SyncRun, summaries: [LibrarySide: LibrarySyncSummary]) {
         // Name only the sides this run actually wrote to. A side that was never touched has
         // nothing to report, and listing it as "nothing changed" reads as a failure.
-        let written = LibrarySide.allCases.filter { summaries[$0] != nil }
+        let written = LibrarySide.allCases.compactMap { side in summaries[side].map { (side: side, summary: $0) } }
         let message = written
-            .map { "\($0.name): \(summaries[$0]!.sentence)" }
+            .map { "\($0.side.name): \($0.summary.sentence)" }
             .joined(separator: " · ")
 
-        let combined = written.reduce(LibrarySyncSummary()) { $0.adding(summaries[$1]!) }
+        let combined = written.reduce(LibrarySyncSummary()) { $0.adding($1.summary) }
         lastSummary = combined
         Logger.shared.log("[LibrarySync] \(run.kind.rawValue) \(run.title): \(message)", type: "Provider")
         #if !os(tvOS)
@@ -536,8 +536,8 @@ final class LibrarySyncService: ObservableObject {
     }
 }
 
-private extension LibrarySyncSummary {
-    mutating func record(_ outcome: LibrarySyncService.Outcome) {
+extension LibrarySyncSummary {
+    fileprivate mutating func record(_ outcome: LibrarySyncService.Outcome) {
         switch outcome {
         case .upToDate:      upToDate += 1
         case .keptAhead:     keptAhead += 1
@@ -550,7 +550,7 @@ private extension LibrarySyncSummary {
     }
 
     /// Both sides of a two-way run as one tally, for `lastSummary`.
-    func adding(_ other: LibrarySyncSummary) -> LibrarySyncSummary {
+    fileprivate func adding(_ other: LibrarySyncSummary) -> LibrarySyncSummary {
         var total = self
         total.created += other.created
         total.advanced += other.advanced
@@ -571,7 +571,6 @@ private extension LibrarySyncSummary {
 /// Two services needed seven cases; three would need nineteen. Naming both ends as values
 /// instead means the run list is generated from whoever is actually signed in.
 struct SyncRun: Identifiable, Equatable {
-
     enum Kind: String {
         /// Merge every side at once: per title, whichever account is further along wins.
         case merge
@@ -596,7 +595,7 @@ struct SyncRun: Identifiable, Equatable {
     ///
     /// Without it the merge title was built from `LibrarySide.allCases`, so somebody signed
     /// into two services was shown a confirmation naming a third they had never connected.
-    var sides: [LibrarySide]? = nil
+    var sides: [LibrarySide]?
 
     var id: String { "\(kind.rawValue)|\(source?.rawValue ?? "all")|\(target?.rawValue ?? "all")" }
 

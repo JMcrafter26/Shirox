@@ -48,7 +48,7 @@ struct CinematicPage<Backdrop: View, Hero: View, Rows: View>: View {
     /// How dark the artwork gets once the rows have scrolled over it: 1 is black.
     var maxDim: CGFloat = 0.6
     /// Pull to refresh, where the page has one.
-    nonisolated var onRefresh: (@Sendable () async -> Void)? = nil
+    nonisolated var onRefresh: (@Sendable () async -> Void)?
     @ViewBuilder let backdrop: () -> Backdrop
     @ViewBuilder let hero: () -> Hero
     @ViewBuilder let rows: () -> Rows
@@ -138,9 +138,7 @@ struct CinematicPage<Backdrop: View, Hero: View, Rows: View>: View {
         // The bottom too: what showed below the page there was the light system background.
         .ignoresSafeArea(edges: [.top, .leading, .bottom])
     }
-}
 
-extension CinematicPage {
     /// Black behind the rows, fading in above them: as they scroll up they cover the artwork
     /// until none of it is left. Part of the scrolling content, so it can't fall behind the
     /// scroll the way a dim measured from the offset did.
@@ -345,7 +343,7 @@ struct CinematicShelf<Item: Identifiable, Card: View>: View {
     let items: [Item]
     var spacing: CGFloat = 16
     /// The card to open the row on, such as the episode up next.
-    var initialIndex: Int? = nil
+    var initialIndex: Int?
     @ViewBuilder let card: (Item) -> Card
 
     var body: some View {

@@ -9,14 +9,14 @@ struct MangaDetailView: View {
     let item: SearchItem
     /// Non-nil ⇒ offline mode: render these downloaded chapters from disk, skip
     /// the module/network load, and hide online-only controls.
-    var offlineChapters: [MangaChapter]? = nil
+    var offlineChapters: [MangaChapter]?
     /// Non-nil ⇒ AniList-first entry (from AniListMangaDetailView / relations):
     /// seed the metadata overlay directly instead of resolving a match.
-    var aniListMedia: Media? = nil
+    var aniListMedia: Media?
     /// The module this manga belongs to — a download's own source. Without it a downloaded
     /// manga showed (and saved reading progress under) whichever module happened to be
     /// active, so Continue Reading later reopened it in the wrong source.
-    var moduleId: String? = nil
+    var moduleId: String?
 
     private var effectiveModuleId: String? { moduleId ?? ModuleManager.shared.activeModule?.id }
     private var effectiveModule: ModuleDefinition? {
@@ -41,8 +41,8 @@ struct MangaDetailView: View {
     @State private var confirmDeleteAllDownloads = false
     @ObservedObject private var anilistAuth = AniListAuthManager.shared
     @ObservedObject private var malAuth = MALAuthManager.shared
-    @State private var existingAniListEntry: LibraryEntry? = nil
-    @State private var existingMALEntry: LibraryEntry? = nil
+    @State private var existingAniListEntry: LibraryEntry?
+    @State private var existingMALEntry: LibraryEntry?
     @State private var showAniListEdit = false
     @State private var showMALEdit = false
     #endif
@@ -893,15 +893,15 @@ private struct MangaRelationCard: View {
 private struct MangaChapterRowView: View {
     let chapter: MangaChapter
     let isRead: Bool
-    var progress: Double? = nil
+    var progress: Double?
     let onTap: () -> Void
-    var onMarkRead: (() -> Void)? = nil
-    var onMarkUnread: (() -> Void)? = nil
+    var onMarkRead: (() -> Void)?
+    var onMarkUnread: (() -> Void)?
     var isSelectionMode: Bool = false
     var isSelected: Bool = false
-    var downloadState: MangaDownloadState? = nil
-    var onDownload: (() -> Void)? = nil
-    var onDeleteDownload: (() -> Void)? = nil
+    var downloadState: MangaDownloadState?
+    var onDownload: (() -> Void)?
+    var onDeleteDownload: (() -> Void)?
 
     private var showsProgressBar: Bool {
         if let progress, progress > 0, !isRead { return true }

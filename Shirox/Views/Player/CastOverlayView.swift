@@ -44,8 +44,7 @@ struct CastOverlayView: View {
                 if let urlStr = imageUrl, let url = URL(string: urlStr) {
                     AsyncImage(url: url) { phase in
                         if let img = phase.image {
-                            img.resizable()
-                                .aspectRatio(contentMode: .fill)
+                            img.resizable().scaledToFill()
                                 .frame(width: 160, height: 240)
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
                                 .shadow(color: .black.opacity(0.5), radius: 12)

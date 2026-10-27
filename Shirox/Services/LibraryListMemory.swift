@@ -5,7 +5,7 @@ import Foundation
 enum LibraryListMemory {
     struct Place: Codable, Equatable {
         var status: MediaListStatus
-        var customList: String? = nil
+        var customList: String?
     }
 
     static let defaultsKey = "libraryLastLists"

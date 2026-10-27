@@ -1,5 +1,5 @@
-import SwiftUI
 import Combine
+import SwiftUI
 
 @MainActor
 final class SubtitleSettingsManager: ObservableObject {
@@ -88,14 +88,14 @@ final class SubtitleSettingsManager: ObservableObject {
         // register(defaults:) provides fallbacks only when a key has never been written —
         // previously saved values always take precedence.
         UserDefaults.standard.register(defaults: [
-            Keys.enabled:           true,
-            Keys.fontSize:          24.0,
-            Keys.shadowRadius:      2.0,
+            Keys.enabled: true,
+            Keys.fontSize: 24.0,
+            Keys.shadowRadius: 2.0,
             Keys.backgroundEnabled: false,
             Keys.backgroundOpacity: 0.6,
-            Keys.backgroundRadius:  6.0,
-            Keys.bottomPadding:     60.0,
-            Keys.delay:             0.0
+            Keys.backgroundRadius: 6.0,
+            Keys.bottomPadding: 60.0,
+            Keys.delay: 0.0
         ])
 
         let d = UserDefaults.standard
@@ -196,9 +196,9 @@ final class SubtitleSettingsManager: ObservableObject {
         let d = UserDefaults.standard
         guard d.object(forKey: Keys.colorR) != nil else { return .white }
         return Color(
-            red:     d.double(forKey: Keys.colorR),
-            green:   d.double(forKey: Keys.colorG),
-            blue:    d.double(forKey: Keys.colorB),
+            red: d.double(forKey: Keys.colorR),
+            green: d.double(forKey: Keys.colorG),
+            blue: d.double(forKey: Keys.colorB),
             opacity: d.double(forKey: Keys.colorA)
         )
     }

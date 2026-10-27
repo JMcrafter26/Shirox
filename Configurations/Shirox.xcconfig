@@ -13,8 +13,8 @@ SWIFT_EMIT_LOC_STRINGS = YES
 LOCALIZATION_PREFERS_STRING_CATALOGS = YES
 
 // Alternate home screen icons (Assets.xcassets/*.appiconset), offered in Settings › General.
-ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES[sdk=iphoneos*] = realistic
-ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES[sdk=iphonesimulator*] = realistic
+ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES[sdk=iphoneos*] = realistic manga
+ASSETCATALOG_COMPILER_ALTERNATE_APPICON_NAMES[sdk=iphonesimulator*] = realistic manga
 
 // Release builds carry no code coverage instrumentation (__LLVM_COV, __llvm_prf_*): that was
 // 3.6 MB of the shipped binary. Debug keeps it for tests.

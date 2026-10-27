@@ -14,10 +14,11 @@ final class MALSocialService {
     // MARK: - Current user profile (official MAL API)
 
     func fetchCurrentUserProfile() async throws -> UserProfile {
-        var components = URLComponents(url: malBase.appendingPathComponent("users/@me"),
-                                       resolvingAgainstBaseURL: false)!
+        guard var components = URLComponents(url: malBase.appendingPathComponent("users/@me"),
+                                             resolvingAgainstBaseURL: false) else { throw URLError(.badURL) }
         components.queryItems = [URLQueryItem(name: "fields", value: "anime_statistics,picture")]
-        let (data, response) = try await MALAuthManager.shared.send(url: components.url!)
+        guard let url = components.url else { throw URLError(.badURL) }
+        let (data, response) = try await MALAuthManager.shared.send(url: url)
         if response.statusCode == 401 {
             throw ProviderError.unauthenticated
         }
@@ -54,10 +55,8 @@ final class MALSocialService {
     // MARK: - Public profile (Jikan)
 
     func fetchProfile(username: String) async throws -> UserProfile {
-        struct JikanUserImages: Decodable {
-            let jpg: JikanUserImageSet?
-            struct JikanUserImageSet: Decodable { let image_url: String? }
-        }
+        struct JikanUserImageSet: Decodable { let image_url: String? }
+        struct JikanUserImages: Decodable { let jpg: JikanUserImageSet? }
         struct JikanAnimeStats: Decodable {
             let total_entries: Int?; let episodes_watched: Int?; let mean_score: Double?
         }
@@ -82,7 +81,7 @@ final class MALSocialService {
         }
         return UserProfile(id: user.mal_id, provider: .mal, name: user.username,
                            avatarURL: user.images?.jpg?.image_url, bannerImage: nil,
-                           isFollowing: nil, statistics: stats ?? nil)
+                           isFollowing: nil, statistics: stats)
     }
 
     // MARK: - History as activity (Jikan)
@@ -98,10 +97,11 @@ final class MALSocialService {
         }
         struct JikanHistoryPage: Decodable { let data: [JikanHistoryEntry] }
 
-        var components = URLComponents(url: jikanBase.appendingPathComponent("users/\(username)/history/anime"),
-                                       resolvingAgainstBaseURL: false)!
+        guard var components = URLComponents(url: jikanBase.appendingPathComponent("users/\(username)/history/anime"),
+                                             resolvingAgainstBaseURL: false) else { throw URLError(.badURL) }
         components.queryItems = [URLQueryItem(name: "page", value: "\(page)")]
-        let (data, _) = try await session.data(from: components.url!)
+        guard let url = components.url else { throw URLError(.badURL) }
+        let (data, _) = try await session.data(from: url)
         let result = try JSONDecoder().decode(JikanHistoryPage.self, from: data)
 
         return result.data.enumerated().map { index, entry in
@@ -111,7 +111,7 @@ final class MALSocialService {
                 coverImage: nil
             )
             return UserActivity(
-                id: entry.entry.mal_id * 1000 + index,
+                id: entry.entry.mal_id * 1_000 + index,
                 kind: .list(status: "watched", progress: entry.increment.map { "\($0)" }, media: media),
                 createdAt: parseDate(entry.date),
                 user: nil,
@@ -131,16 +131,17 @@ final class MALSocialService {
         struct JikanFriend: Decodable { let user: JikanFriendUser }
         struct JikanFriendsPage: Decodable { let data: [JikanFriend] }
 
-        var components = URLComponents(url: jikanBase.appendingPathComponent("users/\(username)/friends"),
-                                       resolvingAgainstBaseURL: false)!
+        guard var components = URLComponents(url: jikanBase.appendingPathComponent("users/\(username)/friends"),
+                                             resolvingAgainstBaseURL: false) else { throw URLError(.badURL) }
         components.queryItems = [URLQueryItem(name: "page", value: "\(page)")]
-        let (data, _) = try await session.data(from: components.url!)
+        guard let url = components.url else { throw URLError(.badURL) }
+        let (data, _) = try await session.data(from: url)
         let friends = try JSONDecoder().decode(JikanFriendsPage.self, from: data)
         // Jikan friends carry no MAL user id; synthesize a unique, page-stable id so
         // SwiftUI's ForEach identity does not collide (which rendered the same friend
         // repeatedly when every id was 0).
         return friends.data.enumerated().map { index, f in
-            UserProfile(id: page * 1000 + index, provider: .mal, name: f.user.username,
+            UserProfile(id: page * 1_000 + index, provider: .mal, name: f.user.username,
                         avatarURL: f.user.images?.jpg?.image_url,
                         bannerImage: nil, isFollowing: nil, statistics: nil)
         }

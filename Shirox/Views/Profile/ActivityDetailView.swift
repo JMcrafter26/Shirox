@@ -237,7 +237,7 @@ struct ActivityDetailView: View {
                         #if os(iOS)
                         .overlay(Circle().stroke(Color(UIColor.systemBackground), lineWidth: 1.5))
                         #elseif os(tvOS)
-                        // TODO: add back overlay
+                        // tvOS has no system background color for the ring, so the avatar goes without one.
                         #else
                         .overlay(Circle().stroke(Color(NSColor.windowBackgroundColor), lineWidth: 1.5))
                         #endif
@@ -277,7 +277,6 @@ struct ActivityDetailView: View {
             } label: {
                 Text("\(likeCount)")
                     .foregroundStyle(isLiked ? .pink : .secondary)
-                    
             }
             .buttonStyle(.plain)
             .zoomSource("likeCount", in: likesZoom, cornerRadius: 8)
@@ -353,7 +352,6 @@ struct ActivityDetailView: View {
                     } label: {
                         Text("\(count)")
                             .foregroundStyle(liked ? .pink : .secondary)
-                            
                     }
                     .buttonStyle(.plain)
                 }

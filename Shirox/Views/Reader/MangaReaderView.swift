@@ -91,9 +91,9 @@ extension View {
 #endif
 
 #if os(iOS)
+import Kingfisher
 import SwiftUI
 import UIKit
-import Kingfisher
 
 /// One page in the reader strip. In vertical mode the strip STITCHES chapters
 /// (Suwatte-style): finishing a chapter scrolls seamlessly into the next, and
@@ -488,7 +488,6 @@ struct MangaReaderView: View {
             .ignoresSafeArea()
         }
     }
-
 
     @ViewBuilder
     private var pagedReader: some View {
@@ -983,9 +982,9 @@ struct MangaReaderView: View {
         case .middle:
             withAnimation(.easeInOut(duration: 0.2)) { chromeVisible.toggle() }
         case .forward:
-            mode == .vertical ? tapScroll(down: true) : tapTurn(1)
+            if mode == .vertical { tapScroll(down: true) } else { tapTurn(1) }
         case .back:
-            mode == .vertical ? tapScroll(down: false) : tapTurn(-1)
+            if mode == .vertical { tapScroll(down: false) } else { tapTurn(-1) }
         }
     }
 
@@ -1029,7 +1028,7 @@ struct MangaReaderView: View {
         #if os(iOS)
         let width = UIScreen.main.bounds.width
         #else
-        let width: CGFloat = 1024
+        let width: CGFloat = 1_024
         #endif
         let anchorX = min(max(pinchAnchor.x, 0), 1)
         let overflow = width * (scale - 1)
@@ -1227,8 +1226,8 @@ struct MangaReaderView: View {
 
 // MARK: - Safe indexing
 
-private extension Array {
-    subscript(safe index: Int) -> Element? {
+extension Array {
+    fileprivate subscript(safe index: Int) -> Element? {
         indices.contains(index) ? self[index] : nil
     }
 }

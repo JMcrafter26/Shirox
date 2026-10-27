@@ -6,7 +6,7 @@ struct StoredStream: Codable, Hashable {
     let headers: [String: String]
     let subtitle: String?
     var subtitleHeaders: [String: String]?
-    var playlistKey: String? = nil
+    var playlistKey: String?
 
     var asStreamResult: StreamResult? {
         guard let url = URL(string: url) else { return nil }
@@ -55,14 +55,12 @@ struct ContinueWatchingItem: Identifiable, Codable, Hashable {
     var localSubtitleImportName: String?
     /// The Simkl title this play belongs to, so resuming it keeps marking on Simkl. Optional, so
     /// saved items still decode.
-    var simklTitle: SimklPlayRef? = nil
+    var simklTitle: SimklPlayRef?
     /// The key the stream's playlists are scrambled with (see ``HLSPlaylistCipher``). Not kept
     /// before, so resuming a scrambled stream (Re:ANIME) handed the player a playlist it couldn't
     /// read and the episode never loaded. Optional, so saved items still decode.
-    var playlistKey: String? = nil
-}
+    var playlistKey: String?
 
-extension ContinueWatchingItem {
     /// True when this item refers to the episode identified by `number`/`href`.
     ///
     /// On a flat multi-season list episode *numbers* repeat (S1 1…12, S2 1…12), so matching an

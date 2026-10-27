@@ -1,6 +1,6 @@
-import Foundation
 import AuthenticationServices
 import Combine
+import Foundation
 
 @MainActor
 final class MALProvider: MediaProvider {

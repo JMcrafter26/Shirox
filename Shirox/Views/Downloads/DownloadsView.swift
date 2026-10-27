@@ -84,7 +84,7 @@ struct DownloadsView: View {
     private struct SectionAction: Identifiable {
         let id = UUID()
         let title: String
-        var systemImage: String? = nil
+        var systemImage: String?
         var isDestructive = false
         let run: () -> Void
 
@@ -765,7 +765,7 @@ private struct ModuleSectionHeader: View {
     let name: String
     let iconUrl: String?
     let iconData: String?
-    var count: Int? = nil
+    var count: Int?
 
     var body: some View {
         HStack(spacing: 6) {
@@ -815,7 +815,7 @@ private struct MediaGroupRow: View {
     var body: some View {
         HStack(spacing: 12) {
             CachedAsyncImage(urlString: imageUrl)
-                .aspectRatio(2/3, contentMode: .fill)
+                .aspectRatio(2 / 3, contentMode: .fill)
                 .frame(width: 48, height: 72)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(Color.primary.opacity(0.08), lineWidth: 0.5))
@@ -866,7 +866,7 @@ private struct DownloadProgressRow: View {
     var body: some View {
         HStack(spacing: 12) {
             CachedAsyncImage(urlString: item.imageUrl)
-                .aspectRatio(2/3, contentMode: .fit)
+                .aspectRatio(2 / 3, contentMode: .fit)
                 .frame(width: 44)
                 .clipShape(RoundedRectangle(cornerRadius: 6))
 
@@ -957,7 +957,7 @@ private struct MangaDownloadProgressRow: View {
     var body: some View {
         HStack(spacing: 12) {
             CachedAsyncImage(urlString: item.coverImage)
-                .aspectRatio(2/3, contentMode: .fit)
+                .aspectRatio(2 / 3, contentMode: .fit)
                 .frame(width: 44)
                 .clipShape(RoundedRectangle(cornerRadius: 6))
 

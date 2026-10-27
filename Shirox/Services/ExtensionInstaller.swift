@@ -42,7 +42,7 @@ enum ExtensionInstaller {
             || AdultModuleCheck.hasAdultName(entry.key) { throw ExtensionInstallError.adult }
         switch repo.kind {
         case .nuvio:
-            let source = String(decoding: try await fetch(entry.fileURL), as: UTF8.self)
+            let source = String(repairingUTF8: try await fetch(entry.fileURL))
             guard isJavaScript(source) else { throw ExtensionInstallError.noPlugin }
             let config: [String: Any] = ["supportedTypes": entry.raw["supportedTypes"] as? [String] ?? ["movie", "tv"]]
             return try make(kind: .nuvio, name: entry.name, version: entry.version, scriptUrl: entry.fileURL.absoluteString,
@@ -86,7 +86,7 @@ enum ExtensionInstaller {
                             repoUrl: repo.url.absoluteString, key: entry.key, icon: entry.iconUrl, language: entry.language,
                             baseUrl: manifest["baseUrl"] as? String, config: ["manifest": manifest], script: wrapSkyStream(js))
         case .mana:
-            let source = String(decoding: try await fetch(entry.fileURL), as: UTF8.self)
+            let source = String(repairingUTF8: try await fetch(entry.fileURL))
             guard isJavaScript(source), let info = manaInfo(source) else { throw ExtensionInstallError.noPlugin }
             // The source's own rating and name, not only the repo's word for them.
             if ExtensionAdultCheck.isAdult(mana: info) || (info["rating"] == nil && ExtensionAdultCheck.isAdult(mana: entry.raw)) {
@@ -188,7 +188,7 @@ enum ExtensionInstaller {
         module.jsonUrl = kind == .stremio ? repoUrl
             : URL(string: repoUrl).map { ExtensionRepoLoader.entryLink(repo: $0, key: key) } ?? repoUrl
         module.scriptContent = script
-        let configJSON = String(decoding: try JSONSerialization.data(withJSONObject: config), as: UTF8.self)
+        let configJSON = String(repairingUTF8: try JSONSerialization.data(withJSONObject: config))
         module.ext = ExtensionInfo(kind: kind, repoUrl: repoUrl, key: key, config: configJSON)
         return module
     }

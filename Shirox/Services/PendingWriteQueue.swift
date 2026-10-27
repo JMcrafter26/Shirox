@@ -75,8 +75,7 @@ final class PendingWriteQueue {
                 if Self.isTransient(error) {
                     if let i = queue.firstIndex(where: { $0.id == write.id }) {
                         queue[i].attempts += 1
-                        if queue[i].attempts >= maxAttempts { queue.remove(at: i) }
-                        else { sawTransient = true }
+                        if queue[i].attempts >= maxAttempts { queue.remove(at: i) } else { sawTransient = true }
                     }
                 } else {
                     queue.removeAll { $0.id == write.id }   // permanent — drop
@@ -126,8 +125,7 @@ final class PendingWriteQueue {
     }
 
     private func persist() {
-        do { try JSONEncoder().encode(queue).write(to: fileURL, options: .atomic) }
-        catch { assertionFailure("PendingWriteQueue: encode/write failed — \(error)") }
+        do { try JSONEncoder().encode(queue).write(to: fileURL, options: .atomic) } catch { assertionFailure("PendingWriteQueue: encode/write failed — \(error)") }
     }
 
     /// After a profile switch: what the new profile saved, and nothing of the last one's.

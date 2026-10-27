@@ -215,10 +215,10 @@ struct ProviderMenuButton: View {
 }
 
 #if canImport(UIKit)
-private extension UIImage {
+extension UIImage {
     /// The image with the menu button's rounded corners (5pt on its 20pt icon), drawn on
     /// white when asked.
-    func menuIcon(onWhite: Bool) -> UIImage {
+    fileprivate func menuIcon(onWhite: Bool) -> UIImage {
         let format = UIGraphicsImageRendererFormat()
         format.scale = scale
         let rect = CGRect(origin: .zero, size: size)

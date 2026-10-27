@@ -1,5 +1,5 @@
-import SwiftUI
 import Charts
+import SwiftUI
 
 struct ProfileStatsView: View {
     let stats: ProfileAnimeStats?
@@ -79,7 +79,7 @@ struct ProfileStatsView: View {
                 Text("profile.status_distribution")
                     .font(.headline)
                     .padding(.horizontal)
-                ForEach(statuses.filter { $0.count > 0 }, id: \.status) { s in
+                ForEach(statuses.filter(\.hasEntries), id: \.status) { s in
                     HStack {
                         Text(s.status.capitalized).padding(.horizontal)
                         Spacer()
@@ -122,7 +122,7 @@ struct ProfileStatsView: View {
     @available(iOS 16, *)
     @ViewBuilder
     private func statusChart(_ data: [ProfileStatusStat]?) -> some View {
-        if let data = data?.filter({ $0.count > 0 }) {
+        if let data = data?.filter(\.hasEntries) {
             Chart(data, id: \.status) { item in
                 BarMark(
                     x: .value(String(localized: "profile.count"), item.count),
@@ -198,8 +198,8 @@ struct ProfileStatsView: View {
     }
 
     private func formatMinutes(_ mins: Int) -> String {
-        let days = mins / 1440
-        let hours = (mins % 1440) / 60
+        let days = mins / 1_440
+        let hours = (mins % 1_440) / 60
         if days > 0 {
             return "\(days)d \(hours)h"
         } else {

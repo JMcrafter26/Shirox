@@ -1,12 +1,12 @@
 import Foundation
 
 enum ProviderType: String, Codable, CaseIterable, Hashable {
-    case anilist = "anilist"
-    case mal = "mal"
+    case anilist
+    case mal
     /// Write-side tracker: syncs libraries, serves no discovery, profile or social
     /// content. Deliberately absent from `userProviders` — it is not a browsing source.
-    case simkl = "simkl"
-    case local = "local"   // on-device-only title (module-scraped or imported file); never sign-in-able
+    case simkl
+    case local   // on-device-only title (module-scraped or imported file); never sign-in-able
 
     /// Providers a user can sign into. Use this for login / provider-selection UIs;
     /// `.local` is excluded because it has no account.
@@ -50,12 +50,12 @@ struct Media: Identifiable, Codable, Equatable, Hashable, Sendable {
     let type: String?
     let format: String?
     /// Minutes. Simkl shows and movies only.
-    var runtime: Int? = nil
+    var runtime: Int?
     /// A Simkl show's TVDB series or movie's TVDB movie, for its logo. Anime reach TVDB through
     /// their AniList or MyAnimeList id instead.
-    var tvdbID: Int? = nil
+    var tvdbID: Int?
     /// A Simkl show's or movie's TMDB record, for a logo TVDB doesn't have.
-    var tmdbID: Int? = nil
+    var tmdbID: Int?
 
     var uniqueId: String {
         // A Simkl show or movie is keyed by Simkl id, and "simkl-52991" is already a Simkl anime
@@ -102,9 +102,7 @@ struct Media: Identifiable, Codable, Equatable, Hashable, Sendable {
         if let aired = nextAiringEpisode.map({ $0.episode - 1 }), aired > 0 { return aired }
         return episodes
     }
-}
 
-extension Media {
     /// `type` of a Simkl TV show or movie, whose `id` is its Simkl id.
     static let simklTVType = "TV"
     static let simklMovieType = "MOVIE"
@@ -127,9 +125,7 @@ extension Media {
     /// any other id — a Simkl show's, a module title's — would be looked up as an AniList one and
     /// find some other title's art.
     var usesTVDBArtwork: Bool { provider == .anilist || provider == .mal }
-}
 
-extension Media {
     /// Deterministic positive id for an on-device-only title, derived from a stable
     /// source key via FNV-1a (not Swift's per-launch-seeded hashValue), so the id and
     /// resulting uniqueId ("local-<id>") are reproducible across launches.
@@ -172,6 +168,24 @@ extension Media {
             season: nil, seasonYear: nil, nextAiringEpisode: nil,
             relations: nil, type: "MANGA", format: nil)
     }
+
+    /// Returns the AniList/MAL ID of the parent or prequel anime, if known from relations.
+    var parentAnimeId: Int? {
+        guard let edges = relations?.edges else { return nil }
+        // 1. Prefer explicit PARENT relation
+        if let parent = edges.first(where: {
+            $0.relationType == "PARENT" && ($0.node.type == nil || $0.node.type?.uppercased() == "ANIME")
+        }) {
+            return parent.node.id
+        }
+        // 2. Fall back to PREQUEL relation
+        if let prequel = edges.first(where: {
+            $0.relationType == "PREQUEL" && ($0.node.type == nil || $0.node.type?.uppercased() == "ANIME")
+        }) {
+            return prequel.node.id
+        }
+        return nil
+    }
 }
 
 struct MediaTitle: Codable, Equatable, Hashable {
@@ -184,8 +198,8 @@ struct MediaTitle: Codable, Equatable, Hashable {
         for lang in priority.components(separatedBy: ",") {
             switch lang {
             case "english": if let e = english, !e.isEmpty { return e }
-            case "romaji":  if let r = romaji,  !r.isEmpty { return r }
-            case "native":  if let n = native,  !n.isEmpty { return n }
+            case "romaji":  if let r = romaji, !r.isEmpty { return r }
+            case "native":  if let n = native, !n.isEmpty { return n }
             default: break
             }
         }
@@ -197,8 +211,8 @@ struct MediaTitle: Codable, Equatable, Hashable {
         for lang in priority.components(separatedBy: ",") {
             switch lang {
             case "english": if let e = english, !e.isEmpty { return e }
-            case "romaji":  if let r = romaji,  !r.isEmpty { return r }
-            case "native":  if let n = native,  !n.isEmpty { return n }
+            case "romaji":  if let r = romaji, !r.isEmpty { return r }
+            case "native":  if let n = native, !n.isEmpty { return n }
             default: break
             }
         }
@@ -245,25 +259,5 @@ struct MediaRelationEdge: Codable, Identifiable, Equatable, Hashable {
 
     var formattedRelation: String {
         relationType.replacingOccurrences(of: "_", with: " ").capitalized
-    }
-}
-
-extension Media {
-    /// Returns the AniList/MAL ID of the parent or prequel anime, if known from relations.
-    var parentAnimeId: Int? {
-        guard let edges = relations?.edges else { return nil }
-        // 1. Prefer explicit PARENT relation
-        if let parent = edges.first(where: {
-            $0.relationType == "PARENT" && ($0.node.type == nil || $0.node.type?.uppercased() == "ANIME")
-        }) {
-            return parent.node.id
-        }
-        // 2. Fall back to PREQUEL relation
-        if let prequel = edges.first(where: {
-            $0.relationType == "PREQUEL" && ($0.node.type == nil || $0.node.type?.uppercased() == "ANIME")
-        }) {
-            return prequel.node.id
-        }
-        return nil
     }
 }

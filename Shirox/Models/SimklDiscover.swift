@@ -2,15 +2,15 @@ import Foundation
 
 /// One title from Simkl's free CDN files — the trending lists, DVD releases and the calendar.
 /// The files share one shape, give or take fields, so one type reads them all.
-struct SimklDiscoverItem: Equatable, Sendable {
+struct SimklDiscoverItem: Equatable, Sendable, Decodable {
     struct IDs: Equatable, Sendable {
         let simkl: Int
         let mal: Int?
         let anilist: Int?
         /// A show's TVDB series or a movie's TVDB movie, where its logo comes from.
-        var tvdb: Int? = nil
+        var tvdb: Int?
         /// Its TMDB show or movie, for a logo TVDB doesn't have.
-        var tmdb: Int? = nil
+        var tmdb: Int?
     }
 
     let title: String
@@ -32,16 +32,37 @@ struct SimklDiscoverItem: Equatable, Sendable {
     /// from v2's times, or the day as v1 lists it.
     var airDay: String?
     /// Calendar entries only: the episode airing — 1 for a new show or season.
-    var episode: Int? = nil
+    var episode: Int?
     /// When the title came out, "yyyy-MM-dd".
-    var released: String? = nil
+    var released: String?
     /// Calendar entries only: the moment it airs or releases, for the Upcoming calendar.
-    var airsAt: Date? = nil
+    var airsAt: Date?
     /// Calendar v2 shows only: the season the episode is in.
-    var season: Int? = nil
-}
+    var season: Int?
 
-extension SimklDiscoverItem: Decodable {
+    /// Written out because the decoding initializer below replaces the synthesized one.
+    init(title: String, titleRomaji: String?, ids: IDs, poster: String?, fanart: String?,
+         overview: String?, genres: [String], rating: Double?, runtime: Int?, totalEpisodes: Int?,
+         rank: Int?, airDay: String? = nil, episode: Int? = nil, released: String? = nil,
+         airsAt: Date? = nil, season: Int? = nil) {
+        self.title = title
+        self.titleRomaji = titleRomaji
+        self.ids = ids
+        self.poster = poster
+        self.fanart = fanart
+        self.overview = overview
+        self.genres = genres
+        self.rating = rating
+        self.runtime = runtime
+        self.totalEpisodes = totalEpisodes
+        self.rank = rank
+        self.airDay = airDay
+        self.episode = episode
+        self.released = released
+        self.airsAt = airsAt
+        self.season = season
+    }
+
     private enum CodingKeys: String, CodingKey {
         case title, title_romaji, ids, poster, fanart, overview, genres, ratings, runtime, total_episodes, rank, date
         case episode, release_date
@@ -61,14 +82,15 @@ extension SimklDiscoverItem: Decodable {
     }
 
     private struct Ratings: Decodable {
-        struct Source: Decodable { let rating: Double? }
-        let simkl: Source?
+        let simkl: RatingSource?
     }
+
+    private struct RatingSource: Decodable { let rating: Double? }
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         func optional<T: Decodable>(_ type: T.Type, _ key: CodingKeys) -> T? {
-            (try? c.decodeIfPresent(type, forKey: key)) ?? nil
+            (try? c.decodeIfPresent(type, forKey: key))
         }
         // The files spell the id `simkl_id`; the detail records `simkl`.
         let raw = try c.decode(RawIDs.self, forKey: .ids)
@@ -140,17 +162,7 @@ extension SimklDiscoverItem: Decodable {
     /// Calendar v2: the airings, with each title's details once, by Simkl id. An airing is joined
     /// with its title's details; one without them is skipped.
     private struct CalendarV2: Decodable {
-        struct Airing: Decodable {
-            struct Episode: Decodable {
-                let episode: Int?
-                let season: Int?
-            }
-            let simkl_id: SimklLibraryService.FlexibleID?
-            let date: String?
-            let episode: Episode?
-        }
-
-        let calendar: [Airing]
+        let calendar: [CalendarAiring]
         let metadata: [String: Lenient]
 
         func items(in timeZone: TimeZone) -> [SimklDiscoverItem] {
@@ -170,6 +182,17 @@ extension SimklDiscoverItem: Decodable {
                 return item
             }
         }
+    }
+
+    private struct CalendarAiring: Decodable {
+        let simkl_id: SimklLibraryService.FlexibleID?
+        let date: String?
+        let episode: CalendarEpisode?
+    }
+
+    private struct CalendarEpisode: Decodable {
+        let episode: Int?
+        let season: Int?
     }
 
     private struct Lenient: Decodable {

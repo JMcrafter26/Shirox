@@ -231,7 +231,7 @@ extension JSContext {
         let networkFetchSimpleNativeFunction: @convention(block) (String, JSValue?, JSValue, JSValue) -> Void = { urlString, optionsValue, resolve, reject in
             Task { @MainActor in
                 var timeoutSeconds = 5
-                var htmlContent: String? = nil
+                var htmlContent: String?
                 var headers: [String: String] = [:]
                 if let optionsDict = optionsValue?.toDictionary() {
                     timeoutSeconds = optionsDict["timeoutSeconds"] as? Int ?? 5
@@ -321,7 +321,7 @@ class NetworkFetchSimpleManager: NSObject, ObservableObject {
 // MARK: - NetworkFetchSimpleMonitor
 
 @MainActor
-class NetworkFetchSimpleMonitor: NSObject, ObservableObject {
+class NetworkFetchSimpleMonitor: NSObject, ObservableObject, WKNavigationDelegate, WKScriptMessageHandler {
     private var webView: WKWebView?
     private var completionHandler: (([String: Any]) -> Void)?
     private var timer: Timer?
@@ -548,7 +548,7 @@ class NetworkFetchSimpleMonitor: NSObject, ObservableObject {
         config.userContentController.addUserScript(userScript)
         config.userContentController.add(self, name: "networkLogger")
 
-        webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 1920, height: 1080), configuration: config)
+        webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 1_920, height: 1_080), configuration: config)
         webView?.navigationDelegate = self
         webView?.customUserAgent = URLSession.randomUserAgent
     }
@@ -668,11 +668,11 @@ class NetworkFetchSimpleMonitor: NSObject, ObservableObject {
             networkRequests.append(urlString)
         }
     }
-}
 
-extension NetworkFetchSimpleMonitor: WKNavigationDelegate {
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {}
-    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {}
+    // MARK: - WKNavigationDelegate
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation?) {}
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation?, withError error: Error) {}
     @available(iOS 15.0, macOS 13.0, *)
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
         if let url = navigationAction.request.url {
@@ -681,9 +681,9 @@ extension NetworkFetchSimpleMonitor: WKNavigationDelegate {
         }
         return .allow
     }
-}
 
-extension NetworkFetchSimpleMonitor: WKScriptMessageHandler {
+    // MARK: - WKScriptMessageHandler
+
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         if message.name == "networkLogger",
            let body = message.body as? [String: Any],
@@ -732,7 +732,7 @@ class NetworkFetchManager: NSObject, ObservableObject {
 // MARK: - NetworkFetchMonitor
 
 @MainActor
-class NetworkFetchMonitor: NSObject, ObservableObject {
+class NetworkFetchMonitor: NSObject, ObservableObject, WKNavigationDelegate, WKScriptMessageHandler {
     private var webView: WKWebView?
     private var completionHandler: (([String: Any]) -> Void)?
     private var timer: Timer?
@@ -744,8 +744,8 @@ class NetworkFetchMonitor: NSObject, ObservableObject {
 
     @Published private(set) var networkRequests: [String] = []
     @Published private(set) var cutoffTriggered = false
-    @Published private(set) var cutoffUrl: String? = nil
-    @Published private(set) var htmlContent: String? = nil
+    @Published private(set) var cutoffUrl: String?
+    @Published private(set) var htmlContent: String?
     @Published private(set) var htmlCaptured = false
     @Published private(set) var cookiesCaptured = false
 
@@ -1132,7 +1132,7 @@ class NetworkFetchMonitor: NSObject, ObservableObject {
         config.userContentController.addUserScript(userScript)
         config.userContentController.add(self, name: "networkLogger")
 
-        webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 1920, height: 1080), configuration: config)
+        webView = WKWebView(frame: CGRect(x: 0, y: 0, width: 1_920, height: 1_080), configuration: config)
         webView?.navigationDelegate = self
         webView?.customUserAgent = URLSession.randomUserAgent
     }
@@ -1337,11 +1337,11 @@ class NetworkFetchMonitor: NSObject, ObservableObject {
             }
         }
     }
-}
 
-extension NetworkFetchMonitor: WKNavigationDelegate {
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {}
-    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {}
+    // MARK: - WKNavigationDelegate
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation?) {}
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation?, withError error: Error) {}
     @available(iOS 15.0, macOS 13.0, *)
     func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction) async -> WKNavigationActionPolicy {
         if let url = navigationAction.request.url {
@@ -1350,9 +1350,9 @@ extension NetworkFetchMonitor: WKNavigationDelegate {
         }
         return .allow
     }
-}
 
-extension NetworkFetchMonitor: WKScriptMessageHandler {
+    // MARK: - WKScriptMessageHandler
+
     func userContentController(_ userContentController: WKUserContentController, didReceive message: WKScriptMessage) {
         guard message.name == "networkLogger",
               let body = message.body as? [String: Any] else { return }

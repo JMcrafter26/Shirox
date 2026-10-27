@@ -12,7 +12,6 @@ import Foundation
 /// The next-episode loader is stateful (each successful call advances an internal season-aware
 /// cursor), so the prefetch must fire at most once per episode; `alreadyStarted` enforces that.
 enum PlayerNextEpisodePrefetch {
-
     /// - Parameters:
     ///   - progress: current playback fraction (currentTime / duration), 0…1.
     ///   - threshold: the `watchedPercentage` fraction (e.g. 0.90) at which to prefetch.

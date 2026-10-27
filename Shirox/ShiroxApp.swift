@@ -1,8 +1,8 @@
 import Combine
 import SwiftUI
 #if os(iOS)
-import UIKit
 import AVFoundation
+import UIKit
 #if canImport(GoogleCast)
 import GoogleCast
 #endif
@@ -100,7 +100,7 @@ class AppDelegate: NSObject, UIApplicationDelegate {
         config.waitsForConnectivity = true
         config.shouldUseExtendedBackgroundIdleMode = true
         config.timeoutIntervalForRequest = 60
-        config.timeoutIntervalForResource = 3600
+        config.timeoutIntervalForResource = 3_600
         // Create a default session with this config for general use
         _ = URLSession(configuration: config)
     }
@@ -136,8 +136,8 @@ struct ShiroxApp: App {
         // Before the first view is drawn, so it already has the chosen pack's icons.
         _ = IconPackStore.shared
         URLCache.shared = URLCache(
-            memoryCapacity: 20 * 1024 * 1024,
-            diskCapacity: 150 * 1024 * 1024,
+            memoryCapacity: 20 * 1_024 * 1_024,
+            diskCapacity: 150 * 1_024 * 1_024,
             diskPath: nil
         )
         #if !os(tvOS) && !targetEnvironment(macCatalyst) || os(macOS)
@@ -220,7 +220,7 @@ struct ShiroxApp: App {
                 }
         }
         #if os(macOS)
-        .defaultSize(width: 1320, height: 860)
+        .defaultSize(width: 1_320, height: 860)
         #endif
         #if targetEnvironment(macCatalyst) || os(macOS)
         .commands {
@@ -745,9 +745,7 @@ private struct RootTabView: View {
         .overlay {
             if let source = tabBarMenuSource {
                 TabBarMenu(source: source, selectedTab: selectedTab, tabs: visibleTabs, onPick: openFromTabBarMenu,
-                           onHidesBar: { hidesTabBar = $0 }) {
-                    tabBarMenuSource = nil
-                }
+                           onHidesBar: { hidesTabBar = $0 }, onDismiss: { tabBarMenuSource = nil })
             }
         }
         .adaptiveSheet(isPresented: $showsModuleList) {
@@ -816,7 +814,7 @@ private struct RootTabView: View {
         #if targetEnvironment(macCatalyst)
         .onAppear {
             guard let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene else { return }
-            scene.sizeRestrictions?.minimumSize = CGSize(width: 1024, height: 700)
+            scene.sizeRestrictions?.minimumSize = CGSize(width: 1_024, height: 700)
         }
         #endif
     }

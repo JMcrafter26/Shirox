@@ -1,5 +1,5 @@
-import SwiftUI
 import QuartzCore
+import SwiftUI
 
 #if os(iOS) || os(tvOS)
 import UIKit
@@ -150,7 +150,8 @@ import CoreMedia
 /// Drawing on the CPU costs far more than Metal — about 12 ms a 1080p frame on an iPhone 16 — so it
 /// lasts only as long as Picture in Picture does, at no more than its window's size.
 @MainActor
-final class MPVPictureInPicture: NSObject {
+final class MPVPictureInPicture: NSObject, AVPictureInPictureSampleBufferPlaybackDelegate,
+    AVPictureInPictureControllerDelegate {
     static let shared = MPVPictureInPicture()
 
     /// Over mpv's own picture: shown while it's fed, and until mpv's picture is back under it.
@@ -358,9 +359,9 @@ final class MPVPictureInPicture: NSObject {
             }
         }
     }
-}
 
-extension MPVPictureInPicture: AVPictureInPictureSampleBufferPlaybackDelegate {
+    // MARK: - AVPictureInPictureSampleBufferPlaybackDelegate
+
     nonisolated func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController,
                                                 setPlaying playing: Bool) {
         MainActor.assumeIsolated {
@@ -402,9 +403,9 @@ extension MPVPictureInPicture: AVPictureInPictureSampleBufferPlaybackDelegate {
             }
         }
     }
-}
 
-extension MPVPictureInPicture: AVPictureInPictureControllerDelegate {
+    // MARK: - AVPictureInPictureControllerDelegate
+
     nonisolated func pictureInPictureControllerDidStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
         MainActor.assumeIsolated {
             isStarting = false

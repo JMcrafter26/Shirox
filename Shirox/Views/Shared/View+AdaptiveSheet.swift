@@ -10,7 +10,7 @@ private struct ShimmerModifier: ViewModifier {
                     stops: [
                         .init(color: .clear, location: 0.2),
                         .init(color: .white.opacity(1.0), location: 0.5),
-                        .init(color: .clear, location: 0.8),
+                        .init(color: .clear, location: 0.8)
                     ],
                     startPoint: .leading,
                     endPoint: .trailing
@@ -299,7 +299,6 @@ extension View {
     }
 }
 
-
 extension View {
     /// Forms inside laid out grouped on a Mac, as on iOS. The Mac's default puts labels in a
     /// column of their own, and in a sheet the controls ran off its right edge.
@@ -343,7 +342,7 @@ struct MacShelf<Item: Identifiable, Card: View>: View {
     /// Room above and below for the cards' shadows.
     var verticalPadding: CGFloat = 0
     /// The card to open the row on.
-    var initialIndex: Int? = nil
+    var initialIndex: Int?
     @ViewBuilder let card: (Item) -> Card
 
     /// Each card's horizontal extent in the row's viewport, by index: those the row has laid out.

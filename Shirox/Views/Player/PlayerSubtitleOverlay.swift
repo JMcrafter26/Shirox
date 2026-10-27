@@ -59,10 +59,10 @@ struct PlayerSubtitleOverlay: View {
                     .font(settings.font(size: settings.fontSize))
                     .foregroundStyle(settings.foregroundColor)
                     // 4-directional outline
-                    .shadow(color: outlineColor, radius: 0, x: -1, y:  0)
-                    .shadow(color: outlineColor, radius: 0, x:  1, y:  0)
-                    .shadow(color: outlineColor, radius: 0, x:  0, y: -1)
-                    .shadow(color: outlineColor, radius: 0, x:  0, y:  1)
+                    .shadow(color: outlineColor, radius: 0, x: -1, y: 0)
+                    .shadow(color: outlineColor, radius: 0, x: 1, y: 0)
+                    .shadow(color: outlineColor, radius: 0, x: 0, y: -1)
+                    .shadow(color: outlineColor, radius: 0, x: 0, y: 1)
                     // Drop shadow on top. Strong enough to see: SwiftUI's default, a third
                     // black, barely showed past the outline.
                     .shadow(color: .black.opacity(0.8), radius: settings.shadowRadius)

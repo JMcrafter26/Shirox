@@ -14,7 +14,6 @@ struct SimklEpisodePlan: Equatable {
 /// history write addresses episodes by nothing else, so nothing here can mark one. A list read
 /// reports watched specials under season 0; they are carried along and never changed.
 enum SimklEpisodePlanner {
-
     /// Regular episodes, in season order.
     static func regular(_ episodes: [SimklEpisode]) -> [SimklEpisodeRef] {
         episodes.compactMap(\.ref).sorted()

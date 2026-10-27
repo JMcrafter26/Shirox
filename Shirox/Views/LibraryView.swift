@@ -1,5 +1,5 @@
-import SwiftUI
 import AuthenticationServices
+import SwiftUI
 
 enum LibrarySortOrder: String, CaseIterable, Identifiable {
     case score      = "My Rating"
@@ -49,7 +49,7 @@ struct LibraryView: View {
     @State private var gridDestination: LibraryEntry?
     @State private var gridLinkActive = false
     #if os(macOS)
-    @State private var libraryWidth: CGFloat = 1000
+    @State private var libraryWidth: CGFloat = 1_000
     #endif
     @AppStorage("localScoreFormat") private var localScoreFormatRaw: String = ScoreFormat.point10Decimal.rawValue
 
@@ -67,21 +67,21 @@ struct LibraryView: View {
     /// AniList ↔ MyAnimeList mirroring — now one pair within `SyncTargets`.
     private var dualSync: Bool { SyncTargets.mirrors(.anilist, .mal, in: SyncTargets.decode(syncTargetsRaw)) }
     @State private var selectedGenres: Set<String> = []
-    @State private var selectedEntry: LibraryEntry? = nil
+    @State private var selectedEntry: LibraryEntry?
     @State private var simklSearch: SimklSearchRequest?
-    @State private var pendingEntry: LibraryEntry? = nil
+    @State private var pendingEntry: LibraryEntry?
     @State private var showProviderPicker = false
     @State private var showManageCollections = false
-    @State private var otherEntry: LibraryEntry? = nil
-    @State private var otherMedia: Media? = nil
+    @State private var otherEntry: LibraryEntry?
+    @State private var otherMedia: Media?
     @State private var showOtherSheet = false
     @State private var isLoadingOtherEntry = false
     // Manga navigation: provider-synced rows resolve to a module asynchronously,
     // so manga taps drive a programmatic NavigationLink rather than an eager one.
-    @State private var pendingMangaItem: SearchItem? = nil
+    @State private var pendingMangaItem: SearchItem?
     @State private var mangaLinkActive = false
-    @State private var resolvingMangaId: Int? = nil
-    @State private var pendingAniListMangaMedia: Media? = nil
+    @State private var resolvingMangaId: Int?
+    @State private var pendingAniListMangaMedia: Media?
     @State private var aniListMangaLinkActive = false
     #if os(iOS)
     @State private var presentationWindow: UIWindow?
@@ -236,8 +236,7 @@ struct LibraryView: View {
             Section("common.sort_by") {
                 ForEach(LibrarySortOrder.allCases) { order in
                     Button {
-                        if sortOrder == order { sortAscending.toggle() }
-                        else { sortOrderRaw = order.rawValue; sortAscending = false }
+                        if sortOrder == order { sortAscending.toggle() } else { sortOrderRaw = order.rawValue; sortAscending = false }
                     } label: {
                         HStack {
                             Text(order.title)
@@ -393,7 +392,8 @@ struct LibraryView: View {
                 #if os(iOS)
                     .foregroundStyle(Color(.systemBackground))
                 #else
-                    // TODO: fix missing color ( XCAssets )
+                    // UIKit's system background isn't available here to invert the capsule's
+                    // primary fill, so the label falls back to the secondary color.
                     .foregroundStyle(Color.secondary)
                 #endif
                 .frame(maxWidth: .infinity)
@@ -569,7 +569,6 @@ struct LibraryView: View {
         }
         .buttonStyle(.plain)
     }
-
 
     private func openManga(_ entry: LibraryEntry) {
         if let source = entry.localSource, source.kind == .module {
@@ -1156,12 +1155,10 @@ struct LibraryView: View {
         }
         #endif
         .onChangeOf(anilistAuth.isLoggedIn) { newValue in
-            if newValue { vm.selectSource(.provider(.anilist)) }
-            else if !malAuth.isLoggedIn, case .provider = vm.source { vm.selectSource(sourceAfterSignOut) }
+            if newValue { vm.selectSource(.provider(.anilist)) } else if !malAuth.isLoggedIn, case .provider = vm.source { vm.selectSource(sourceAfterSignOut) }
         }
         .onChangeOf(malAuth.isLoggedIn) { newValue in
-            if newValue { vm.selectSource(.provider(.mal)) }
-            else if !anilistAuth.isLoggedIn, case .provider = vm.source { vm.selectSource(sourceAfterSignOut) }
+            if newValue { vm.selectSource(.provider(.mal)) } else if !anilistAuth.isLoggedIn, case .provider = vm.source { vm.selectSource(sourceAfterSignOut) }
         }
         .onChangeOf(simklAuth.isLoggedIn) { newValue in
             // Signing in adds Simkl's pill without taking over the Library — it's a tracker.
@@ -1359,8 +1356,8 @@ private struct SimklSearchRequest: Identifiable {
     var id: String { "\(kind.rawValue)|\(query)" }
 }
 
-private extension MediaKind {
-    var pillTitle: String {
+extension MediaKind {
+    fileprivate var pillTitle: String {
         switch self {
         case .anime: return String(localized: "common.anime")
         case .manga: return String(localized: "common.manga")
@@ -1369,7 +1366,7 @@ private extension MediaKind {
         }
     }
 
-    var pillIcon: String {
+    fileprivate var pillIcon: String {
         switch self {
         case .anime: return "tv"
         case .manga: return "book"
@@ -1379,7 +1376,7 @@ private extension MediaKind {
     }
 
     /// "Add shows to Watching on Simkl."
-    var noun: String {
+    fileprivate var noun: String {
         switch self {
         case .anime: return "anime"
         case .manga: return "manga"
@@ -1415,7 +1412,7 @@ private struct LibraryGridCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 7) {
             Color.clear
-                .aspectRatio(2/3, contentMode: .fit)
+                .aspectRatio(2 / 3, contentMode: .fit)
                 .overlay(
                     ZStack {
                         CachedAsyncImage(urlString: entry.media.coverImage.thumb ?? "")
@@ -1537,7 +1534,7 @@ private struct LibraryRowView: View {
         HStack(spacing: 12) {
             // Cover image — AniListCardView style
             Color.clear
-                .aspectRatio(2/3, contentMode: .fit)
+                .aspectRatio(2 / 3, contentMode: .fit)
                 .frame(width: 70)
                 .overlay(
                     ZStack {
@@ -1661,7 +1658,6 @@ private struct LibraryRowView: View {
         return "\(entry.progress) episodes watched"
     }
 }
-
 
 #if os(macOS)
 /// The library's filter from the window toolbar's search field, on macOS 15 and later where

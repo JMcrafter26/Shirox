@@ -38,7 +38,7 @@ struct HTTPRequestHead: Equatable {
             if let end = text.range(of: terminator) {
                 let candidate = String(text[text.startIndex..<end.lowerBound])
                 // Prefer whichever terminator appears first.
-                if headText == nil || candidate.count < headText!.count { headText = candidate }
+                if headText.map({ candidate.count < $0.count }) ?? true { headText = candidate }
             }
         }
         guard let head = headText else { return nil }

@@ -15,7 +15,6 @@ import Foundation
 /// Missing the second group is invisible in a master playlist and fatal in a media one: the
 /// key or init segment 403s and the receiver stalls on a manifest that otherwise looks fine.
 enum CastManifestRewriter {
-
     /// Tags whose `URI="…"` attribute addresses a resource the receiver must fetch.
     private static let uriAttributeTags = [
         "#EXT-X-KEY", "#EXT-X-SESSION-KEY", "#EXT-X-MAP",
@@ -74,7 +73,7 @@ enum CastManifestRewriter {
 
     /// Rewrites every fetchable URL in `manifest` through `proxy`, telling it what each is.
     static func rewrite(_ manifest: String, baseURL: URL, resource proxy: (URL, Resource) -> URL?) -> String {
-        let isMaster = manifest.contains("#EXT-X-STREAM-INF") || manifest.contains("#EXT-X-MEDIA:")
+        let isMultivariant = manifest.contains("#EXT-X-STREAM-INF") || manifest.contains("#EXT-X-MEDIA:")
         return manifest.components(separatedBy: .newlines).map { line -> String in
             let trimmed = line.trimmingCharacters(in: .whitespaces)
             if trimmed.isEmpty { return line }
@@ -89,7 +88,7 @@ enum CastManifestRewriter {
                 return rewriteTag(line, baseURL: baseURL) { proxy($0, resource) }
             }
             guard let resolved = resolve(trimmed, relativeTo: baseURL),
-                  let proxied = proxy(resolved, isMaster ? .playlist : .other) else { return line }
+                  let proxied = proxy(resolved, isMultivariant ? .playlist : .other) else { return line }
             return proxied.absoluteString
         }.joined(separator: "\n")
     }

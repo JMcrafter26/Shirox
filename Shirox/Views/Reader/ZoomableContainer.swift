@@ -135,7 +135,7 @@ struct ZoomableContainer<Content: View>: UIViewRepresentable {
             host.view.topAnchor.constraint(equalTo: scroll.contentLayoutGuide.topAnchor),
             host.view.bottomAnchor.constraint(equalTo: scroll.contentLayoutGuide.bottomAnchor),
             host.view.widthAnchor.constraint(equalTo: scroll.frameLayoutGuide.widthAnchor),
-            host.view.heightAnchor.constraint(equalTo: scroll.frameLayoutGuide.heightAnchor),
+            host.view.heightAnchor.constraint(equalTo: scroll.frameLayoutGuide.heightAnchor)
         ])
         context.coordinator.host = host
         context.coordinator.scroll = scroll

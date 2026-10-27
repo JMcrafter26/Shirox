@@ -79,11 +79,13 @@ private struct SimklRawDetails: Decodable {
     let certification: String?
     let total_episodes: Int?
     struct Ratings: Decodable {
-        struct Source: Decodable { let rating: Double? }
-        let simkl: Source?
+        let simkl: SimklRawRatingSource?
     }
     let ratings: Ratings?
 }
+
+/// One source's score in `SimklRawDetails.ratings`.
+private struct SimklRawRatingSource: Decodable { let rating: Double? }
 
 /// One `/tv/episodes/{id}` item as Simkl sends it.
 private struct SimklRawEpisode: Decodable {
@@ -112,7 +114,7 @@ enum SimklCatalog {
         let (data, http) = try await auth.send {
             try auth.authorizedRequest(path: searchPath(for: kind), query: [
                 URLQueryItem(name: "q", value: query),
-                URLQueryItem(name: "limit", value: "20"),
+                URLQueryItem(name: "limit", value: "20")
             ])
         }
         guard (200...299).contains(http.statusCode) else {
@@ -221,14 +223,14 @@ enum SimklCatalog {
 
     /// `200 []` for an unknown id, as for every lookup.
     nonisolated static func decodeAnimeIDs(_ data: Data) throws -> SimklDiscoverItem.IDs? {
+        struct RecordIDs: Decodable {
+            let simkl: SimklLibraryService.FlexibleID?
+            let simkl_id: SimklLibraryService.FlexibleID?
+            let mal: SimklLibraryService.FlexibleID?
+            let anilist: SimklLibraryService.FlexibleID?
+        }
         struct Record: Decodable {
-            struct IDs: Decodable {
-                let simkl: SimklLibraryService.FlexibleID?
-                let simkl_id: SimklLibraryService.FlexibleID?
-                let mal: SimklLibraryService.FlexibleID?
-                let anilist: SimklLibraryService.FlexibleID?
-            }
-            let ids: IDs?
+            let ids: RecordIDs?
         }
         guard let record = try? JSONDecoder().decode(Record.self, from: data) else {
             _ = try JSONDecoder().decode([Record].self, from: data)
@@ -237,11 +239,9 @@ enum SimklCatalog {
         guard let ids = record.ids, let simkl = ids.simkl?.value ?? ids.simkl_id?.value else { return nil }
         return SimklDiscoverItem.IDs(simkl: simkl, mal: ids.mal?.value, anilist: ids.anilist?.value)
     }
-}
 
-// MARK: - Simkl id by tracker id
+    // MARK: - Simkl id by tracker id
 
-extension SimklCatalog {
     private static let animeIDsKey = "com.shirox.simkl_anime_ids"
     /// Misses this session, so a title Simkl doesn't know isn't asked about on every visit.
     private static var unknownAnime: Set<String> = []

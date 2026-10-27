@@ -4,7 +4,7 @@ struct PlayerDoubleTapSeek: View {
     var onSingleTap: () -> Void
     var onSeekBackward: () -> Void
     var onSeekForward: () -> Void
-    var onHover: (() -> Void)? = nil
+    var onHover: (() -> Void)?
     let seekAmount: Double
     /// Screen lock is on. Double-tap seeking used to ignore it entirely, so a locked player
     /// still jumped when a pocket or a passing hand caught the screen twice — the one thing
@@ -24,7 +24,7 @@ struct PlayerDoubleTapSeek: View {
             // allowing SingleTouchTapGR to correctly fail on any multi-finger touch.
             FullScreenSeekView(
                 onSingleTap: onSingleTap,
-                onSeekLeft:  { guard !isLocked else { return }; showFeedback(left: true);  onSeekBackward() },
+                onSeekLeft: { guard !isLocked else { return }; showFeedback(left: true);  onSeekBackward() },
                 onSeekRight: { guard !isLocked else { return }; showFeedback(left: false); onSeekForward()  },
                 onHover: onHover
             )
@@ -75,8 +75,7 @@ struct PlayerDoubleTapSeek: View {
                     TapGesture(count: 2).onEnded {
                         didDoubleTap = true
                         guard !isLocked else { return }
-                        if isLeft { onSeekBackward(); showFeedback(left: true) }
-                        else      { onSeekForward();  showFeedback(left: false) }
+                        if isLeft { onSeekBackward(); showFeedback(left: true) } else { onSeekForward();  showFeedback(left: false) }
                         Task {
                             try? await Task.sleep(nanoseconds: 350_000_000)
                             didDoubleTap = false
@@ -119,7 +118,7 @@ private struct FullScreenSeekView: UIViewRepresentable {
     var onSingleTap: () -> Void
     var onSeekLeft: () -> Void
     var onSeekRight: () -> Void
-    var onHover: (() -> Void)? = nil
+    var onHover: (() -> Void)?
 
     func makeCoordinator() -> Coordinator {
         Coordinator(onSingleTap: onSingleTap, onSeekLeft: onSeekLeft, onSeekRight: onSeekRight, onHover: onHover)

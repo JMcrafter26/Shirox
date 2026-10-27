@@ -1,7 +1,7 @@
 #if !os(tvOS)
 import Foundation
-import Libavformat
 import Libavcodec
+import Libavformat
 import Libavutil
 
 /// Turns a finished HLS download — a folder of playlists and hundreds of segments — into one
@@ -14,7 +14,9 @@ enum MediaRemuxer {
     enum RemuxError: LocalizedError {
         case failed(String)
         var errorDescription: String? {
-            switch self { case .failed(let message): return String(localized: "shared.couldnt_build_the_video_file \(message)") }
+            switch self {
+            case .failed(let message): return String(localized: "shared.couldnt_build_the_video_file \(message)")
+            }
         }
     }
 
@@ -222,9 +224,9 @@ enum MediaRemuxer {
             guard let next = inputs.indices.filter({ ready[$0] }).min(by: { seconds($0) < seconds($1) }),
                   let packet = pending[next], let ctx = inputs[next].ctx else { break }
             let sourceIndex = Int(packet.pointee.stream_index)
-            let source = ctx.pointee.streams[sourceIndex]!
             let targetIndex = Int(inputs[next].mapping[sourceIndex])
-            let target = outCtx.pointee.streams[targetIndex]!
+            guard let source = ctx.pointee.streams[sourceIndex],
+                  let target = outCtx.pointee.streams[targetIndex] else { throw RemuxError.failed("no stream") }
             packet.pointee.stream_index = Int32(targetIndex)
             av_packet_rescale_ts(packet, source.pointee.time_base, target.pointee.time_base)
             packet.pointee.pos = -1
@@ -338,7 +340,9 @@ enum MediaRemuxer {
         // stream moves by the same amount, so they stay in sync.
         let start = inCtx.pointee.start_time == noPTS ? 0 : inCtx.pointee.start_time
         var offset = (0..<outputCount).map { index in
-            -av_rescale_q(start, AVRational(num: 1, den: 1_000_000), outCtx.pointee.streams[index]!.pointee.time_base)
+            // Every output stream exists by now: each was made with avformat_new_stream above.
+            -av_rescale_q(start, AVRational(num: 1, den: 1_000_000),
+                          outCtx.pointee.streams[index]?.pointee.time_base ?? AVRational(num: 1, den: 1_000_000))
         }
 
         while true {
@@ -355,7 +359,7 @@ enum MediaRemuxer {
             // write its config from the header again.
             if aacPlans[sourceIndex] != nil { try stripADTSHeader(packet) }
             let targetIndex = Int(mapping[sourceIndex])
-            let target = outCtx.pointee.streams[targetIndex]!
+            guard let target = outCtx.pointee.streams[targetIndex] else { throw RemuxError.failed("no stream") }
             packet.pointee.stream_index = Int32(targetIndex)
             av_packet_rescale_ts(packet, source.pointee.time_base, target.pointee.time_base)
             packet.pointee.pos = -1
@@ -433,7 +437,7 @@ enum MediaRemuxer {
         guard let packet, let frame else { return [:] }
         // A dozen decoded frames settle SBR and PS; a few hundred packets is plenty to find them.
         var read = 0
-        while read < 2000, probes.values.contains(where: { $0.frames < 12 }) {
+        while read < 2_000, probes.values.contains(where: { $0.frames < 12 }) {
             guard av_read_frame(ctx, packet) >= 0 else { break }
             defer { av_packet_unref(packet) }
             read += 1

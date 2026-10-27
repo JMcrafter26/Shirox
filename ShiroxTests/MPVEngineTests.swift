@@ -126,7 +126,7 @@ final class MPVEngineTests: XCTestCase {
         engine.load(PlaybackSource(url: try silence(seconds: 2)))
         engine.setPeakBitRate(1_000_000)
         await fulfillment(of: [ready], timeout: 10)
-        RunLoop.main.run(until: Date().addingTimeInterval(0.5))
+        try await Task.sleep(nanoseconds: 500_000_000)
         XCTAssertEqual(readyCount, 1)
         XCTAssertTrue(engine.isItemReady)
         XCTAssertEqual(engine.duration ?? 0, 2, accuracy: 0.05)
@@ -297,7 +297,7 @@ final class MPVEngineTests: XCTestCase {
         engine.events.itemReady = { ready.fulfill() }
         engine.load(PlaybackSource(url: URL(string: "https://cdn.invalid/ep2.m3u8")!))
         await fulfillment(of: [ready], timeout: 10)
-        RunLoop.main.run(until: Date().addingTimeInterval(0.6))
+        try await Task.sleep(nanoseconds: 600_000_000)
         XCTAssertEqual(engine.duration ?? 0, 1, accuracy: 0.05, "the second episode is what's loaded")
     }
 
@@ -371,7 +371,8 @@ final class MPVEngineTests: XCTestCase {
 }
 
 /// Serves files from memory over loopback, one request a connection, and counts what's asked of it.
-final class HLSServer {
+/// Unchecked Sendable: its state is only touched on `queue`.
+final class HLSServer: @unchecked Sendable {
     private let listener: NWListener
     private let queue = DispatchQueue(label: "test.hls-server")
     private let files: [String: Data]
@@ -387,16 +388,8 @@ final class HLSServer {
 
     static func start(files: [String: Data]) async throws -> HLSServer {
         let server = HLSServer(listener: try NWListener(using: .tcp, on: .any), files: files)
-        await withCheckedContinuation { (ready: CheckedContinuation<Void, Never>) in
-            var resumed = false
-            server.listener.stateUpdateHandler = { state in
-                guard case .ready = state, !resumed else { return }
-                resumed = true
-                ready.resume()
-            }
-            server.listener.newConnectionHandler = { [weak server] in server?.serve($0) }
-            server.listener.start(queue: server.queue)
-        }
+        server.listener.newConnectionHandler = { [weak server] in server?.serve($0) }
+        await server.listener.startWhenReady(queue: server.queue)
         return server
     }
 

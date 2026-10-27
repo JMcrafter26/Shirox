@@ -408,7 +408,6 @@ final class GooeyRefreshCenter: ObservableObject {
         watch = nil
     }
 
-
     private func show(in hostWindow: UIWindow?) {
         hideWork?.cancel()
         guard let hostWindow, let scene = hostWindow.windowScene else { return }

@@ -1,5 +1,5 @@
-import SwiftUI
 import Combine
+import SwiftUI
 
 // MARK: - VM Store
 
@@ -26,9 +26,9 @@ struct ModuleStreamPickerView: View {
     let animeTitle: String
     let episodeNumber: Int
     /// A Simkl season's numbering. Nil everywhere else, which leaves the picker exactly as it was.
-    var seasonNumbering: ModuleSeasonNumbering? = nil
+    var seasonNumbering: ModuleSeasonNumbering?
     /// The show, for Seanime streaming providers' searches — from the anime page's AniList entry.
-    var seanimeMedia: SeanimeSearchMedia? = nil
+    var seanimeMedia: SeanimeSearchMedia?
     let onDismiss: () -> Void
     let onStreamsLoaded: ([StreamResult], StreamResult?, String?, Int?, String?) -> Void  // allStreams, selectedStream, showHref, availableCount, episodeHref
 
@@ -691,7 +691,7 @@ private struct SearchResultCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Color.clear
-                .aspectRatio(2/3, contentMode: .fit)
+                .aspectRatio(2 / 3, contentMode: .fit)
                 .frame(width: 72)
                 .overlay(
                     ZStack {
@@ -737,7 +737,7 @@ private struct SearchResultsPickerSheet: View {
                         Button { onSelect(item) } label: {
                             VStack(alignment: .leading, spacing: 4) {
                                 Color.clear
-                                    .aspectRatio(2/3, contentMode: .fit)
+                                    .aspectRatio(2 / 3, contentMode: .fit)
                                     .overlay(
                                         ZStack {
                                             CachedAsyncImage(urlString: item.image)

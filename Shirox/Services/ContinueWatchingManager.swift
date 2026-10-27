@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 /// What a local Reset Progress holds back from the AniList and MyAnimeList syncs. They mark
 /// episodes 1…progress watched for every show on the Watching list, so a reset of such a show
@@ -300,9 +300,7 @@ struct SimklTrackWrite: Equatable {
                 let nextEp = entry.progress + 1
 
                 // availableEpisodes = how many have aired (nextAiringEpisode.episode - 1 for airing shows)
-                let availableEpisodes: Int? = media.nextAiringEpisode != nil
-                    ? (media.nextAiringEpisode!.episode - 1)
-                    : media.episodes
+                let availableEpisodes: Int? = media.nextAiringEpisode.map { $0.episode - 1 } ?? media.episodes
                 let isAiring = media.status == "RELEASING"
 
                 // Reconcile watched keys: mark all eps 1...progress as watched locally (highest wins),
@@ -376,7 +374,6 @@ struct SimklTrackWrite: Equatable {
             // Sort by date and keep unique
             items = Array(newItems.sorted { cwSortOrder($0, $1) }.prefix(maxItems))
             persist()
-            
         } catch {
             // No internet → expected silent failure; anything else is worth logging.
             if !ProviderManager.isOfflineError(error) {
@@ -806,7 +803,7 @@ struct SimklTrackWrite: Equatable {
     // MARK: - Private Helpers
 
     private func matchesShow(_ item: ContinueWatchingItem,
-                              aniListID: Int?, moduleId: String?, mediaTitle: String) -> Bool {
+                             aniListID: Int?, moduleId: String?, mediaTitle: String) -> Bool {
         if let aid = aniListID { return item.aniListID == aid }
         if let mid = moduleId { return item.moduleId == mid && item.mediaTitle == mediaTitle }
         return false
@@ -814,13 +811,13 @@ struct SimklTrackWrite: Equatable {
 
     /// Removes every item for the given show from `arr`.
     private func removeAllShowItems(aniListID: Int?, moduleId: String?, mediaTitle: String,
-                                     in arr: inout [ContinueWatchingItem]) {
+                                    in arr: inout [ContinueWatchingItem]) {
         arr.removeAll { matchesShow($0, aniListID: aniListID, moduleId: moduleId, mediaTitle: mediaTitle) }
     }
 
     /// Convenience overload — derives show identifiers from an existing item.
     private func removeAllShowItems(for item: ContinueWatchingItem,
-                                     in arr: inout [ContinueWatchingItem]) {
+                                    in arr: inout [ContinueWatchingItem]) {
         removeAllShowItems(aniListID: item.aniListID, moduleId: item.moduleId,
                            mediaTitle: item.mediaTitle, in: &arr)
         // A file played where it lies (a Mac's) has no show behind it, so it's its own address:
@@ -844,20 +841,20 @@ struct SimklTrackWrite: Equatable {
     /// logically-unchanged card changes its ForEach row identity, which tears down any in-flight
     /// NavigationLink push (e.g. tapping an "Up Next" card pops back to Home).
     private func makePlaceholder(episodeNumber: Int,
-                                  from source: ContinueWatchingItem?,
-                                  aniListID: Int?, moduleId: String?, mediaTitle: String,
-                                  imageUrl: String?, totalEpisodes: Int?,
-                                  availableEpisodes: Int? = nil,
-                                  isAiring: Bool? = nil,
-                                  detailHref: String?,
-                                  lastWatchedAt: Date = .now,
-                                  aniListUpdatedAt: Int? = nil,
-                                  id: UUID = UUID()) -> ContinueWatchingItem? {
+                                 from source: ContinueWatchingItem?,
+                                 aniListID: Int?, moduleId: String?, mediaTitle: String,
+                                 imageUrl: String?, totalEpisodes: Int?,
+                                 availableEpisodes: Int? = nil,
+                                 isAiring: Bool? = nil,
+                                 detailHref: String?,
+                                 lastWatchedAt: Date = .now,
+                                 aniListUpdatedAt: Int? = nil,
+                                 id: UUID = UUID()) -> ContinueWatchingItem? {
         let srcImageUrl   = [source?.imageUrl, imageUrl].compactMap { $0 }.first(where: { !$0.isEmpty }) ?? ""
-        let srcAniListID  = source?.aniListID     ?? aniListID
-        let srcModuleId   = source?.moduleId      ?? moduleId
-        let srcMediaTitle = source?.mediaTitle    ?? mediaTitle
-        let srcDetailHref = source?.detailHref    ?? detailHref
+        let srcAniListID  = source?.aniListID ?? aniListID
+        let srcModuleId   = source?.moduleId ?? moduleId
+        let srcMediaTitle = source?.mediaTitle ?? mediaTitle
+        let srcDetailHref = source?.detailHref ?? detailHref
 
         // Use the largest known totalEpisodes — stale module counts are often 1 and would
         // incorrectly cap a multi-episode show if we took the minimum or first-non-nil.
@@ -915,8 +912,8 @@ struct SimklTrackWrite: Equatable {
     ///   beyond their last-watched ep, it re-creates the "Up Next" placeholder.
     /// - If the user is on the last available episode, ensures no stale placeholder lingers.
     func notifyNewEpisodesAvailable(aniListID: Int?, moduleId: String?, mediaTitle: String,
-                                     availableEpisodes: Int, imageUrl: String? = nil,
-                                     totalEpisodes: Int? = nil, isAiring: Bool? = nil, detailHref: String? = nil) {
+                                    availableEpisodes: Int, imageUrl: String? = nil,
+                                    totalEpisodes: Int? = nil, isAiring: Bool? = nil, detailHref: String? = nil) {
         guard availableEpisodes > 0 else { return }
 
         var arr = items
@@ -1007,7 +1004,7 @@ struct SimklTrackWrite: Equatable {
     }
 
     private static func watchedKey(aniListID: Int?, moduleId: String?,
-                                    mediaTitle: String, episodeNumber: Int) -> String? {
+                                   mediaTitle: String, episodeNumber: Int) -> String? {
         if let aid = aniListID { return "a:\(aid):\(episodeNumber)" }
         if let mid = moduleId, !mid.isEmpty {
             let canonical = mediaTitle.trimmingCharacters(in: .whitespaces).lowercased()
@@ -1020,7 +1017,7 @@ struct SimklTrackWrite: Equatable {
     /// show's markers can be found/cleared by prefix. Nil when the href is empty or the show
     /// has no identity (mirrors `watchedKey`'s aniListID-then-module precedence).
     private static func watchedHrefKey(aniListID: Int?, moduleId: String?,
-                                        mediaTitle: String, episodeHref: String?) -> String? {
+                                       mediaTitle: String, episodeHref: String?) -> String? {
         guard let href = episodeHref, !href.isEmpty else { return nil }
         if let aid = aniListID { return "ah:\(aid):\(href)" }
         if let mid = moduleId, !mid.isEmpty {
@@ -1120,7 +1117,6 @@ struct SimklTrackWrite: Equatable {
         currentStatus: MediaListStatus?, currentProgress: Int,
         watchedEpisode ep: Int, totalEpisodes: Int?, isCompleted: Bool,
         skipRewatch: Bool) -> RemoteTrackDecision {
-
         switch currentStatus {
         case .completed:
             if totalEpisodes == 1 { return .write(status: .completed, progress: ep, incrementRepeat: true) }
@@ -1334,7 +1330,7 @@ struct SimklTrackWrite: Equatable {
                                                  remoteStatus: rewatching ? .repeating : nil)
 
         let aniListWillWrite = aniListEnabled && AniListAuthManager.shared.isLoggedIn
-        let malWillWrite     = malEnabled     && MALAuthManager.shared.isLoggedIn
+        let malWillWrite     = malEnabled && MALAuthManager.shared.isLoggedIn
         if aniListWillWrite || malWillWrite {
             NotificationCenter.default.post(name: .remoteLibraryProgressDidPush, object: nil)
         }
@@ -1394,7 +1390,7 @@ struct SimklTrackWrite: Equatable {
         for item in legacyItems {
             guard let mediaId = item.aniListID, let media = try? await AniListService.shared.detail(id: mediaId) else { continue }
             
-            let avail = media.nextAiringEpisode != nil ? (media.nextAiringEpisode!.episode - 1) : 0
+            let avail = media.nextAiringEpisode.map { $0.episode - 1 } ?? 0
             if avail > 0 {
                 await MainActor.run {
                     self.notifyNewEpisodesAvailable(

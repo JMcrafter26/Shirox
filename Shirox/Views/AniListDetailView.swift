@@ -1,5 +1,5 @@
-import SwiftUI
 import AVKit
+import SwiftUI
 
 #if !os(tvOS)
 private struct DownloadEpisodeItem: Identifiable {
@@ -26,17 +26,17 @@ struct AniListDetailView: View {
     /// AniList ↔ MyAnimeList mirroring — now one pair within `SyncTargets`.
     private var dualSync: Bool { SyncTargets.mirrors(.anilist, .mal, in: SyncTargets.decode(syncTargetsRaw)) }
     @State private var showLibraryEdit = false
-    @State private var existingEntry: LibraryEntry? = nil
-    @State private var existingMALEntry: LibraryEntry? = nil
+    @State private var existingEntry: LibraryEntry?
+    @State private var existingMALEntry: LibraryEntry?
     @State private var showMALEdit = false
-    @State private var linkedIDs: TrackingIDs? = nil
+    @State private var linkedIDs: TrackingIDs?
     /// The title's Simkl id from Simkl's id search, when no link or library entry gave one.
     @State private var lookedUpSimklID: Int?
     @State private var showTrackingLinks = false
     /// The buttons the edit, tracking-links and download sheets grow out of.
     @Namespace private var sheetZoom
     @State private var showAniListEdit = false
-    @State private var existingAniListCrossEntry: LibraryEntry? = nil
+    @State private var existingAniListCrossEntry: LibraryEntry?
     @State private var isLoadingEntry = false
     @ObservedObject private var simklAuth = SimklAuthManager.shared
     /// The Details sheet: following, full synopsis, trailer.
@@ -46,7 +46,7 @@ struct AniListDetailView: View {
     @State private var simklEdit: SimklEditTarget?
     #endif
     #if !os(tvOS)
-    @State private var pendingDownloadEpisodeNumber: DownloadEpisodeItem? = nil
+    @State private var pendingDownloadEpisodeNumber: DownloadEpisodeItem?
     @State private var isSelectionMode = false
     /// Which of the two download buttons the batch sheet grows out of.
     @State private var batchDownloadZoomID = "batchDownload"
@@ -70,7 +70,7 @@ struct AniListDetailView: View {
     }
     @State private var isReversed = false
     @State private var selectedTab = 0
-    @State private var sequelMediaId: Int? = nil
+    @State private var sequelMediaId: Int?
     @State private var watchOrder: [TVDBMappingService.AniraMediaEntry] = []
     @State private var leadingInset: CGFloat = 0
     @AppStorage(DetailLayoutSetting.cinematicKey) private var cinematicLayout = true
@@ -451,9 +451,7 @@ struct AniListDetailView: View {
             }
 
             if let media = vm.media {
-                let avail = media.nextAiringEpisode != nil
-                    ? (media.nextAiringEpisode!.episode - 1)
-                    : 0
+                let avail = media.nextAiringEpisode.map { $0.episode - 1 } ?? 0
                 if avail > 0 {
                     ContinueWatchingManager.shared.notifyNewEpisodesAvailable(
                         aniListID: media.id,
@@ -488,20 +486,21 @@ struct AniListDetailView: View {
             } else if !vm.showFinalStreamPicker {
                 vm.dismissModulePicker()
             }
-        }) {
+        }, content: {
             if let media = vm.media, let ep = vm.selectedEpisodeNumber {
                 ModuleStreamPickerView(
                     mediaId: media.id,
                     animeTitle: media.title.searchTitle,
                     episodeNumber: ep,
                     seanimeMedia: SeanimeSearchMedia(media: media),
-                    onDismiss: { vm.showStreamPicker = false }
-                ) { streams, selectedStream, showHref, availableCount, episodeHref in
-                    vm.onStreamsLoaded(streams, selectedStream: selectedStream, episodeHref: showHref, availableCount: availableCount, actualEpisodeHref: episodeHref)
-                }
+                    onDismiss: { vm.showStreamPicker = false },
+                    onStreamsLoaded: { streams, selectedStream, showHref, availableCount, episodeHref in
+                        vm.onStreamsLoaded(streams, selectedStream: selectedStream, episodeHref: showHref, availableCount: availableCount, actualEpisodeHref: episodeHref)
+                    }
+                )
                 .environmentObject(moduleManager)
             }
-        }
+        })
         .adaptiveSheet(isPresented: $vm.showFinalStreamPicker, onDismiss: {
             if let stream = vm.pendingFinalStream {
                 vm.pendingFinalStream = nil
@@ -516,7 +515,7 @@ struct AniListDetailView: View {
             } else {
                 vm.dismissFinalPicker()
             }
-        }) {
+        }, content: {
             AniListStreamResultSheet(
                 episodeNumber: vm.selectedEpisodeNumber ?? 0,
                 streams: vm.pendingStreams,
@@ -526,24 +525,25 @@ struct AniListDetailView: View {
                     vm.showFinalStreamPicker = false
                 }
             )
-        }
+        })
         #if !os(tvOS)
         .adaptiveSheet(item: $pendingDownloadEpisodeNumber) { item in
-            let media = vm.media!
-            DownloadModulePickerView(
-                mediaId: media.id,
-                animeTitle: media.title.searchTitle,
-                episodeNumber: item.episodeNumber,
-                onDismiss: { pendingDownloadEpisodeNumber = nil },
-                onStreamsLoaded: { streams, episodeHref in
-                    guard let stream = streams.first else { return }
-                    vm.pendingDownloadEpisode = (EpisodeLink(number: Double(item.episodeNumber), href: episodeHref ?? ""), item.episodeNumber)
-                    vm.pendingDownloadMedia = media
-                    vm.pendingDownloadModule = moduleManager.activeModule
-                    vm.downloadWithSelectedStream(stream)
-                }
-            )
-            .environmentObject(moduleManager)
+            if let media = vm.media {
+                DownloadModulePickerView(
+                    mediaId: media.id,
+                    animeTitle: media.title.searchTitle,
+                    episodeNumber: item.episodeNumber,
+                    onDismiss: { pendingDownloadEpisodeNumber = nil },
+                    onStreamsLoaded: { streams, episodeHref in
+                        guard let stream = streams.first else { return }
+                        vm.pendingDownloadEpisode = (EpisodeLink(number: Double(item.episodeNumber), href: episodeHref ?? ""), item.episodeNumber)
+                        vm.pendingDownloadMedia = media
+                        vm.pendingDownloadModule = moduleManager.activeModule
+                        vm.downloadWithSelectedStream(stream)
+                    }
+                )
+                .environmentObject(moduleManager)
+            }
         }
         .adaptiveSheet(isPresented: $showBatchDownloadPicker) {
             if let media = vm.media {
@@ -589,7 +589,7 @@ struct AniListDetailView: View {
                         handleLibraryEdit(media: media, status: status, progress: progress, score: score, alsoUpdateMAL: shouldSyncMAL)
                     },
                     onDelete: existingEntry != nil ? {
-                        let entryId = existingEntry!.id
+                        guard let entryId = existingEntry?.id else { return }
                         let provider = activeProvider
                         existingEntry = nil
                         Task { try? await provider.deleteEntry(entryId: entryId) }
@@ -686,7 +686,7 @@ struct AniListDetailView: View {
                         Task { try? await AniListProvider.shared.updateEntry(mediaId: aniId, status: status, progress: progress, score: score) }
                     },
                     onDelete: existingAniListCrossEntry != nil ? {
-                        let entryId = existingAniListCrossEntry!.id
+                        guard let entryId = existingAniListCrossEntry?.id else { return }
                         existingAniListCrossEntry = nil
                         Task { try? await AniListProvider.shared.deleteEntry(entryId: entryId) }
                     } : nil
@@ -1009,7 +1009,7 @@ struct AniListDetailView: View {
         let total = media.airedOrAnnouncedEpisodes ?? 0
         let rawNext = item?.episodeNumber ?? (existingEntry?.progress ?? 0) + 1
         let nextEp = rawNext > total && total > 0 ? 1 : rawNext
-        let continuing = item != nil && !item!.streamUrl.isEmpty
+        let continuing = item.map { !$0.streamUrl.isEmpty } ?? false
         let label = isSingleEpisode(media)
             ? (media.format == "MOVIE"
                 ? (continuing ? String(localized: "detail.continue_movie") : String(localized: "detail.watch_movie"))
@@ -1665,12 +1665,10 @@ struct AniListDetailView: View {
             .padding(.top, 8)
         }
     }
-}
 
-#if !os(tvOS)
-// MARK: - Cinematic layout
+    #if !os(tvOS)
+    // MARK: - Cinematic layout
 
-extension AniListDetailView {
     /// The iPad and Mac page: the artwork fills the window, the title block sits over it, and
     /// episodes and related titles follow in rows that scroll sideways.
     @ViewBuilder
@@ -1827,8 +1825,8 @@ extension AniListDetailView {
             }
         }
     }
+    #endif
 }
-#endif
 
 // MARK: - Synopsis
 struct SynopsisSection: View {
@@ -1840,7 +1838,7 @@ struct SynopsisSection: View {
         text.replacingOccurrences(of: #"\s*\n\s*"#, with: "\n", options: .regularExpression)
     }
     /// Opens the full details instead of expanding the text in place.
-    var onMore: (() -> Void)? = nil
+    var onMore: (() -> Void)?
     @State private var expanded = false
 
     var body: some View {
@@ -1889,10 +1887,10 @@ private struct AniListEpisodeRowContainer: View {
     let totalEpisodes: Int?
     let aniListProgress: Int?
     let aniListStatus: MediaListStatus?
-    var isAiring: Bool? = nil
+    var isAiring: Bool?
     let onTap: () -> Void
-    var onDownload: (() -> Void)? = nil
-    var onTryOtherStream: (() -> Void)? = nil
+    var onDownload: (() -> Void)?
+    var onTryOtherStream: (() -> Void)?
     var isSelectionMode: Bool = false
     var isSelected: Bool = false
     var style: ThumbnailEpisodeRow.Style = .row
@@ -1904,7 +1902,7 @@ private struct AniListEpisodeRowContainer: View {
 
     @State private var aniMapEpisode: AniMapEpisode?
     @State private var fallbackThumbnail: String?
-    @State private var pendingDowngrade: RemoteDowngrade? = nil
+    @State private var pendingDowngrade: RemoteDowngrade?
 
     private var markContext: MarkContext {
         MarkContext(
@@ -2065,7 +2063,7 @@ struct RelationCard: View {
 
     var body: some View {
         Color.clear
-            .aspectRatio(2/3, contentMode: .fit)
+            .aspectRatio(2 / 3, contentMode: .fit)
             .overlay(
                 ZStack {
                     TVDBPosterImage(media: edge.node)
@@ -2121,7 +2119,7 @@ struct AniListMatchingSearchView: View {
     var isLinked: Bool = false
     let onSelect: (Media?) -> Void
     /// Optional custom search (e.g. manga). Defaults to the provider's anime search.
-    var searchOverride: ((String) async throws -> [Media])? = nil
+    var searchOverride: ((String) async throws -> [Media])?
 
     @Environment(\.dismiss) private var dismiss
     @State private var searchText = ""
@@ -2208,7 +2206,7 @@ struct AniListMatchingSearchView: View {
                             HStack(spacing: 12) {
                                 AsyncImage(url: URL(string: media.coverImage.large ?? "")) { phase in
                                     if let image = phase.image {
-                                        image.resizable().aspectRatio(contentMode: .fill)
+                                        image.resizable().scaledToFill()
                                     } else {
                                         Rectangle().fill(Color.secondary.opacity(0.15))
                                     }

@@ -1,6 +1,6 @@
 #if os(iOS)
-import Foundation
 import AVFoundation
+import Foundation
 
 /// Keeps the app process alive in the background while casting to Chromecast.
 ///
@@ -85,7 +85,7 @@ final class BackgroundKeepAlive {
     }
 
     /// Builds a mono 16-bit PCM WAV of pure silence (zeros).
-    private static func makeSilentWav(seconds: Int = 10, sampleRate: Int = 8000) -> Data {
+    private static func makeSilentWav(seconds: Int = 10, sampleRate: Int = 8_000) -> Data {
         let channels = 1, bitsPerSample = 16
         let frameCount = seconds * sampleRate
         let dataBytes = frameCount * channels * bitsPerSample / 8
@@ -93,7 +93,7 @@ final class BackgroundKeepAlive {
         let blockAlign = channels * bitsPerSample / 8
 
         var d = Data()
-        func ascii(_ s: String) { d.append(s.data(using: .ascii)!) }
+        func ascii(_ s: String) { d.append(contentsOf: s.utf8) }
         func u32(_ v: UInt32) { var x = v.littleEndian; withUnsafeBytes(of: &x) { d.append(contentsOf: $0) } }
         func u16(_ v: UInt16) { var x = v.littleEndian; withUnsafeBytes(of: &x) { d.append(contentsOf: $0) } }
 

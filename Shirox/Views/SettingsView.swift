@@ -1,13 +1,13 @@
-import SwiftUI
 import AuthenticationServices
 import Combine
+import SwiftUI
 
 // MARK: - Navigation Row Component
 
 struct SettingsNavRow: View {
     let icon: String
     let title: String
-    var subtitle: String? = nil
+    var subtitle: String?
 
     var body: some View {
         HStack(spacing: 12) {
@@ -127,7 +127,7 @@ struct SettingsView: View {
         let services = [
             aniListAuth.isLoggedIn ? "AniList" : nil,
             malAuth.isLoggedIn ? "MAL" : nil,
-            simklAuth.isLoggedIn ? "Simkl" : nil,
+            simklAuth.isLoggedIn ? "Simkl" : nil
         ].compactMap { $0 }
         return services.isEmpty ? String(localized: "library.sign_in") : services.joined(separator: ", ")
     }
@@ -440,7 +440,7 @@ private enum Platform {
         if runsOnMac { return sysctlString("hw.model") }
         var info = utsname()
         uname(&info)
-        return withUnsafeBytes(of: &info.machine) { String(decoding: $0.prefix { $0 != 0 }, as: UTF8.self) }
+        return withUnsafeBytes(of: &info.machine) { String(bytes: $0.prefix { $0 != 0 }, encoding: .utf8) ?? "" }
         #endif
         #endif
     }
@@ -470,7 +470,7 @@ private enum Platform {
         "iPhone17,3": "iPhone 16", "iPhone17,4": "iPhone 16 Plus", "iPhone17,1": "iPhone 16 Pro", "iPhone17,2": "iPhone 16 Pro Max",
         "iPhone17,5": "iPhone 16e",
         "iPhone18,3": "iPhone 17", "iPhone18,4": "iPhone Air", "iPhone18,1": "iPhone 17 Pro", "iPhone18,2": "iPhone 17 Pro Max",
-        "iPhone19,4": "iPhone Duo",
+        "iPhone19,4": "iPhone Duo"
     ]
 }
 
@@ -1189,7 +1189,7 @@ struct ModulesSettingsView: View {
                             } else {
                                 AsyncImage(url: URL(string: providerManager.primary?.providerType.iconURL ?? "")) { phase in
                                     if case .success(let image) = phase {
-                                        image.resizable().aspectRatio(contentMode: .fit)
+                                        image.resizable().scaledToFit()
                                     } else {
                                         IconView("list.bullet")
                                             .font(.title)
@@ -1748,7 +1748,7 @@ enum AppDirectories {
     private static let looseSupportFiles = [
         "modules.json", "id-mappings.json", "id-media-mappings.json", "id-tvdb-groups.json",
         "local_library.json", "pending-writes.json", "library-cache.json", "profile-cache.json",
-        "home-cache.json", "simkl-write-queue.json", "LocalImports",
+        "home-cache.json", "simkl-write-queue.json", "LocalImports"
     ]
 
     /// Moves them into the Shirox folder, once. `modules.json` is a common name, so it goes only
@@ -1764,7 +1764,7 @@ enum AppDirectories {
             guard fm.fileExists(atPath: from.path), !fm.fileExists(atPath: to.path) else { continue }
             if name == "modules.json" {
                 guard let data = try? Data(contentsOf: from),
-                      String(decoding: data.prefix(4096), as: UTF8.self).contains("scriptContent") else { continue }
+                      data.prefix(4_096).range(of: Data("scriptContent".utf8)) != nil else { continue }
             }
             try? fm.moveItem(at: from, to: to)
         }
@@ -2054,8 +2054,8 @@ class Logger: @unchecked Sendable {
     private let logFileURL: URL
     private let logFilterViewModel = LogFilterViewModel.shared
 
-    private let maxFileSize = 1024 * 512
-    private let maxLogEntries = 1000 
+    private let maxFileSize = 1_024 * 512
+    private let maxLogEntries = 1_000 
     
     private init() {
         logFileURL = AppDirectories.documents.appendingPathComponent("logs.txt")
@@ -2382,7 +2382,6 @@ private struct ProvidersSettingsSection: View {
         }
     }
 }
-
 
 /// Shows exactly what an overwrite or mirror would do before it does any of it. These runs can't be
 /// undone, so the deletions are listed by name rather than just counted — a number is easy to

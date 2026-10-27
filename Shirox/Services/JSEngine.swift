@@ -1,13 +1,12 @@
+import Combine
 import Foundation
 @preconcurrency import JavaScriptCore
-import Combine
 
 #if os(tvOS)
     import FakeWebKit
 #else
     import WebKit
 #endif
-
 
 @MainActor
 final class JSEngine: ObservableObject {
@@ -103,7 +102,7 @@ final class JSEngine: ObservableObject {
         let consoleWarn: @convention(block) (JSValue) -> Void = { value in
             Logger.shared.log("[JS Warn] \(value.toString() ?? "undefined")", type: "General")
         }
-        let consoleObj = JSValue(newObjectIn: context)!
+        guard let consoleObj = JSValue(newObjectIn: context) else { return }
         consoleObj.setObject(consoleLog, forKeyedSubscript: "log" as NSString)
         consoleObj.setObject(consoleError, forKeyedSubscript: "error" as NSString)
         consoleObj.setObject(consoleWarn, forKeyedSubscript: "warn" as NSString)
@@ -151,7 +150,7 @@ final class JSEngine: ObservableObject {
                 ? (headersVal.toDictionary() as? [String: String] ?? [:])
                 : [String: String]()
 
-            var impersonateTarget: BrowserTarget? = nil
+            var impersonateTarget: BrowserTarget?
             var useWebView = false
             // The body as Base64 rather than text: binary (an image, an encrypted page) intact.
             var base64Body = false
@@ -405,7 +404,7 @@ final class JSEngine: ObservableObject {
                 callback.call(withArguments: [])
             }
             timerMap[id] = item
-            DispatchQueue.main.asyncAfter(deadline: .now() + max(delay, 0) / 1000.0, execute: item)
+            DispatchQueue.main.asyncAfter(deadline: .now() + max(delay, 0) / 1_000.0, execute: item)
             return id
         }
 
@@ -417,7 +416,7 @@ final class JSEngine: ObservableObject {
         let setIntervalBlock: @convention(block) (JSValue, Double) -> Int = { callback, delay in
             let id = nextId
             nextId += 1
-            let interval = max(delay, 16) / 1000.0
+            let interval = max(delay, 16) / 1_000.0
             func schedule() {
                 guard timerMap[id] != nil else { return }
                 let item = DispatchWorkItem {
@@ -555,7 +554,7 @@ final class JSEngine: ObservableObject {
     /// A response body as text. A page with one bad UTF-8 sequence (ocecomic.com cuts titles off
     /// mid-character) is the page with a replacement character there, not an empty string.
     nonisolated static func bodyText(_ data: Data) -> String {
-        String(data: data, encoding: .utf8) ?? String(decoding: data, as: UTF8.self)
+        String(data: data, encoding: .utf8) ?? String(repairingUTF8: data)
     }
 
     static func isTurnstileResponse(status: Int, body: String) -> Bool {
@@ -587,10 +586,12 @@ extension JSContext {
     /// with its own heap and collector, and with a few module rows searching at once that was
     /// several heaps alive together. All of these contexts run on the main thread, so they can
     /// share one; each context still gets its own globals.
-    @MainActor private static let moduleVM = JSVirtualMachine()!
+    @MainActor private static let moduleVM: JSVirtualMachine? = JSVirtualMachine()
 
     @MainActor static func forModule() -> JSContext {
-        JSContext(virtualMachine: moduleVM)!
+        // Without the shared VM a context still works, it just brings its own heap again.
+        guard let moduleVM, let context = JSContext(virtualMachine: moduleVM) else { return JSContext() }
+        return context
     }
 
     /// The fetch-style response handed to a module's `fetchv2` promise. It's built in JS around
@@ -660,6 +661,15 @@ extension JSContext {
         let raw: Any = data.flatMap { String(data: $0, encoding: .utf8) == nil ? $0.base64EncodedString() : nil } ?? NSNull()
         let args: [Any] = [status, statusText ?? NSNull(), url, headers, body, raw]
         return make?.call(withArguments: args) ?? JSValue(undefinedIn: self)
+    }
+}
+
+extension String {
+    /// Text from bytes that may not be valid UTF-8: a bad sequence becomes a replacement
+    /// character rather than failing the whole string. String validates the bytes as it builds
+    /// itself and repairs what's broken, the same result as `String(decoding:as:)`.
+    init<Bytes: Collection>(repairingUTF8 bytes: Bytes) where Bytes.Element == UInt8 {
+        self.init(unsafeUninitializedCapacity: bytes.count) { $0.initialize(from: bytes).1 }
     }
 }
 
@@ -907,17 +917,17 @@ final class WebKitFetchEngine: NSObject, WKNavigationDelegate {
         }
     }
 
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation?) {
         pageLoad?.resume()
         pageLoad = nil
     }
 
-    func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+    func webView(_ webView: WKWebView, didFail navigation: WKNavigation?, withError error: Error) {
         pageLoad?.resume(throwing: error)
         pageLoad = nil
     }
 
-    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+    func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation?, withError error: Error) {
         pageLoad?.resume(throwing: error)
         pageLoad = nil
     }
@@ -977,4 +987,3 @@ final class WebKitFetchEngine: NSObject, WKNavigationDelegate {
         return (resData, status, resHeaders, finalURL)
     }
 }
-

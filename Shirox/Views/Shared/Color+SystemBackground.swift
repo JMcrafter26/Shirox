@@ -3,7 +3,7 @@ import SwiftUI
 extension Color {
     static var adaptiveSystemBackground: Color {
         #if os(tvOS)
-        // TODO: add back adaptive background color
+        // tvOS has no system background color; clear lets the system's own backdrop show through.
         return Color.clear
         #elseif canImport(UIKit)
         return Color(uiColor: .systemBackground)

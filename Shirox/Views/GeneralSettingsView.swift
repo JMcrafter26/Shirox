@@ -229,10 +229,10 @@ struct GeneralSettingsView: View {
     #endif
 }
 
-private extension View {
+extension View {
     /// A list row's menu picker draws its value in the tint, but kept the old colour after the
     /// accent colour changed until the page was opened again. A new identity per colour redraws it.
-    func retinted(_ tint: String) -> some View {
+    fileprivate func retinted(_ tint: String) -> some View {
         id(tint)
     }
 }

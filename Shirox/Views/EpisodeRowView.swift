@@ -2,19 +2,19 @@ import SwiftUI
 
 struct EpisodeRowView: View {
     let episode: EpisodeLink
-    var progress: Double? = nil
+    var progress: Double?
     let onTap: () -> Void
-    var onMarkWatched: (() -> Void)? = nil
-    var onMarkUnwatched: (() -> Void)? = nil
-    var onResetProgress: (() -> Void)? = nil
-    var onDownload: (() -> Void)? = nil
-    var onDeleteDownload: (() -> Void)? = nil
+    var onMarkWatched: (() -> Void)?
+    var onMarkUnwatched: (() -> Void)?
+    var onResetProgress: (() -> Void)?
+    var onDownload: (() -> Void)?
+    var onDeleteDownload: (() -> Void)?
     /// The finished download's file, for Share and Show in Files.
-    var downloadedFile: URL? = nil
-    var onTryOtherStream: (() -> Void)? = nil
+    var downloadedFile: URL?
+    var onTryOtherStream: (() -> Void)?
     var isSelectionMode: Bool = false
     var isSelected: Bool = false
-    var downloadState: DownloadState? = nil
+    var downloadState: DownloadState?
 
     private var isComplete: Bool { (progress ?? 0) >= 0.9 }
 

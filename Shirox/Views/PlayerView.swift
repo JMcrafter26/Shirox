@@ -1,7 +1,7 @@
-import SwiftUI
 import AVKit
-import MediaPlayer
 import Combine
+import MediaPlayer
+import SwiftUI
 
 #if os(iOS)
 import AVFoundation
@@ -110,7 +110,7 @@ struct PlayerView: View {
     @Environment(\.dismiss) private var dismiss
     /// Plays the stream. A new one for every `setupPlayer()`, as a new AVPlayer was made; a swap
     /// loads into the one there is.
-    @State private var engine: (any PlaybackEngine)? = nil
+    @State private var engine: (any PlaybackEngine)?
     @AppStorage("playerEngine") private var preferredEngine = PlaybackEngineKind.native.rawValue
     /// Set once AVPlayer has given up on something MPV then played; the rest of the session stays
     /// on MPV, since the next episode would most likely fail the same way first.
@@ -125,7 +125,7 @@ struct PlayerView: View {
     /// Last play/pause state pushed to the progress sync, so we report a genuine
     /// play↔pause flip exactly once (nil = nothing reported yet). Dedups the
     /// button, Control Center, and buffering/seek status flaps into one report.
-    @State private var lastReportedPaused: Bool? = nil
+    @State private var lastReportedPaused: Bool?
     @State private var clock = PlaybackClock()
     /// The clock's, read and set as before; the player doesn't redraw for it (see `PlaybackClock`).
     private var currentTime: Double {
@@ -138,13 +138,13 @@ struct PlayerView: View {
     /// The lock button, while locked: shown on a tap and gone again after a few seconds, like
     /// the controls, instead of sitting over the video the whole time.
     @State private var lockButtonVisible = false
-    @State private var lockHideTask: Task<Void, Never>? = nil
+    @State private var lockHideTask: Task<Void, Never>?
     /// Set up already; appearing again is the player coming back from Picture in Picture.
     @State private var hasAppeared = false
     @State private var isFilled = false
     @State private var isScrubbing = false
-    @State private var hideTask: Task<Void, Never>? = nil
-    @State private var autoAdvanceTask: Task<Void, Never>? = nil
+    @State private var hideTask: Task<Void, Never>?
+    @State private var autoAdvanceTask: Task<Void, Never>?
     /// Owns the Control Center / lock screen transport registration. Held here so a player
     /// rebuild replaces the handlers instead of stacking a second set on top.
     #if !os(tvOS)
@@ -157,7 +157,7 @@ struct PlayerView: View {
     #endif
     /// Non-nil while playback is routed through `CastProxyServer` for an AirPlay receiver,
     /// which is the only way a header-authenticated stream reaches an Apple TV.
-    @State private var airPlayProxyURL: URL? = nil
+    @State private var airPlayProxyURL: URL?
     @State private var isSwappingAirPlayRoute = false
     /// What the subtitles last handed to the AirPlay receiver were, so a change (a new track,
     /// cues that finished loading after the swap) re-sends them.
@@ -189,7 +189,7 @@ struct PlayerView: View {
     @State private var isRefetchingStream = false
     @State private var showNextEpisodePicker = false
     @State private var hlsQualities: [HLSQualityLevel] = []
-    @State private var selectedQualityBandwidth: Int? = nil
+    @State private var selectedQualityBandwidth: Int?
     @State private var nextEpisodeStreams: [StreamResult] = []
     @State private var nextEpisodeNumber: Int = 0
     @State private var nextEpisodeHref: String?
@@ -197,11 +197,11 @@ struct PlayerView: View {
     // The loader is stateful, so we call it at most once per episode and cache the result here;
     // loadAndAdvance consumes the cache rather than calling the loader again.
     @State private var didPrefetchNext = false
-    @State private var prefetchTask: Task<(streams: [StreamResult], episodeNumber: Int, episodeHref: String?)?, Never>? = nil
-    @State private var prefetchedResult: (streams: [StreamResult], episodeNumber: Int, episodeHref: String?)? = nil
+    @State private var prefetchTask: Task<(streams: [StreamResult], episodeNumber: Int, episodeHref: String?)?, Never>?
+    @State private var prefetchedResult: (streams: [StreamResult], episodeNumber: Int, episodeHref: String?)?
     @State private var showSequelPicker = false
     @State private var sequelResults: [SearchItem] = []
-    @State private var pendingSequelMediaID: Int? = nil
+    @State private var pendingSequelMediaID: Int?
 
     // Settings
     @AppStorage("playerSkipShort") private var skipShort: Int = 10
@@ -243,13 +243,13 @@ struct PlayerView: View {
     }
 
     // Stall recovery watchdog
-    @State private var stallWatchdogTask: Task<Void, Never>? = nil
+    @State private var stallWatchdogTask: Task<Void, Never>?
     @State private var stallRecoveryAttempts = 0
     @State private var isRecoveringStall = false
     @State private var showStallRetry = false
     // When we were truly backgrounded (home/app-switch/lock), so foreground can tell a
     // brief resign-active from a suspension long enough to have killed the source.
-    @State private var backgroundedAt: Date? = nil
+    @State private var backgroundedAt: Date?
 
     // Audio-session interruption (calls, Siri, other media apps)
     @State private var wasPlayingBeforeInterruption = false
@@ -257,11 +257,11 @@ struct PlayerView: View {
     // Paused for Control Center / Notification Center, owed a resume when they close.
     @AppStorage("pauseWhenInactive") private var pauseWhenInactive = true
     @AppStorage("playerAmbientMode") private var ambientMode = false
-    @State private var inactivePauseTask: Task<Void, Never>? = nil
+    @State private var inactivePauseTask: Task<Void, Never>?
     @State private var pausedForInactive = false
 
     // TVDB episode title
-    @State private var tvdbEpisodeTitle: String? = nil
+    @State private var tvdbEpisodeTitle: String?
 
     // Subtitles
     @State private var subtitleCues: [SubtitleCue] = []
@@ -275,8 +275,8 @@ struct PlayerView: View {
     @State private var pickedEmbeddedSubtitle: Int?
     /// The viewer picked (or imported) a downloadable track rather than taking the default.
     @State private var subtitlePickedByUser = false
-    @State private var selectedSubtitleTrack: SubtitleTrack? = nil
-    @State private var subtitleTracks: [SubtitleTrack]? = nil
+    @State private var selectedSubtitleTrack: SubtitleTrack?
+    @State private var subtitleTracks: [SubtitleTrack]?
     @ObservedObject var subtitleSettings = SubtitleSettingsManager.shared
     @ObservedObject var castManager = CastManager.shared
     #if os(iOS) && !targetEnvironment(macCatalyst)
@@ -497,7 +497,7 @@ struct PlayerView: View {
             let needsStreamRefresh = availableStreams.count == 1
             let needsTrackRefresh = subtitleTracks == nil
             Logger.shared.log("[Subtitles] onAppear: subtitleTracks=\(subtitleTracks?.count ?? -1) currentStream.allSubtitles=\(currentStream.allSubtitles?.count ?? -1) currentStream.subtitle=\(currentStream.subtitle ?? "nil") needsTrackRefresh=\(needsTrackRefresh) onStreamExpired=\(onStreamExpired != nil)", type: "Debug")
-            if (needsStreamRefresh || needsTrackRefresh), let loader = onStreamExpired {
+            if needsStreamRefresh || needsTrackRefresh, let loader = onStreamExpired {
                 Task {
                     // Defer this proactive backfill until the first frame is ready. The loader runs
                     // extractStreamUrl on the @MainActor, and firing it during onAppear starves the
@@ -858,20 +858,21 @@ struct PlayerView: View {
             nextEpisodeStreams = []
             nextEpisodeNumber = 0
             nextEpisodeHref = nil
-        }) {
+        }, content: {
             PlayerNextEpisodePicker(streams: nextEpisodeStreams) { selected in
                 swapStream(selected, episodeNumber: nextEpisodeNumber, allStreams: nextEpisodeStreams, episodeHref: nextEpisodeHref)
             }
             .adaptivePresentationDetents([.height(nextEpisodePickerHeight)])
-        }
+        })
         .sheet(isPresented: $showSequelPicker, onDismiss: {
             sequelResults = []
             pendingSequelMediaID = nil
-        }) {
+        }, content: {
             PlayerSequelPickerSheet(results: sequelResults) { selected in
                 advanceToSequel(selected)
-            }            .adaptivePresentationDetents([.medium])
-        }
+            }
+            .adaptivePresentationDetents([.medium])
+        })
         .playerKeyboardShortcuts(
             togglePlayPause: togglePlayPause,
             skip: { skip(by: $0) },
@@ -2288,7 +2289,7 @@ struct PlayerView: View {
               let seg = skipSegments?.segment(for: type) else { return }
         skippedSegments.insert(type)
         activeSkipSegment = nil
-        engine?.seek(to: seg.endMs / 1000, precision: .exact, completion: nil)
+        engine?.seek(to: seg.endMs / 1_000, precision: .exact, completion: nil)
     }
 
     private func skip(by seconds: Double) {
@@ -2737,8 +2738,8 @@ struct PlayerView: View {
                 pendingResumeTarget = nil
             }
             if let segments = skipSegments {
-                let timeMs = currentTime * 1000
-                var newActive: SkipSegmentType? = nil
+                let timeMs = currentTime * 1_000
+                var newActive: SkipSegmentType?
                 for type in SkipSegmentType.allCases {
                     if let seg = segments.segment(for: type) {
                         let start = seg.startMs ?? 0
@@ -2753,7 +2754,7 @@ struct PlayerView: View {
                        let seg = segments.segment(for: type) {
                         skippedSegments.insert(type)
                         activeSkipSegment = nil
-                        engine.seek(to: seg.endMs / 1000, precision: .exact, completion: nil)
+                        engine.seek(to: seg.endMs / 1_000, precision: .exact, completion: nil)
                     } else if activeSkipSegment != newActive {
                         activeSkipSegment = newActive
                     }
@@ -2970,8 +2971,7 @@ struct PlayerView: View {
         let epTitle = tvdbEpisodeTitle ?? currentContext?.episodeTitle
         let subtitleString: String
         if let n = epNumber {
-            if let t = epTitle { subtitleString = String(localized: "player.episode_titled \(n) \(t)") }
-            else { subtitleString = String(localized: "common.episode \(n)") }
+            if let t = epTitle { subtitleString = String(localized: "player.episode_titled \(n) \(t)") } else { subtitleString = String(localized: "common.episode \(n)") }
         } else {
             subtitleString = epTitle ?? ""
         }
@@ -3507,12 +3507,10 @@ struct PlayerView: View {
         if let match {
             Logger.shared.log("[PlayerView] Auto-selected stream: \(match.title)", type: "Debug")
             swapStream(match, episodeNumber: result.episodeNumber, allStreams: result.streams, episodeHref: result.episodeHref)
-        }
-        else if result.streams.count == 1 {
+        } else if result.streams.count == 1 {
             Logger.shared.log("[PlayerView] Auto-selected single stream: \(result.streams[0].title)", type: "Debug")
             swapStream(result.streams[0], episodeNumber: result.episodeNumber, allStreams: result.streams, episodeHref: result.episodeHref)
-        }
-        else {
+        } else {
             Logger.shared.log("[PlayerView] Showing stream picker with \(result.streams.count) streams", type: "Debug")
             nextEpisodeNumber = result.episodeNumber
             nextEpisodeStreams = result.streams
@@ -3703,7 +3701,6 @@ struct PlayerView: View {
         currentTime = 0
         duration = 0
         bufferProgress = 0
-
 
         showNextEpisodePicker = false
         nextEpisodeStreams = []
@@ -3927,9 +3924,9 @@ struct PlayerView: View {
 
 // MARK: - Keyboard Shortcuts Helper
 
-private extension View {
+extension View {
     @ViewBuilder
-    func playerKeyboardShortcuts(
+    fileprivate func playerKeyboardShortcuts(
         togglePlayPause: @escaping () -> Void,
         skip: @escaping (Double) -> Void,
         scheduleHide: @escaping () -> Void,
@@ -4462,7 +4459,7 @@ final class MacPlayerWindowManager: NSObject, ObservableObject {
             }
             return true
         }
-        guard mods.intersection([.command, .control, .option]).isEmpty else { return false }
+        guard mods.isDisjoint(with: [.command, .control, .option]) else { return false }
         switch kind {
         case .reader:
             guard event.type == .keyDown, let key = MacReaderKey(event) else { return false }
@@ -4819,7 +4816,7 @@ struct PlayerAmbientBackground: View {
         let output = AVPlayerItemVideoOutput(pixelBufferAttributes: [
             kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA,
             kCVPixelBufferWidthKey as String: 32,
-            kCVPixelBufferHeightKey as String: 18,
+            kCVPixelBufferHeightKey as String: 18
         ])
         item.add(output)
         self.output = output
@@ -4883,7 +4880,8 @@ private struct TwoFingerTapOverlay: UIViewRepresentable {
     }
 
     static func dismantleUIView(_ uiView: UIView, coordinator: Coordinator) {
-        coordinator.recognizer?.view?.removeGestureRecognizer(coordinator.recognizer!)
+        guard let recognizer = coordinator.recognizer else { return }
+        recognizer.view?.removeGestureRecognizer(recognizer)
     }
 
     final class Coordinator: NSObject, UIGestureRecognizerDelegate {
@@ -4984,7 +4982,8 @@ private struct SpeedBoostOverlay: UIViewRepresentable {
     }
 
     static func dismantleUIView(_ uiView: UIView, coordinator: Coordinator) {
-        coordinator.recognizer?.view?.removeGestureRecognizer(coordinator.recognizer!)
+        guard let recognizer = coordinator.recognizer else { return }
+        recognizer.view?.removeGestureRecognizer(recognizer)
     }
 
     final class Coordinator: NSObject, UIGestureRecognizerDelegate {
@@ -5002,8 +5001,7 @@ private struct SpeedBoostOverlay: UIViewRepresentable {
 
         @objc func handle(_ gr: UILongPressGestureRecognizer) {
             guard !isLocked else { return }
-            if gr.state == .began { onBegan() }
-            else if gr.state == .ended || gr.state == .cancelled { onEnded() }
+            if gr.state == .began { onBegan() } else if gr.state == .ended || gr.state == .cancelled { onEnded() }
         }
 
         func gestureRecognizer(_ gr: UIGestureRecognizer,
@@ -5080,7 +5078,7 @@ class PlayerHostingController<Content: View>: UIHostingController<Content> {
 
     private static func isPlainSpace(_ press: UIPress) -> Bool {
         guard let key = press.key else { return false }
-        return key.charactersIgnoringModifiers == " " && key.modifierFlags.intersection([.command, .control, .alternate]).isEmpty
+        return key.charactersIgnoringModifiers == " " && key.modifierFlags.isDisjoint(with: [.command, .control, .alternate])
     }
 
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {

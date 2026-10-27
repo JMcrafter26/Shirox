@@ -1,6 +1,6 @@
+import Darwin
 import Foundation
 import Network
-import Darwin
 
 final class HLSProxyServer: @unchecked Sendable {
     static let shared = HLSProxyServer()
@@ -8,7 +8,7 @@ final class HLSProxyServer: @unchecked Sendable {
     private var listener: NWListener?
     // Changes only while the proxy is down — tests move it, clear of a copy of the app running
     // in a simulator on the same Mac, which shares its ports.
-    var port: NWEndpoint.Port = 8765
+    var port: NWEndpoint.Port = 8_765
     private var proxyHeaders: [String: String] = [:]
     private(set) var isRunning = false
     private let listenerQueue = DispatchQueue(label: "com.shirox.hlsproxy", qos: .userInitiated)
@@ -110,7 +110,7 @@ final class HLSProxyServer: @unchecked Sendable {
     }
 
     private func receiveRequest(on connection: NWConnection) {
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 8192) { [weak self] data, _, _, _ in
+        connection.receive(minimumIncompleteLength: 1, maximumLength: 8_192) { [weak self] data, _, _, _ in
             guard let self = self, let data = data, let requestText = String(data: data, encoding: .utf8) else {
                 connection.cancel()
                 return
@@ -132,11 +132,9 @@ final class HLSProxyServer: @unchecked Sendable {
             }
             
             var range: String?
-            for line in lines {
-                if line.lowercased().hasPrefix("range:") {
-                    range = line.components(separatedBy: ":").last?.trimmingCharacters(in: .whitespaces)
-                    break
-                }
+            for line in lines where line.lowercased().hasPrefix("range:") {
+                range = line.components(separatedBy: ":").last?.trimmingCharacters(in: .whitespaces)
+                break
             }
             
             Task {
@@ -224,7 +222,7 @@ final class HLSProxyServer: @unchecked Sendable {
     private func streamFile(_ handle: FileHandle, connection: NWConnection, remaining: Int64) {
         final class StreamState: @unchecked Sendable { var left: Int64; init(_ v: Int64) { left = v } }
         let state = StreamState(remaining)
-        let chunk = Int64(128 * 1024)
+        let chunk = Int64(128 * 1_024)
         @Sendable func sendNext() {
             guard state.left > 0 else { try? handle.close(); return }
             let toRead = min(state.left, chunk)
@@ -251,7 +249,7 @@ final class HLSProxyServer: @unchecked Sendable {
 
     private func sendData(_ data: Data, contentType: String, connection: NWConnection) {
         let h = "HTTP/1.1 200 OK\r\nContent-Type: \(contentType)\r\nContent-Length: \(data.count)\r\nAccess-Control-Allow-Origin: *\r\n\r\n"
-        var resp = h.data(using: .utf8)!
+        var resp = Data(h.utf8)
         resp.append(data)
         connection.send(content: resp, completion: .contentProcessed({ _ in }))
     }
@@ -264,7 +262,9 @@ final class HLSProxyServer: @unchecked Sendable {
     private func parseRange(_ r: String, size: Int64) -> (Int64, Int64)? {
         let val = r.replacingOccurrences(of: "bytes=", with: "").components(separatedBy: "-")
         guard let s = Int64(val[0]) else { return nil }
-        let e = val.count > 1 && !val[1].isEmpty ? Int64(val[1])! : size - 1
+        // An end that isn't a number makes the whole header unusable, like a bad start.
+        guard val.count > 1 && !val[1].isEmpty else { return (s, size - 1) }
+        guard let e = Int64(val[1]) else { return nil }
         return (s, e)
     }
 

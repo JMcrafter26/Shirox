@@ -242,8 +242,7 @@ struct ProfileView: View {
             // Banner
             Group {
                 if let banner = vm.user?.bannerImage {
-                    CachedAsyncImage(urlString: banner)
-                        .aspectRatio(contentMode: .fill)
+                    CachedAsyncImage(urlString: banner).scaledToFill()
                 } else {
                     LinearGradient(
                         colors: [Color.accentColor.opacity(0.35), Color.accentColor.opacity(0.10)],
@@ -309,7 +308,7 @@ struct ProfileView: View {
         #if os(iOS)
         .overlay(Circle().strokeBorder(Color(UIColor.systemBackground), lineWidth: 4))
         #elseif os(tvOS)
-        // TODO: add back overlay
+        // tvOS has no system background color for the ring, so the avatar goes without one.
         #else
         .overlay(Circle().strokeBorder(Color(NSColor.windowBackgroundColor), lineWidth: 4))
         #endif
@@ -374,5 +373,4 @@ struct ProfileView: View {
             }
         }
     }
-
 }

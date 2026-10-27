@@ -1,5 +1,5 @@
-import SwiftUI
 import Kingfisher
+import SwiftUI
 
 #if os(iOS)
 import UIKit
@@ -17,7 +17,7 @@ typealias PlatformImage = NSImage
 /// headers, solved Cloudflare sessions, base64 and `file://` fast paths.
 struct CachedAsyncImage: View {
     let urlString: String
-    var base64String: String? = nil
+    var base64String: String?
     /// `.fill` (the default) crops to fill its frame — what every thumbnail and
     /// hero wants. `.fit` shows the whole image uncropped, for the full-poster viewer.
     var contentMode: SwiftUI.ContentMode = .fill

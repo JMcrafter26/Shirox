@@ -124,8 +124,7 @@ struct MarkdownText: View {
                 .fixedSize(horizontal: false, vertical: true)
 
         case .image(let url, let width):
-            CachedAsyncImage(urlString: url)
-                .aspectRatio(contentMode: .fit)
+            CachedAsyncImage(urlString: url).scaledToFit()
                 .frame(maxWidth: width ?? .infinity)
                 .clipShape(RoundedRectangle(cornerRadius: 8))
 
@@ -375,8 +374,7 @@ struct MarkdownText: View {
                     let align = String(full[alignVal])
                     let content = String(full[contentVal])
                     flushParagraph()
-                    if align == "center" { result.append(.centered(.paragraph(content))) }
-                    else { emit(.paragraph(content)) }
+                    if align == "center" { result.append(.centered(.paragraph(content))) } else { emit(.paragraph(content)) }
                     continue
                 }
             }
@@ -562,7 +560,7 @@ struct MarkdownText: View {
         // HTML spoiler div → ~!...!~
         s = s.replacingOccurrences(of: #"<div\s+rel="spoiler">([\s\S]*?)</div>"#, with: "~!$1!~", options: .regularExpression)
         // HTML inline formatting → Markdown equivalents
-        for tag in ["i", "em"]    { s = s.replacingOccurrences(of: "<\(tag)>", with: "*").replacingOccurrences(of: "</\(tag)>", with: "*") }
+        for tag in ["i", "em"] { s = s.replacingOccurrences(of: "<\(tag)>", with: "*").replacingOccurrences(of: "</\(tag)>", with: "*") }
         for tag in ["b", "strong"] { s = s.replacingOccurrences(of: "<\(tag)>", with: "**").replacingOccurrences(of: "</\(tag)>", with: "**") }
         for tag in ["del", "strike", "s"] { s = s.replacingOccurrences(of: "<\(tag)>", with: "~~").replacingOccurrences(of: "</\(tag)>", with: "~~") }
         s = s.replacingOccurrences(of: "<code>", with: "`").replacingOccurrences(of: "</code>", with: "`")

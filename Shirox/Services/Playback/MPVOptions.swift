@@ -2,7 +2,6 @@ import Foundation
 
 /// The player's settings and a stream's headers written as mpv options — apart from the engine.
 enum MPVOptions {
-
     /// Every header but the user agent and referrer, which mpv takes as options of their own, as
     /// `http-header-fields`: `Key: Value` entries joined by commas, in key order. mpv splits the
     /// list on commas, so one inside a value is escaped.

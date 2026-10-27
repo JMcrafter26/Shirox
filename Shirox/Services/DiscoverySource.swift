@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 /// Where Home and Search come from: the AniList/MyAnimeList chain, or Simkl.
 ///

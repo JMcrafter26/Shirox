@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 /// Local manga reading progress: one Continue Reading card per manga plus a
 /// per-manga set of read chapter hrefs. Mirrors ContinueWatchingManager's

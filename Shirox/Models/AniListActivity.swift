@@ -98,9 +98,7 @@ struct ActivityMedia: Codable {
     let id: Int
     let title: AniListTitle?
     let coverImage: AniListCoverImage?
-}
 
-extension ActivityMedia {
     var displayTitle: String {
         title?.english ?? title?.romaji ?? title?.native ?? String(localized: "shared.unknown")
     }

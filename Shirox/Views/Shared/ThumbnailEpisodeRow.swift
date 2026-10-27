@@ -2,24 +2,24 @@ import SwiftUI
 
 struct ThumbnailEpisodeRow: View {
     let number: Int
-    var thumbnail: String? = nil
-    var title: String? = nil
-    var fillerType: String? = nil
-    var airdate: String? = nil
-    var episodeDescription: String? = nil
-    var progress: Double? = nil
+    var thumbnail: String?
+    var title: String?
+    var fillerType: String?
+    var airdate: String?
+    var episodeDescription: String?
+    var progress: Double?
     let onTap: () -> Void
-    var onMarkWatched: (() -> Void)? = nil
-    var onMarkUnwatched: (() -> Void)? = nil
-    var onResetProgress: (() -> Void)? = nil
-    var onDownload: (() -> Void)? = nil
-    var onDeleteDownload: (() -> Void)? = nil
+    var onMarkWatched: (() -> Void)?
+    var onMarkUnwatched: (() -> Void)?
+    var onResetProgress: (() -> Void)?
+    var onDownload: (() -> Void)?
+    var onDeleteDownload: (() -> Void)?
     /// The finished download's file, for Share and Show in Files.
-    var downloadedFile: URL? = nil
-    var onTryOtherStream: (() -> Void)? = nil
+    var downloadedFile: URL?
+    var onTryOtherStream: (() -> Void)?
     var isSelectionMode: Bool = false
     var isSelected: Bool = false
-    var downloadState: DownloadState? = nil
+    var downloadState: DownloadState?
     var style: Style = .row
 
     enum Style {
@@ -70,7 +70,7 @@ struct ThumbnailEpisodeRow: View {
                 } else {
                     if let thumb = thumbnail {
                         CachedAsyncImage(urlString: thumb)
-                            .aspectRatio(16/9, contentMode: .fill)
+                            .aspectRatio(16 / 9, contentMode: .fill)
                             .frame(width: 100, height: 56)
                             .overlay(
                                 ZStack {
@@ -260,7 +260,7 @@ struct ThumbnailEpisodeRow: View {
     private var cardBody: some View {
         VStack(alignment: .leading, spacing: 8) {
             Color.secondary.opacity(0.12)
-                .aspectRatio(16/9, contentMode: .fit)
+                .aspectRatio(16 / 9, contentMode: .fit)
                 .overlay {
                     if let thumb = thumbnail {
                         CachedAsyncImage(urlString: thumb)
@@ -422,9 +422,7 @@ struct ThumbnailEpisodeRow: View {
             }
         }
     }
-}
 
-extension ThumbnailEpisodeRow {
     /// Filler classifications we surface as a badge. Only `filler` and `mixed-manga`
     /// get badged; canon/unknown/nil are intentionally not shown.
     enum FillerBadge: Equatable {

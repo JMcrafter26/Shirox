@@ -42,7 +42,7 @@ final class MALMangaLibraryService {
 
     func fetchLibrary() async throws -> [MALMangaListEntry] {
         var all: [MALMangaListEntry] = []
-        var nextURL: URL? = makeLibraryURL()
+        var nextURL: URL? = try makeLibraryURL()
         while let url = nextURL {
             let (data, response) = try await MALAuthManager.shared.send(url: url)
             try validateResponse(response)
@@ -53,24 +53,26 @@ final class MALMangaLibraryService {
         return all
     }
 
-    private func makeLibraryURL() -> URL {
-        var c = URLComponents(url: base.appendingPathComponent("users/@me/mangalist"),
-                              resolvingAgainstBaseURL: false)!
+    private func makeLibraryURL() throws -> URL {
+        guard var c = URLComponents(url: base.appendingPathComponent("users/@me/mangalist"),
+                                    resolvingAgainstBaseURL: false) else { throw URLError(.badURL) }
         c.queryItems = [
             URLQueryItem(name: "fields", value: "list_status{status,score,num_chapters_read,num_times_reread,updated_at},num_chapters,status,mean,genres,synopsis,media_type,main_picture"),
             URLQueryItem(name: "limit", value: "500"),
             URLQueryItem(name: "nsfw", value: "false")
         ]
-        return c.url!
+        guard let url = c.url else { throw URLError(.badURL) }
+        return url
     }
 
     // MARK: - Fetch single entry
 
     func fetchEntry(malId: Int) async throws -> MALMangaListEntry? {
-        var c = URLComponents(url: base.appendingPathComponent("manga/\(malId)"),
-                              resolvingAgainstBaseURL: false)!
+        guard var c = URLComponents(url: base.appendingPathComponent("manga/\(malId)"),
+                                    resolvingAgainstBaseURL: false) else { throw URLError(.badURL) }
         c.queryItems = [URLQueryItem(name: "fields", value: "my_list_status{status,score,num_chapters_read,num_times_reread,updated_at},num_chapters,status,mean,genres,synopsis,media_type,main_picture")]
-        let (data, response) = try await MALAuthManager.shared.send(url: c.url!)
+        guard let url = c.url else { throw URLError(.badURL) }
+        let (data, response) = try await MALAuthManager.shared.send(url: url)
         if response.statusCode == 404 { return nil }
         try validateResponse(response)
 

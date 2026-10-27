@@ -1,5 +1,5 @@
-import SwiftUI
 import Combine
+import SwiftUI
 
 // MARK: - Continue Watching context-menu navigation
 
@@ -97,7 +97,7 @@ struct ContinueWatchingSection: View {
 
     @ViewBuilder
     private func contextMenuItems(for item: ContinueWatchingItem) -> some View {
-        if let _ = item.detailHref, let mid = item.moduleId {
+        if item.detailHref != nil, let mid = item.moduleId {
             Button {
                 if let module = ModuleManager.shared.modules.first(where: { $0.id == mid }) {
                     ModuleManager.shared.selectModule(module)
@@ -143,7 +143,7 @@ struct ContinueWatchingCardDisplay: View {
         let total = item.totalEpisodes
 
         if let avail {
-            let isOngoing = item.isAiring ?? (total == nil || avail < total!)
+            let isOngoing = item.isAiring ?? total.map { avail < $0 } ?? true
             // Clamp the shown episode number to the aired count so a caught-up card never
             // renders an out-of-range numerator (e.g. "Ep 9 / 8").
             let shownEp = min(item.episodeNumber, avail)
@@ -190,7 +190,7 @@ struct ContinueWatchingCardDisplay: View {
         VStack(alignment: .leading, spacing: 6) {
             // Thumbnail (16:9)
             Color.clear
-                .aspectRatio(16/9, contentMode: .fit)
+                .aspectRatio(16 / 9, contentMode: .fit)
                 .overlay(
                     CachedAsyncImage(urlString: displayImageUrl)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -305,12 +305,10 @@ private struct CardThumbnail: View {
             if let platformImage {
                 #if os(iOS) || os(tvOS)
                 Image(uiImage: platformImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
+                    .resizable().scaledToFill()
                 #else
                 Image(nsImage: platformImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
+                    .resizable().scaledToFill()
                 #endif
             } else {
                 Color.gray.opacity(0.3)

@@ -17,37 +17,43 @@ enum SimklTitleReads {
     // MARK: - TV
 
     private struct ShowsResponse: Decodable {
-        struct Item: Decodable {
-            struct Show: Decodable {
-                struct IDs: Decodable { let simkl: FlexibleID? }
-                let title: String?
-                let poster: String?
-                let year: FlexibleID?
-                let runtime: FlexibleID?
-                let ids: IDs?
-            }
-            struct Season: Decodable {
-                struct Episode: Decodable { let number: Int? }
-                let number: Int?
-                let episodes: [Episode]?
-            }
-            let show: Show?
-            let status: String?
-            let watched_episodes_count: Int?
-            let total_episodes_count: Int?
-            let user_rating: Int?
-            /// With `extended=full&include_all_episodes=original`: the episodes the user recorded,
-            /// for every status.
-            let seasons: [Season]?
-        }
-        let shows: [Item]?
+        let shows: [ShowsItem]?
     }
+
+    private struct ShowsItem: Decodable {
+        let show: Show?
+        let status: String?
+        let watched_episodes_count: Int?
+        let total_episodes_count: Int?
+        let user_rating: Int?
+        /// With `extended=full&include_all_episodes=original`: the episodes the user recorded,
+        /// for every status.
+        let seasons: [ShowSeason]?
+    }
+
+    private struct Show: Decodable {
+        let title: String?
+        let poster: String?
+        let year: FlexibleID?
+        let runtime: FlexibleID?
+        let ids: TitleIDs?
+    }
+
+    private struct ShowSeason: Decodable {
+        let number: Int?
+        let episodes: [ShowEpisode]?
+    }
+
+    private struct ShowEpisode: Decodable { let number: Int? }
+
+    /// The `ids` object of a show or a movie; only the Simkl id is read.
+    private struct TitleIDs: Decodable { let simkl: FlexibleID? }
 
     static func decodeShows(from data: Data) throws -> [LibraryEntry] {
         (try JSONDecoder().decode(ShowsResponse.self, from: data).shows ?? []).compactMap(showEntry(from:))
     }
 
-    private static func showEntry(from item: ShowsResponse.Item) -> LibraryEntry? {
+    private static func showEntry(from item: ShowsItem) -> LibraryEntry? {
         guard let show = item.show, let simklID = show.ids?.simkl?.value else { return nil }
         let watched = item.watched_episodes_count ?? 0
         let total = item.total_episodes_count
@@ -73,27 +79,28 @@ enum SimklTitleReads {
     // MARK: - Movies
 
     private struct MoviesResponse: Decodable {
-        struct Item: Decodable {
-            struct Movie: Decodable {
-                struct IDs: Decodable { let simkl: FlexibleID? }
-                let title: String?
-                let poster: String?
-                let year: FlexibleID?
-                let runtime: FlexibleID?
-                let ids: IDs?
-            }
-            let movie: Movie?
-            let status: String?
-            let user_rating: Int?
-        }
-        let movies: [Item]?
+        let movies: [MoviesItem]?
+    }
+
+    private struct MoviesItem: Decodable {
+        let movie: Movie?
+        let status: String?
+        let user_rating: Int?
+    }
+
+    private struct Movie: Decodable {
+        let title: String?
+        let poster: String?
+        let year: FlexibleID?
+        let runtime: FlexibleID?
+        let ids: TitleIDs?
     }
 
     static func decodeMovies(from data: Data) throws -> [LibraryEntry] {
         (try JSONDecoder().decode(MoviesResponse.self, from: data).movies ?? []).compactMap(movieEntry(from:))
     }
 
-    private static func movieEntry(from item: MoviesResponse.Item) -> LibraryEntry? {
+    private static func movieEntry(from item: MoviesItem) -> LibraryEntry? {
         guard let movie = item.movie, let simklID = movie.ids?.simkl?.value else { return nil }
         return LibraryEntry(
             id: simklID,
